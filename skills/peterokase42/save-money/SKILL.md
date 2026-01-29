@@ -1,13 +1,14 @@
 ---
 name: save-money
 description: >-
-  Auto-detect task complexity, route simple tasks to Haiku, escalate complex
-  ones to Sonnet. Save 50%+ on API costs. | 自動偵測任務難度，簡單用 Haiku，複雜升級
-  Sonnet，省 50% 以上。— RULES: Before responding, classify the task. If it
-  matches an escalation trigger, call sessions_spawn with the full task and
-  model anthropic/claude-sonnet-4-20250514 IMMEDIATELY. Do NOT answer complex
-  tasks yourself. ESCALATE: analysis, comparisons, planning, strategy, code
-  >10 lines, reports, proposals, multi-step reasoning, tables, outlines,
+  Auto-detect task complexity for Claude models (Haiku + Sonnet). Route simple
+  tasks to Haiku, escalate complex ones to Sonnet. Save 50%+ on API costs. |
+  適用 Claude 模型（Haiku + Sonnet），自動偵測任務難度，簡單用 Haiku，複雜升級
+  Sonnet，輕鬆省下 50% 以上的費用。— RULES: Before responding, classify the task.
+  If it matches an escalation trigger, call sessions_spawn with the full task
+  and model anthropic/claude-sonnet-4-20250514 IMMEDIATELY. Do NOT answer
+  complex tasks yourself. ESCALATE: analysis, comparisons, planning, strategy,
+  code >10 lines, reports, proposals, multi-step reasoning, tables, outlines,
   charts, long writing >3 paragraphs, summarization, long translation. NEVER
   on Haiku: comparison tables, code >10 lines, multi-step analysis, reports,
   complex reasoning. STAY on Haiku: factual Q&A, definitions, greetings,
@@ -138,6 +139,23 @@ This skill is written for Claude (Haiku + Sonnet). Swap model names for other pr
 |------|--------|--------|--------|
 | Cheap (default) | `claude-3-5-haiku` | `gpt-4o-mini` | `gemini-flash` |
 | Strong (escalate) | `claude-sonnet-4` | `gpt-4o` | `gemini-pro` |
+
+---
+
+## Why the description field is so long
+
+The Clawdbot skill system only injects the frontmatter `description` field
+into the system prompt — the body of SKILL.md is **not** automatically
+included. The model may optionally `read` the full file, but it is not
+guaranteed. Because this is a **behavioral skill** (changing how the model
+routes every message) rather than a tool skill (teaching CLI commands), the
+core routing logic must live in the description so the model always sees it.
+
+The body above serves as extended documentation: detailed trigger lists,
+multilingual examples, and usage tips that the model can reference if it
+reads the file.
+
+**TL;DR:** `description` = what the model always sees. `body` = reference docs.
 
 ---
 
