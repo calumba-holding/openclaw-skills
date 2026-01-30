@@ -6,13 +6,15 @@ metadata: {"clawdbot":{"emoji":"📰"}}
 
 # Bitcoin Dev Digest (📰)
 
+![Bitcoin Daily](https://files.catbox.moe/v0zvnj.png)
+
 Daily summary of bitcoindev mailing list + Bitcoin Core commits.
 
 *Made in 🤠 Texas ❤️ [PlebLab](https://pleblab.dev)*
 
 ## Commands
 
-Run via: `node ~/workspace/skills/bitcoindev-digest/scripts/digest.js <command>`
+Run via: `node ~/workspace/skills/bitcoin-daily/scripts/digest.js <command>`
 
 | Command | Description |
 |---------|-------------|
