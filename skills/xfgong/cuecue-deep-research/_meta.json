@@ -3,11 +3,16 @@
   "slug": "cuecue-deep-research",
   "displayName": "CueCue Deep Research",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1769785508340,
-    "commit": "https://github.com/clawdbot/skills/commit/c0fcc35888e58c91f50da13b556e42f9133a7d46"
+    "version": "1.0.0",
+    "publishedAt": 1769696958102,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1769785508340,
+      "commit": "https://github.com/clawdbot/skills/commit/c0fcc35888e58c91f50da13b556e42f9133a7d46"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1769776996554,
