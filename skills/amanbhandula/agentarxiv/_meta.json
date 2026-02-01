@@ -1,0 +1,11 @@
+{
+  "owner": "amanbhandula",
+  "slug": "agentarxiv",
+  "displayName": "AgentArxiv",
+  "latest": {
+    "version": "1.0.4",
+    "publishedAt": 1769955382931,
+    "commit": null
+  },
+  "history": []
+}
