@@ -7,29 +7,40 @@ tags: [feishu, lark, card, message, interactive, markdown]
 # Feishu Card Skill
 
 Send rich interactive cards via Feishu Open API.
-Updated to use the `markdown` component tag for full Markdown support (Code blocks, Tables, etc.).
+
+## ⚠️ CRITICAL FORMATTING RULES (READ BEFORE USING)
+
+1.  **Escape Newlines**: If using `--text` via CLI, you MUST escape newlines as `\\n`.
+    - ❌ Wrong: `--text "Line 1\nLine 2"` (Shell eats the backslash)
+    - ✅ Right: `--text "Line 1\\nLine 2"`
+2.  **Prefer File Input**: For any content longer than one line, **ALWAYS** use `--text-file`.
+    - ✅ Best: `echo "Line 1\nLine 2" > msg.md && node send.js ... --text-file msg.md`
+    - This avoids ALL shell escaping issues.
+3.  **Markdown Support**: Supports **Bold**, *Italic*, [Links](url).
+    - ⚠️ **Code Blocks**: Support is limited. Use single backticks \`code\` for safety.
 
 ## Usage
 
 ```bash
-# Via argument
-node send.js --target "ou_..." --text "Hello **World**"
+# Via argument (Simple)
+node skills/feishu-card/send.js --target "ou_..." --text "Hello **World**"
 
-# Via file (Recommended for complex content)
-node send.js --target "ou_..." --text-file message.md
-
-# Via STDIN (New! Safe for shell scripts)
-echo "Hello **World**" | node send.js --target "ou_..."
+# Via file (Recommended for Reports/Long Text)
+cat <<EOF > msg.md
+**Status**: Ready
+**Details**:
+- Item 1
+- Item 2
+EOF
+node skills/feishu-card/send.js --target "ou_..." --title "Report" --text-file msg.md
+rm msg.md
 ```
 
 ## Options
 - `-t, --target`: User Open ID (`ou_...`) or Group Chat ID (`oc_...`).
 - `-x, --text`: Markdown content.
 - `-f, --text-file`: Read markdown from file.
-- `STDIN`: If text/text-file is missing, content is read from STDIN.
 - `--title`: Card header title.
 - `--color`: Header color (blue, red, green, etc.).
 - `--button-text`: Add a bottom button.
 - `--button-url`: Button URL.
-- `--text-size`: Text size (`normal`, `heading`, `heading-1`... `small`).
-- `--text-align`: Alignment (`left`, `center`, `right`).
