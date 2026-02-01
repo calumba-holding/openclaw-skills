@@ -1,0 +1,11 @@
+{
+  "owner": "icyfrosty",
+  "slug": "slack-hub-skill",
+  "displayName": "Slack Hub Skill",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1769906671579,
+    "commit": null
+  },
+  "history": []
+}
