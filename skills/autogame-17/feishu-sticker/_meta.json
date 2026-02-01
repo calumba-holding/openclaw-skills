@@ -3,11 +3,16 @@
   "slug": "feishu-sticker",
   "displayName": "Feishu Sticker",
   "latest": {
-    "version": "1.1.1",
-    "publishedAt": 1769947023033,
-    "commit": "https://github.com/clawdbot/skills/commit/ef1b28e1bea5548f4ba8d7bb4d62aff3d89e110d"
+    "version": "1.0.8",
+    "publishedAt": 1769967785861,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.1",
+      "publishedAt": 1769947023033,
+      "commit": "https://github.com/clawdbot/skills/commit/ef1b28e1bea5548f4ba8d7bb4d62aff3d89e110d"
+    },
     {
       "version": "1.1.0",
       "publishedAt": 1769921101582,

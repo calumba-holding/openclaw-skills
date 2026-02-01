@@ -1,9 +1,10 @@
+const os = require('os');
+const { execSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { program } = require('commander');
 const FormData = require('form-data');
-const { execSync } = require('child_process');
 // Try to resolve ffmpeg-static from workspace root
 let ffmpegPath;
 try {
@@ -28,17 +29,21 @@ if (!APP_ID || !APP_SECRET) {
     process.exit(1);
 }
 
-async function getToken() {
+async function getToken(forceRefresh = false) {
     const now = Math.floor(Date.now() / 1000);
 
     // 1. Try Memory Cache (File)
-    if (fs.existsSync(TOKEN_CACHE_FILE)) {
+    if (!forceRefresh && fs.existsSync(TOKEN_CACHE_FILE)) {
         try {
             const cached = JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, 'utf8'));
             if (cached.token && cached.expire > now + 60) {
                 return cached.token;
             }
         } catch (e) {}
+    }
+
+    if (forceRefresh) {
+        try { if (fs.existsSync(TOKEN_CACHE_FILE)) fs.unlinkSync(TOKEN_CACHE_FILE); } catch(e) {}
     }
 
     try {
@@ -71,35 +76,57 @@ async function getToken() {
     }
 }
 
+async function executeWithAuthRetry(operation) {
+    let token = await getToken();
+    try {
+        return await operation(token);
+    } catch (e) {
+        const msg = e.message || '';
+        const isAuthError = msg.includes('9999166') || 
+                           (msg.toLowerCase().includes('token') && (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('expire')));
+        
+        if (isAuthError) {
+            console.warn(`[Feishu-Sticker] Auth Error (${msg}). Refreshing token...`);
+            token = await getToken(true);
+            return await operation(token);
+        }
+        throw e;
+    }
+}
+
 async function uploadImage(token, filePath) {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000;
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
+            const fileBuffer = fs.readFileSync(filePath);
+            const blob = new Blob([fileBuffer]);
             const formData = new FormData();
             formData.append('image_type', 'message');
-            // Re-create stream for each attempt to avoid "stream closed" errors
-            formData.append('image', fs.createReadStream(filePath));
+            formData.append('image', blob, path.basename(filePath));
 
-            const axios = require('axios');
-            const res = await axios.post('https://open.feishu.cn/open-apis/im/v1/images', formData, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    ...formData.getHeaders()
-                },
-                timeout: 10000 // 10s timeout
+            const res = await fetch('https://open.feishu.cn/open-apis/im/v1/images', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
             });
-            return res.data.data.image_key;
-        } catch (e) {
-            const isLast = attempt === MAX_RETRIES;
-            const errMsg = e.response ? JSON.stringify(e.response.data) : e.message;
-            console.warn(`[Attempt ${attempt}/${MAX_RETRIES}] Upload failed: ${errMsg}`);
-            
-            if (isLast) {
-                console.error('Final upload failure.');
-                process.exit(1);
+            const data = await res.json();
+
+            if (data.code !== 0) {
+                if (data.code === 99991663 || data.code === 99991664 || data.code === 99991661) {
+                     throw new Error(`Feishu Auth Error: ${data.code} ${data.msg}`);
+                }
+                throw new Error(JSON.stringify(data));
             }
+            return data.data.image_key;
+        } catch (e) {
+            if (e.message.includes('Feishu Auth Error')) throw e;
+
+            const isLast = attempt === MAX_RETRIES;
+            console.warn(`[Attempt ${attempt}/${MAX_RETRIES}] Upload failed: ${e.message}`);
+            
+            if (isLast) throw e;
             
             // Wait before retry
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * attempt));
@@ -108,13 +135,28 @@ async function uploadImage(token, filePath) {
 }
 
 async function sendSticker(options) {
-    const token = await getToken();
-    const stickerDir = path.resolve('/home/crishaocredits/.openclaw/media/stickers');
+    await executeWithAuthRetry(async (token) => {
+        return await sendStickerLogic(token, options);
+    });
+}
+
+async function sendStickerLogic(token, options) {
+    const stickerDir = process.env.STICKER_DIR 
+        ? path.resolve(process.env.STICKER_DIR) 
+        : path.resolve(path.join(os.homedir(), '.openclaw/media/stickers'));
     let selectedFile;
+    let isTempFile = false; // Track if we created a temp file to clean up
 
     if (options.file) {
         selectedFile = path.resolve(options.file);
     } else {
+        if (!fs.existsSync(stickerDir)) {
+             console.warn(`Sticker directory missing: ${stickerDir}. Creating...`);
+             try { fs.mkdirSync(stickerDir, { recursive: true }); } catch (e) {
+                 console.error('Failed to create sticker directory:', e.message);
+                 process.exit(1);
+             }
+        }
         try {
             // Prioritize WebP, allow others
             const files = fs.readdirSync(stickerDir).filter(f => /\.(webp|jpg|png|gif)$/i.test(f));
@@ -135,20 +177,33 @@ async function sendSticker(options) {
         console.log('Detected GIF. Converting to WebP (Efficiency Protocol)...');
         const webpPath = selectedFile.replace(/\.gif$/i, '.webp');
         try {
-            // -loop 0 ensures animation loops are preserved
-            // -c:v libwebp, -lossless 0 (lossy), -q:v 75 (quality), -an (remove audio)
-            // -vsync 0 prevents frame duplication issues
-            execSync(`${ffmpegPath} -i "${selectedFile}" -c:v libwebp -lossless 0 -q:v 75 -loop 0 -an -vsync 0 -y "${webpPath}"`, { stdio: 'pipe' });
+            const ffmpegArgs = [
+                '-i', selectedFile,
+                '-c:v', 'libwebp',
+                '-lossless', '0',
+                '-q:v', '75',
+                '-loop', '0',
+                '-an',
+                '-vsync', '0', 
+                '-vf', 'scale=\'min(320,iw)\':-2',
+                '-y',
+                webpPath
+            ];
+            spawnSync(ffmpegPath, ffmpegArgs, { stdio: 'pipe' });
             
             if (fs.existsSync(webpPath)) {
-                // Determine if we should delete the original
-                // If it's in our sticker stash, yes. If it's a user-provided path outside, maybe/maybe not.
-                // Assuming safer to replace for protocol compliance.
-                try {
-                    fs.unlinkSync(selectedFile);
-                    console.log('Original GIF deleted.');
-                } catch (delErr) {
-                    console.warn('Could not delete original GIF:', delErr.message);
+                // SAFETY CHECK: Only delete if it's in our internal sticker stash
+                const isInStickerDir = path.resolve(selectedFile).startsWith(stickerDir);
+                
+                if (isInStickerDir) {
+                    try {
+                        fs.unlinkSync(selectedFile);
+                        console.log('Original GIF deleted (Internal Storage Cleanup).');
+                    } catch (delErr) {
+                        console.warn('Could not delete original GIF:', delErr.message);
+                    }
+                } else {
+                    console.log('External file detected. Preserving original GIF.');
                 }
                 selectedFile = webpPath;
             }
@@ -159,8 +214,39 @@ async function sendSticker(options) {
 
     console.log(`Sending sticker: ${selectedFile}`);
 
+    // Optimization: Large Image Compression (>5MB) to avoid API errors
+    if (ffmpegPath) {
+        try {
+            const stats = fs.statSync(selectedFile);
+            const LIMIT_BYTES = 5 * 1024 * 1024; // 5MB
+            if (stats.size > LIMIT_BYTES) {
+                console.log(`[Compression] Image is ${(stats.size/1024/1024).toFixed(2)}MB (>5MB). Compressing...`);
+                // Use a temp file for compression output
+                const compressedPath = path.join(path.dirname(selectedFile), `temp_compressed_${Date.now()}.webp`);
+                
+                const args = ['-i', selectedFile, '-c:v', 'libwebp', '-q:v', '60', '-y', compressedPath];
+                const res = spawnSync(ffmpegPath, args, { stdio: 'ignore' });
+                
+                if (res.status === 0 && fs.existsSync(compressedPath)) {
+                    const newStats = fs.statSync(compressedPath);
+                    if (newStats.size < stats.size && newStats.size < LIMIT_BYTES) {
+                        console.log(`[Compression] Success: ${(newStats.size/1024/1024).toFixed(2)}MB.`);
+                        selectedFile = compressedPath;
+                        isTempFile = true; // Mark for deletion
+                    } else {
+                         console.warn('[Compression] Failed to reduce size below limit.');
+                         try { fs.unlinkSync(compressedPath); } catch(e) {}
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[Compression] Error:', e.message);
+        }
+    }
+
     // Caching (Enhanced with MD5 Hash)
-    const cachePath = path.join(__dirname, 'image_key_cache.json');
+    // Unified Cache: Use the shared memory file (same as feishu-card) to prevent duplicate uploads
+    const cachePath = path.resolve(__dirname, '../../memory/feishu_image_keys.json');
     let cache = {};
     if (fs.existsSync(cachePath)) {
         try {
@@ -171,49 +257,53 @@ async function sendSticker(options) {
         } catch (e) {
             console.warn(`[Cache Warning] Corrupt cache file detected: ${e.message}`);
             try {
-                // Backup corrupt file to prevent total data loss
                 const backupPath = cachePath + '.corrupt.' + Date.now();
                 fs.copyFileSync(cachePath, backupPath);
-                console.warn(`[Cache Warning] Backed up corrupt cache to ${backupPath}`);
-            } catch (backupErr) {
-                console.error('[Cache Error] Failed to backup corrupt cache:', backupErr.message);
-            }
-            // Proceed with empty cache (safe default), but original data is saved
+            } catch (backupErr) {}
         }
     }
 
-    // Calculate file hash for deduplication and content validation
+    // Calculate file hash
     const fileBuffer = fs.readFileSync(selectedFile);
     const fileHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
-
-    // Check cache by Hash (Primary) or Filename (Legacy Fallback)
     const fileName = path.basename(selectedFile);
     let imageKey = cache[fileHash] || cache[fileName];
 
     if (!imageKey) {
         console.log(`Uploading image (Hash: ${fileHash.substring(0, 8)})...`);
-        imageKey = await uploadImage(token, selectedFile);
-        if (imageKey) {
-            // Save with both keys for backward compatibility and robustness
-            cache[fileHash] = imageKey;
-            // Also cache by filename to maintain legacy lookup speed if needed, but hash is preferred
-            cache[fileName] = imageKey;
-            
-            // Atomic write to prevent corruption
-            const tempPath = `${cachePath}.tmp`;
-            try {
-                fs.writeFileSync(tempPath, JSON.stringify(cache, null, 2));
-                fs.renameSync(tempPath, cachePath);
-            } catch (writeErr) {
-                console.warn('Warning: Failed to write cache atomically:', writeErr.message);
-                // Fallback to direct write if rename fails (e.g. cross-device link)
+        try {
+            imageKey = await uploadImage(token, selectedFile);
+            if (imageKey) {
+                cache[fileHash] = imageKey;
+                cache[fileName] = imageKey;
                 try {
-                     fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
-                } catch (e) {}
+                    const tempPath = `${cachePath}.tmp`;
+                    fs.writeFileSync(tempPath, JSON.stringify(cache, null, 2));
+                    fs.renameSync(tempPath, cachePath);
+                } catch (writeErr) {}
+            }
+        } finally {
+            // CLEANUP: Delete temp file if we created it during compression
+            if (isTempFile && fs.existsSync(selectedFile)) {
+                try {
+                    fs.unlinkSync(selectedFile);
+                    console.log(`[Cleanup] Deleted temporary compressed file: ${path.basename(selectedFile)}`);
+                } catch (cleanupErr) {
+                    console.warn(`[Cleanup Warning] Failed to delete temp file: ${cleanupErr.message}`);
+                }
             }
         }
     } else {
         console.log(`Using cached image_key (Hash: ${fileHash.substring(0, 8)})`);
+        // If we used a cached key, but `selectedFile` was a temp compressed file, we still need to delete it!
+        // Because we didn't call uploadImage (which has the finally block if we put it there),
+        // we must clean up here too.
+        if (isTempFile && fs.existsSync(selectedFile)) {
+             try {
+                 fs.unlinkSync(selectedFile);
+                 console.log(`[Cleanup] Deleted temporary compressed file (Cache Hit): ${path.basename(selectedFile)}`);
+             } catch (cleanupErr) {}
+        }
     }
 
     // Determine receive_id_type
@@ -224,51 +314,82 @@ async function sendSticker(options) {
 
     // Send
     try {
-        const axios = require('axios');
-        const res = await axios.post(
-            `https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=${receiveIdType}`,
-            {
+        const res = await fetch(`https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=${receiveIdType}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
                 receive_id: options.target,
                 msg_type: 'image',
                 content: JSON.stringify({ image_key: imageKey })
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+            })
+        });
+        const data = await res.json();
+        
+        if (data.code !== 0) {
+            if (data.code === 99991663 || data.code === 99991664 || data.code === 99991661) {
+                 throw new Error(`Feishu Auth Error: ${data.code} ${data.msg}`);
             }
-        );
-        console.log('Success:', JSON.stringify(res.data.data, null, 2));
+            throw new Error(JSON.stringify(data));
+        }
+
+        console.log('Success:', JSON.stringify(data.data, null, 2));
     } catch (e) {
-        console.error('Send failed:', e.response ? e.response.data : e.message);
-        process.exit(1);
+        if (e.message.includes('Feishu Auth Error')) throw e;
+        console.error('Send failed:', e.message);
+        throw e; 
     }
 }
 
 program
-  .requiredOption('-t, --target <open_id>', 'Target User Open ID')
+  .option('-t, --target <open_id>', 'Target User Open ID')
   .option('-f, --file <path>', 'Specific image file path (optional)')
   .option('-q, --query <text>', 'Search query (e.g., "angry cat", "happy")')
   .option('-e, --emotion <emotion>', 'Filter by emotion (e.g., "happy", "sad")')
   .parse(process.argv);
 
+function getAutoTarget() {
+    // 1. Env Var (Highest Priority)
+    if (process.env.FEISHU_TARGET_ID) return process.env.FEISHU_TARGET_ID;
+
+    // 2. Shared Context (Active Session)
+    try {
+        const contextPath = path.resolve(__dirname, '../../memory/context.json');
+        if (fs.existsSync(contextPath)) {
+            const context = JSON.parse(fs.readFileSync(contextPath, 'utf8'));
+            if (context.last_target_id) return context.last_target_id;
+            // Fallback to interaction-logger fields
+            if (context.last_active_chat) return context.last_active_chat;
+            if (context.last_active_user) return context.last_active_user;
+        }
+    } catch (e) {}
+
+    // 3. Last Menu Interaction (Fallback)
+    try {
+        const menuPath = path.resolve(__dirname, '../../memory/menu_events.json');
+        if (fs.existsSync(menuPath)) {
+            const events = JSON.parse(fs.readFileSync(menuPath, 'utf8'));
+            if (events.length > 0) return events[events.length - 1].user_id;
+        }
+    } catch (e) {}
+
+    // 4. Default to Master
+    return 'ou_cdc63fe05e88c580aedead04d851fc04'; 
+}
+
 async function findSticker(options) {
     if (!options.query && !options.emotion) return null;
     
-    // Call find.js as a subprocess to leverage its logic
     try {
-        const findScript = path.join(__dirname, 'find.js');
-        let cmd = `node "${findScript}" --json --random`;
-        if (options.query) cmd += ` --query "${options.query}"`;
-        if (options.emotion) cmd += ` --emotion "${options.emotion}"`;
+        const { findSticker: findStickerFn } = require('./find.js');
+        // Use true for 'random' parameter to keep behavior consistent with CLI default
+        const result = findStickerFn(options.query, options.emotion, true);
         
-        const stdout = execSync(cmd).toString();
-        const result = JSON.parse(stdout);
-        
-        if (result.found && result.sticker && result.sticker.path) {
-            console.log(`Smart match: ${result.sticker.emotion} [${result.sticker.keywords}]`);
-            return result.sticker.path;
+        if (result && result.path) {
+            console.log(`Smart match: ${result.emotion} [${result.keywords}]`);
+            return result.path;
         }
     } catch (e) {
         console.warn("Smart search failed, falling back to random:", e.message);
@@ -278,6 +399,12 @@ async function findSticker(options) {
 
 (async () => {
     const opts = program.opts();
+
+    // Auto-detect target if missing
+    if (!opts.target) {
+        opts.target = getAutoTarget();
+        console.log(`Auto-detected target: ${opts.target}`);
+    }
     
     // If query/emotion is provided, try to find a matching sticker
     if (opts.query || opts.emotion) {

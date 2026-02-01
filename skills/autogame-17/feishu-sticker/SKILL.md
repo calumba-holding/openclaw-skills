@@ -1,32 +1,34 @@
 ---
 name: feishu-sticker
-description: Send images as native Feishu stickers. Automatically uploads images to Feishu, caches image keys, and sends as sticker/image messages.
+description: Send images as native Feishu stickers. Features auto-upload, caching, and GIF-to-WebP conversion.
 tags: [feishu, lark, sticker, image, fun]
 ---
 
 # Feishu Sticker Skill
 
-Sends a sticker (image) to a Feishu user.
-Automatically uploads the image to Feishu (caching the image_key) and sends it as an `image` message.
+Sends a sticker (image) to a Feishu user or group.
+Automatically uploads the image to Feishu (caching the `image_key` via MD5), converts GIFs to WebP for efficiency, and supports smart search.
 
-## Tools
+## Features
+- **Auto-Upload**: Uploads local images to Feishu CDN on demand.
+- **Caching**: Caches `image_key` by file hash to avoid re-uploading.
+- **Optimization**: Auto-converts GIFs to WebP (via `ffmpeg-static`) and compresses large images (>5MB).
+- **Smart Search**: Find stickers by `--query` or `--emotion`.
 
-### feishu_sticker
-Send a sticker.
-
-- **target** (required): The Open ID of the user.
-- **file** (optional): Path to a specific image file. If omitted, picks a random image from `media/stickers/`.
-
-## Setup
-1.  Put your stickers in `~/.openclaw/media/stickers/`.
-2.  Install dependencies: `npm install axios form-data commander`.
-
-## Examples
+## Usage
 
 ```bash
-# Random sticker
-feishu_sticker --target "ou_..."
+# Send random sticker
+node skills/feishu-sticker/send.js --target "ou_..."
 
-# Specific sticker
-feishu_sticker --target "ou_..." --file "/path/to/image.jpg"
+# Send specific file
+node skills/feishu-sticker/send.js --target "ou_..." --file "/path/to/image.jpg"
+
+# Search and send
+node skills/feishu-sticker/send.js --target "ou_..." --query "angry cat"
+node skills/feishu-sticker/send.js --target "ou_..." --emotion "happy"
 ```
+
+## Setup
+1.  Put your stickers in `~/.openclaw/media/stickers/` (or set `STICKER_DIR`).
+2.  Install dependencies: `npm install` (requires `axios`, `commander`, `ffmpeg-static`, `form-data`, `dotenv`).
