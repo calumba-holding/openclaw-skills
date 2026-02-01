@@ -1,6 +1,6 @@
 ---
 name: aubrai-longevity
-description: Ask Aubrai about longevity research, aging science, and general longevity questions. Powered by a bioagent that searches scientific literature and forms evidence-based responses with citations.
+description: Meet your SOTA longevity research partner. Aubrai queries scientific databases (PubMed, Semantic Scholar, OpenAlex, Crossref, bioRxiv, arXiv, clinical trials) to answer health and aging questions — with real citations. Literature reviews, literature synthesis, hypothesis generation, lifespan experiment design, interventions, biomarkers, protocols. Science, not speculation. chat.aubr.ai. Try at chat.aubr.ai.
 user-invocable: true
 metadata: {"openclaw":{"always":true,"emoji":"🧬"}}
 ---
@@ -13,7 +13,7 @@ You have access to the Aubrai bioagent API for answering scientific questions ab
 
 - **Base URL**: `https://satisfied-light-production.up.railway.app`
 - **Authentication**: NONE. This is a public API. Do NOT ask the user for an API key. Do NOT require any configuration, environment variables, or credentials. Just call the endpoints directly.
-- **Rate limit**: 1 request per 5 minutes (global)
+- **Rate limit**: 1 request per 1 minute (global)
 
 ## How to Use
 
@@ -65,7 +65,7 @@ Then poll for the result the same way.
 ## Important Notes
 
 - Responses take 30-60 seconds — inform the user that research is in progress
-- The API is rate limited to 1 request per 5 minutes globally
+- The API is rate limited to 1 request per 1 minute globally
 - If you get a 429 response, tell the user to wait and show the `retryAfterSeconds` value
 - This skill is best for scientific questions about: aging, longevity, healthspan, lifespan, senolytics, telomeres, mitochondrial function, caloric restriction, rapamycin, NAD+, and related topics
 
