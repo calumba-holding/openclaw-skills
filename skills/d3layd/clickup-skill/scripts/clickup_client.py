@@ -399,6 +399,211 @@ class ClickUpClient:
             params = {"custom_task_ids": "true", "team_id": team_id}
         
         return self._request("DELETE", f"/task/{task_id}/link/{links_to}", params=params)
+    
+    # ===== REPORTING & ANALYTICS =====
+    
+    def get_all_tasks(self, team_id: str, include_closed: bool = False, 
+                     space_ids: Optional[List[str]] = None,
+                     assignees: Optional[List[str]] = None,
+                     **filters) -> List[Dict]:
+        """Get ALL tasks from workspace with automatic pagination.
+        
+        CRITICAL: Always includes subtasks (subtasks=true) to avoid missing 70%+ of work.
+        ClickUp API returns max 100 tasks per page — this handles pagination automatically.
+        
+        Args:
+            team_id: Workspace ID
+            include_closed: Include closed/completed tasks
+            space_ids: Optional list of space IDs to filter
+            assignees: Optional list of user IDs to filter by assignee
+            **filters: Additional filter parameters
+        
+        Returns:
+            List of all tasks (parents and subtasks)
+        """
+        all_tasks = []
+        page = 0
+        
+        while True:
+            params = {
+                "subtasks": "true",  # CRITICAL: Always include subtasks
+                "include_closed": str(include_closed).lower(),
+                "page": page,
+                **filters
+            }
+            
+            if space_ids:
+                for i, sid in enumerate(space_ids):
+                    params[f"space_ids[{i}]"] = sid
+            
+            if assignees:
+                for i, uid in enumerate(assignees):
+                    params[f"assignees[{i}]"] = uid
+            
+            result = self._request("GET", f"/team/{team_id}/task", params=params)
+            
+            if "error" in result:
+                return [{"error": result["error"], "page": page}]
+            
+            tasks = result.get("tasks", [])
+            all_tasks.extend(tasks)
+            
+            # Check if last page
+            if result.get("last_page", True):
+                break
+            
+            page += 1
+            
+            # Safety limit: max 10 pages (1000 tasks)
+            if page >= 10:
+                all_tasks.append({"warning": "Pagination limit reached (1000 tasks). More tasks may exist."})
+                break
+        
+        return all_tasks
+    
+    def get_task_counts(self, team_id: str, **filters) -> Dict:
+        """Get task count breakdown: total, parents, subtasks.
+        
+        Returns:
+            Dict with total, parents, subtasks, and unassigned counts
+        """
+        tasks = self.get_all_tasks(team_id, **filters)
+        
+        if tasks and "error" in tasks[0]:
+            return {"error": tasks[0]["error"]}
+        
+        parents = [t for t in tasks if t.get("parent") is None]
+        subtasks = [t for t in tasks if t.get("parent") is not None]
+        unassigned = [t for t in tasks if not t.get("assignees")]
+        
+        return {
+            "total": len(tasks),
+            "parents": len(parents),
+            "subtasks": len(subtasks),
+            "unassigned": len(unassigned)
+        }
+    
+    def get_assignee_breakdown(self, team_id: str, **filters) -> Dict:
+        """Get workload breakdown by assignee.
+        
+        Returns:
+            Dict mapping username -> task count, sorted by count descending
+        """
+        tasks = self.get_all_tasks(team_id, **filters)
+        
+        if tasks and "error" in tasks[0]:
+            return {"error": tasks[0]["error"]}
+        
+        from collections import Counter
+        
+        assignee_counts = Counter()
+        for task in tasks:
+            assignees = task.get("assignees", [])
+            if assignees:
+                for assignee in assignees:
+                    username = assignee.get("username", "Unknown")
+                    assignee_counts[username] += 1
+            else:
+                assignee_counts["Unassigned"] += 1
+        
+        # Sort by count descending
+        return dict(assignee_counts.most_common())
+    
+    def get_status_breakdown(self, team_id: str, **filters) -> Dict:
+        """Get task count breakdown by status.
+        
+        Returns:
+            Dict mapping status -> count, sorted by count descending
+        """
+        tasks = self.get_all_tasks(team_id, **filters)
+        
+        if tasks and "error" in tasks[0]:
+            return {"error": tasks[0]["error"]}
+        
+        from collections import Counter
+        
+        status_counts = Counter()
+        for task in tasks:
+            status = task.get("status", {})
+            status_name = status.get("status", "Unknown")
+            status_counts[status_name] += 1
+        
+        return dict(status_counts.most_common())
+    
+    def get_priority_breakdown(self, team_id: str, **filters) -> Dict:
+        """Get task count breakdown by priority.
+        
+        Returns:
+            Dict mapping priority -> count
+        """
+        tasks = self.get_all_tasks(team_id, **filters)
+        
+        if tasks and "error" in tasks[0]:
+            return {"error": tasks[0]["error"]}
+        
+        from collections import Counter
+        
+        priority_counts = Counter()
+        for task in tasks:
+            priority = task.get("priority")
+            if priority:
+                priority_name = priority.get("priority", "none")
+            else:
+                priority_name = "none"
+            priority_counts[priority_name] += 1
+        
+        return dict(priority_counts.most_common())
+    
+    def get_daily_standup_report(self, team_id: str, assignee_id: Optional[str] = None) -> Dict:
+        """Generate daily standup report.
+        
+        Shows tasks grouped by status for specific assignee or all team members.
+        
+        Args:
+            team_id: Workspace ID
+            assignee_id: Optional user ID to filter (if None, shows all)
+        
+        Returns:
+            Dict with tasks grouped by status category
+        """
+        filters = {}
+        if assignee_id:
+            filters["assignees"] = [assignee_id]
+        
+        tasks = self.get_all_tasks(team_id, **filters)
+        
+        if tasks and "error" in tasks[0]:
+            return {"error": tasks[0]["error"]}
+        
+        # Group by status type
+        report = {
+            "to_do": [],
+            "in_progress": [],
+            "complete": [],
+            "other": []
+        }
+        
+        for task in tasks:
+            status = task.get("status", {})
+            status_type = status.get("type", "other")
+            task_summary = {
+                "id": task.get("id"),
+                "name": task.get("name"),
+                "status": status.get("status"),
+                "assignees": [a.get("username") for a in task.get("assignees", [])],
+                "url": task.get("url")
+            }
+            
+            if status_type == "open":
+                report["to_do"].append(task_summary)
+            elif status_type == "custom":
+                report["in_progress"].append(task_summary)
+            elif status_type == "closed":
+                report["complete"].append(task_summary)
+            else:
+                report["other"].append(task_summary)
+        
+        return report
 
 
 def main():
@@ -489,6 +694,21 @@ def main():
             result = client.link_tasks(kwargs.pop("task_id"), kwargs.pop("links_to"), **kwargs)
         elif command == "unlink_tasks":
             result = client.unlink_tasks(kwargs.pop("task_id"), kwargs.pop("links_to"), **kwargs)
+        
+        # Reporting commands
+        elif command == "get_all_tasks":
+            result = client.get_all_tasks(kwargs.pop("team_id"), **kwargs)
+        elif command == "task_counts":
+            result = client.get_task_counts(kwargs.pop("team_id"), **kwargs)
+        elif command == "assignee_breakdown":
+            result = client.get_assignee_breakdown(kwargs.pop("team_id"), **kwargs)
+        elif command == "status_breakdown":
+            result = client.get_status_breakdown(kwargs.pop("team_id"), **kwargs)
+        elif command == "priority_breakdown":
+            result = client.get_priority_breakdown(kwargs.pop("team_id"), **kwargs)
+        elif command == "standup_report":
+            result = client.get_daily_standup_report(kwargs.pop("team_id"), kwargs.get("assignee_id"))
+        
         else:
             result = {"error": f"Unknown command: {command}"}
         

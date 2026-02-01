@@ -1,11 +1,24 @@
 ---
 name: clickup
-description: "Comprehensive ClickUp project management integration supporting multiple workspaces. Use when: (1) Creating, updating, or managing tasks across ClickUp workspaces, (2) Configuring spaces, folders, lists, and their statuses/custom fields, (3) Managing time tracking and timers, (4) Creating or editing ClickUp documents and pages, (5) Querying workspace structure (teams, spaces, folders, lists), (6) Moving tasks between lists or workspaces, (7) Bulk operations on tasks or time entries. Multi-workspace capable with full CRUD operations."
+description: "Enterprise-grade ClickUp project management integration with advanced reporting, multi-workspace support, and client/project tracking. Core capabilities: (1) Multi-workspace task management with automatic workspace switching, (2) Advanced analytics & reporting (task counts, assignee breakdowns, status/priority analysis, daily standup reports) with automatic subtask inclusion and pagination, (3) Client folder organization with project tracking (📋 Client Overview, 📁 Completed Work, active project lists), (4) Full CRUD operations for spaces, folders, lists, tasks, and custom fields, (5) Time tracking & timer management with billing support, (6) Document creation and page management (API v3), (7) Task dependencies, linking, and relationship mapping, (8) Sales pipeline tracking with prospect/project status, (9) Retainer & recurring billing management. Built for agencies managing multiple clients across complex workspace hierarchies."
 ---
 
 # ClickUp Skill
 
-Manage ClickUp workspaces, tasks, time tracking, and documents across multiple workspaces.
+**Enterprise-grade ClickUp integration for agency workflows.** Manage multiple clients, projects, and workspaces with advanced reporting, automatic subtask handling, and sophisticated folder organization.
+
+## Key Benefits
+
+| Feature | Why It Matters |
+|---------|----------------|
+| **🔍 Always includes subtasks** | Never miss 70%+ of actual work — subtasks included automatically |
+| **📊 Advanced reporting** | Task counts, workload distribution, status breakdowns, standup reports |
+| **🏢 Multi-workspace** | Seamlessly switch between Client Work, Product Development, Personal Projects, and more |
+| **👥 Client organization** | Structured folders: 📋 Client Overview, 📁 Completed Work, active projects |
+| **📈 Sales pipeline** | Track proposals, negotiations, and project lifecycles |
+| **⏱️ Time tracking** | Built-in timers and manual entries with billing support |
+| **📄 Document management** | Create docs and pages via API v3 |
+| **🔗 Task relationships** | Dependencies, blocking/waiting, and arbitrary task linking |
 
 ## Quick Start
 
@@ -98,6 +111,65 @@ python skills/clickup/scripts/clickup_client.py stop_timer team_id="xxx"
 2. Add pages: Use ClickUp UI (pages API is in beta)
 
 Note: Documents use ClickUp API v3 (workspace_id instead of team_id).
+
+### Workflow: Reporting & Analytics
+
+**Get task counts (with parent/subtask breakdown):**
+```bash
+python skills/clickup/scripts/clickup_client.py task_counts team_id="xxx"
+# Returns: {"total": 50, "parents": 20, "subtasks": 30, "unassigned": 5}
+```
+
+**Get workload by assignee:**
+```bash
+python skills/clickup/scripts/clickup_client.py assignee_breakdown team_id="xxx"
+# Returns: {"John Doe": 15, "Jane Smith": 12, "Unassigned": 8}
+```
+
+**Get tasks by status:**
+```bash
+python skills/clickup/scripts/clickup_client.py status_breakdown team_id="xxx"
+# Returns: {"to do": 20, "in progress": 10, "complete": 15}
+```
+
+**Get tasks by priority:**
+```bash
+python skills/clickup/scripts/clickup_client.py priority_breakdown team_id="xxx"
+# Returns: {"urgent": 2, "high": 5, "normal": 15, "low": 8, "none": 20}
+```
+
+**Daily standup report (grouped by status):**
+```bash
+# All team members
+python skills/clickup/scripts/clickup_client.py standup_report team_id="xxx"
+
+# Specific person (use user ID)
+python skills/clickup/scripts/clickup_client.py standup_report team_id="xxx" assignee_id="12345"
+```
+
+**Get all tasks with pagination (auto-handled):**
+```bash
+python skills/clickup/scripts/clickup_client.py get_all_tasks team_id="xxx"
+# Always includes subtasks automatically (critical!)
+```
+
+**Filter reports by space or assignee:**
+```bash
+# Specific space
+python skills/clickup/scripts/clickup_client.py task_counts team_id="xxx" space_ids='["SPACE_ID_HERE"]'
+
+# Specific assignee
+python skills/clickup/scripts/clickup_client.py get_all_tasks team_id="xxx" assignees='["12345"]'
+
+# Include closed tasks
+python skills/clickup/scripts/clickup_client.py task_counts team_id="xxx" include_closed="true"
+```
+
+**Critical Rules for Reporting:**
+1. **Always include subtasks** — Our methods do this automatically via `subtasks=true`
+2. **Pagination handled** — `get_all_tasks` loops until all pages retrieved
+3. **Parent vs Subtask** — Parents have `parent: null`, subtasks have `parent: "task_id"`
+4. **Rate limit** — 100 requests/min; our pagination respects this
 
 ### Workflow: Link Doc to Task
 
@@ -235,6 +307,14 @@ python scripts/clickup_client.py <command> [key=value ...]
 #### Task Linking (Arbitrary Relationships)
 - `link_tasks task_id="xxx" links_to="yyy"` - Create arbitrary link between tasks
 - `unlink_tasks task_id="xxx" links_to="yyy"` - Remove task link
+
+#### Reporting & Analytics
+- `get_all_tasks team_id="xxx" [include_closed="true"] [space_ids='["id1"]'] [assignees='["uid1"]']` - All tasks with auto-pagination (always includes subtasks)
+- `task_counts team_id="xxx" [filters...]` - Count breakdown: total, parents, subtasks, unassigned
+- `assignee_breakdown team_id="xxx" [filters...]` - Workload distribution by assignee
+- `status_breakdown team_id="xxx" [filters...]` - Tasks grouped by status
+- `priority_breakdown team_id="xxx" [filters...]` - Tasks grouped by priority
+- `standup_report team_id="xxx" [assignee_id="yyy"]` - Daily standup report grouped by status
 
 #### Documents
 - `get_docs team_id="xxx"` - List documents
