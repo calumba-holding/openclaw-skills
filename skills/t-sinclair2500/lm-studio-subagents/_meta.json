@@ -3,11 +3,16 @@
   "slug": "lm-studio-subagents",
   "displayName": "Offload Tasks to LM Studio Models",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1769313109687,
-    "commit": "https://github.com/clawdbot/skills/commit/19ee1ff42a30dec76a7d6f3a91fd3d16472c8ef7"
+    "version": "1.0.2",
+    "publishedAt": 1769895475613,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1769313109687,
+      "commit": "https://github.com/clawdbot/skills/commit/19ee1ff42a30dec76a7d6f3a91fd3d16472c8ef7"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1769310793928,
