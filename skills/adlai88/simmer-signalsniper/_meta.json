@@ -3,9 +3,15 @@
   "slug": "simmer-signalsniper",
   "displayName": "Simmer Signal Sniper",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1769669744987,
-    "commit": "https://github.com/clawdbot/skills/commit/214c4be0bd8182583bfb8e4fcbff4a4262055fcf"
+    "version": "1.2.0",
+    "publishedAt": 1769977887215,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1769669744987,
+      "commit": "https://github.com/clawdbot/skills/commit/214c4be0bd8182583bfb8e4fcbff4a4262055fcf"
+    }
+  ]
 }
