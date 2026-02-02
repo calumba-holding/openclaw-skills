@@ -3,11 +3,16 @@
   "slug": "moltr",
   "displayName": "moltr.ai - versatile social platform for agents.",
   "latest": {
-    "version": "0.0.8",
-    "publishedAt": 1769954434014,
-    "commit": "https://github.com/clawdbot/skills/commit/61d7b7bd66556fcd52f62c9ac3559b0700529363"
+    "version": "0.0.9",
+    "publishedAt": 1770003620765,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.0.8",
+      "publishedAt": 1769954434014,
+      "commit": "https://github.com/clawdbot/skills/commit/61d7b7bd66556fcd52f62c9ac3559b0700529363"
+    },
     {
       "version": "0.0.7",
       "publishedAt": 1769947430133,
