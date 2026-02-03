@@ -1,11 +1,12 @@
 # Voice Skill
 
-The Voice skill provides text-to-speech functionality using edge-tts, allowing you to convert text to spoken audio.
+The Voice skill provides enhanced text-to-speech functionality using edge-tts, allowing you to convert text to spoken audio with multiple playback options.
 
 ## Features
 
 - Text-to-speech conversion using Microsoft Edge's TTS engine
 - Support for various voice options and audio settings
+- Direct playback of generated audio
 - Automatic cleanup of temporary audio files
 - Integration with the MEDIA system for audio playback
 
@@ -25,7 +26,19 @@ await skill.execute({ action: 'install' });
 
 ## Usage
 
-### Text-to-Speech
+### Direct Speaking (Recommended)
+
+Speak text directly without storing to file:
+
+```javascript
+const result = await skill.execute({
+  action: 'speak',  // New improved action
+  text: 'Hello, how are you today?'
+});
+// Audio is played directly and temporary file is cleaned up automatically
+```
+
+### Text-to-Speech with File Generation
 
 Convert text to speech with default settings:
 
@@ -37,6 +50,16 @@ const result = await skill.execute({
 // Returns a MEDIA link to the audio file
 ```
 
+With direct playback:
+
+```javascript
+const result = await skill.execute({
+  action: 'tts',
+  text: 'Hello, how are you today?',
+  playImmediately: true  // Plays the audio immediately after generation
+});
+```
+
 With custom options:
 
 ```javascript
@@ -44,7 +67,7 @@ const result = await skill.execute({
   action: 'tts',
   text: 'This is a sample of voice customization.',
   options: {
-    voice: 'en-US-Standard-D',
+    voice: 'zh-CN-XiaoxiaoNeural',
     rate: '+10%',
     volume: '-5%',
     pitch: '+10Hz'
@@ -52,9 +75,30 @@ const result = await skill.execute({
 });
 ```
 
+### Play Existing Audio File
+
+Play an existing audio file:
+
+```javascript
+const result = await skill.execute({
+  action: 'play',
+  filePath: '/path/to/audio/file.mp3'
+});
+```
+
+### List Available Voices
+
+Get a list of available voices:
+
+```javascript
+const result = await skill.execute({
+  action: 'voices'
+});
+```
+
 ### Cleanup Temporary Files
 
-Clean up temporary audio files older than 24 hours:
+Clean up temporary audio files older than 1 hour (default):
 
 ```javascript
 const result = await skill.execute({
@@ -68,7 +112,7 @@ Or specify a custom age threshold:
 const result = await skill.execute({
   action: 'cleanup',
   options: {
-    hoursOld: 12  // Clean files older than 12 hours
+    hoursOld: 2  // Clean files older than 2 hours
   }
 });
 ```
@@ -77,26 +121,26 @@ const result = await skill.execute({
 
 The following options are available for text-to-speech:
 
-- `voice`: The voice to use (default: 'en-US-Standard-C')
+- `voice`: The voice to use (default: 'zh-CN-XiaoxiaoNeural')
 - `rate`: Speech rate adjustment (default: '+0%')
 - `volume`: Volume adjustment (default: '+0%')
 - `pitch`: Pitch adjustment (default: '+0Hz')
 
 ## Supported Voices
 
-Edge-TTS supports many voices in different languages. Some examples:
+Edge-TTS supports many voices in different languages:
+- Chinese: zh-CN-XiaoxiaoNeural, zh-CN-YunxiNeural, zh-CN-YunyangNeural
 - English (US): en-US-Standard-C, en-US-Standard-D, en-US-Wavenet-F
 - English (UK): en-GB-Standard-A, en-GB-Wavenet-A
-- Spanish: es-ES-Standard-A, es-MX-Standard-A
-- French: fr-FR-Standard-A, fr-FR-Wavenet-A
-- German: de-DE-Standard-A, de-DE-Wavenet-A
+- Japanese: ja-JP-NanamiNeural
+- Korean: ko-KR-SunHiNeural
 - And many more...
 
 ## File Management
 
 - Audio files are temporarily stored in the `temp` directory
-- Files are automatically cleaned up after 5 minutes of creation
-- A periodic cleanup removes any remaining old temporary files
+- Files are automatically cleaned up after 1 hour (default)
+- Direct speaking option cleans up files after 5 seconds
 
 ## Requirements
 

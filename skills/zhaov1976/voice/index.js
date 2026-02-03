@@ -1,27 +1,28 @@
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const util = require('util');
 
 const execAsync = util.promisify(exec);
 
-class VoiceSkill {
+class ImprovedVoiceSkill {
   constructor() {
     this.name = 'voice';
-    this.description = 'Text-to-speech functionality using edge-tts';
+    this.description = 'Enhanced text-to-speech functionality using edge-tts with direct playback';
     this.dependencies = ['edge-tts'];
   }
 
   /**
-   * Converts text to speech using edge-tts
+   * Converts text to speech using edge-tts and optionally plays it directly
    * @param {string} text - The text to convert to speech
    * @param {Object} options - Options for the TTS
-   * @returns {Promise<string>} Path to the generated audio file
+   * @param {boolean} playImmediately - Whether to play the audio immediately after generation
+   * @returns {Promise<Object>} Result object with success status, message and media link
    */
-  async textToSpeech(text, options = {}) {
+  async textToSpeech(text, options = {}, playImmediately = false) {
     // Set default options
     const {
-      voice = 'en-US-Standard-C',
+      voice = 'zh-CN-XiaoxiaoNeural',  // Default to Chinese voice
       output = null,
       rate = '+0%',
       volume = '+0%',
@@ -61,10 +62,66 @@ class VoiceSkill {
         throw new Error(`Failed to create audio file at ${outputFileName}`);
       }
 
-      return outputFileName;
+      // Play immediately if requested
+      let playResult = null;
+      if (playImmediately) {
+        playResult = await this.playAudio(outputFileName);
+      }
+
+      return {
+        success: true,
+        message: `Text-to-speech completed successfully${playImmediately ? ' and played' : ''}`,
+        media: `MEDIA: ${outputFileName}`,
+        filePath: outputFileName,
+        played: playImmediately,
+        playResult: playResult
+      };
     } catch (error) {
       throw new Error(`Text-to-speech failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Plays an audio file directly using system player
+   * @param {string} filePath - Path to the audio file to play
+   * @returns {Promise<Object>} Play result
+   */
+  async playAudio(filePath) {
+    return new Promise((resolve, reject) => {
+      if (!fs.existsSync(filePath)) {
+        reject(new Error(`Audio file does not exist: ${filePath}`));
+        return;
+      }
+
+      // Determine the appropriate player based on OS
+      let player;
+      let playerArgs;
+
+      if (process.platform === 'darwin') { // macOS
+        player = 'afplay';
+        playerArgs = [filePath];
+      } else if (process.platform === 'win32') { // Windows
+        player = 'powershell';
+        playerArgs = ['-c', `(New-Object Media.SoundPlayer "${filePath}").PlaySync();`];
+      } else { // Linux and others
+        player = 'aplay';
+        playerArgs = [filePath];
+      }
+
+      const playProcess = spawn(player, playerArgs);
+
+      playProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve({ success: true, message: `Audio played successfully` });
+        } else {
+          reject(new Error(`Audio playback failed with code: ${code}`));
+        }
+      });
+
+      playProcess.on('error', (err) => {
+        reject(new Error(`Audio playback error: ${err.message}`));
+      });
+    });
   }
 
   /**
@@ -72,7 +129,7 @@ class VoiceSkill {
    * @param {number} hoursOld - Files older than this many hours will be cleaned up
    * @returns {Promise<number>} Number of files removed
    */
-  async cleanupTempFiles(hoursOld = 24) {
+  async cleanupTempFiles(hoursOld = 1) { // Reduce default cleanup time to 1 hour
     const tempDir = path.join(__dirname, '..', '..', 'temp');
     if (!fs.existsSync(tempDir)) {
       return 0;
@@ -100,6 +157,28 @@ class VoiceSkill {
   }
 
   /**
+   * Speaks text directly without saving to file
+   * @param {string} text - The text to speak
+   * @param {Object} options - Options for the TTS
+   * @returns {Promise<Object>} Result object
+   */
+  async speakDirect(text, options = {}) {
+    // For direct speaking, we'll create a temporary file and play it immediately
+    const result = await this.textToSpeech(text, options, true);
+    
+    // Schedule cleanup of the temp file after a short time
+    setTimeout(() => {
+      if (fs.existsSync(result.filePath)) {
+        fs.unlink(result.filePath, (err) => {
+          if (err) console.error(`Error removing temp file: ${err.message}`);
+        });
+      }
+    }, 5000); // Clean up after 5 seconds
+    
+    return result;
+  }
+
+  /**
    * Installs the required dependencies
    * @returns {Promise<void>}
    */
@@ -114,21 +193,12 @@ class VoiceSkill {
   }
 
   /**
-   * Generates a media link for the audio file
-   * @param {string} filePath - Path to the audio file
-   * @returns {string} Media link string
-   */
-  generateMediaLink(filePath) {
-    return `MEDIA: ${filePath}`;
-  }
-
-  /**
    * Main execution function for the skill
    * @param {Object} params - Parameters for the skill
    * @returns {Promise<Object>} Result of the operation
    */
   async execute(params) {
-    const { action, text, options } = params;
+    const { action, text, options, playImmediately = false } = params;
 
     switch (action) {
       case 'tts':
@@ -136,27 +206,31 @@ class VoiceSkill {
           throw new Error('Text is required for text-to-speech');
         }
         
-        const filePath = await this.textToSpeech(text, options);
-        const mediaLink = this.generateMediaLink(filePath);
+        const result = await this.textToSpeech(text, options, playImmediately);
+        return result;
+
+      case 'speak':
+        if (!text) {
+          throw new Error('Text is required for speaking');
+        }
         
-        // Schedule cleanup of the temp file after some time
-        setTimeout(() => {
-          if (fs.existsSync(filePath)) {
-            fs.unlink(filePath, (err) => {
-              if (err) console.error(`Error removing temp file: ${err.message}`);
-            });
-          }
-        }, 300000); // Clean up after 5 minutes
+        const speakResult = await this.speakDirect(text, options);
+        return speakResult;
+
+      case 'play':
+        if (!params.filePath) {
+          throw new Error('File path is required for playing audio');
+        }
         
+        const playResult = await this.playAudio(params.filePath);
         return {
           success: true,
-          message: 'Text-to-speech completed successfully',
-          media: mediaLink,
-          filePath: filePath
+          message: 'Audio played successfully',
+          playResult
         };
 
       case 'cleanup':
-        const hoursOld = options?.hoursOld || 24;
+        const hoursOld = options?.hoursOld || 1; // Default to 1 hour
         const cleaned = await this.cleanupTempFiles(hoursOld);
         return {
           success: true,
@@ -170,10 +244,22 @@ class VoiceSkill {
           message: 'Dependencies installed successfully'
         };
 
+      case 'voices':
+        // Return a list of available voices
+        return {
+          success: true,
+          message: 'Available voices',
+          voices: [
+            'zh-CN-XiaoxiaoNeural', 'zh-CN-YunxiNeural', 'zh-CN-YunyangNeural',
+            'en-US-Standard-C', 'en-US-Standard-D', 'en-US-Wavenet-F',
+            'ja-JP-NanamiNeural', 'ko-KR-SunHiNeural'
+          ]
+        };
+
       default:
-        throw new Error(`Unknown action: ${action}. Available actions: tts, cleanup, install`);
+        throw new Error(`Unknown action: ${action}. Available actions: tts, speak, play, cleanup, install, voices`);
     }
   }
 }
 
-module.exports = VoiceSkill;
+module.exports = ImprovedVoiceSkill;
