@@ -1,0 +1,11 @@
+{
+  "owner": "titocosta",
+  "slug": "openindex",
+  "displayName": "End-to-end encrypted messaging and EVM crypto wallet for agent identity",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1770071916678,
+    "commit": null
+  },
+  "history": []
+}
