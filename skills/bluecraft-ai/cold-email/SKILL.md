@@ -17,11 +17,41 @@ Generate personalized cold email sequences from lead data. MachFive uses AI to r
 1. Get your API key at https://app.machfive.io/settings (Integrations → API Keys)
 2. Set `MACHFIVE_API_KEY` in your environment
 
+## Campaign ID
+
+Every generate request needs a **campaign ID** in the URL: `/api/v1/campaigns/{campaign_id}/generate` (or `/generate-batch`).
+
+- **If the user has not provided a campaign name or ID:** Call **GET /api/v1/campaigns** (see below) to list campaigns in their workspace, then ask them to pick one by name or ID before running generate.
+- **Where to get it manually:** https://app.machfive.io/campaigns → open a campaign → copy the ID from the URL or settings.
+- **No default:** The skill does not assume a campaign. The user (or agent config) must provide one. Agents can store a default campaign ID for the workspace if the user provides it (e.g. "use campaign X for my requests").
+
 ## Endpoints
+
+### List Campaigns (discover before generate)
+
+List campaigns in the workspace so the agent can ask the user which campaign to use when they haven't provided a name or ID.
+```
+GET https://app.machfive.io/api/v1/campaigns
+Authorization: Bearer {MACHFIVE_API_KEY}
+```
+Or use `X-API-Key: {MACHFIVE_API_KEY}` header.
+
+Optional query: `?q=search` or `?name=search` to filter by campaign name.
+
+**Response (200):**
+```json
+{
+  "campaigns": [
+    { "id": "cb1bbb14-e576-4d8f-a8f3-6fa929076fd8", "name": "SaaS Q1 Outreach", "created_at": "2025-01-15T12:00:00Z" },
+    { "id": "a1b2c3d4-...", "name": "Enterprise Leads", "created_at": "2025-01-10T08:00:00Z" }
+  ]
+}
+```
+If no campaign name or ID was given, call this first, then ask the user: "Which campaign should I use? [list names/IDs]."
 
 ### Single Lead (Sync)
 
-Generate a sequence for one lead. Waits for completion, returns emails directly.
+Generate a sequence for one lead. Waits for completion, returns emails directly. **The request can take 3–5 minutes** (AI research + generation); use a client timeout of at least **300 seconds (5 min)** or **600 seconds (10 min)**. Do not use a 120s timeout or the response will be cut off.
 ```
 POST https://app.machfive.io/api/v1/campaigns/{campaign_id}/generate
 Authorization: Bearer {MACHFIVE_API_KEY}
@@ -63,7 +93,7 @@ Or use `X-API-Key: {MACHFIVE_API_KEY}` header.
 
 ### Batch (Async)
 
-Generate sequences for multiple leads. Returns immediately, processes in background.
+Generate sequences for multiple leads. **Returns immediately** (202) with `sequence_id`; processing runs in the background. View results in the MachFive UI when done (no poll endpoint yet).
 ```
 POST https://app.machfive.io/api/v1/campaigns/{campaign_id}/generate-batch
 Authorization: Bearer {MACHFIVE_API_KEY}
@@ -90,7 +120,7 @@ Or use `X-API-Key: {MACHFIVE_API_KEY}` header.
   "sequence_id": "uuid",
   "status": "processing",
   "leads_count": 2,
-  "message": "Batch accepted. Poll sequence status or view in MachFive UI."
+  "message": "Batch accepted. View results in MachFive UI."
 }
 ```
 
