@@ -3,11 +3,16 @@
   "slug": "api-gateway",
   "displayName": "API Gateway",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1770118161158,
-    "commit": "https://github.com/clawdbot/skills/commit/58b0832f004c5d496023abc8fb0b28f1aca3179d"
+    "version": "1.0.4",
+    "publishedAt": 1770146863151,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1770118161158,
+      "commit": "https://github.com/clawdbot/skills/commit/58b0832f004c5d496023abc8fb0b28f1aca3179d"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1769935616692,

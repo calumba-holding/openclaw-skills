@@ -157,12 +157,16 @@ If omitted, the gateway uses the default (oldest) active connection for that app
 | Google Drive | `google-drive` | `www.googleapis.com` |
 | Google Forms | `google-forms` | `forms.googleapis.com` |
 | Gmail | `google-mail` | `gmail.googleapis.com` |
+| Google Meet | `google-meet` | `meet.googleapis.com` |
+| Google Play | `google-play` | `androidpublisher.googleapis.com` |
 | Google Search Console | `google-search-console` | `www.googleapis.com` |
 | Google Sheets | `google-sheets` | `sheets.googleapis.com` |
+| Google Slides | `google-slides` | `slides.googleapis.com` |
 | HubSpot | `hubspot` | `api.hubapi.com` |
 | Jira | `jira` | `api.atlassian.com` |
 | JotForm | `jotform` | `api.jotform.com` |
 | Notion | `notion` | `api.notion.com` |
+| Outlook | `outlook` | `graph.microsoft.com` |
 | QuickBooks | `quickbooks` | `quickbooks.api.intuit.com` |
 | Salesforce | `salesforce` | `{instance}.salesforce.com` |
 | Slack | `slack` | `slack.com` |
@@ -186,12 +190,16 @@ See [references/](references/) for detailed routing guides per provider:
 - [Google Drive](references/google-drive.md) - Files, folders, permissions
 - [Google Forms](references/google-forms.md) - Forms, questions, responses
 - [Gmail](references/google-mail.md) - Messages, threads, labels
+- [Google Meet](references/google-meet.md) - Spaces, conference records, participants
+- [Google Play](references/google-play.md) - In-app products, subscriptions, reviews
 - [Google Search Console](references/google-search-console.md) - Search analytics, sitemaps
 - [Google Sheets](references/google-sheets.md) - Values, ranges, formatting
+- [Google Slides](references/google-slides.md) - Presentations, slides, formatting
 - [HubSpot](references/hubspot.md) - Contacts, companies, deals
 - [Jira](references/jira.md) - Issues, projects, JQL queries
 - [JotForm](references/jotform.md) - Forms, submissions, webhooks
 - [Notion](references/notion.md) - Pages, databases, blocks
+- [Outlook](references/outlook.md) - Mail, calendar, contacts
 - [QuickBooks](references/quickbooks.md) - Customers, invoices, reports
 - [Salesforce](references/salesforce.md) - SOQL, sObjects, CRUD
 - [Slack](references/slack.md) - Messages, channels, users
