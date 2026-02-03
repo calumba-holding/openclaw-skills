@@ -3,9 +3,15 @@
   "slug": "google-ads-api",
   "displayName": "Google Ads",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1770022035827,
-    "commit": "https://github.com/clawdbot/skills/commit/005b71db3672927f1d6291f5ea7495c771434263"
+    "version": "1.0.1",
+    "publishedAt": 1770117859629,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1770022035827,
+      "commit": "https://github.com/clawdbot/skills/commit/005b71db3672927f1d6291f5ea7495c771434263"
+    }
+  ]
 }
