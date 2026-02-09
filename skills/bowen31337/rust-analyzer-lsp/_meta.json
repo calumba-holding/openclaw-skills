@@ -1,0 +1,11 @@
+{
+  "owner": "bowen31337",
+  "slug": "rust-analyzer-lsp",
+  "displayName": "Rust Analyzer LSP",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1770606395976,
+    "commit": null
+  },
+  "history": []
+}
