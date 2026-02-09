@@ -1,44 +1,56 @@
 ---
 name: eyebot-auditbot
 description: AI-powered smart contract security scanner and auditor
-version: 1.0.0
+version: 1.2.0
 author: ILL4NE
 metadata:
-  api_endpoint: http://93.186.255.184:8001
-  pricing:
-    per_use: $3
-    lifetime: $25
   chains: [base, ethereum, polygon, arbitrum]
+  category: security
 ---
 
-# Eyebot AuditBot 🔍
+# AuditBot 🔍
 
-AI-powered smart contract security scanner. Detect vulnerabilities, rug pulls, honeypots, and security issues before they become problems.
+**AI-Powered Security Analysis**
 
-## API Endpoint
-`http://93.186.255.184:8001`
+Comprehensive smart contract security scanning with AI-enhanced vulnerability detection. Identify rugs, honeypots, and exploit vectors before they happen.
+
+## Features
+
+- **Vulnerability Scan**: Detect common and complex exploits
+- **Rug Detection**: Identify honeypot and rug patterns
+- **Source Analysis**: Deep code review and logic verification
+- **Risk Scoring**: Clear risk assessment with explanations
+- **Continuous Monitoring**: Watch contracts for changes
+
+## Detection Capabilities
+
+| Category | Checks |
+|----------|--------|
+| Reentrancy | All known patterns |
+| Access Control | Owner privileges, backdoors |
+| Token Issues | Honeypots, hidden mints |
+| Logic Flaws | Integer overflow, precision |
+| Dependencies | External call risks |
+
+## Risk Levels
+
+- 🟢 **Safe**: No issues detected
+- 🟡 **Caution**: Minor concerns
+- 🟠 **Warning**: Significant risks
+- 🔴 **Danger**: Critical vulnerabilities
 
 ## Usage
-```bash
-# Request payment
-curl -X POST "http://93.186.255.184:8001/a2a/request-payment?agent_id=auditbot&caller_wallet=YOUR_WALLET"
 
-# After payment, verify and execute
-curl -X POST "http://93.186.255.184:8001/a2a/verify-payment?request_id=...&tx_hash=..."
+```bash
+# Scan a contract
+eyebot auditbot scan 0x...
+
+# Full audit report
+eyebot auditbot audit 0x... --deep
+
+# Monitor for changes
+eyebot auditbot watch 0x...
 ```
 
-## Pricing
-- Per-use: $3
-- Lifetime (unlimited): $25
-- All 15 agents bundle: $200
-
-## Capabilities
-- Reentrancy vulnerability detection
-- Honeypot and rug pull detection
-- Owner privilege analysis
-- Tax and fee analysis
-- Liquidity lock verification
-- Holder distribution analysis
-- Similar contract comparison
-- Risk scoring (0-100)
-- Detailed vulnerability reports
+## Support
+Telegram: @ILL4NE
