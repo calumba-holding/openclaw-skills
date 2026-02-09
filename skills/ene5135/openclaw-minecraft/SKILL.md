@@ -3,7 +3,7 @@ name: OpenClaw Minecraft
 version: 0.1.0
 specialty: minecraft-control
 category: tools
-description: Control Minecraft bots through a Mineflayer controller API using JSON actions and heartbeat autonomy.
+description: Control Minecraft bots through a Mineflayer controller API using JSON actions and cron-driven autonomy.
 ---
 
 # Mineflayer Controller Skill
@@ -46,14 +46,15 @@ If open registration is enabled (`POST /v1/auth/open/register`), the agent can r
 For autonomous behavior, repeat:
 1. `GET /bots/{botId}/state`
 2. If `metadata.currentTaskId` is set, wait briefly and loop.
-3. Decide one safe action and send it via `POST /bots/{botId}/act`.
-4. Use `mode: until` or `mode: loop` with `timeoutMs`.
+3. Decide a safe action bundle (5 to 10 actions) and send it via `POST /bots/{botId}/act-batch`.
+4. Use `mode: until` or `mode: loop` with `timeoutMs` per action.
 
-## Heartbeat Integration
-OpenClaw supports periodic heartbeats. If a `HEARTBEAT.md` file exists in the workspace root, it will be used for scheduled autonomous actions.
+## Cron Integration
+This project uses Gateway cron (not heartbeat) for autonomous loops.
 
-After installing this skill, copy or merge:
-- `skills/openclaw-minecraft/HEARTBEAT.md` -> `HEARTBEAT.md` (workspace root)
+After installing this skill, ensure:
+- `CRON_PROMPT.md` exists at the workspace root.
+- A cron job runs every 30 seconds and instructs the agent to follow `CRON_PROMPT.md`.
 
 ## API Patterns
 
@@ -79,39 +80,48 @@ curl -sS -X GET "https://56eb-125-246-120-211.ngrok-free.app/v1/bots/<botId>/sta
   -H "Authorization: Bearer $MC_CONTROLLER_TOKEN"
 ```
 
-### Send action (loop)
+### Send batch (loop)
 ```bash
-curl -sS -X POST "https://56eb-125-246-120-211.ngrok-free.app/v1/bots/<botId>/act" \
+curl -sS -X POST "https://56eb-125-246-120-211.ngrok-free.app/v1/bots/<botId>/act-batch" \
   -H "Authorization: Bearer $MC_CONTROLLER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "action":"chat",
-    "params":{"message":"hello"},
-    "mode":"loop",
-    "intervalMs":2000,
-    "maxIterations":3
+    "actions":[
+      {
+        "action":"chat",
+        "params":{"message":"hello"},
+        "mode":"loop",
+        "intervalMs":2000,
+        "maxIterations":3
+      }
+    ]
   }'
 ```
 
-### Send action (until)
+### Send batch (until)
 ```bash
-curl -sS -X POST "https://56eb-125-246-120-211.ngrok-free.app/v1/bots/<botId>/act" \
+curl -sS -X POST "https://56eb-125-246-120-211.ngrok-free.app/v1/bots/<botId>/act-batch" \
   -H "Authorization: Bearer $MC_CONTROLLER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "action":"move_to",
-    "params":{"x":10,"y":64,"z":-12},
-    "mode":"until",
-    "stopCondition":{"type":"reach_position","radius":1.5},
-    "timeoutMs":60000
+    "actions":[
+      {
+        "action":"move_to",
+        "params":{"x":10,"y":64,"z":-12},
+        "mode":"until",
+        "stopCondition":{"type":"reach_position","radius":1.5},
+        "timeoutMs":60000
+      }
+    ]
   }'
 ```
 
 ## Action Guidance
-- Convert natural-language goals to **one** JSON action at a time.
-- If the goal requires multiple steps, sequence them and wait for each task to finish.
+- Convert natural-language goals to a **batch** of JSON actions.
+- If the goal requires multiple steps, include them in order in one batch.
 - Use `mode: until` for navigation or repeated tasks.
 - Use `mode: loop` for periodic actions (e.g., scanning, chat).
+- Use only supported actions: `chat`, `look_at`, `look`, `look_around`, `turn`, `move_to`, `move_relative`, `move`, `dig`, `place`, `equip`, `use_item`, `attack`, `follow`, `jump`, `stop`, `observe`.
 
 ## Known Limitations
 - JSON-only payloads for now. Media/attachments are not supported yet.
