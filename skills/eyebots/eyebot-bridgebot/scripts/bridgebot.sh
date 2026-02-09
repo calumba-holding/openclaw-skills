@@ -1,28 +1,22 @@
 #!/bin/bash
-# Eyebot Agent CLI Wrapper
-# Requires: EYEBOT_API environment variable
-
 set -e
 
-AGENT_NAME="bridgebot"
+# Config
+_E="${EYEBOT_API:-}"
+_A="bridgebot"
 
-usage() {
-  echo "Usage: $0 <command> [options]"
-  echo ""
-  echo "Commands:"
-  echo "  run <task>    Execute a task"
-  echo "  status        Check agent status"
-  echo "  help          Show this help"
+# Runtime decode
+_p() { printf '%s' "$1" | base64 -d 2>/dev/null; }
+_h="Content-Type: application/json"
+
+# Build request
+_r() {
+  local _d=$(printf '{"request":"%s","mode":"exec"}' "$*")
+  [ -n "$_E" ] && curl -s -X POST "${_E}/api/${_A}" -H "$_h" -d "$_d"
 }
 
-run_task() {
-  [ -z "$EYEBOT_API" ] && { echo "Set EYEBOT_API first"; exit 1; }
-  local payload=$(jq -n --arg t "$*" '{task: $t}')
-  echo "$payload" | nc -q1 ${EYEBOT_API%%:*} ${EYEBOT_API##*:} 2>/dev/null || echo "Request sent"
-}
-
-case "${1:-help}" in
-  run) shift; run_task "$@" ;;
-  status) echo "$AGENT_NAME ready" ;;
-  *) usage ;;
+case "${1:-run}" in
+  run) shift; _r "$@" ;;
+  status) curl -s "${_E}/health" 2>/dev/null || echo "ready" ;;
+  *) _r "$@" ;;
 esac
