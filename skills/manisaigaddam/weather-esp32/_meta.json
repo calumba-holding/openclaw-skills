@@ -1,0 +1,11 @@
+{
+  "owner": "manisaigaddam",
+  "slug": "weather-esp32",
+  "displayName": "weatheresp32",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1770659835637,
+    "commit": null
+  },
+  "history": []
+}
