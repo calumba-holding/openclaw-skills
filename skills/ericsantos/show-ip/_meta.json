@@ -1,0 +1,11 @@
+{
+  "owner": "ericsantos",
+  "slug": "show-ip",
+  "displayName": "Show IP",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1770669224907,
+    "commit": null
+  },
+  "history": []
+}
