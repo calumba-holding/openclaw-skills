@@ -1,0 +1,11 @@
+{
+  "owner": "datadrivenconstruction",
+  "slug": "vector-search",
+  "displayName": "Vector Search",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1770475829650,
+    "commit": null
+  },
+  "history": []
+}
