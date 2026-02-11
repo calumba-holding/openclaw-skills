@@ -1,7 +1,7 @@
 ---
 name: gamification
-version: 1.0.0
-description: XP system for productivity gamification - track levels, badges, streaks, and achievements
+version: 1.1.0
+description: XP system for productivity gamification via ClawdBot - track levels, badges, streaks, and achievements
 author: ClawdBot
 category: productivity
 tags:
@@ -15,6 +15,13 @@ tags:
   - motivation
   - achievements
   - goals
+env:
+  - name: SUPABASE_URL
+    description: Supabase project URL for gamification data storage
+    required: true
+  - name: SUPABASE_SERVICE_KEY
+    description: Supabase service role key for database access
+    required: true
 keywords:
   - earn xp
   - level up
@@ -36,6 +43,18 @@ triggers:
 
 Turn productivity into a game with XP, levels, badges, streaks, and achievements. Every completed task, habit, and goal milestone earns XP toward leveling up.
 
+## ClawdBot Integration
+
+This skill is designed for **ClawdBot** - it provides the prompt interface for ClawdBot's gamification API server which stores data in Supabase.
+
+**Architecture:**
+```
+User → ClawdBot Gateway → ClawdBot API Server → Supabase (Postgres)
+                         (Railway)              (user_gamification, xp_transactions tables)
+```
+
+The backend implementation lives in `api-server/src/routes/gamification.ts` and `api-server/src/lib/xp-engine.ts`.
+
 ## Features
 
 - **XP System**: Earn XP for habits, tasks, and goal milestones
@@ -45,7 +64,16 @@ Turn productivity into a game with XP, levels, badges, streaks, and achievements
 - **Leaderboard**: Compare progress (multi-user support)
 - **Accountability**: Track commitment and earn-back system
 
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SUPABASE_URL` | Yes | Supabase project URL |
+| `SUPABASE_SERVICE_KEY` | Yes | Supabase service role key |
+
 ## API Endpoints
+
+All endpoints are relative to the ClawdBot API server (`{CLAWDBOT_API_URL}/api/gamification/`).
 
 ### Get User Stats
 ```
@@ -143,6 +171,13 @@ GET /api/gamification/leaderboard
 ```
 GET /api/gamification/config
 ```
+
+## Database Tables
+
+This skill requires the following Supabase tables:
+- `user_gamification` - User XP totals, levels, streaks
+- `xp_transactions` - XP award history
+- `user_badges` - Earned badges
 
 ## XP Rewards
 
