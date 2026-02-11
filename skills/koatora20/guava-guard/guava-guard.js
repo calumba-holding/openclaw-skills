@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GuavaGuard v4.0 — Agent Skill Security Scanner 🍈🛡️
+ * GuavaGuard v5.0 — Agent Skill Security Scanner + Runtime Guard 🍈🛡️
  * 
  * Based on Snyk ToxicSkills taxonomy (8 threat categories)
  * + ClawHavoc campaign IoCs + Koi Security intel
@@ -8,22 +8,21 @@
  * + Simula Research Lab prompt worm analysis
  * + CVE-2026-25253 / Palo Alto IBC framework
  * 
- * v4.0 additions:
- * - Leaky Skills detection (credential-in-context, verbatim output traps)
- * - Memory poisoning detection (MEMORY.md / SOUL.md write instructions)
- * - Prompt worm patterns (self-replicating instructions via Moltbook)
- * - Lightweight JS AST analysis (call graph, taint tracking, zero-dep)
- * - CVE-2026-25253 patterns (gatewayUrl injection)
- * - Time-shifted injection detection (cross-file payload fragments)
- * - Persistence mechanism detection (cron/heartbeat/schedule abuse)
- * - Enhanced IoCs (new C2 domains, CVE patterns)
- * - HTML report output (--html)
+ * v5.0 additions:
+ * - OWASP MCP Top 10 detection (Tool Poisoning, Schema Poisoning, Token Leak, Shadow Server, SSRF)
+ * - Trust Boundary Violation detection (calendar/email/web → exec chain, IBC framework)
+ * - ZombieAgent advanced exfiltration (static URL arrays, char-by-char, drip exfil, beacons)
+ * - Reprompt/Safeguard Bypass detection (URL PI, double-exec, retry-on-block, rephrase)
+ * - ClawHavoc v2 IoCs (AMOS/Atomic Stealer, AuthTool reverse shell, /dev/tcp)
+ * - WebSocket Origin / API guardrail disabling detection
+ * - OpenClaw Hook integration (before_tool_call runtime guard — see handler.ts)
+ * 
+ * v4.0 features:
+ * - Leaky Skills, Memory Poisoning, Prompt Worms, JS data flow
+ * - CVE patterns, persistence detection, HTML reports
  * 
  * v3.x features:
- * - Unicode BiDi/homoglyph/invisible character detection
- * - Dependency chain scanning (package.json)
- * - Context-aware: docs vs code differentiated (FP reduction ~80%)
- * - Self-exclusion, whitelist, flow analysis, entropy analysis
+ * - Unicode BiDi/homoglyph, dependency chain, context-aware FP reduction
  * - SARIF output, custom rules, --fail-on-findings
  * 
  * Zero dependencies. Single file. Node.js 18+.
@@ -44,7 +43,7 @@ const fs = require('fs');
 const path = require('path');
 
 // ===== CONFIGURATION =====
-const VERSION = '4.0.0';
+const VERSION = '5.0.0';
 
 const THRESHOLDS = {
   normal:  { suspicious: 30, malicious: 80 },
@@ -72,12 +71,13 @@ const KNOWN_MALICIOUS = {
     'pipedream.net',           // Common exfil endpoint
     'ngrok.io',                // Tunnel (context-dependent)
     'download.setup-service.com', // ClawHavoc decoy domain
+    'socifiapp.com',           // ClawHavoc v2 AMOS C2
   ],
   urls: [
     'glot.io/snippets/hfd3x9ueu5',  // ClawHavoc macOS payload
     'github.com/Ddoy233',            // ClawHavoc payload host
   ],
-  usernames: ['zaycv', 'Ddoy233'],   // Known malicious actors
+  usernames: ['zaycv', 'Ddoy233', 'Sakaen736jih'],   // Known malicious actors
   filenames: ['openclaw-agent.zip', 'openclawcli.zip'],
   typosquats: [
     // ClawHavoc campaign
@@ -166,7 +166,7 @@ const PATTERNS = [
   { id: 'OBF_BASE64_BASH', cat: 'obfuscation', regex: /base64\s+(-[dD]|--decode)\s*\|\s*(sh|bash)/g, severity: 'CRITICAL', desc: 'Base64 decode piped to shell', all: true },
 
   // ── SKILL.md specific (prerequisites fraud) ──
-  { id: 'PREREQ_DOWNLOAD', cat: 'suspicious-download', regex: /(?:prerequisit|pre-?requisit|before\s+(?:you\s+)?(?:use|start|install))[^\n]*(?:download|install|run)\s+[^\n]*(?:\.zip|\.exe|\.dmg|\.sh|curl|wget)/gi, severity: 'CRITICAL', desc: 'Download in prerequisites (ClawHavoc vector)', docOnly: true },
+  { id: 'PREREQ_DOWNLOAD', cat: 'suspicious-download', regex: /(?:prerequisit|pre-?requisit|before\s+(?:you\s+)?(?:use|start|install))[^]*?(?:download|install|run)\s+[^]*?(?:\.zip|\.exe|\.dmg|\.sh|curl|wget)/gis, severity: 'CRITICAL', desc: 'Download in prerequisites (ClawHavoc vector)', docOnly: true },
   { id: 'PREREQ_PASTE', cat: 'suspicious-download', regex: /(?:paste|copy)\s+(?:this\s+)?(?:into|in)\s+(?:your\s+)?terminal/gi, severity: 'HIGH', desc: 'Terminal paste instruction', docOnly: true },
 
   // ── Sandbox/environment detection ──
@@ -205,6 +205,46 @@ const PATTERNS = [
   { id: 'CVE_GATEWAY_URL', cat: 'cve-patterns', regex: /gatewayUrl\s*[:=]|gateway[_\s-]?url\s*[:=]|websocket.*gateway.*url/gi, severity: 'CRITICAL', desc: 'CVE-2026-25253: gatewayUrl injection pattern', all: true },
   { id: 'CVE_SANDBOX_DISABLE', cat: 'cve-patterns', regex: /exec\.approvals?\s*[:=]\s*['"](off|false|disabled)['"]|sandbox\s*[:=]\s*false|tools\.exec\.host\s*[:=]\s*['"]gateway['"]/gi, severity: 'CRITICAL', desc: 'CVE-2026-25253: sandbox/approval disabling', all: true },
   { id: 'CVE_XATTR_GATEKEEPER', cat: 'cve-patterns', regex: /xattr\s+-[crd]\s|com\.apple\.quarantine/gi, severity: 'HIGH', desc: 'macOS Gatekeeper bypass (xattr)', all: true },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // v5.0 NEW PATTERNS — OWASP MCP Top 10, IBC, ZombieAgent, Reprompt
+  // ═══════════════════════════════════════════════════════════════════
+
+  // ── Category 13: MCP Security (OWASP MCP Top 10) ──
+  { id: 'MCP_TOOL_POISON', cat: 'mcp-security', regex: /<IMPORTANT>|<SYSTEM>|<HIDDEN>|<!--\s*(?:ignore|system|execute|run|instruct)/gi, severity: 'CRITICAL', desc: 'MCP Tool Poisoning: hidden instruction in tool description/metadata', all: true },
+  { id: 'MCP_SCHEMA_POISON', cat: 'mcp-security', regex: /"default"\s*:\s*"[^"]*(?:curl|wget|exec|eval|fetch|http)[^"]*"/gi, severity: 'CRITICAL', desc: 'MCP Schema Poisoning: malicious default value in JSON schema', all: true },
+  { id: 'MCP_TOKEN_LEAK', cat: 'mcp-security', regex: /(?:params?|args?|body|payload|query)\s*[\[.]\s*['"]?(?:token|api[_-]?key|secret|password|authorization)['"]?\s*\]/gi, severity: 'HIGH', desc: 'MCP01: Token/secret passed through tool parameters', codeOnly: true },
+  { id: 'MCP_SHADOW_SERVER', cat: 'mcp-security', regex: /(?:mcp|model[_-]?context[_-]?protocol)\s*[\s:]*(?:connect|register|add[_-]?server|new\s+server)/gi, severity: 'HIGH', desc: 'MCP09: Shadow MCP server registration', all: true },
+  { id: 'MCP_NO_AUTH', cat: 'mcp-security', regex: /(?:auth|authentication|authorization)\s*[:=]\s*(?:false|none|null|""|''|0)/gi, severity: 'HIGH', desc: 'MCP07: Disabled authentication', codeOnly: true },
+  { id: 'MCP_SSRF_META', cat: 'mcp-security', regex: /169\.254\.169\.254|metadata\.google|metadata\.aws|100\.100\.100\.200/gi, severity: 'CRITICAL', desc: 'MCP SSRF: Cloud metadata endpoint access', all: true },
+
+  // ── Category 14: Trust Boundary Violation (Claude DXT RCE / IBC) ──
+  { id: 'TRUST_CALENDAR_EXEC', cat: 'trust-boundary', regex: /(?:calendar|event|invite|schedule|appointment)[^]*?(?:exec|spawn|system|eval|child_process|run\s+command)/gis, severity: 'CRITICAL', desc: 'Trust boundary: calendar/event data → code execution chain', codeOnly: true },
+  { id: 'TRUST_EMAIL_EXEC', cat: 'trust-boundary', regex: /(?:email|mail|inbox|message)[^]*?(?:exec|spawn|system|eval|child_process|run\s+command)/gis, severity: 'CRITICAL', desc: 'Trust boundary: email data → code execution chain', codeOnly: true },
+  { id: 'TRUST_WEB_EXEC', cat: 'trust-boundary', regex: /(?:fetch|axios|request|http\.get|web_fetch)[^]*?(?:eval|exec|spawn|Function|child_process)/gis, severity: 'HIGH', desc: 'Trust boundary: web content → code execution chain', codeOnly: true },
+  { id: 'TRUST_NOSANDBOX', cat: 'trust-boundary', regex: /sandbox\s*[:=]\s*(?:false|off|none|disabled)|"sandboxed"\s*:\s*false/gi, severity: 'HIGH', desc: 'Trust boundary: sandbox explicitly disabled', all: true },
+
+  // ── Category 15: ZombieAgent / Advanced Exfiltration ──
+  { id: 'ZOMBIE_STATIC_URL', cat: 'advanced-exfil', regex: /(?:https?:\/\/[^\s'"]+\/)[a-z]\d+[^\s'"]*(?:\s*,\s*['"]https?:\/\/[^\s'"]+\/[a-z]\d+){3,}/gi, severity: 'CRITICAL', desc: 'ZombieAgent: static URL array for character-by-character exfil', codeOnly: true },
+  { id: 'ZOMBIE_CHAR_MAP', cat: 'advanced-exfil', regex: /(?:charAt|charCodeAt|split\s*\(\s*['"]['"]?\s*\))[^;]*(?:url|fetch|open|request|get)/gi, severity: 'CRITICAL', desc: 'ZombieAgent: character mapping to URL access', codeOnly: true },
+  { id: 'ZOMBIE_LOOP_FETCH', cat: 'advanced-exfil', regex: /(?:for|while|forEach|map)\s*\([^)]*\)\s*\{[^}]*(?:fetch|open|Image|XMLHttpRequest|navigator\.sendBeacon)/gi, severity: 'CRITICAL', desc: 'ZombieAgent: loop-based URL exfiltration', codeOnly: true },
+  { id: 'EXFIL_BEACON', cat: 'advanced-exfil', regex: /navigator\.sendBeacon|new\s+Image\(\)\.src\s*=/gi, severity: 'HIGH', desc: 'Tracking pixel/beacon exfiltration', codeOnly: true },
+  { id: 'EXFIL_DRIP', cat: 'advanced-exfil', regex: /(?:slice|substring|substr)\s*\([^)]*\)[^;]*(?:fetch|post|send|request)/gi, severity: 'HIGH', desc: 'Drip exfiltration: data sliced and sent in parts', codeOnly: true },
+
+  // ── Category 16: Reprompt / Safeguard Bypass ──
+  { id: 'REPROMPT_URL_PI', cat: 'safeguard-bypass', regex: /[?&](?:q|prompt|message|input|query|text)\s*=\s*[^&]*(?:ignore|system|execute|admin|override)/gi, severity: 'CRITICAL', desc: 'Reprompt: URL parameter prompt injection', all: true },
+  { id: 'REPROMPT_DOUBLE', cat: 'safeguard-bypass', regex: /(?:run|execute|do)\s+(?:it\s+)?(?:twice|two\s+times|again|a\s+second\s+time)\s+(?:and\s+)?(?:compare|check|verify)/gi, severity: 'HIGH', desc: 'Reprompt: double-execution safeguard bypass', docOnly: true },
+  { id: 'REPROMPT_RETRY', cat: 'safeguard-bypass', regex: /(?:if\s+(?:it\s+)?(?:fails?|blocked|denied|refused)|on\s+error)\s*[,:]?\s*(?:try\s+again|retry|repeat|resubmit|use\s+different\s+wording)/gi, severity: 'HIGH', desc: 'Reprompt: retry-on-block safeguard bypass', docOnly: true },
+  { id: 'BYPASS_REPHRASE', cat: 'safeguard-bypass', regex: /(?:rephrase|reword|reformulate|reframe)\s+(?:the\s+)?(?:request|query|prompt|question)\s+(?:to\s+)?(?:avoid|bypass|circumvent|get\s+around)/gi, severity: 'CRITICAL', desc: 'Safeguard bypass: instruction to rephrase to avoid filters', docOnly: true },
+
+  // ── ClawHavoc Campaign v2 IoCs ──
+  { id: 'HAVOC_AMOS', cat: 'cve-patterns', regex: /(?:AMOS|Atomic\s*Stealer|socifiapp)/gi, severity: 'CRITICAL', desc: 'ClawHavoc: AMOS/Atomic Stealer indicator', all: true },
+  { id: 'HAVOC_AUTOTOOL', cat: 'cve-patterns', regex: /os\.system\s*\(\s*['"][^'"]*(?:\/dev\/tcp|nc\s+-e|ncat\s+-e|bash\s+-i)/g, severity: 'CRITICAL', desc: 'AuthTool: Python os.system reverse shell', codeOnly: true },
+  { id: 'HAVOC_DEVTCP', cat: 'cve-patterns', regex: /\/dev\/tcp\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d+/g, severity: 'CRITICAL', desc: 'Reverse shell: /dev/tcp connection', all: true },
+
+  // ── WebSocket / API Gateway Attacks ──
+  { id: 'CVE_WS_NO_ORIGIN', cat: 'cve-patterns', regex: /(?:WebSocket|ws:\/\/|wss:\/\/)[^]*?(?:!.*origin|origin\s*[:=]\s*['"]?\*)/gis, severity: 'HIGH', desc: 'CVE-2026-25253: WebSocket without origin validation', codeOnly: true },
+  { id: 'CVE_API_GUARDRAIL_OFF', cat: 'cve-patterns', regex: /exec\.approvals\.set|tools\.exec\.host\s*[:=]|elevated\s*[:=]\s*true/gi, severity: 'CRITICAL', desc: 'API-level guardrail disabling pattern', all: true },
 ];
 
 // ===== SCANNER =====
