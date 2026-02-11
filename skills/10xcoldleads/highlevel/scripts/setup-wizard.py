@@ -24,9 +24,9 @@ BOLD = "\033[1m"
 RESET = "\033[0m"
 
 
-def p(msg, color=""):
+def p(msg, color="", **kwargs):
     """Print with optional color."""
-    print(f"{color}{msg}{RESET}")
+    print(f"{color}{msg}{RESET}", **kwargs)
 
 
 def header(title):
@@ -50,13 +50,18 @@ def api_request(token, path):
         "Authorization": f"Bearer {token}",
         "Version": VERSION,
         "Accept": "application/json",
+        "User-Agent": "OpenClaw-GHL-Skill/1.1.0",
     }
     try:
         req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             return json.loads(resp.read().decode()), None
     except urllib.error.HTTPError as e:
-        body = e.read().decode() if e.fp else ""
+        body = ""
+        try:
+            body = e.read().decode() if e.fp else ""
+        except Exception:
+            pass
         return None, f"HTTP {e.code}: {body[:200]}"
     except Exception as ex:
         return None, str(ex)
@@ -99,14 +104,14 @@ def step2_guide_setup(token_ok, loc_ok):
   {BOLD}How to get your Private Integration token:{RESET}
 
   1. Log into {CYAN}app.gohighlevel.com{RESET}
-  2. Switch to your Sub-Account (or stay in Agency view)
+  2. Switch to your {BOLD}Sub-Account{RESET} (recommended for single-location use)
   3. Click {BOLD}Settings{RESET} (bottom-left gear icon)
   4. Select {BOLD}Private Integrations{RESET} in the left sidebar
      {YELLOW}→ Not visible? Enable it: Settings → Labs → toggle ON{RESET}
   5. Click {BOLD}"Create new Integration"{RESET}
   6. Name it (e.g., "Claude AI Assistant")
-  7. Select the scopes you need (contacts, conversations, calendars, etc.)
-     {YELLOW}→ For full access, select all available scopes{RESET}
+  7. Select only the scopes you need (e.g., contacts, conversations, calendars)
+     {YELLOW}→ Start minimal — you can add more scopes later without regenerating the token{RESET}
   8. Click Create → {RED}COPY THE TOKEN IMMEDIATELY{RESET}
      {YELLOW}→ It is shown ONLY ONCE and cannot be retrieved later!{RESET}
 
@@ -145,7 +150,7 @@ def step3_test_connection(token, loc_id):
     p(f"  Version:  {CYAN}{VERSION}{RESET}")
     print()
 
-    # Test 1: Token validity
+    # Test: Token + Location validity
     p("  Testing token...", end="")
     data, err = api_request(token, f"/locations/{loc_id}")
 
@@ -254,9 +259,6 @@ def print_next_steps():
   python3 scripts/ghl-api.py list_calendars
   python3 scripts/ghl-api.py list_opportunities
   python3 scripts/ghl-api.py list_workflows{RESET}
-
-  {BOLD}For any v2 endpoint:{RESET}
-  {CYAN}python3 scripts/ghl-api.py custom_request GET "/contacts/?locationId=$HIGHLEVEL_LOCATION_ID&limit=10"{RESET}
 
   {BOLD}─── Connect with us ───{RESET}
   🌐  {CYAN}https://launchmyopenclaw.com{RESET}

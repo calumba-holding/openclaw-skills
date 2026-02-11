@@ -10,27 +10,44 @@ Base URL: https://services.leadconnectorhq.com
 All requests include: Authorization: Bearer <token>, Version: 2021-07-28
 """
 
-import json, os, sys, time, urllib.request, urllib.error, urllib.parse
+import json, os, re, sys, time, urllib.request, urllib.error, urllib.parse
 
 BASE = "https://services.leadconnectorhq.com"
 VERSION = "2021-07-28"
 MAX_RETRIES = 3
 
-# Load credentials from secure storage
+# ──────────────────────────────────────────────
+# Credentials & Validation
+# ──────────────────────────────────────────────
+
+# Strict pattern for GHL IDs (alphanumeric, no path traversal)
+_SAFE_ID = re.compile(r"^[a-zA-Z0-9_-]{1,128}$")
+
+
+def _validate_id(value, name="ID"):
+    """Validate that a value is a safe GHL identifier (alphanumeric, hyphens, underscores).
+    Prevents path traversal and injection via URL path segments."""
+    if not value or not _SAFE_ID.match(str(value)):
+        raise ValueError(
+            f"Invalid {name}: must be 1-128 alphanumeric/hyphen/underscore characters. Got: {repr(value)}"
+        )
+    return str(value)
+
+
 def _load_creds():
-    """Load credentials from secure storage."""
-    cred_path = "/data/.openclaw/credentials/image-generation-keys.json"
-    try:
-        with open(cred_path, 'r') as f:
-            creds = json.load(f)
-        hl = creds.get('highlevel', {})
-        return hl.get('api_key', ''), hl.get('location_id', '')
-    except:
-        # Fallback to env vars
-        return os.environ.get("HIGHLEVEL_TOKEN", ""), os.environ.get("HIGHLEVEL_LOCATION_ID", "")
+    """Load credentials from environment variables."""
+    return (
+        os.environ.get("HIGHLEVEL_TOKEN", "").strip(),
+        os.environ.get("HIGHLEVEL_LOCATION_ID", "").strip(),
+    )
+
 
 TOKEN, LOC_ID = _load_creds()
 
+
+# ──────────────────────────────────────────────
+# HTTP Client (native urllib.request)
+# ──────────────────────────────────────────────
 
 def _headers():
     return {
@@ -38,73 +55,51 @@ def _headers():
         "Version": VERSION,
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "User-Agent": "OpenClaw-GHL-Skill/1.1.0 (stdlib-only)",
     }
 
 
 def _request(method, path, body=None, retries=MAX_RETRIES):
-    """Make API request using curl (avoids Cloudflare blocks)."""
-    import subprocess
-    url = f"{BASE}{path}" if path.startswith("/") else f"{BASE}/{path}"
-    
-    cmd = [
-        "curl", "-s", "-L",
-        "-H", f"Authorization: Bearer {TOKEN}",
-        "-H", f"Version: {VERSION}",
-        "-H", "Content-Type: application/json",
-        "-H", "Accept: application/json",
-        "-H", "User-Agent: curl/7.68.0"
-    ]
-    
-    if body:
-        cmd.extend(["-d", json.dumps(body)])
-    cmd.extend(["-X", method, url])
-    
-    for attempt in range(retries):
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-            if result.returncode == 0:
-                try:
-                    return json.loads(result.stdout)
-                except json.JSONDecodeError:
-                    return {"error": "Invalid JSON response", "raw": result.stdout[:200]}
-            else:
-                if attempt < retries - 1:
-                    time.sleep(1)
-                    continue
-                return {"error": result.returncode, "message": result.stderr}
-        except Exception as e:
-            if attempt < retries - 1:
-                time.sleep(1)
-                continue
-            return {"error": str(e)}
-    
-    return {"error": "Max retries exceeded"}
-
-# Old urllib implementation (kept for reference, not used)
-def _request_old_urllib(method, path, body=None, retries=MAX_RETRIES):
-    """Make API request with retry logic for 429/5xx errors. (Deprecated - use curl)"""
+    """Make API request using native urllib with retry logic for 429/5xx errors."""
     url = f"{BASE}{path}" if path.startswith("/") else f"{BASE}/{path}"
     data = json.dumps(body).encode() if body else None
+
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url, data=data, headers=_headers(), method=method)
-            with urllib.request.urlopen(req) as resp:
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 raw = resp.read().decode()
                 return json.loads(raw) if raw else {"status": resp.status}
         except urllib.error.HTTPError as e:
-            err_body = e.read().decode() if e.fp else ""
+            err_body = ""
+            try:
+                err_body = e.read().decode() if e.fp else ""
+            except Exception:
+                pass
+
+            # Retry on rate-limit (429) with exponential backoff
             if e.code == 429 and attempt < retries - 1:
-                wait = 2 ** (attempt + 1)
+                retry_after = e.headers.get("Retry-After")
+                wait = int(retry_after) if retry_after and retry_after.isdigit() else 2 ** (attempt + 1)
                 print(f"Rate limited (429). Retrying in {wait}s...", file=sys.stderr)
                 time.sleep(wait)
                 continue
+
+            # Retry on server errors (5xx)
             if e.code >= 500 and attempt < retries - 1:
+                time.sleep(2 ** attempt)
+                continue
+
+            return {"error": e.code, "message": err_body}
+        except urllib.error.URLError as e:
+            if attempt < retries - 1:
                 time.sleep(2)
                 continue
-            return {"error": e.code, "message": err_body}
+            return {"error": "connection_failed", "message": str(e.reason)}
         except Exception as ex:
-            return {"error": str(ex)}
-    return {"error": "Max retries exceeded"}
+            return {"error": "unexpected", "message": str(ex)}
+
+    return {"error": "max_retries_exceeded"}
 
 
 def _get(path):
@@ -124,84 +119,66 @@ def _delete(path):
 
 
 def _get_paginated(endpoint_base, params=None, max_pages=50):
-    """
-    Automatically paginate through all results.
-    
+    """Automatically paginate through all results using cursor pagination.
+
     Args:
         endpoint_base: API endpoint path (e.g., "/contacts/")
-        params: Dict of query parameters (will add locationId automatically)
+        params: Dict of query parameters (locationId added automatically)
         max_pages: Safety limit (default 50 = 5000 records max)
-    
+
     Returns:
-        Dict with "items" (all results), "total" (count), "pages" (pages fetched)
+        Dict with all results, total count, and pages fetched
     """
-    import subprocess
-    
     all_items = []
     start_after = None
     start_after_id = None
     page = 1
-    item_key = None  # Will detect from first response (contacts, opportunities, etc.)
-    
-    # Build base params
-    base_params = {"locationId": LOC_ID, "limit": 100}
+    item_key = None
+
+    base_params = {"locationId": LOC_ID, "limit": "100"}
     if params:
-        base_params.update(params)
-    
+        base_params.update({k: str(v) for k, v in params.items()})
+
     while page <= max_pages:
-        # Build URL with current pagination
         url_params = base_params.copy()
         if start_after and start_after_id:
             url_params["startAfter"] = start_after
             url_params["startAfterId"] = start_after_id
-        
+
         query_string = urllib.parse.urlencode(url_params)
-        url = f"{BASE}{endpoint_base}?{query_string}"
-        
-        # Make request via curl
-        cmd = [
-            "curl", "-s", "-L",
-            "-H", f"Authorization: Bearer {TOKEN}",
-            "-H", f"Version: {VERSION}",
-            "-H", "Accept: application/json",
-            url
-        ]
-        
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-            if result.returncode != 0:
-                break
-            
-            data = json.loads(result.stdout)
-            
-            # Detect item key from first response
-            if item_key is None:
-                for key in data.keys():
-                    if key != "meta" and key != "traceId" and isinstance(data[key], list):
-                        item_key = key
-                        break
-            
-            if item_key:
-                items = data.get(item_key, [])
-                all_items.extend(items)
-            
-            # Check for next page
-            meta = data.get("meta", {})
-            if not meta.get("nextPageUrl"):
-                break
-            
-            start_after = meta.get("startAfter")
-            start_after_id = meta.get("startAfterId")
-            page += 1
-            
-        except Exception:
+        path = f"{endpoint_base}?{query_string}"
+        data = _get(path)
+
+        if "error" in data:
             break
-    
+
+        # Detect item key from first response
+        if item_key is None:
+            for key in data:
+                if key not in ("meta", "traceId") and isinstance(data[key], list):
+                    item_key = key
+                    break
+
+        if item_key:
+            items = data.get(item_key, [])
+            all_items.extend(items)
+
+        # Check for next page
+        meta = data.get("meta", {})
+        if not meta.get("nextPageUrl"):
+            break
+
+        start_after = meta.get("startAfter")
+        start_after_id = meta.get("startAfterId")
+        if not start_after or not start_after_id:
+            break
+        page += 1
+
     return {
         item_key or "items": all_items,
         "total": len(all_items),
         "pages": page,
-        "endpoint": endpoint_base
+        "endpoint": endpoint_base,
     }
 
 
@@ -216,13 +193,12 @@ def _out(data):
 def test_connection():
     """Verify token and location ID are working using contacts endpoint."""
     if not TOKEN:
-        return {"error": "HIGHLEVEL_TOKEN not set. Check credentials file or run /highlevel-setup"}
+        return {"error": "HIGHLEVEL_TOKEN not set. Set the environment variable or run /highlevel-setup"}
     if not LOC_ID:
-        return {"error": "HIGHLEVEL_LOCATION_ID not set. Check credentials file or run /highlevel-setup"}
-    
-    # Use contacts endpoint (most reliable, requires contacts.readonly scope)
-    result = _get(f"/contacts/?locationId={LOC_ID}&limit=1")
-    
+        return {"error": "HIGHLEVEL_LOCATION_ID not set. Set the environment variable or run /highlevel-setup"}
+
+    result = _get(f"/contacts/?locationId={urllib.parse.quote(LOC_ID, safe='')}&limit=1")
+
     if "error" in result:
         error_code = result.get("error")
         if error_code == 403:
@@ -235,17 +211,17 @@ def test_connection():
                     "3. Find your 'Claude AI Assistant' integration",
                     "4. Click 'Edit Scopes'",
                     "5. ENABLE: contacts.readonly (and others needed)",
-                    "6. Save - no need to regenerate token"
-                ]
+                    "6. Save - no need to regenerate token",
+                ],
             }
         return result
-    
+
     total = result.get("total", 0)
     return {
         "status": "connected",
         "locationId": LOC_ID,
         "totalContacts": total,
-        "message": f"Successfully connected! Found {total} contacts."
+        "message": f"Successfully connected! Found {total} contacts.",
     }
 
 
@@ -255,29 +231,29 @@ def test_connection():
 
 def search_contacts(query="", limit=20, paginate=True):
     """Search contacts by name, email, phone, or company.
-    
+
     Args:
         query: Search term
-        limit: Max results per page (default 20, max 100) - only used if paginate=False
+        limit: Max results per page (default 20, max 100) — only used if paginate=False
         paginate: If True (default), fetch ALL contacts across all pages
     """
     if not paginate:
         params = urllib.parse.urlencode({"locationId": LOC_ID, "query": query, "limit": limit})
         return _get(f"/contacts/?{params}")
-    
-    # Auto-paginate to get all results
-    params = {"query": query} if query else {}
-    return _get_paginated("/contacts/", params)
+
+    search_params = {"query": query} if query else {}
+    return _get_paginated("/contacts/", search_params)
 
 
 def list_all_contacts():
-    """Get ALL contacts with automatic pagination (convenience wrapper)."""
+    """Get ALL contacts with automatic pagination."""
     return search_contacts(query="", limit=100, paginate=True)
 
 
 def get_contact(contact_id):
     """Get full contact details by ID."""
-    return _get(f"/contacts/{contact_id}")
+    cid = _validate_id(contact_id, "contact_id")
+    return _get(f"/contacts/{cid}")
 
 
 def create_contact(data):
@@ -290,14 +266,16 @@ def create_contact(data):
 
 def update_contact(contact_id, data):
     """Update contact fields. data = JSON with fields to update."""
+    cid = _validate_id(contact_id, "contact_id")
     if isinstance(data, str):
         data = json.loads(data)
-    return _put(f"/contacts/{contact_id}", data)
+    return _put(f"/contacts/{cid}", data)
 
 
 def delete_contact(contact_id):
     """Delete a contact by ID."""
-    return _delete(f"/contacts/{contact_id}")
+    cid = _validate_id(contact_id, "contact_id")
+    return _delete(f"/contacts/{cid}")
 
 
 def upsert_contact(data):
@@ -310,16 +288,18 @@ def upsert_contact(data):
 
 def add_contact_tags(contact_id, tags):
     """Add tags to a contact. tags = JSON array of tag strings."""
+    cid = _validate_id(contact_id, "contact_id")
     if isinstance(tags, str):
         tags = json.loads(tags)
-    return _post(f"/contacts/{contact_id}/tags", {"tags": tags})
+    return _post(f"/contacts/{cid}/tags", {"tags": tags})
 
 
 def remove_contact_tags(contact_id, tags):
     """Remove tags from a contact."""
+    cid = _validate_id(contact_id, "contact_id")
     if isinstance(tags, str):
         tags = json.loads(tags)
-    return _delete(f"/contacts/{contact_id}/tags")
+    return _delete(f"/contacts/{cid}/tags")
 
 
 # ──────────────────────────────────────────────
@@ -334,11 +314,13 @@ def list_conversations(limit=20):
 
 def get_conversation(conversation_id):
     """Get a specific conversation."""
-    return _get(f"/conversations/{conversation_id}")
+    cid = _validate_id(conversation_id, "conversation_id")
+    return _get(f"/conversations/{cid}")
 
 
 def send_message(contact_id, message, msg_type="SMS"):
     """Send a message to a contact. msg_type: SMS, Email, WhatsApp, FB, IG, Live_Chat."""
+    _validate_id(contact_id, "contact_id")
     body = {
         "type": msg_type,
         "contactId": contact_id,
@@ -359,18 +341,20 @@ def list_calendars():
 
 def get_free_slots(calendar_id, start_date, end_date):
     """Get available booking slots. Dates in YYYY-MM-DD format."""
+    cal_id = _validate_id(calendar_id, "calendar_id")
     params = urllib.parse.urlencode({
         "startDate": start_date,
         "endDate": end_date,
     })
-    return _get(f"/calendars/{calendar_id}/free-slots?{params}")
+    return _get(f"/calendars/{cal_id}/free-slots?{params}")
 
 
 def create_appointment(calendar_id, data):
     """Create a calendar appointment."""
+    cal_id = _validate_id(calendar_id, "calendar_id")
     if isinstance(data, str):
         data = json.loads(data)
-    data["calendarId"] = calendar_id
+    data["calendarId"] = cal_id
     data["locationId"] = LOC_ID
     return _post("/calendars/events", data)
 
@@ -381,7 +365,7 @@ def create_appointment(calendar_id, data):
 
 def list_opportunities(pipeline_id=None, limit=20, paginate=True):
     """List opportunities. Optionally filter by pipeline.
-    
+
     Args:
         pipeline_id: Filter by specific pipeline
         limit: Max per page (only if paginate=False)
@@ -390,18 +374,19 @@ def list_opportunities(pipeline_id=None, limit=20, paginate=True):
     if not paginate:
         params = {"locationId": LOC_ID, "limit": limit}
         if pipeline_id:
-            params["pipelineId"] = pipeline_id
+            params["pipelineId"] = _validate_id(pipeline_id, "pipeline_id")
         return _get(f"/opportunities/search?{urllib.parse.urlencode(params)}")
-    
-    params = {}
+
+    search_params = {}
     if pipeline_id:
-        params["pipelineId"] = pipeline_id
-    return _get_paginated("/opportunities/search", params)
+        search_params["pipelineId"] = _validate_id(pipeline_id, "pipeline_id")
+    return _get_paginated("/opportunities/search", search_params)
 
 
 def get_opportunity(opp_id):
     """Get opportunity by ID."""
-    return _get(f"/opportunities/{opp_id}")
+    oid = _validate_id(opp_id, "opportunity_id")
+    return _get(f"/opportunities/{oid}")
 
 
 def create_opportunity(data):
@@ -414,7 +399,7 @@ def create_opportunity(data):
 
 def list_pipelines():
     """List all pipelines and their stages."""
-    return _get(f"/opportunities/pipelines?locationId={LOC_ID}")
+    return _get(f"/opportunities/pipelines?locationId={urllib.parse.quote(LOC_ID, safe='')}")
 
 
 # ──────────────────────────────────────────────
@@ -423,35 +408,37 @@ def list_pipelines():
 
 def list_workflows(paginate=True):
     """List all workflows.
-    
+
     Args:
         paginate: If True (default), fetch ALL workflows
     """
     if not paginate:
-        return _get(f"/workflows/?locationId={LOC_ID}")
+        return _get(f"/workflows/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
     return _get_paginated("/workflows/")
 
 
 def add_to_workflow(contact_id, workflow_id):
     """Add a contact to a workflow."""
-    return _post(f"/contacts/{contact_id}/workflow/{workflow_id}", {
-        "eventStartTime": ""
-    })
+    cid = _validate_id(contact_id, "contact_id")
+    wid = _validate_id(workflow_id, "workflow_id")
+    return _post(f"/contacts/{cid}/workflow/{wid}", {"eventStartTime": ""})
 
 
 def remove_from_workflow(contact_id, workflow_id):
     """Remove a contact from a workflow."""
-    return _delete(f"/contacts/{contact_id}/workflow/{workflow_id}")
+    cid = _validate_id(contact_id, "contact_id")
+    wid = _validate_id(workflow_id, "workflow_id")
+    return _delete(f"/contacts/{cid}/workflow/{wid}")
 
 
 def list_campaigns(paginate=True):
     """List all campaigns.
-    
+
     Args:
         paginate: If True (default), fetch ALL campaigns
     """
     if not paginate:
-        return _get(f"/campaigns/?locationId={LOC_ID}")
+        return _get(f"/campaigns/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
     return _get_paginated("/campaigns/")
 
 
@@ -460,12 +447,7 @@ def list_campaigns(paginate=True):
 # ──────────────────────────────────────────────
 
 def list_invoices(limit=20, paginate=True):
-    """List invoices.
-    
-    Args:
-        limit: Max per page (only if paginate=False)
-        paginate: If True (default), fetch ALL invoices
-    """
+    """List invoices."""
     if not paginate:
         params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit})
         return _get(f"/invoices/?{params}")
@@ -474,7 +456,8 @@ def list_invoices(limit=20, paginate=True):
 
 def get_invoice(invoice_id):
     """Get invoice details."""
-    return _get(f"/invoices/{invoice_id}")
+    iid = _validate_id(invoice_id, "invoice_id")
+    return _get(f"/invoices/{iid}")
 
 
 def create_invoice(data):
@@ -491,12 +474,7 @@ def create_invoice(data):
 # ──────────────────────────────────────────────
 
 def list_orders(limit=20, paginate=True):
-    """List payment orders.
-    
-    Args:
-        limit: Max per page (only if paginate=False)
-        paginate: If True (default), fetch ALL orders
-    """
+    """List payment orders."""
     if not paginate:
         params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit})
         return _get(f"/payments/orders/?{params}")
@@ -504,12 +482,7 @@ def list_orders(limit=20, paginate=True):
 
 
 def list_transactions(limit=20, paginate=True):
-    """List payment transactions.
-    
-    Args:
-        limit: Max per page (only if paginate=False)
-        paginate: If True (default), fetch ALL transactions
-    """
+    """List payment transactions."""
     if not paginate:
         params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit})
         return _get(f"/payments/transactions/?{params}")
@@ -517,12 +490,7 @@ def list_transactions(limit=20, paginate=True):
 
 
 def list_subscriptions(limit=20, paginate=True):
-    """List payment subscriptions.
-    
-    Args:
-        limit: Max per page (only if paginate=False)
-        paginate: If True (default), fetch ALL subscriptions
-    """
+    """List payment subscriptions."""
     if not paginate:
         params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit})
         return _get(f"/payments/subscriptions/?{params}")
@@ -534,12 +502,7 @@ def list_subscriptions(limit=20, paginate=True):
 # ──────────────────────────────────────────────
 
 def list_products(limit=20, paginate=True):
-    """List products.
-    
-    Args:
-        limit: Max per page (only if paginate=False)
-        paginate: If True (default), fetch ALL products
-    """
+    """List products."""
     if not paginate:
         params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit})
         return _get(f"/products/?{params}")
@@ -548,7 +511,8 @@ def list_products(limit=20, paginate=True):
 
 def get_product(product_id):
     """Get product details."""
-    return _get(f"/products/{product_id}")
+    pid = _validate_id(product_id, "product_id")
+    return _get(f"/products/{pid}")
 
 
 # ──────────────────────────────────────────────
@@ -556,51 +520,32 @@ def get_product(product_id):
 # ──────────────────────────────────────────────
 
 def list_forms(paginate=True):
-    """List all forms.
-    
-    Args:
-        paginate: If True (default), fetch ALL forms
-    """
+    """List all forms."""
     if not paginate:
-        return _get(f"/forms/?locationId={LOC_ID}")
+        return _get(f"/forms/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
     return _get_paginated("/forms/")
 
 
 def list_form_submissions(form_id, limit=20, paginate=True):
-    """Get form submissions.
-    
-    Args:
-        form_id: The form ID to get submissions for
-        limit: Max per page (only if paginate=False)
-        paginate: If True (default), fetch ALL submissions
-    """
+    """Get form submissions."""
+    fid = _validate_id(form_id, "form_id")
     if not paginate:
-        params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit})
-        return _get(f"/forms/submissions?{params}&formId={form_id}")
-    
-    params = {"formId": form_id}
-    return _get_paginated("/forms/submissions", params)
+        params = urllib.parse.urlencode({"locationId": LOC_ID, "limit": limit, "formId": fid})
+        return _get(f"/forms/submissions?{params}")
+    return _get_paginated("/forms/submissions", {"formId": fid})
 
 
 def list_surveys(paginate=True):
-    """List all surveys.
-    
-    Args:
-        paginate: If True (default), fetch ALL surveys
-    """
+    """List all surveys."""
     if not paginate:
-        return _get(f"/surveys/?locationId={LOC_ID}")
+        return _get(f"/surveys/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
     return _get_paginated("/surveys/")
 
 
 def list_funnels(paginate=True):
-    """List all funnels.
-    
-    Args:
-        paginate: If True (default), fetch ALL funnels
-    """
+    """List all funnels."""
     if not paginate:
-        return _get(f"/funnels/funnel/list?locationId={LOC_ID}")
+        return _get(f"/funnels/funnel/list?locationId={urllib.parse.quote(LOC_ID, safe='')}")
     return _get_paginated("/funnels/funnel/list")
 
 
@@ -610,16 +555,18 @@ def list_funnels(paginate=True):
 
 def list_social_posts(limit=20):
     """List social media posts."""
-    return _post(f"/social-media-posting/{LOC_ID}/posts/list", {
-        "limit": limit, "skip": 0
+    loc = _validate_id(LOC_ID, "location_id")
+    return _post(f"/social-media-posting/{loc}/posts/list", {
+        "limit": limit, "skip": 0,
     })
 
 
 def create_social_post(data):
     """Create a social media post."""
+    loc = _validate_id(LOC_ID, "location_id")
     if isinstance(data, str):
         data = json.loads(data)
-    return _post(f"/social-media-posting/{LOC_ID}/posts", data)
+    return _post(f"/social-media-posting/{loc}/posts", data)
 
 
 # ──────────────────────────────────────────────
@@ -628,46 +575,50 @@ def create_social_post(data):
 
 def list_media():
     """List media files."""
-    return _get(f"/medias/files?locationId={LOC_ID}")
+    return _get(f"/medias/files?locationId={urllib.parse.quote(LOC_ID, safe='')}")
 
 
 def list_users():
     """List users for this location."""
-    return _get(f"/users/?locationId={LOC_ID}")
+    return _get(f"/users/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
 
 
 def list_trigger_links():
     """List trigger links."""
-    return _get(f"/links/?locationId={LOC_ID}")
+    return _get(f"/links/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
 
 
 # ──────────────────────────────────────────────
-# Safe Specific Functions (Replacing custom_request)
+# Location & Settings
 # ──────────────────────────────────────────────
 
 def get_location_details():
     """Get current location details."""
-    return _get(f"/locations/{LOC_ID}")
+    loc = _validate_id(LOC_ID, "location_id")
+    return _get(f"/locations/{loc}")
 
 
 def list_location_custom_fields():
     """List custom fields for this location."""
-    return _get(f"/locations/{LOC_ID}/customFields")
+    loc = _validate_id(LOC_ID, "location_id")
+    return _get(f"/locations/{loc}/customFields")
 
 
 def list_location_tags():
     """List tags for this location."""
-    return _get(f"/locations/{LOC_ID}/tags")
+    loc = _validate_id(LOC_ID, "location_id")
+    return _get(f"/locations/{loc}/tags")
 
 
 def list_location_custom_values():
     """List custom values for this location."""
-    return _get(f"/locations/{LOC_ID}/customValues")
+    loc = _validate_id(LOC_ID, "location_id")
+    return _get(f"/locations/{loc}/customValues")
 
 
 def list_courses():
     """List courses/memberships."""
-    return _get(f"/courses/?locationId={LOC_ID}")
+    return _get(f"/courses/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
 
 
 def list_snapshots():
@@ -677,7 +628,8 @@ def list_snapshots():
 
 def get_snapshot_status(snapshot_id):
     """Get snapshot installation status."""
-    return _get(f"/snapshots/{snapshot_id}/status")
+    sid = _validate_id(snapshot_id, "snapshot_id")
+    return _get(f"/snapshots/{sid}/status")
 
 
 # ──────────────────────────────────────────────
@@ -738,4 +690,11 @@ if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
         print(f"Commands: {', '.join(sorted(COMMANDS.keys()))}")
         sys.exit(1)
-    _out(COMMANDS[sys.argv[1]]())
+    try:
+        _out(COMMANDS[sys.argv[1]]())
+    except ValueError as e:
+        _out({"error": "validation_failed", "message": str(e)})
+        sys.exit(1)
+    except IndexError:
+        _out({"error": "missing_argument", "message": f"Command '{sys.argv[1]}' requires additional arguments."})
+        sys.exit(1)

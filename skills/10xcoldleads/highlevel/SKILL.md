@@ -1,26 +1,37 @@
 ---
-name: GoHighLevel API
-description: Connect Claude to your GoHighLevel CRM. Manage contacts, conversations, calendars, pipelines, invoices, payments, workflows, social media, and 30+ more endpoint groups — all through natural language. Includes interactive setup wizard and 40+ pre-built API commands.
-emoji: 🚀
+name: highlevel
+version: 1.1.0
+description: "Connect your AI assistant to GoHighLevel CRM via the official API v2. Manage contacts, conversations, calendars, pipelines, invoices, payments, workflows, and 30+ endpoint groups through natural language. Includes interactive setup wizard and 40+ pre-built, safe API commands. Python 3.6+ stdlib only — zero external dependencies."
+tags: [gohighlevel, crm, api, contacts, conversations, calendars, opportunities, invoices, workflows, automation]
+author: Ty Shane
 homepage: https://launchmyopenclaw.com
-requires:
-  env:
-    - HIGHLEVEL_TOKEN
-    - HIGHLEVEL_LOCATION_ID
-primaryEnv: HIGHLEVEL_TOKEN
-metadata: "GoHighLevel GHL CRM API v2 contacts conversations calendars opportunities invoices payments workflows social-planner products forms surveys funnels voice-ai"
+compatibility: "Requires Python 3.6+ (stdlib only, no pip installs). Requires two environment variables: HIGHLEVEL_TOKEN and HIGHLEVEL_LOCATION_ID."
 ---
 
 # GoHighLevel API Skill
 
-> **Turn Claude into your GoHighLevel command center.** Search contacts, send messages, book appointments, manage pipelines, create invoices, schedule social posts — across all 39 GHL API v2 endpoint groups, using plain English.
+> **Turn your AI assistant into a GoHighLevel command center.** Search contacts, send messages, book appointments, manage pipelines, create invoices, schedule social posts — across all 39 GHL API v2 endpoint groups, using plain English.
 
 **Don't have GoHighLevel yet?** Start with the free 5-Day AI Employee Challenge and build a fully automated system:
 👉 [**Start the 5-Day AI Employee Challenge**](https://gohighlevel.com/5-day-challenge?fp_ref=369ai)
 
+## Requirements
+
+| Requirement | Details |
+|-------------|---------|
+| **Runtime** | Python 3.6+ (uses only standard library: `urllib`, `json`, `os`, `re`, `sys`, `time`) |
+| **External packages** | **None** — zero `pip install` required |
+| **Environment variables** | `HIGHLEVEL_TOKEN` (Primary — your Private Integration bearer token) |
+| | `HIGHLEVEL_LOCATION_ID` (your sub-account Location ID) |
+| **Network access** | HTTPS to `services.leadconnectorhq.com` only |
+
 **Base URL**: `https://services.leadconnectorhq.com`
 **Required Headers**: `Authorization: Bearer $HIGHLEVEL_TOKEN` + `Version: 2021-07-28`
 **Rate Limits**: 100 requests/10 seconds burst, 200K/day per location
+
+## Security Design
+
+All API functions use pre-defined endpoint paths — there is no arbitrary HTTP request capability. Every user-supplied ID is validated against a strict alphanumeric regex (`^[a-zA-Z0-9_-]{1,128}$`) before being included in any URL path, preventing path traversal and injection. The scripts use only Python's built-in `urllib.request` for all network calls. No shell commands, no external binaries, no file writes outside of stdout.
 
 ## Setup — `/highlevel-setup`
 
@@ -36,25 +47,36 @@ The wizard automatically: checks environment variables → guides Private Integr
 
 #### Step 1: Create a Private Integration (NOT the old API Keys method)
 1. Log into **app.gohighlevel.com**
-2. Switch to your **Sub-Account** (or stay in Agency view for agency-level access)
+2. Switch to your **Sub-Account** (recommended for single-location use)
 3. Click **Settings** (bottom-left gear icon)
 4. Select **Private Integrations** in the left sidebar
    - If not visible, enable it first: Settings → Labs → toggle Private Integrations ON
 5. Click **"Create new Integration"**
 6. Enter a name (e.g., "Claude AI Assistant") and description
-7. **Select ALL scopes** you want Claude to access (contacts, conversations, calendars, opportunities, etc.)
-   - For full access, select all available scopes
-   - Scopes follow the pattern: `contacts.readonly`, `contacts.write`, etc.
+7. **Grant only the scopes you need** (least-privilege recommended):
+
+   | Use case | Recommended scopes |
+   |----------|--------------------|
+   | Contact management only | `contacts.readonly`, `contacts.write` |
+   | Contacts + messaging | Above + `conversations.readonly`, `conversations.write`, `conversations/message.write` |
+   | Full CRM (contacts, calendar, pipeline) | Above + `calendars.readonly`, `calendars.write`, `opportunities.readonly`, `opportunities.write` |
+   | Adding workflows & invoices | Above + `workflows.readonly`, `invoices.readonly`, `invoices.write` |
+   | Read-only reporting | `contacts.readonly`, `opportunities.readonly`, `calendars.readonly`, `invoices.readonly`, `locations.readonly` |
+
+   You can always add more scopes later in Settings → Private Integrations → Edit without regenerating the token.
+
 8. Click Create → **Copy the token IMMEDIATELY** — it is shown only once and cannot be retrieved later
 
-### Agency vs Sub-Account Integrations
+#### Agency vs Sub-Account Integrations
 
 | Feature | Agency Integration | Sub-Account Integration |
 |---------|-------------------|------------------------|
 | Created at | Agency Settings → Private Integrations | Sub-Account Settings → Private Integrations |
 | Access scope | Agency + all sub-accounts (pass `locationId`) | Single location only |
 | Available scopes | All scopes including `locations.write`, `oauth.*`, `saas.*`, `snapshots.*`, `companies.readonly` | Sub-account scopes only |
-| Best for | Multi-location management, SaaS configurator | Single client integrations |
+| Best for | Multi-location management, SaaS configurator | Single client integrations (recommended default) |
+
+> **Recommendation:** Start with a Sub-Account integration and the minimum scopes you need. You can upgrade to Agency-level later if you need multi-location access.
 
 ### Step 2: Get Your Location ID
 1. While in the sub-account, go to **Settings** → **Business Info** (or **Business Profile**)
@@ -74,7 +96,7 @@ After successful setup, pull 5 contacts as a quick win to confirm everything wor
 
 ## Helper Script
 
-`scripts/ghl-api.py` — Executable Python script with built-in retry logic, pagination, and error handling.
+`scripts/ghl-api.py` — Executable Python script (stdlib only) with built-in retry logic, pagination, input validation, and error handling.
 
 **Core Commands:**
 | Command | Description |
@@ -99,7 +121,7 @@ After successful setup, pull 5 contacts as a quick win to confirm everything wor
 | `list_location_tags` | List location tags |
 | `list_courses` | List courses/memberships |
 
-All functions are safe, specific endpoints. No arbitrary request capability.
+All functions are safe, pre-defined endpoints. No arbitrary request capability.
 
 ## Complete API v2 Coverage (39 Endpoint Groups)
 
@@ -194,7 +216,7 @@ Docs: https://marketplace.gohighlevel.com/docs/webhook/WebhookIntegrationGuide
 
 ---
 
-### 🚀 Built by Ty Shane
+### Built by Ty Shane
 
 [🌐 LaunchMyOpenClaw.com](https://launchmyopenclaw.com) • [🌐 MyFBLeads.com](https://myfbleads.com)
 [▶️ YouTube @10xcoldleads](https://youtube.com/@10xcoldleads) • [📘 Facebook](https://facebook.com/ty.shane.howell.2025) • [💼 LinkedIn](https://linkedin.com/in/ty-shane/)
