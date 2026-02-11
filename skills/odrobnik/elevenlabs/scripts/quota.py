@@ -23,6 +23,25 @@ from pathlib import Path
 import requests
 
 
+def _find_workspace_root() -> Path:
+    """Walk up from script location to find workspace root (parent of 'skills/')."""
+    env = os.environ.get("ELEVENLABS_WORKSPACE")
+    if env:
+        return Path(env)
+    
+    # Prefer CWD if it looks like a workspace (handles symlinks correctly)
+    cwd = Path.cwd()
+    if (cwd / "skills").is_dir():
+        return cwd
+
+    d = Path(__file__).resolve().parent
+    for _ in range(6):
+        if (d / "skills").is_dir() and d != d.parent:
+            return d
+        d = d.parent
+    return Path.cwd()
+
+
 def _load_dotenv(paths: list[Path]) -> None:
     """Best-effort .env loader (KEY=VALUE), without external deps."""
     for p in paths:
@@ -42,10 +61,35 @@ def _load_dotenv(paths: list[Path]) -> None:
             continue
 
 
-# Load common env locations so cron jobs can rely on .env files.
+def _find_state_dir() -> Path:
+    """Resolve a dedicated state/config dir for this skill.
+
+    IMPORTANT: We intentionally do NOT load a workspace-wide `.env` because that can
+    accidentally import unrelated secrets.
+    """
+    env = os.environ.get("ELEVENLABS_DIR")
+    if env:
+        return Path(env).expanduser()
+
+    workspace = _find_workspace_root()
+    ws_dir = workspace / "elevenlabs"
+    if ws_dir.is_dir():
+        return ws_dir
+
+    home = Path.home()
+    new = home / ".openclaw" / "elevenlabs"
+    legacy = home / ".moltbot" / "elevenlabs"
+    if new.is_dir() or not legacy.is_dir():
+        return new
+    return legacy
+
+
+# Load local .env files (best-effort) so cron jobs can rely on them.
+# NOTE: We only read `.env` from the skill folder and the dedicated state dir.
+_skill_root = Path(__file__).resolve().parents[1]
 _load_dotenv([
-    Path.home() / ".moltbot" / ".env",
-    Path("/Users/oliver/clawd/.env"),
+    _skill_root / ".env",
+    _find_state_dir() / ".env",
 ])
 
 
