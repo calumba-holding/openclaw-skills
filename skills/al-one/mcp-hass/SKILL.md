@@ -1,6 +1,26 @@
 ---
 name: mcp-hass
 description: The skill for control Home Assistant smart home devices and query states using MCP protocol.
+homepage: https://home-assistant.io/integrations/mcp
+metadata:
+  {
+    "openclaw":
+      {
+        "emoji": "🏠",
+        "requires": { "anyBins": ["mcporter", "npx"], "env": ["HASS_ACCESS_TOKEN", "HASS_BASE_URL"] },
+        "primaryEnv": "HASS_ACCESS_TOKEN",
+        "install":
+          [
+            {
+              "id": "node",
+              "kind": "node",
+              "package": "mcporter",
+              "bins": ["mcporter"],
+              "label": "Install mcporter (node)",
+            },
+          ],
+      },
+  }
 ---
 
 # Home Assistant
@@ -17,39 +37,39 @@ Enable MCP server in Home Assistant:
 ## Usage
 ```shell
 # Get states
-npx -y mcporter call home-assistant.GetLiveContext
+mcporter call home-assistant.GetLiveContext
 
 # Turn on the device
-npx -y mcporter call home-assistant.HassTurnOn(name: "Bedroom Light")
-npx -y mcporter call home-assistant.HassTurnOn(name: "Light", area: "Bedroom")
+mcporter call home-assistant.HassTurnOn(name: "Bedroom Light")
+mcporter call home-assistant.HassTurnOn(name: "Light", area: "Bedroom")
 
 # Turn off the device
-npx -y mcporter call home-assistant.HassTurnOff(name: "Bedroom Light")
-npx -y mcporter call home-assistant.HassTurnOff(area: "Bedroom", domain: ["light"])
+mcporter call home-assistant.HassTurnOff(name: "Bedroom Light")
+mcporter call home-assistant.HassTurnOff(area: "Bedroom", domain: ["light"])
 
 # Control light
 # brightness: The percentage of the light, where 0 is off and 100 is fully lit.
 # color: Name of color
-npx -y mcporter call home-assistant.HassLightSet(name: "Bedroom Light", brightness: 50)
+mcporter call home-assistant.HassLightSet(name: "Bedroom Light", brightness: 50)
 
 # Control fan
 # percentage: The percentage of the fan, where 0 is off and 100 is full speed.
-npx -y mcporter call home-assistant.HassFanSetSpeed(name: "Fan", area: "Bedroom", percentage: 80)
+mcporter call home-assistant.HassFanSetSpeed(name: "Fan", area: "Bedroom", percentage: 80)
 ```
 
 Execute the following command to learn about specific usage methods:
-- `npx -y mcporter list home-assistant --schema --all-parameters`
+- `mcporter list home-assistant --schema --all-parameters`
 
 ## Config
 When prompted that the MCP server does not exist, remind the user to configure the `HASS_BASE_URL` and `HASS_ACCESS_TOKEN` environment variables by executing the following command to add the configuration:
 ```shell
-npx -y mcporter config add home-assistant \
+mcporter config add home-assistant \
   --transport http \
   --url "${HASS_BASE_URL:-http://homeassistant.local:8123}/api/mcp" \
   --header "Authorization=Bearer \${HASS_ACCESS_TOKEN}"
 ```
 
 ## About `mcporter`
-- To improve compatibility, use `npx -y mcporter` instead of `mcporter` when executing commands.
+- When command `mcporter` does not exist, use `npx -y mcporter` instead.
 - https://github.com/steipete/mcporter/raw/refs/heads/main/docs/call-syntax.md
 - https://github.com/steipete/mcporter/raw/refs/heads/main/docs/cli-reference.md
