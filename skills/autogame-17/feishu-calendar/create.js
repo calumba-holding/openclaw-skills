@@ -42,6 +42,7 @@ async function createEvent() {
              try {
                  const calList = await client.calendar.calendar.list();
                  if (calList.code === 0 && calList.data.calendar_list && calList.data.calendar_list.length > 0) {
+                     // Prefer 'OpenClaw Assistant', then 'primary', then first in list
                      const botCal = calList.data.calendar_list.find(c => c.summary === 'OpenClaw Assistant') || calList.data.calendar_list[0];
                      targetCalendarId = botCal.calendar_id;
                      console.log(`Auto-selected calendar: ${botCal.summary} (${targetCalendarId})`);
@@ -68,28 +69,31 @@ async function createEvent() {
 
         console.log(`Creating event on calendar: ${targetCalendarId}`);
 
-        // Direct Request
-        // Add user_id_type AND explicit attendee type
+        // Direct Request with Fallback
         
-        // 关键修复:
-        // 1. 如果 Bot 是日历所有者(应用日历)，'permissions' 参数可能不被完全支持或默认行为不同。
-        // 2. 重点: `need_notification: true` 确保发送通知。
-        // 3. 重点: `attendees` 中的 `user_id` 必须配合 `user_id_type`。
-        // 4. 新尝试: 去掉 'permissions' (使用默认)，确保 'need_notification' 为 true。
-        
-        const response = await client.request({
-            method: 'POST',
-            url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(targetCalendarId)}/events?user_id_type=open_id`,
-            data: {
-                summary: options.summary,
-                description: options.desc || '',
-                need_notification: true, // Explicitly request notification
-                start_time: { timestamp: String(startTs), timezone: 'Asia/Shanghai' },
-                end_time: { timestamp: String(endTs), timezone: 'Asia/Shanghai' },
-                attendees: attendees.length > 0 ? attendees : undefined,
-                vchat: { vc_type: 'no_meeting' }
-            }
-        });
+        async function tryCreate(calId) {
+            return await client.request({
+                method: 'POST',
+                url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(calId)}/events?user_id_type=open_id`,
+                data: {
+                    summary: options.summary,
+                    description: options.desc || '',
+                    need_notification: true, // Explicitly request notification
+                    start_time: { timestamp: String(startTs), timezone: 'Asia/Shanghai' },
+                    end_time: { timestamp: String(endTs), timezone: 'Asia/Shanghai' },
+                    attendees: attendees.length > 0 ? attendees : undefined,
+                    vchat: { vc_type: 'no_meeting' }
+                }
+            });
+        }
+
+        let response = await tryCreate(targetCalendarId);
+
+        // Fallback to primary if specific ID fails (permission issue)
+        if (response.code !== 0 && targetCalendarId !== 'primary') {
+             console.log(`Creation failed on ${targetCalendarId} (${response.code}). Retrying on 'primary'...`);
+             response = await tryCreate('primary');
+        }
 
         if (response.code !== 0) {
             console.error(`Feishu API Error: ${response.msg} (Code: ${response.code})`);

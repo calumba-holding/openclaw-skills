@@ -16,13 +16,25 @@ const client = new Lark.Client({ appId: APP_ID, appSecret: APP_SECRET });
         if (botCal) botCalendarId = botCal.calendar_id;
     }
 
-    if (!botCalendarId) return;
+    if (!botCalendarId) {
+        // Try fallback
+        try {
+            const primary = await client.calendar.calendar.get({ calendar_id: 'primary' });
+            if (primary.code === 0) botCalendarId = 'primary';
+        } catch(e) {}
+    }
+
+    if (!botCalendarId) {
+        console.log("No calendar to clean.");
+        return;
+    }
 
     // 2. List ALL Future Events
     const now = Math.floor(Date.now() / 1000);
     const endTime = now + 30 * 24 * 3600; // 30 days
     
-    const res = await client.request({
+    // SDK approach with raw fallback if needed
+    let res = await client.request({
         method: 'GET',
         url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(botCalendarId)}/events`,
         params: {
@@ -31,6 +43,20 @@ const client = new Lark.Client({ appId: APP_ID, appSecret: APP_SECRET });
             page_size: 100
         }
     });
+    
+    if (res.code !== 0 && botCalendarId !== 'primary') {
+         console.log(`Access failed for ${botCalendarId}. Retrying primary...`);
+         botCalendarId = 'primary';
+         res = await client.request({
+            method: 'GET',
+            url: `/open-apis/calendar/v4/calendars/primary/events`,
+            params: {
+                start_time: String(now),
+                end_time: String(endTime),
+                page_size: 100
+            }
+        });
+    }
 
     if (res.code === 0 && res.data.items) {
         for (const evt of res.data.items) {

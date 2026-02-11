@@ -28,16 +28,35 @@ async function clearTestEvents() {
         }
 
         if (!botCalendarId) {
+            // Try fallback
+            try {
+                const primary = await client.calendar.calendar.get({ calendar_id: 'primary' });
+                if (primary.code === 0) botCalendarId = 'primary';
+            } catch(e) {}
+        }
+
+        if (!botCalendarId) {
             console.error('❌ Bot calendar not found.');
             return;
         }
 
         // 2. List Events
-        const res = await client.request({
+        let res = await client.request({
             method: 'GET',
             url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(botCalendarId)}/events`,
             params: { page_size: 50 }
         });
+        
+        // Fallback for list
+        if (res.code !== 0 && botCalendarId !== 'primary') {
+             console.log(`Access failed for ${botCalendarId}. Retrying primary...`);
+             botCalendarId = 'primary';
+             res = await client.request({
+                method: 'GET',
+                url: `/open-apis/calendar/v4/calendars/primary/events`,
+                params: { page_size: 50 }
+            });
+        }
 
         if (res.code === 0 && res.data.items) {
             for (const evt of res.data.items) {
@@ -59,14 +78,16 @@ async function addMaintenanceSchedule() {
     try {
         console.log('📅 Adding Daily Maintenance Schedule...');
         
+        // 1. Get calendar list to find appropriate target
         let botCalendarId;
         const calList = await client.calendar.calendar.list();
         if (calList.code === 0 && calList.data.calendar_list) {
             const botCal = calList.data.calendar_list.find(c => c.summary === 'OpenClaw Assistant');
             if (botCal) botCalendarId = botCal.calendar_id;
         }
-
-        if (!botCalendarId) return;
+        
+        // If not found, default to primary immediately to avoid unnecessary checks
+        if (!botCalendarId) botCalendarId = 'primary';
 
         // Recurrence Rule: Daily at 04:00 AM
         // RRULE:FREQ=DAILY;BYHOUR=4;BYMINUTE=0;BYSECOND=0
@@ -80,20 +101,31 @@ async function addMaintenanceSchedule() {
         
         const startTs = Math.floor(tomorrow4am.getTime() / 1000);
         const endTs = startTs + 300; // 5 minutes duration
+        
+        // Helper to attempt creation
+        async function create(calId) {
+            return await client.request({
+                method: 'POST',
+                url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(calId)}/events`,
+                data: {
+                    summary: '🛡️ System Maintenance (Auto-Restart)',
+                    description: 'Routine system health check and gateway restart if idle.',
+                    start_time: { timestamp: String(startTs), timezone: 'Asia/Shanghai' },
+                    end_time: { timestamp: String(endTs), timezone: 'Asia/Shanghai' },
+                    recurrence: 'FREQ=DAILY;INTERVAL=1', // Daily
+                    color: -1, 
+                    permissions: 'public'
+                }
+            });
+        }
 
-        const res = await client.request({
-            method: 'POST',
-            url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(botCalendarId)}/events`,
-            data: {
-                summary: '🛡️ System Maintenance (Auto-Restart)',
-                description: 'Routine system health check and gateway restart if idle.',
-                start_time: { timestamp: String(startTs), timezone: 'Asia/Shanghai' },
-                end_time: { timestamp: String(endTs), timezone: 'Asia/Shanghai' },
-                recurrence: 'FREQ=DAILY;INTERVAL=1', // Daily
-                color: -1, 
-                permissions: 'public'
-            }
-        });
+        let res = await create(botCalendarId);
+        
+        // Fallback retry if specific ID failed (e.g. permission error) and it wasn't already primary
+        if (res.code !== 0 && botCalendarId !== 'primary') {
+             console.log(`Creation failed on ${botCalendarId} (${res.code}). Retrying on 'primary'...`);
+             res = await create('primary');
+        }
 
         if (res.code === 0) {
             console.log(`✅ Maintenance Schedule Added: ${res.data.event.app_link}`);

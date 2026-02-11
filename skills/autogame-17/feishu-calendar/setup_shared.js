@@ -29,7 +29,9 @@ async function main() {
         console.log(`Creating shared calendar: ${options.name}...`);
         
         // 1. Create Calendar
-        const createRes = await client.request({
+        // Use default method for creation, which is usually fine for new calendars.
+        // Fallback isn't really applicable for creating a NEW calendar, but we can ensure consistent error handling.
+        let createRes = await client.request({
             method: 'POST',
             url: '/open-apis/calendar/v4/calendars',
             data: {
@@ -54,7 +56,9 @@ async function main() {
         
         for (const userId of members) {
             console.log(`Adding member ${userId} as ${options.role}...`);
-            const aclRes = await client.request({
+            
+            // Try specific calendar ACL update
+            let aclRes = await client.request({
                 method: 'POST',
                 url: `/open-apis/calendar/v4/calendars/${encodeURIComponent(calendarId)}/acls?user_id_type=open_id`,
                 data: {
@@ -66,6 +70,10 @@ async function main() {
                 }
             });
 
+            // If failed (e.g. 403 or permission denied), check if fallback is needed, though creating a new calendar usually works fine.
+            // But if this script is reused for existing calendars where permissions are tight, we might fail.
+            // However, this script creates NEW calendars, so permission should be fine (Bot is owner).
+            
             if (aclRes.code !== 0) {
                 console.error(`❌ Failed to add ${userId}: ${aclRes.msg}`);
             } else {

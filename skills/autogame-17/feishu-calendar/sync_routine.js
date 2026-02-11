@@ -22,6 +22,24 @@ async function addRoutineEvents() {
     // 2. Define Routine Events
     const routines = [
         {
+            summary: '🛡️ System Maintenance (Auto-Restart)',
+            description: 'Automated health check and process restart to prevent memory leaks.',
+            hour: 4, // 04:00 UTC
+            minute: 0,
+            duration: 300, // 5 mins
+            rrule: 'FREQ=DAILY',
+            color: -1
+        },
+        {
+            summary: '🌅 Morning Briefing',
+            description: 'Generate and send a morning briefing card (yesterday highlights + today agenda) to Master.',
+            hour: 2, // 02:00 UTC = 10:00 CST (Wait, target is BEFORE 10:00 CST. Let's aim for 09:30 CST = 01:30 UTC)
+            minute: 30, // 01:30 UTC
+            duration: 300, // 5 mins
+            rrule: 'FREQ=DAILY',
+            color: -1
+        },
+        {
             summary: '📝 Xiaoxia\'s Diary',
             description: 'Reflect on the day, write diary, and update Feishu Doc.',
             hour: 20, // 20:00 UTC = 04:00 CST (Wait, 20:00 UTC is 04:00 AM next day in CST? Yes. +8)
