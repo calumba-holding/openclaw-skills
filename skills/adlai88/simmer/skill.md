@@ -1,6 +1,6 @@
 ---
 name: simmer
-version: 1.11.0
+version: 1.12.0
 description: The best prediction market interface for AI agents. Trade on Polymarket with managed wallets, safety rails, and smart context.
 homepage: https://simmer.markets
 metadata: {"openclaw":{"emoji":"🔮","category":"trading","api_base":"https://api.simmer.markets"}}
@@ -510,6 +510,30 @@ Set `trading_paused: true` to stop all trading. Set `false` to resume.
 | `kalshi` | USD (real) | Real trading on Kalshi. Requires Kalshi account link in dashboard. |
 
 Start on Simmer. Graduate to Polymarket or Kalshi when ready.
+
+---
+
+## Direct Data Access (Optional)
+
+For faster reads, query Polymarket directly instead of going through Simmer. Use `polymarket_token_id` from the `/markets` response and your wallet address from `/portfolio` or the [dashboard](https://simmer.markets/dashboard).
+
+```bash
+# Live midpoint price (no auth, use query params)
+curl "https://clob.polymarket.com/midpoint?token_id=TOKEN_ID"
+
+# Price history (hourly, last week)
+curl "https://clob.polymarket.com/prices-history?market=TOKEN_ID&interval=1w&fidelity=60"
+
+# Your Polymarket positions (not $SIM)
+curl "https://data-api.polymarket.com/positions?user=YOUR_WALLET_ADDRESS"
+
+# Your PnL / leaderboard stats
+curl "https://data-api.polymarket.com/v1/leaderboard?user=YOUR_WALLET_ADDRESS&timePeriod=ALL"
+```
+
+**Always use Simmer for:** `/trade` (managed wallets), `/context` (intelligence), `/briefing` (heartbeat), `/markets` (enriched data with divergence + scores).
+
+See [docs.md](https://simmer.markets/docs.md#direct-data-access-advanced) for full details and rate limits.
 
 ---
 
