@@ -3,11 +3,16 @@
   "slug": "youdotcom-cli",
   "displayName": "You.com CLI",
   "latest": {
-    "version": "1.2.1",
-    "publishedAt": 1770286344589,
-    "commit": "https://github.com/clawdbot/skills/commit/ab4ffae43160fcc7cc23cdaeeda2cadceba7bd52"
+    "version": "2.0.0",
+    "publishedAt": 1770747073860,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.1",
+      "publishedAt": 1770286344589,
+      "commit": "https://github.com/clawdbot/skills/commit/ab4ffae43160fcc7cc23cdaeeda2cadceba7bd52"
+    },
     {
       "version": "1.1.0",
       "publishedAt": 1770151231574,
