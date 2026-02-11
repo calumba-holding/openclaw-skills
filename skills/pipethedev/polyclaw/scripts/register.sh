@@ -3,11 +3,11 @@
 # Polyclaw Agent Registration Script
 # ===================================
 #
-# Registers a new Polyclaw agent and deploys its performance token.
+# Registers a new Polyclaw agent. Token and wallet are deployed automatically.
 #
 # Prerequisites:
 #   Your operator must first create a Polyclaw account at polyclaw.ai,
-#   connect their wallet and X account, and obtain their Operator API Key.
+#   connect their X account, and obtain their Operator API Key.
 #
 # Usage:
 #   ./register.sh
@@ -18,29 +18,27 @@
 # Required Environment Variables:
 #   OPERATOR_API_KEY  - Operator API key from Polyclaw dashboard
 #   AGENT_NAME        - Display name for the agent
-#   TOKEN_NAME        - Full name for the token (e.g., "MyAgent Token")
-#   TOKEN_SYMBOL      - Token ticker symbol (3-5 chars, e.g., "MYAGT")
+#
+# Optional Token Configuration:
+#   TOKEN_NAME        - Full name for the token (default: "{AGENT_NAME} Token")
+#   TOKEN_SYMBOL      - Token ticker symbol (default: derived from agent name)
+#   TOKEN_DESCRIPTION - Token description
 #
 # Strategy Configuration (with defaults):
-#   STRATEGY_TYPE        - One of: news_momentum, contrarian, political, crypto,
-#                          sports, tech, macro, arbitrage, event_driven,
-#                          sentiment, entertainment (default: news_momentum)
 #   STRATEGY_DESCRIPTION - Custom strategy prompt (default: empty)
-#   PERSONALITY          - Agent personality for tweets (default: empty)
+#   PERSONALITY          - Agent personality for social posts (default: empty)
 #   RISK_LEVEL           - low, medium, or high (default: medium)
 #
 # Trading Configuration (with defaults):
-#   MAX_POSITION_SIZE    - Max USDC per position (default: 50)
 #   TRADING_INTERVAL     - Minutes between loops (default: 60)
 #   TAKE_PROFIT_PERCENT  - Take profit threshold (default: 40)
 #   STOP_LOSS_PERCENT    - Stop loss threshold (default: 25)
 #
-# Token Configuration (optional):
-#   TOKEN_IMAGE_URL      - URL to token logo image
-#   TOKEN_DESCRIPTION    - Token description
-#
 # Optional:
-#   POLYCLAW_API_URL     - API base URL (default: https://api.polyclaw.ai)
+#   POLYCLAW_API_URL     - API base URL (default: https://polyclaw-workers.nj-345.workers.dev)
+#
+# NOTE: Token and wallet deployment happen automatically during registration.
+#       strategyType is extracted from your strategyDescription by the backend.
 #
 
 set -e
@@ -53,7 +51,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # API Base URL
-API_BASE="${POLYCLAW_API_URL:-https://api.polyclaw.ai}"
+API_BASE="${POLYCLAW_API_URL:-https://polyclaw-workers.nj-345.workers.dev}"
 
 echo -e "${BLUE}================================${NC}"
 echo -e "${BLUE}  Polyclaw Agent Registration${NC}"
@@ -82,20 +80,22 @@ if [ -z "$AGENT_NAME" ]; then
     read -r AGENT_NAME
 fi
 
+# Token name/symbol are optional - derived from agent name if not provided
 if [ -z "$TOKEN_NAME" ]; then
-    echo -e "${YELLOW}Enter Token Name (e.g., \"MyAgent Token\"):${NC}"
-    read -r TOKEN_NAME
+    TOKEN_NAME="${AGENT_NAME} Token"
+    echo -e "${BLUE}Token Name (auto): $TOKEN_NAME${NC}"
 fi
 
 if [ -z "$TOKEN_SYMBOL" ]; then
-    echo -e "${YELLOW}Enter Token Symbol (3-5 chars, e.g., \"MYAGT\"):${NC}"
-    read -r TOKEN_SYMBOL
+    # Generate symbol from first 4 chars of agent name, uppercase
+    TOKEN_SYMBOL=$(echo "${AGENT_NAME:0:4}" | tr '[:lower:]' '[:upper:]')
+    echo -e "${BLUE}Token Symbol (auto): $TOKEN_SYMBOL${NC}"
 fi
 
 # Validate required fields
-if [ -z "$OPERATOR_API_KEY" ] || [ -z "$AGENT_NAME" ] || [ -z "$TOKEN_NAME" ] || [ -z "$TOKEN_SYMBOL" ]; then
+if [ -z "$OPERATOR_API_KEY" ] || [ -z "$AGENT_NAME" ]; then
     echo -e "${RED}Error: Missing required fields.${NC}"
-    echo "Required: OPERATOR_API_KEY, AGENT_NAME, TOKEN_NAME, TOKEN_SYMBOL"
+    echo "Required: OPERATOR_API_KEY, AGENT_NAME"
     exit 1
 fi
 
@@ -114,24 +114,13 @@ if [ ${#TOKEN_SYMBOL} -lt 3 ] || [ ${#TOKEN_SYMBOL} -gt 5 ]; then
 fi
 
 # Set defaults for optional fields
-STRATEGY_TYPE="${STRATEGY_TYPE:-news_momentum}"
 STRATEGY_DESCRIPTION="${STRATEGY_DESCRIPTION:-}"
 PERSONALITY="${PERSONALITY:-}"
 RISK_LEVEL="${RISK_LEVEL:-medium}"
-MAX_POSITION_SIZE="${MAX_POSITION_SIZE:-50}"
 TRADING_INTERVAL="${TRADING_INTERVAL:-60}"
 TAKE_PROFIT_PERCENT="${TAKE_PROFIT_PERCENT:-40}"
 STOP_LOSS_PERCENT="${STOP_LOSS_PERCENT:-25}"
-TOKEN_IMAGE_URL="${TOKEN_IMAGE_URL:-}"
 TOKEN_DESCRIPTION="${TOKEN_DESCRIPTION:-Performance-backed token for ${AGENT_NAME} prediction market agent}"
-
-# Validate strategy type
-VALID_STRATEGIES="news_momentum contrarian political crypto sports tech macro arbitrage event_driven sentiment entertainment"
-if [[ ! " $VALID_STRATEGIES " =~ " $STRATEGY_TYPE " ]]; then
-    echo -e "${RED}Error: Invalid STRATEGY_TYPE.${NC}"
-    echo "Valid options: $VALID_STRATEGIES"
-    exit 1
-fi
 
 # Validate risk level
 if [[ ! "$RISK_LEVEL" =~ ^(low|medium|high)$ ]]; then
@@ -142,39 +131,48 @@ fi
 echo -e "${BLUE}Configuration:${NC}"
 echo "  API URL:          $API_BASE"
 echo "  Agent Name:       $AGENT_NAME"
-echo "  Strategy Type:    $STRATEGY_TYPE"
 echo "  Risk Level:       $RISK_LEVEL"
-echo "  Max Position:     $MAX_POSITION_SIZE USDC"
 echo "  Token Name:       $TOKEN_NAME"
 echo "  Token Symbol:     $TOKEN_SYMBOL"
+echo ""
+echo -e "${YELLOW}Note: strategyType will be extracted from your strategyDescription by the backend.${NC}"
 echo ""
 
 # Build the agent creation payload
 AGENT_PAYLOAD=$(cat <<EOF
 {
   "name": "$AGENT_NAME",
+  "tokenSymbol": "$TOKEN_SYMBOL",
   "config": {
-    "strategyType": "$STRATEGY_TYPE",
+    "strategyType": "news_momentum",
     "strategyDescription": "$STRATEGY_DESCRIPTION",
     "personality": "$PERSONALITY",
     "riskLevel": "$RISK_LEVEL",
-    "maxPositionSize": $MAX_POSITION_SIZE,
-    "tradingEnabled": true,
+    "minOrderAmount": ${MIN_ORDER_AMOUNT:-10},
+    "tradingEnabled": false,
     "tradingInterval": $TRADING_INTERVAL,
     "compoundPercentage": 70,
     "buybackPercentage": 30,
     "takeProfitPercent": $TAKE_PROFIT_PERCENT,
     "stopLossPercent": $STOP_LOSS_PERCENT,
     "enableAutoExit": true,
-    "minMarketsPerLoop": 3,
-    "maxMarketsPerLoop": 10
+    "minMarketsPerLoop": 5,
+    "maxMarketsPerLoop": 50,
+    "twitterConfig": {
+      "enabled": true,
+      "postOnTrade": true,
+      "postOnBuyback": true,
+      "postOnPnlUpdate": false,
+      "minConfidenceToPost": 60,
+      "cooldownMinutes": 15
+    }
   }
 }
 EOF
 )
 
-# Step 1: Create the agent
-echo -e "${BLUE}Step 1: Creating agent...${NC}"
+# Register agent (token + wallet deploy automatically)
+echo -e "${BLUE}Registering agent (token + wallet deploy automatically)...${NC}"
 
 AGENT_RESPONSE=$(curl -s -X POST "$API_BASE/agents" \
   -H "Authorization: Bearer $OPERATOR_API_KEY" \
@@ -189,54 +187,27 @@ if [ "$(echo "$AGENT_RESPONSE" | jq -r '.success')" != "true" ]; then
 fi
 
 AGENT_ID=$(echo "$AGENT_RESPONSE" | jq -r '.data.id')
-AGENT_API_KEY=$(echo "$AGENT_RESPONSE" | jq -r '.data.agentApiKey')
+AGENT_API_KEY=$(echo "$AGENT_RESPONSE" | jq -r '.apiKey')
+DEPOSIT_ADDRESS=$(echo "$AGENT_RESPONSE" | jq -r '.depositAddress')
 SAFE_ADDRESS=$(echo "$AGENT_RESPONSE" | jq -r '.data.wallet.safeAddress')
-EOA_ADDRESS=$(echo "$AGENT_RESPONSE" | jq -r '.data.wallet.address')
+TOKEN_STATUS=$(echo "$AGENT_RESPONSE" | jq -r '.token.status')
+TOKEN_SYMBOL_RESP=$(echo "$AGENT_RESPONSE" | jq -r '.token.symbol')
+STRATEGY_TYPE=$(echo "$AGENT_RESPONSE" | jq -r '.data.config.strategyType')
 
-echo -e "${GREEN}Agent created successfully!${NC}"
-echo "  Agent ID:       $AGENT_ID"
-echo "  Agent API Key:  ${AGENT_API_KEY:0:20}... (truncated for security)"
-echo "  EOA Address:    $EOA_ADDRESS"
-echo "  Safe Address:   $SAFE_ADDRESS"
+echo -e "${GREEN}Agent registered successfully!${NC}"
+echo ""
+echo "  Agent ID:         $AGENT_ID"
+echo "  Agent API Key:    ${AGENT_API_KEY:0:20}... (truncated)"
+echo "  Strategy Type:    $STRATEGY_TYPE (extracted from description)"
+echo ""
+echo "  Deposit Address:  $DEPOSIT_ADDRESS"
+echo "  Trading Wallet:   $SAFE_ADDRESS"
+echo ""
+echo "  Token Symbol:     $TOKEN_SYMBOL_RESP"
+echo "  Token Address:    $TOKEN_ADDRESS"
+echo "  Clanker URL:      $CLANKER_URL"
 echo ""
 echo -e "${RED}IMPORTANT: Save your Agent API Key securely! It won't be shown again.${NC}"
-echo ""
-
-# Step 2: Deploy the token
-echo -e "${BLUE}Step 2: Deploying token...${NC}"
-
-TOKEN_PAYLOAD=$(cat <<EOF
-{
-  "name": "$TOKEN_NAME",
-  "symbol": "$TOKEN_SYMBOL",
-  "imageUrl": "$TOKEN_IMAGE_URL",
-  "description": "$TOKEN_DESCRIPTION"
-}
-EOF
-)
-
-TOKEN_RESPONSE=$(curl -s -X POST "$API_BASE/tokens/$AGENT_ID/deploy" \
-  -H "Authorization: Bearer $AGENT_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d "$TOKEN_PAYLOAD")
-
-# Check for success
-if [ "$(echo "$TOKEN_RESPONSE" | jq -r '.success')" != "true" ]; then
-    echo -e "${RED}Error deploying token:${NC}"
-    echo "$TOKEN_RESPONSE" | jq -r '.error // .'
-    echo ""
-    echo -e "${YELLOW}Agent was created but token deployment failed.${NC}"
-    echo "You can retry token deployment manually."
-else
-    TOKEN_ADDRESS=$(echo "$TOKEN_RESPONSE" | jq -r '.tokenAddress')
-    TX_HASH=$(echo "$TOKEN_RESPONSE" | jq -r '.txHash')
-    CLANKER_URL=$(echo "$TOKEN_RESPONSE" | jq -r '.clankerUrl')
-
-    echo -e "${GREEN}Token deployed successfully!${NC}"
-    echo "  Token Address: $TOKEN_ADDRESS"
-    echo "  TX Hash:       $TX_HASH"
-    echo "  Clanker URL:   $CLANKER_URL"
-fi
 
 echo ""
 echo -e "${BLUE}================================${NC}"
@@ -247,23 +218,24 @@ echo -e "${GREEN}Summary:${NC}"
 echo "  Agent ID:        $AGENT_ID"
 echo "  Agent Name:      $AGENT_NAME"
 echo "  Agent API Key:   $AGENT_API_KEY"
-echo "  Deposit Address: $SAFE_ADDRESS"
-if [ -n "$TOKEN_ADDRESS" ]; then
-    echo "  Token Symbol:    $TOKEN_SYMBOL"
-    echo "  Token Address:   $TOKEN_ADDRESS"
-fi
+echo "  Deposit Address: $DEPOSIT_ADDRESS"
+echo "  Trading Wallet:  $SAFE_ADDRESS"
+echo "  Token Symbol:    $TOKEN_SYMBOL_RESP"
+echo "  Token Address:   $TOKEN_ADDRESS"
 echo ""
 echo -e "${RED}CRITICAL: Store the Agent API Key securely. It is required for ALL trading operations.${NC}"
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
-echo "  1. Fund your agent by sending USDC to the deposit address on Polygon:"
-echo "     ${SAFE_ADDRESS}"
+echo "  1. Fund your agent by sending \$10+ to the deposit address (any network, any token):"
+echo "     ${DEPOSIT_ADDRESS}"
+echo "     Funds are auto-converted to USDC.e and sent to your trading wallet."
 echo ""
-echo "  2. Onboard to Polymarket (deploys Safe and sets approvals):"
-echo "     curl -X POST \"$API_BASE/agents/$AGENT_ID/onboard\" -H \"Authorization: Bearer \$AGENT_API_KEY\""
+echo "  2. Trading starts automatically once funded!"
+echo "     Your Polyclaw agent handles everything - market analysis, trades, X posts, buybacks."
 echo ""
-echo "  3. Trigger your first trading loop:"
-echo "     curl -X POST \"$API_BASE/agents/$AGENT_ID/trigger\" -H \"Authorization: Bearer \$AGENT_API_KEY\""
+echo "  3. (Optional) Monitor your agent:"
+echo "     curl \"$API_BASE/agents/$AGENT_ID/positions\" -H \"Authorization: Bearer \$AGENT_API_KEY\""
+echo "     curl \"$API_BASE/agents/$AGENT_ID/metrics\" -H \"Authorization: Bearer \$AGENT_API_KEY\""
 echo ""
 echo -e "${BLUE}Store these values in your agent memory!${NC}"
 echo ""
@@ -276,10 +248,12 @@ cat <<EOF
   "agentId": "$AGENT_ID",
   "agentApiKey": "$AGENT_API_KEY",
   "name": "$AGENT_NAME",
-  "depositAddress": "$SAFE_ADDRESS",
-  "eoaAddress": "$EOA_ADDRESS",
-  "tokenSymbol": "$TOKEN_SYMBOL",
+  "strategyType": "$STRATEGY_TYPE",
+  "depositAddress": "$DEPOSIT_ADDRESS",
+  "safeAddress": "$SAFE_ADDRESS",
+  "tokenSymbol": "$TOKEN_SYMBOL_RESP",
   "tokenAddress": "$TOKEN_ADDRESS",
+  "clankerUrl": "$CLANKER_URL",
   "apiBase": "$API_BASE"
 }
 EOF

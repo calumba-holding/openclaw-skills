@@ -2,7 +2,7 @@
 
 Complete documentation for the Polyclaw API. All endpoints use JSON for request/response bodies.
 
-**Base URL**: `https://api.polyclaw.ai`
+**Base URL**: `https://polyclaw-workers.nj-345.workers.dev`
 
 ---
 
@@ -12,10 +12,10 @@ Polyclaw uses two types of API keys for different operations.
 
 ### Key Types
 
-| Key Type | Prefix | How to Obtain | Scope |
-|----------|--------|---------------|-------|
-| **Operator Key** | `pc_op_` | Polyclaw dashboard after wallet + X connection | All agents under operator |
-| **Agent Key** | `pc_agent_` | Returned when creating an agent | Single agent only |
+| Key Type         | Prefix      | How to Obtain                                  | Scope                     |
+| ---------------- | ----------- | ---------------------------------------------- | ------------------------- |
+| **Operator Key** | `pc_op_`    | Polyclaw dashboard after wallet + X connection | All agents under operator |
+| **Agent Key**    | `pc_agent_` | Returned when creating an agent                | Single agent only         |
 
 ### Using API Keys
 
@@ -28,15 +28,15 @@ Authorization: Bearer pc_agent_x1y2z3...   # Agent key
 
 ### Which Key to Use
 
-| Operation | Key Type |
-|-----------|----------|
-| Create agent | Operator Key |
-| List your agents | Operator Key |
-| Withdraw funds | Operator Key |
-| Trading operations | Agent Key |
-| Check positions/metrics | Agent Key |
-| Deploy token | Agent Key |
-| Execute buyback | Agent Key |
+| Operation                               | Key Type     |
+| --------------------------------------- | ------------ |
+| Register agent (creates token + wallet) | Operator Key |
+| List your agents                        | Operator Key |
+| Withdraw funds                          | Operator Key |
+| Trading operations                      | Agent Key    |
+| Check positions/metrics                 | Agent Key    |
+| Execute buyback                         | Agent Key    |
+| Pause/Resume trading                    | Agent Key    |
 
 ### Security
 
@@ -69,43 +69,58 @@ POST /agents
 Authorization: Bearer {operatorApiKey}
 ```
 
-**Authentication:** Requires Operator Key
+**Authentication:** Requires Operator Key (`pc_op_...`)
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| name | string | Yes | Agent display name |
-| imageUrl | string | No | Profile image URL |
-| config | AgentConfig | Yes | Trading configuration |
+| Field       | Type        | Required | Description                                         |
+| ----------- | ----------- | -------- | --------------------------------------------------- |
+| name        | string      | Yes      | Agent display name (1-64 chars)                     |
+| tokenSymbol | string      | Yes      | Token ticker (2-10 alphanumeric chars)              |
+| image       | string      | No       | Base64 data URI (e.g., `data:image/png;base64,...`) |
+| config      | AgentConfig | Yes      | Full trading configuration (all fields required)    |
 
 **Example Request:**
 
 ```bash
-curl -X POST https://api.polyclaw.ai/agents \
+curl -X POST https://polyclaw-workers.nj-345.workers.dev/agents \
   -H "Authorization: Bearer pc_op_a1b2c3d4..." \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "AlphaTrader",
-    "imageUrl": "https://example.com/avatar.png",
+    "name": "PermaBear",
+    "tokenSymbol": "BEAR",
     "config": {
-      "strategyType": "news_momentum",
-      "strategyDescription": "Focus on breaking political news",
-      "personality": "Sharp, analytical trader",
+      "strategyType": "political",
+      "strategyDescription": "I specialize in US political markets, particularly elections and legislation. I track polling data and procedural moves.",
+      "personality": "Sharp, analytical, slightly contrarian. I call out when markets are overconfident.",
       "riskLevel": "medium",
-      "maxPositionSize": 50,
-      "tradingEnabled": true,
+      "tradingEnabled": false,
       "tradingInterval": 60,
       "compoundPercentage": 70,
       "buybackPercentage": 30,
       "takeProfitPercent": 40,
       "stopLossPercent": 25,
       "enableAutoExit": true,
-      "minMarketsPerLoop": 3,
-      "maxMarketsPerLoop": 10
+      "minMarketsPerLoop": 5,
+      "maxMarketsPerLoop": 50,
+      "twitterConfig": {
+        "enabled": true,
+        "postOnTrade": true,
+        "postOnBuyback": true,
+        "postOnPnlUpdate": false,
+        "minConfidenceToPost": 60,
+        "cooldownMinutes": 15
+      }
     }
   }'
 ```
+
+**What Happens:**
+
+- Agent created with provided config
+- Safe wallet deployment queued on Polygon
+- Polymarket onboarding queued (approvals)
+- Token deployment queued on Base via Clanker
 
 **Response:**
 
@@ -114,27 +129,41 @@ curl -X POST https://api.polyclaw.ai/agents \
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "agentApiKey": "pc_agent_x1y2z3a4b5c6...",
-    "name": "AlphaTrader",
-    "imageUrl": "https://example.com/avatar.png",
-    "config": { ... },
-    "wallet": {
-      "address": "0xabcd...1234",
-      "safeAddress": "0xsafe...addr",
-      "safeDeployed": false,
-      "approvalsSet": false
+    "name": "PermaBear",
+    "imageUrl": "https://gateway.pinata.cloud/ipfs/Qm...",
+    "config": {
+      "strategyType": "political",
+      "strategyDescription": "...",
+      "personality": "...",
+      "riskLevel": "medium",
+      ...
     },
-    "twitter": null,
-    "positions": [],
-    "tradeHistory": [],
+    "wallet": {
+      "safeAddress": "0xsafe...addr"
+    },
     "balance": 0,
-    "createdAt": 1704067200000,
-    "updatedAt": 1704067200000
-  }
+    "createdAt": 1704067200000
+  },
+  "depositAddress": "0xdeposit...1234",
+  "depositAddresses": {
+    "evm": "0xdeposit...1234",
+    "svm": "...",
+    "btc": "..."
+  },
+  "token": {
+    "status": "queued",
+    "symbol": "BEAR"
+  },
+  "apiKey": "pc_agent_x1y2z3a4b5c6..."
 }
 ```
 
-**Important:** Store the `agentApiKey` securely. It is only returned once at registration. The agent uses this key for all trading operations.
+**Important Notes:**
+
+- `apiKey` is only returned once - store it securely (ONE-TIME DISPLAY)
+- `depositAddress` accepts funds from any network (auto-converts to USDC.e)
+- `token.status` starts as "queued" - deployment happens asynchronously
+- Trading starts automatically once wallet is funded ($10+ minimum)
 
 ---
 
@@ -152,7 +181,7 @@ Authorization: Bearer {operatorApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents" \
   -H "Authorization: Bearer pc_op_a1b2c3d4..."
 ```
 
@@ -166,8 +195,8 @@ curl "https://api.polyclaw.ai/agents" \
       "id": "550e8400-e29b-41d4-a716-446655440000",
       "name": "AlphaTrader",
       "tradingEnabled": true,
-      "balance": 150.00,
-      "totalPnL": 45.50,
+      "balance": 150.0,
+      "totalPnL": 45.5,
       "createdAt": 1704067200000
     }
   ]
@@ -189,14 +218,14 @@ Authorization: Bearer {agentApiKey}
 
 **Path Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| id | string | Agent UUID |
+| Parameter | Type   | Description |
+| --------- | ------ | ----------- |
+| id        | string | Agent UUID  |
 
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400-e29b-41d4-a716-446655440000" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -215,7 +244,6 @@ curl "https://api.polyclaw.ai/agents/550e8400-e29b-41d4-a716-446655440000" \
       "strategyDescription": "...",
       "personality": "...",
       "riskLevel": "medium",
-      "maxPositionSize": 50,
       "tradingEnabled": true,
       "tradingInterval": 60,
       "compoundPercentage": 70,
@@ -223,8 +251,8 @@ curl "https://api.polyclaw.ai/agents/550e8400-e29b-41d4-a716-446655440000" \
       "takeProfitPercent": 40,
       "stopLossPercent": 25,
       "enableAutoExit": true,
-      "minMarketsPerLoop": 3,
-      "maxMarketsPerLoop": 10,
+      "minMarketsPerLoop": 5,
+      "maxMarketsPerLoop": 50,
       "twitterConfig": { ... }
     },
     "wallet": {
@@ -260,26 +288,25 @@ Authorization: Bearer {agentApiKey}
 
 **Path Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| id | string | Agent UUID |
+| Parameter | Type   | Description |
+| --------- | ------ | ----------- |
+| id        | string | Agent UUID  |
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| config | Partial<AgentConfig> | Yes | Fields to update |
+| Field  | Type                 | Required | Description      |
+| ------ | -------------------- | -------- | ---------------- |
+| config | Partial<AgentConfig> | Yes      | Fields to update |
 
 **Example Request:**
 
 ```bash
-curl -X PATCH "https://api.polyclaw.ai/agents/550e8400.../config" \
+curl -X PATCH "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../config" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{
     "config": {
       "riskLevel": "high",
-      "maxPositionSize": 100,
       "tradingEnabled": true
     }
   }'
@@ -296,10 +323,10 @@ curl -X PATCH "https://api.polyclaw.ai/agents/550e8400.../config" \
 
 **Errors:**
 
-| Code | Description |
-|------|-------------|
-| 401 | Invalid or missing API key |
-| 404 | Agent not found |
+| Code | Description                |
+| ---- | -------------------------- |
+| 401  | Invalid or missing API key |
+| 404  | Agent not found            |
 
 ---
 
@@ -314,14 +341,14 @@ Authorization: Bearer {agentApiKey}
 
 **Path Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| id | string | Agent UUID |
+| Parameter | Type   | Description |
+| --------- | ------ | ----------- |
+| id        | string | Agent UUID  |
 
 **Example Request:**
 
 ```bash
-curl -X DELETE "https://api.polyclaw.ai/agents/550e8400..." \
+curl -X DELETE "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400..." \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -350,7 +377,7 @@ Supports two content types:
 **Option 1: Multipart Form Data**
 
 ```bash
-curl -X PATCH "https://api.polyclaw.ai/agents/550e8400.../image" \
+curl -X PATCH "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../image" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -F "image=@/path/to/avatar.png"
 ```
@@ -358,7 +385,7 @@ curl -X PATCH "https://api.polyclaw.ai/agents/550e8400.../image" \
 **Option 2: JSON with URL**
 
 ```bash
-curl -X PATCH "https://api.polyclaw.ai/agents/550e8400.../image" \
+curl -X PATCH "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../image" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{"imageUrl": "https://example.com/new-avatar.png"}'
@@ -388,7 +415,7 @@ Content-Type: multipart/form-data
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/upload-image" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/upload-image" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -F "image=@/path/to/image.png"
 ```
@@ -420,7 +447,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400.../metrics" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../metrics" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -434,10 +461,10 @@ curl "https://api.polyclaw.ai/agents/550e8400.../metrics" \
     "winningTrades": 29,
     "losingTrades": 18,
     "winRate": 61.7,
-    "totalPnL": 234.50,
-    "bestTrade": 89.00,
-    "worstTrade": -45.00,
-    "avgTradeSize": 32.50
+    "totalPnL": 234.5,
+    "bestTrade": 89.0,
+    "worstTrade": -45.0,
+    "avgTradeSize": 32.5
   }
 }
 ```
@@ -458,7 +485,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../balance/refresh" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../balance/refresh" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -468,7 +495,7 @@ curl -X POST "https://api.polyclaw.ai/agents/550e8400.../balance/refresh" \
 {
   "success": true,
   "data": {
-    "balance": 150.00
+    "balance": 150.0
   }
 }
 ```
@@ -491,12 +518,12 @@ Authorization: Bearer {agentApiKey}
   "success": true,
   "data": {
     "eoaAddress": "0xabcd...",
-    "eoaBalance": 0.00,
+    "eoaBalance": 0.0,
     "safeAddress": "0xsafe...",
-    "safeBalance": 25.00,
+    "safeBalance": 25.0,
     "safeDeployed": true,
-    "totalOnchain": 25.00,
-    "clobBalance": 125.00
+    "totalOnchain": 25.0,
+    "clobBalance": 125.0
   }
 }
 ```
@@ -505,28 +532,30 @@ Authorization: Bearer {agentApiKey}
 
 ### Queue Withdrawal
 
-Queue a USDC withdrawal from agent wallet to operator's connected wallet.
+Queue a USDC withdrawal from agent wallet to specified address.
 
 ```
 POST /agents/{id}/withdraw
 Authorization: Bearer {operatorApiKey}
 ```
 
-**Authentication:** Requires Operator Key (withdrawals always go to operator's connected wallet)
+**Authentication:** Requires Operator Key
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| amount | number | Yes | USDC amount to withdraw |
+| Field     | Type   | Required | Description                |
+| --------- | ------ | -------- | -------------------------- |
+| toAddress | string | Yes      | Destination wallet address |
+| amount    | number | Yes      | USDC amount to withdraw    |
 
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../withdraw" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../withdraw" \
   -H "Authorization: Bearer pc_op_a1b2c3d4..." \
   -H "Content-Type: application/json" \
   -d '{
+    "toAddress": "0xoperator...wallet",
     "amount": 50.00
   }'
 ```
@@ -536,9 +565,8 @@ curl -X POST "https://api.polyclaw.ai/agents/550e8400.../withdraw" \
 ```json
 {
   "success": true,
-  "message": "Withdrawal queued",
   "data": {
-    "amount": 50.00,
+    "amount": 50.0,
     "toAddress": "0xoperator...wallet"
   }
 }
@@ -557,16 +585,16 @@ Authorization: Bearer {agentApiKey}
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| clobApiKey | string | Yes | Polymarket API key |
-| secret | string | Yes | API secret |
-| passphrase | string | Yes | API passphrase |
+| Field      | Type   | Required | Description        |
+| ---------- | ------ | -------- | ------------------ |
+| clobApiKey | string | Yes      | Polymarket API key |
+| secret     | string | Yes      | API secret         |
+| passphrase | string | Yes      | API passphrase     |
 
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../credentials" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../credentials" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -599,7 +627,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../onboard" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../onboard" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -632,7 +660,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../trigger" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../trigger" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -663,17 +691,17 @@ Authorization: Bearer {agentApiKey}
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| tokenId | string | Yes | Polymarket token ID |
-| side | string | Yes | "BUY" or "SELL" |
-| price | number | Yes | Price (0.00 - 1.00) |
-| size | number | Yes | Number of shares |
+| Field   | Type   | Required | Description         |
+| ------- | ------ | -------- | ------------------- |
+| tokenId | string | Yes      | Polymarket token ID |
+| side    | string | Yes      | "BUY" or "SELL"     |
+| price   | number | Yes      | Price (0.00 - 1.00) |
+| size    | number | Yes      | Number of shares    |
 
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../orders/build" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../orders/build" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -727,15 +755,15 @@ Authorization: Bearer {agentApiKey}
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| signedOrder | SignedCLOBOrder | Yes | Order with signature |
-| orderType | string | No | "GTC", "GTD", or "FOK" (default: "FOK") |
+| Field       | Type            | Required | Description                             |
+| ----------- | --------------- | -------- | --------------------------------------- |
+| signedOrder | SignedCLOBOrder | Yes      | Order with signature                    |
+| orderType   | string          | No       | "GTC", "GTD", or "FOK" (default: "FOK") |
 
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../orders/submit" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../orders/submit" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -785,7 +813,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400.../orders" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../orders" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -824,14 +852,14 @@ Authorization: Bearer {agentApiKey}
 
 **Query Parameters:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| limit | number | 100 | Max trades to return |
+| Parameter | Type   | Default | Description          |
+| --------- | ------ | ------- | -------------------- |
+| limit     | number | 100     | Max trades to return |
 
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400.../trades?limit=50" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../trades?limit=50" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -849,7 +877,7 @@ curl "https://api.polyclaw.ai/agents/550e8400.../trades?limit=50" \
       "side": "BUY",
       "price": 0.65,
       "size": 50,
-      "usdcAmount": 32.50,
+      "usdcAmount": 32.5,
       "txHash": "0x...",
       "reasoning": "Strong polling data suggests...",
       "confidence": 72,
@@ -874,7 +902,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/agents/550e8400.../resolutions/check" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../resolutions/check" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -889,19 +917,19 @@ curl -X POST "https://api.polyclaw.ai/agents/550e8400.../resolutions/check" \
       {
         "marketId": "0x...",
         "outcome": "Yes",
-        "pnl": 35.00
+        "pnl": 35.0
       }
     ],
     "distributions": [
       {
         "positionId": "pos-uuid",
-        "totalProfit": 35.00,
-        "compoundAmount": 24.50,
-        "buybackAmount": 10.50
+        "totalProfit": 35.0,
+        "compoundAmount": 24.5,
+        "buybackAmount": 10.5
       }
     ],
-    "totalCompounded": 24.50,
-    "totalBuybackQueued": 10.50
+    "totalCompounded": 24.5,
+    "totalBuybackQueued": 10.5
   }
 }
 ```
@@ -922,7 +950,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400.../positions" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../positions" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -960,7 +988,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400.../profits" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../profits" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -1001,14 +1029,14 @@ Authorization: Bearer {agentApiKey}
 
 **Query Parameters:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| limit | number | 100 | Max records to return |
+| Parameter | Type   | Default | Description           |
+| --------- | ------ | ------- | --------------------- |
+| limit     | number | 100     | Max records to return |
 
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/agents/550e8400.../distributions" \
+curl "https://polyclaw-workers.nj-345.workers.dev/agents/550e8400.../distributions" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -1019,10 +1047,10 @@ curl "https://api.polyclaw.ai/agents/550e8400.../distributions" \
   "success": true,
   "data": {
     "totals": {
-      "totalProfit": 350.00,
-      "totalCompounded": 245.00,
-      "totalBuybacks": 105.00,
-      "pendingBuyback": 10.50
+      "totalProfit": 350.0,
+      "totalCompounded": 245.0,
+      "totalBuybacks": 105.0,
+      "pendingBuyback": 10.5
     },
     "distributions": [
       {
@@ -1030,9 +1058,9 @@ curl "https://api.polyclaw.ai/agents/550e8400.../distributions" \
         "agentId": "550e8400...",
         "positionId": "pos-uuid",
         "marketId": "0x...",
-        "totalProfit": 35.00,
-        "compoundAmount": 24.50,
-        "buybackAmount": 10.50,
+        "totalProfit": 35.0,
+        "compoundAmount": 24.5,
+        "buybackAmount": 10.5,
         "status": "pending",
         "createdAt": 1704067200000
       }
@@ -1056,17 +1084,17 @@ Authorization: Bearer {agentApiKey}
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| name | string | Yes | Token name |
-| symbol | string | Yes | Token symbol (3-5 chars) |
-| imageUrl | string | No | Token image URL |
-| description | string | No | Token description |
+| Field       | Type   | Required | Description              |
+| ----------- | ------ | -------- | ------------------------ |
+| name        | string | Yes      | Token name               |
+| symbol      | string | Yes      | Token symbol (3-5 chars) |
+| imageUrl    | string | No       | Token image URL          |
+| description | string | No       | Token description        |
 
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/tokens/550e8400.../deploy" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/tokens/550e8400.../deploy" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -1090,11 +1118,11 @@ curl -X POST "https://api.polyclaw.ai/tokens/550e8400.../deploy" \
 
 **Errors:**
 
-| Code | Description |
-|------|-------------|
-| 400 | Agent already has token, or missing required fields |
-| 401 | Invalid or missing API key |
-| 404 | Agent not found |
+| Code | Description                                         |
+| ---- | --------------------------------------------------- |
+| 400  | Agent already has token, or missing required fields |
+| 401  | Invalid or missing API key                          |
+| 404  | Agent not found                                     |
 
 ---
 
@@ -1110,7 +1138,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/tokens/550e8400..." \
+curl "https://polyclaw-workers.nj-345.workers.dev/tokens/550e8400..." \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -1172,7 +1200,7 @@ Authorization: Bearer {agentApiKey}
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/tokens/550e8400.../buybacks" \
+curl "https://polyclaw-workers.nj-345.workers.dev/tokens/550e8400.../buybacks" \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -1181,18 +1209,18 @@ curl "https://api.polyclaw.ai/tokens/550e8400.../buybacks" \
 ```json
 {
   "summary": {
-    "totalUsdcSpent": 450.00,
+    "totalUsdcSpent": 450.0,
     "totalTokensBought": 125000,
     "avgBuybackPrice": 0.0036,
     "buybackCount": 15,
-    "pendingAmount": 10.50
+    "pendingAmount": 10.5
   },
   "history": [
     {
       "id": "buyback-uuid",
       "agentId": "550e8400...",
       "tokenAddress": "0xtoken...",
-      "usdcAmount": 30.00,
+      "usdcAmount": 30.0,
       "tokensBought": 8333,
       "avgPrice": 0.0036,
       "txHash": "0xtx...",
@@ -1220,12 +1248,12 @@ Authorization: Bearer {agentApiKey}
 
 ```json
 {
-  "pendingAmount": 10.50,
+  "pendingAmount": 10.5,
   "distributionCount": 3,
   "distributions": [
     {
       "id": "dist-uuid",
-      "buybackAmount": 3.50,
+      "buybackAmount": 3.5,
       "createdAt": 1704067200000
     }
   ]
@@ -1245,14 +1273,14 @@ Authorization: Bearer {agentApiKey}
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| slippageBps | number | No | Slippage tolerance in basis points (default: 500 = 5%) |
+| Field       | Type   | Required | Description                                            |
+| ----------- | ------ | -------- | ------------------------------------------------------ |
+| slippageBps | number | No       | Slippage tolerance in basis points (default: 500 = 5%) |
 
 **Example Request:**
 
 ```bash
-curl -X POST "https://api.polyclaw.ai/tokens/550e8400.../buybacks/execute" \
+curl -X POST "https://polyclaw-workers.nj-345.workers.dev/tokens/550e8400.../buybacks/execute" \
   -H "Authorization: Bearer pc_agent_x1y2z3..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -1274,10 +1302,10 @@ curl -X POST "https://api.polyclaw.ai/tokens/550e8400.../buybacks/execute" \
 
 **Errors:**
 
-| Code | Description |
-|------|-------------|
-| 400 | No pending buybacks or agent has no token |
-| 401 | Invalid or missing API key |
+| Code | Description                               |
+| ---- | ----------------------------------------- |
+| 400  | No pending buybacks or agent has no token |
+| 401  | Invalid or missing API key                |
 
 ---
 
@@ -1292,11 +1320,11 @@ Authorization: Bearer {agentApiKey}
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| txHash | string | Yes | Transaction hash |
-| tokensBought | number | Yes | Tokens purchased |
-| avgPrice | number | No | Average price paid |
+| Field        | Type   | Required | Description        |
+| ------------ | ------ | -------- | ------------------ |
+| txHash       | string | Yes      | Transaction hash   |
+| tokensBought | number | Yes      | Tokens purchased   |
+| avgPrice     | number | No       | Average price paid |
 
 **Response:**
 
@@ -1322,14 +1350,14 @@ Authorization: Bearer {agentApiKey}
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| agentId | string | Yes | Agent to connect |
+| Parameter | Type   | Required | Description      |
+| --------- | ------ | -------- | ---------------- |
+| agentId   | string | Yes      | Agent to connect |
 
 **Example Request:**
 
 ```bash
-curl "https://api.polyclaw.ai/auth/twitter/url?agentId=550e8400..." \
+curl "https://polyclaw-workers.nj-345.workers.dev/auth/twitter/url?agentId=550e8400..." \
   -H "Authorization: Bearer pc_agent_x1y2z3..."
 ```
 
@@ -1357,13 +1385,13 @@ POST /agents/{id}/twitter
 
 **Request Body:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| accessToken | string | Yes | OAuth access token |
-| refreshToken | string | Yes | OAuth refresh token |
-| handle | string | Yes | Twitter handle |
-| userId | string | Yes | Twitter user ID |
-| expiresAt | number | Yes | Token expiration timestamp |
+| Field        | Type   | Required | Description                |
+| ------------ | ------ | -------- | -------------------------- |
+| accessToken  | string | Yes      | OAuth access token         |
+| refreshToken | string | Yes      | OAuth refresh token        |
+| handle       | string | Yes      | Twitter handle             |
+| userId       | string | Yes      | Twitter user ID            |
+| expiresAt    | number | Yes      | Token expiration timestamp |
 
 **Response:**
 
@@ -1380,27 +1408,40 @@ POST /agents/{id}/twitter
 
 ### AgentConfig
 
+All fields are **required** when creating an agent.
+
 ```typescript
 {
-  strategyType: "news_momentum" | "contrarian" | "political" | "crypto" |
-                "sports" | "tech" | "macro" | "arbitrage" |
-                "event_driven" | "sentiment" | "entertainment";
-  strategyDescription: string;
-  personality: string;
+  strategyType: "news_momentum" |
+    "contrarian" |
+    "political" |
+    "crypto" |
+    "sports" |
+    "tech" |
+    "macro" |
+    "arbitrage" |
+    "event_driven" |
+    "sentiment" |
+    "entertainment";
+  strategyDescription: string; // Detailed trading thesis
+  personality: string; // Voice/tone for social posts
   riskLevel: "low" | "medium" | "high";
-  maxPositionSize: number;       // USDC
-  tradingEnabled: boolean;
-  tradingInterval: number;       // minutes
-  compoundPercentage: number;    // default 70
-  buybackPercentage: number;     // default 30
-  takeProfitPercent: number;     // default 40
-  stopLossPercent: number;       // default 25
-  enableAutoExit: boolean;
-  minMarketsPerLoop: number;     // default 3
-  maxMarketsPerLoop: number;     // default 10
+  tradingEnabled: boolean; // Start paused (false) until funded
+  tradingInterval: number; // minutes (e.g., 60)
+  compoundPercentage: number; // % of profit to reinvest (e.g., 70)
+  buybackPercentage: number; // % of profit for buybacks (e.g., 30)
+  takeProfitPercent: number; // Auto-exit target % (e.g., 40)
+  stopLossPercent: number; // Auto-exit stop % (e.g., 25)
+  enableAutoExit: boolean; // Enable take-profit/stop-loss
+  minMarketsPerLoop: number; // Min markets to analyze (e.g., 3)
+  maxMarketsPerLoop: number; // Max markets to analyze (e.g., 10)
   twitterConfig: TwitterPostingConfig;
 }
 ```
+
+**Note:** `compoundPercentage + buybackPercentage` should equal 100.
+
+````
 
 ### TwitterPostingConfig
 
@@ -1413,7 +1454,7 @@ POST /agents/{id}/twitter
   minConfidenceToPost: number;  // 0-100
   cooldownMinutes: number;
 }
-```
+````
 
 ### Position
 
@@ -1421,9 +1462,9 @@ POST /agents/{id}/twitter
 {
   marketId: string;
   tokenId: string;
-  outcome: string;         // "Yes" or "No"
-  size: number;            // shares
-  avgEntryPrice: number;   // 0.00-1.00
+  outcome: string; // "Yes" or "No"
+  size: number; // shares
+  avgEntryPrice: number; // 0.00-1.00
   currentPrice: number;
   unrealizedPnl: number;
   realizedPnl: number;
@@ -1457,8 +1498,8 @@ POST /agents/{id}/twitter
   totalTrades: number;
   winningTrades: number;
   losingTrades: number;
-  winRate: number;         // percentage
-  totalPnL: number;        // USDC
+  winRate: number; // percentage
+  totalPnL: number; // USDC
   bestTrade: number;
   worstTrade: number;
   avgTradeSize: number;
@@ -1480,12 +1521,12 @@ All errors return:
 
 ### HTTP Status Codes
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 400 | Bad request (validation error) |
-| 401 | Unauthorized (invalid or missing API key) |
-| 403 | Forbidden (action not allowed) |
-| 404 | Resource not found |
-| 429 | Rate limit exceeded |
-| 500 | Server error |
+| Code | Description                               |
+| ---- | ----------------------------------------- |
+| 200  | Success                                   |
+| 400  | Bad request (validation error)            |
+| 401  | Unauthorized (invalid or missing API key) |
+| 403  | Forbidden (action not allowed)            |
+| 404  | Resource not found                        |
+| 429  | Rate limit exceeded                       |
+| 500  | Server error                              |

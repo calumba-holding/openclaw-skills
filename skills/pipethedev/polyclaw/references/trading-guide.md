@@ -13,12 +13,14 @@ Polymarket offers binary outcome markets where you trade on Yes/No outcomes. Eac
 > "Will Bitcoin reach $100,000 by March 2025?"
 
 You can buy:
+
 - **Yes shares**: Pay out $1.00 if the answer is Yes
 - **No shares**: Pay out $1.00 if the answer is No
 
 ### Prices as Probabilities
 
 Share prices represent implied probability:
+
 - Yes at $0.65 = market believes 65% chance of Yes
 - No at $0.35 = market believes 35% chance of No
 - Prices always sum to ~$1.00
@@ -26,6 +28,7 @@ Share prices represent implied probability:
 ### The Central Limit Order Book (CLOB)
 
 Polymarket uses an order book, not AMM pools:
+
 - **Bids**: Buy orders at various prices
 - **Asks**: Sell orders at various prices
 - **Spread**: Gap between best bid and best ask
@@ -34,6 +37,7 @@ Polymarket uses an order book, not AMM pools:
 ### Market Resolution
 
 When the event occurs:
+
 - Winning shares pay $1.00 each
 - Losing shares pay $0.00
 - Resolution is determined by UMA's optimistic oracle
@@ -53,6 +57,7 @@ Edge = Your Estimate - Market Price
 ### Example
 
 Market: "Will the Fed cut rates in January?"
+
 - Market price for Yes: $0.45 (45% implied probability)
 - Your analysis says: 60% likely
 - Your edge: 0.60 - 0.45 = **+0.15 (15% edge)**
@@ -60,6 +65,7 @@ Market: "Will the Fed cut rates in January?"
 ### When to Trade
 
 Trade when you have:
+
 1. **Positive edge**: Your estimate > market price (for Yes) or < market price (for No)
 2. **Sufficient confidence**: Your confidence score meets your risk level threshold
 3. **Strategy fit**: The market matches your strategy focus
@@ -85,6 +91,7 @@ A market can have high edge but low confidence (uncertain but mispriced) or low 
 React to new information before markets fully price it in. Speed matters—you want to act while others are still reading the headline.
 
 **Ideal Markets**:
+
 - Markets with pending announcements
 - Developing news stories
 - Official statements expected
@@ -109,6 +116,7 @@ Company announces earnings beat after hours. The "Will stock hit $X?" market has
 Find markets where popular opinion has pushed prices to extremes. When "everyone knows" something will happen, the market often overprices it.
 
 **Ideal Markets**:
+
 - Extreme prices (>85% or <15%)
 - High-confidence consensus views
 - Echo chamber effects
@@ -134,6 +142,7 @@ Patient and analytical. Wait for clear mispricings. Take positions against the c
 Deep expertise in political dynamics and institutional behavior. Understand how Congress works, what drives executive decisions, how courts rule.
 
 **Ideal Markets**:
+
 - Elections and primaries
 - Legislative votes
 - Executive actions
@@ -160,6 +169,7 @@ A bill is at 70% to pass. You've tracked committee markups and know two swing vo
 Leverage crypto-native knowledge. Understand on-chain metrics, developer activity, community sentiment, and how crypto Twitter moves markets.
 
 **Ideal Markets**:
+
 - Price predictions (BTC/ETH milestones)
 - Protocol upgrades
 - Regulatory decisions on crypto
@@ -185,6 +195,7 @@ Market asks if ETH hits $4k by month end. It's at $3,800, priced at 40%. You see
 Statistical analysis meets sports knowledge. Use advanced metrics, injury reports, and historical patterns to find mispriced games.
 
 **Ideal Markets**:
+
 - Game outcomes
 - Championship winners
 - Player awards and milestones
@@ -210,6 +221,7 @@ Star player listed as "questionable" but you have info they'll play. Market hasn
 Track Silicon Valley. Understand product cycles, company strategies, and what drives tech earnings. AI developments are high-signal.
 
 **Ideal Markets**:
+
 - Product launches
 - Company earnings and performance
 - AI developments
@@ -235,6 +247,7 @@ Apple event scheduled. Market prices new product at 60%. Supply chain reports co
 Understand monetary policy and economic cycles. Read Fed minutes, track inflation data, model unemployment trends.
 
 **Ideal Markets**:
+
 - Federal Reserve decisions
 - Economic data releases
 - Inflation metrics
@@ -260,6 +273,7 @@ Analytical. Track leading indicators, read Fed communications, understand what d
 Systematically scan for markets that don't add up. Yes/No pairs should sum to $1.00. Related markets should be consistent.
 
 **Ideal Markets**:
+
 - Markets with pricing errors
 - Related markets with divergent prices
 - Yes/No pairs not summing correctly
@@ -285,6 +299,7 @@ Quantitative. Build alerts for mispricings. Act fast—arbitrage closes quickly.
 Position before key dates when outcomes will be determined. The event is the catalyst—prices often don't move until it happens.
 
 **Ideal Markets**:
+
 - Scheduled announcements
 - Deadline-driven markets
 - Binary outcome events
@@ -310,6 +325,7 @@ FDA decision in 3 days. Market at 50/50. Your biotech analysis says 70% approval
 Monitor social platforms for sentiment shifts. Viral narratives move markets. Get ahead of what everyone will believe tomorrow.
 
 **Ideal Markets**:
+
 - Social media trends
 - Public opinion shifts
 - Viral narratives
@@ -335,6 +351,7 @@ You spot a viral thread gaining traction that will shift opinion on a market. Cu
 Track box office, streaming charts, award show patterns, and pop culture. Industry insiders often know outcomes early.
 
 **Ideal Markets**:
+
 - Award show predictions
 - Box office performance
 - Streaming rankings
@@ -358,6 +375,7 @@ Your `strategyDescription` is passed to Claude during every market analysis. Mak
 ### Be Specific About Your Edge
 
 **Good**:
+
 ```
 I specialize in US political markets, particularly congressional legislation.
 I track committee votes, whip counts, and procedural moves. I'm skeptical of
@@ -366,6 +384,7 @@ I understand filibuster dynamics and reconciliation rules.
 ```
 
 **Bad**:
+
 ```
 I trade political markets.
 ```
@@ -373,6 +392,7 @@ I trade political markets.
 ### Define Your Market Types
 
 **Good**:
+
 ```
 I focus on crypto price prediction markets for BTC and ETH. I use on-chain
 metrics (whale movements, exchange flows) and technical analysis (support/
@@ -381,6 +401,7 @@ tokens.
 ```
 
 **Bad**:
+
 ```
 I like crypto.
 ```
@@ -388,6 +409,7 @@ I like crypto.
 ### Set Your Decision Framework
 
 **Good**:
+
 ```
 I only trade markets where I have at least 15% edge. I prefer markets with
 clear resolution criteria and avoid ambiguous questions. I weight recent
@@ -395,6 +417,7 @@ data heavily and discount stale information.
 ```
 
 **Bad**:
+
 ```
 I trade when I think I'm right.
 ```
@@ -403,39 +426,30 @@ I trade when I think I'm right.
 
 ## Risk Management
 
-### Position Sizing
-
-Your `riskLevel` determines position size:
-
-| Risk Level | Position Multiplier | Example (maxPositionSize=100) |
-|------------|--------------------|-----------------------------|
-| Low | 0.25x | Max $25 per position |
-| Medium | 0.5x | Max $50 per position |
-| High | 1.0x | Max $100 per position |
-
 ### Confidence Thresholds
 
 Trades only execute above your confidence threshold:
 
 | Risk Level | Min Confidence |
-|------------|---------------|
-| Low | 75% |
-| Medium | 60% |
-| High | 50% |
+| ---------- | -------------- |
+| Low        | 75%            |
+| Medium     | 60%            |
+| High       | 50%            |
 
 ### Max Open Positions
 
 Diversification limits:
 
 | Risk Level | Max Positions |
-|------------|--------------|
-| Low | 3 |
-| Medium | 5 |
-| High | 10 |
+| ---------- | ------------- |
+| Low        | 3             |
+| Medium     | 5             |
+| High       | 10            |
 
 ### Take-Profit and Stop-Loss
 
 Configure automatic exits:
+
 - `takeProfitPercent`: Sell when position is up this % (default: 40%)
 - `stopLossPercent`: Sell when position is down this % (default: 25%)
 - `enableAutoExit`: Toggle automatic exits
@@ -443,6 +457,7 @@ Configure automatic exits:
 ### Diversification
 
 Don't put all your USDC in one market:
+
 - Spread across multiple uncorrelated markets
 - Don't overweight any single event
 - Keep some USDC liquid for opportunities
@@ -454,6 +469,7 @@ Don't put all your USDC in one market:
 ### Overtrading
 
 Trading too frequently erodes returns:
+
 - Transaction costs add up
 - More trades = more mistakes
 - Patience beats volume
@@ -461,6 +477,7 @@ Trading too frequently erodes returns:
 ### Chasing Losses
 
 After a loss, don't:
+
 - Double down to "make it back"
 - Take risky positions out of frustration
 - Abandon your strategy
@@ -468,6 +485,7 @@ After a loss, don't:
 ### Ignoring Liquidity
 
 Check the order book before trading:
+
 - Wide spreads = expensive execution
 - Thin books = hard to exit
 - Don't be the only buyer/seller
@@ -475,6 +493,7 @@ Check the order book before trading:
 ### Confirmation Bias
 
 Don't just look for evidence supporting your view:
+
 - Steelman the opposing position
 - Consider what would prove you wrong
 - Update beliefs with new information
@@ -482,6 +501,7 @@ Don't just look for evidence supporting your view:
 ### Holding Too Long
 
 Know when to exit:
+
 - Markets resolve—don't get stuck
 - Take profits before the crowd
 - Cut losses early
@@ -493,19 +513,20 @@ Know when to exit:
 ### Frequency
 
 - Default: 60 minutes
-- Volatile markets: Consider 30 minutes
+- Volatile markets: Consider 60 minutes
 - Stable markets: 120 minutes is fine
 - Don't over-optimize—consistency beats frequency
 
 ### Market Selection
 
-- `minMarketsPerLoop`: 3 (ensure diversity)
-- `maxMarketsPerLoop`: 10 (don't spread too thin)
-- Quality over quantity
+- `minMarketsPerLoop`: 5 (ensure diversity)
+- `maxMarketsPerLoop`: 50 (more markets = more opportunities)
+- Polymarket has thousands of active markets - analyze more to find alpha
 
 ### Resolution Checking
 
 Call `/resolutions/check` regularly:
+
 - After market events
 - Daily at minimum
 - Triggers profit distribution and buybacks
