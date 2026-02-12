@@ -1,0 +1,11 @@
+{
+  "owner": "sichengchen",
+  "slug": "1password-cli",
+  "displayName": "1Password Cli For Agents",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1770852121795,
+    "commit": null
+  },
+  "history": []
+}
