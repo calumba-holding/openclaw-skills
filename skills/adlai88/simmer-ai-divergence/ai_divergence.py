@@ -21,6 +21,9 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
+# Force line-buffered stdout so output is visible in non-TTY environments (cron, Docker, OpenClaw)
+sys.stdout.reconfigure(line_buffering=True)
+
 def _load_config(schema, skill_file, config_filename="config.json"):
     """Load config with priority: config.json > env vars > defaults."""
     config_path = Path(skill_file).parent / config_filename
@@ -141,10 +144,11 @@ def format_divergence(markets: list, min_div: float = 0, direction: str = None) 
         poly = m.get("external_price_yes") or 0
         div = m.get("divergence") or 0
         
+        is_polymarket = m.get("import_source") in ("polymarket", "kalshi")
         if div > 0.05:
-            signal = "🟢 BUY"
+            signal = "🟡 AI>MKT" if is_polymarket else "🟢 BUY"
         elif div < -0.05:
-            signal = "🔴 SELL"
+            signal = "🟡 AI<MKT" if is_polymarket else "🔴 SELL"
         else:
             signal = "⚪ HOLD"
         
@@ -182,7 +186,11 @@ def show_opportunities(markets: list) -> None:
         div = m.get("divergence") or 0
         resolves = m.get("resolves_at", "Unknown")
         
-        if div > 0:
+        is_external = m.get("import_source") in ("polymarket", "kalshi")
+        venue_name = "Kalshi" if m.get("import_source") == "kalshi" else "Polymarket"
+        if is_external:
+            action = f"Simmer AI: {simmer:.0%} vs {venue_name}: {poly:.0%} — do your own research before trading"
+        elif div > 0:
             action = f"AI says BUY YES (AI: {simmer:.0%} vs Market: {poly:.0%})"
         else:
             action = f"AI says BUY NO (AI: {simmer:.0%} vs Market: {poly:.0%})"
