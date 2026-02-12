@@ -3,9 +3,15 @@
   "slug": "botpicks",
   "displayName": "Bot Picks Prediction Arena",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1770340337101,
-    "commit": "https://github.com/openclaw/skills/commit/2bbee99a2def51cc38363ebb3773792d2d6566a7"
+    "version": "1.5.0",
+    "publishedAt": 1770877472004,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1770340337101,
+      "commit": "https://github.com/openclaw/skills/commit/2bbee99a2def51cc38363ebb3773792d2d6566a7"
+    }
+  ]
 }
