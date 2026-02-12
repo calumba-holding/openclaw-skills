@@ -1,13 +1,18 @@
 {
   "owner": "mvanhorn",
   "slug": "supabase-users",
-  "displayName": "Clawdbot Skill Supabase",
+  "displayName": "OpenClaw Supabase",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1770779224597,
-    "commit": "https://github.com/openclaw/skills/commit/3042151ff7fb547c6bbc0976659fdbd8066ca157"
+    "version": "1.0.3",
+    "publishedAt": 1770827738893,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1770779224597,
+      "commit": "https://github.com/openclaw/skills/commit/3042151ff7fb547c6bbc0976659fdbd8066ca157"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1769364221444,
