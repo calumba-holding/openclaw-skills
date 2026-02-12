@@ -1,11 +1,12 @@
 ---
 name: letterboxd-watchlist
-description: Scrape a public Letterboxd user's watchlist into a CSV/JSONL list of titles and film URLs without logging in. Use when a user asks to export, scrape, or mirror a Letterboxd watchlist; to build watch-next queues; or to match a watchlist against a local media library.
+description: Scrape a public Letterboxd user's watchlist into a CSV/JSONL list of titles and film URLs without logging in. Use when a user asks to export, scrape, or mirror a Letterboxd watchlist, or to build watch-next queues.
 ---
 
 # Letterboxd Watchlist Scraper
 
 Use the bundled script to scrape a **public** Letterboxd watchlist (no auth).
+Always ask the user for the Letterboxd username if they did not provide one.
 
 ## Script
 
@@ -14,7 +15,13 @@ Use the bundled script to scrape a **public** Letterboxd watchlist (no auth).
 ### Basic usage
 
 ```bash
-python scripts/scrape_watchlist.py 1980vhs --out watchlist.csv
+uv run scripts/scrape_watchlist.py <username> --out watchlist.csv
+```
+
+### Robust mode (recommended)
+
+```bash
+uv run scripts/scrape_watchlist.py <username> --out watchlist.jsonl --delay-ms 300 --timeout 30 --retries 2
 ```
 
 ### Output formats
@@ -27,9 +34,11 @@ python scripts/scrape_watchlist.py 1980vhs --out watchlist.csv
 - Letterboxd usernames are case-insensitive, but must be exact.
 - The script scrapes paginated pages: `/watchlist/page/<n>/`.
 - Stop condition: first page with **no** `data-target-link="/film/..."` poster entries.
+- The scraper validates username format (`[A-Za-z0-9_-]+`) and uses retries + timeout.
+- Default crawl delay is 250ms/page to be polite and reduce transient failures.
 - This is best-effort HTML scraping; if Letterboxd changes markup, adjust the regex in the script.
 
-## Common follow-ups
+## Scope boundary
 
-- Match against a local library: list folders in `/media/movies` and fuzzy-match titles.
-- Build a watch-next list: shuffle, filter by decade/genre (requires additional lookups), or prioritize unwatched/rare items.
+- This skill only scrapes a public Letterboxd watchlist and writes CSV/JSONL output.
+- Do not read local folders, scan libraries, or perform unrelated follow-up actions unless explicitly requested by the user.

@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Scrape a public Letterboxd user's watchlist.
 
 Outputs CSV (title,link) or JSONL (one object per line).
 
 Example:
-  python scrape_watchlist.py 1980vhs --out watchlist.csv
+  uv run scrape_watchlist.py <username> --out watchlist.csv
 """
 
 import argparse
@@ -14,6 +14,7 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 from urllib.parse import urljoin
 
@@ -33,18 +34,48 @@ def fetch(url: str, timeout: int = 30, user_agent: str = "Mozilla/5.0") -> str:
         return resp.read().decode("utf-8", "ignore")
 
 
-def scrape_watchlist(username: str, max_pages: int = 500, delay_ms: int = 0):
+def validate_username(username: str) -> str:
     username = username.strip().strip("/")
     if not username:
         raise ValueError("username is required")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", username):
+        raise ValueError("username contains invalid characters")
+    return username
+
+
+def scrape_watchlist(
+    username: str,
+    max_pages: int = 500,
+    delay_ms: int = 250,
+    timeout: int = 30,
+    retries: int = 2,
+):
+    username = validate_username(username)
 
     seen = set()
     items = []
 
     for page in range(1, max_pages + 1):
         url = f"{BASE}/{username}/watchlist/page/{page}/"
-        html = fetch(url)
-        found = POSTER_RE.findall(html)
+
+        html = None
+        for attempt in range(retries + 1):
+            try:
+                html = fetch(url, timeout=timeout)
+                break
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    html = ""
+                    break
+                if attempt >= retries:
+                    raise
+                time.sleep(0.5 * (attempt + 1))
+            except (urllib.error.URLError, TimeoutError):
+                if attempt >= retries:
+                    raise
+                time.sleep(0.5 * (attempt + 1))
+
+        found = POSTER_RE.findall(html or "")
 
         if not found:
             break
@@ -82,10 +113,18 @@ def main(argv):
     ap.add_argument("username", help="Letterboxd username (public profile)")
     ap.add_argument("--out", required=True, help="Output path (.csv or .jsonl)")
     ap.add_argument("--max-pages", type=int, default=500)
-    ap.add_argument("--delay-ms", type=int, default=0)
+    ap.add_argument("--delay-ms", type=int, default=250)
+    ap.add_argument("--timeout", type=int, default=30)
+    ap.add_argument("--retries", type=int, default=2)
     args = ap.parse_args(argv)
 
-    items = scrape_watchlist(args.username, max_pages=args.max_pages, delay_ms=args.delay_ms)
+    items = scrape_watchlist(
+        args.username,
+        max_pages=args.max_pages,
+        delay_ms=args.delay_ms,
+        timeout=args.timeout,
+        retries=args.retries,
+    )
 
     out = args.out
     if out.lower().endswith(".csv"):
