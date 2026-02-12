@@ -1,27 +1,31 @@
 ---
 name: agent-analytics
-description: Web analytics your AI agent can read. Drop a script tag on any site, then just ask "how's my site doing?" — no dashboards, no logins. One account for all your projects. Use when adding analytics to a site, checking traffic/events, or when the user wants to ask their agent instead of opening a dashboard.
-version: 1.0.0
+description: Add lightweight, privacy-friendly analytics tracking to any website. Track page views and custom events, then query the data via CLI or API. Use when the user wants to know if a project is alive and growing.
+version: 1.1.0
 author: dannyshmueli
-repository: https://github.com/Agent-Analytics/agent-analytics-core
+repository: https://github.com/Agent-Analytics/agent-analytics-cli
+homepage: https://agentanalytics.sh
 tags:
   - analytics
   - tracking
   - web
   - events
+metadata: {"openclaw":{"requires":{"env":["AGENT_ANALYTICS_KEY"],"anyBins":["npx"]},"primaryEnv":"AGENT_ANALYTICS_KEY"}}
 ---
 
-# Agent Analytics — Analytics your AI agent can actually read
+# Agent Analytics — Add tracking to any website
 
-You are setting up analytics that the agent queries directly — no dashboards, no logins. One script tag per site, one API key for all projects. The user asks "how's my site doing?" and you answer with real data.
+You are adding analytics tracking using Agent Analytics — a lightweight platform built for developers who ship lots of projects and want their AI agent to monitor them.
 
 ## Philosophy
 
 You are NOT Mixpanel. Don't track everything. Track only what answers: **"Is this project alive and growing?"**
 
-For a typical site, that's 3-5 custom events max on top of automatic page views. The magic isn't in collecting data — it's that YOU (the agent) can query it and report back instantly.
+For a typical site, that's 3-5 custom events max on top of automatic page views.
 
 ## First-time setup
+
+**Get an API key:** Sign up at [agentanalytics.sh](https://agentanalytics.sh) and generate a key from the dashboard. Alternatively, self-host the open-source version from [GitHub](https://github.com/Agent-Analytics/agent-analytics).
 
 If the project doesn't have tracking yet:
 
@@ -50,6 +54,8 @@ Add before `</body>`:
 ```
 
 This auto-tracks `page_view` events with path, referrer, browser, OS, device, screen size, and UTM params. You do NOT need to add custom page_view events.
+
+> **Security note:** The project write token (`aat_*`) is intentionally public and safe to embed in client-side HTML. It can only write events to one specific project, is rate-limited (10 req/min free, 1,000 req/min pro), and is revocable from the dashboard. It cannot read data — that requires the separate API key (`aak_*`).
 
 ## Step 1b: Discover existing events (existing projects)
 
@@ -119,9 +125,9 @@ npx agent-analytics events PROJECT_NAME
 # Events appear within seconds.
 ```
 
-## Querying the data (the whole point)
+## Querying the data
 
-This is why Agent Analytics exists — you query it, not a human in a dashboard:
+Your AI agent checks on projects:
 
 ```bash
 # How's the project doing?
@@ -138,12 +144,19 @@ curl "https://api.agentanalytics.sh/stats?project=my-site&days=7" \
   -H "X-API-Key: $AGENT_ANALYTICS_KEY"
 ```
 
+### Visualizing results
+
+For better-looking output, pair with these companion skills:
+
+- **`table-image-generator`** — render stats as clean table images (great for Discord/Telegram where ASCII tables break)
+- **`chart-image`** — generate line, bar, area, or pie charts from your analytics data
+
 ## What this skill does NOT do
 
 - No dashboards — your agent IS the dashboard
+- No user management or billing
 - No complex funnels or cohort analysis
-- No PII collection — no cookies, no IP addresses, privacy-first by design
-- No per-project accounts — one API key covers everything
+- No PII stored — IP addresses are not logged or retained. Privacy-first by design
 
 ## Examples
 
