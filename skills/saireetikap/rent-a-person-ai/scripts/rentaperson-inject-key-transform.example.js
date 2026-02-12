@@ -1,22 +1,41 @@
 /**
- * Example OpenClaw hook transform: inject RENTAPERSON_API_KEY (and related env)
- * from config into the webhook message so the agent has the key even when the
- * session is new and has no env. Copy this to your OpenClaw hooks.transformsDir
- * and wire your mapping (e.g. POST /hooks/rentaperson) to use it.
+ * OpenClaw webhook transform: inject RENTAPERSON_API_KEY from config into message.
+ * Supports multiple possible OpenClaw transform API signatures.
  *
- * Expects: config or context with skills.entries["rent-a-person-ai"].env
+ * Copy this to your OpenClaw hooks.transformsDir and wire your mapping
+ * (e.g. POST /hooks/rentaperson) to use it.
+ *
  * Input body: { message, name, sessionKey, wakeMode, deliver, ... }
  * Returns: same body with message augmented with one line containing key/id/name.
  */
 
-// Adapt to your OpenClaw transform API (e.g. export a function that receives body + config)
-function transform(body, config) {
+const fs = require('fs');
+const path = require('path');
+
+function getConfig() {
+  // Try to load config from default location
+  const configPath =
+    process.env.OPENCLAW_CONFIG ||
+    path.join(process.env.HOME || process.env.USERPROFILE || '', '.openclaw', 'openclaw.json');
+  try {
+    const raw = fs.readFileSync(configPath, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    if (e.code !== 'ENOENT') {
+      console.error('[rentaperson-transform] Error loading config:', e.message);
+    }
+    return {};
+  }
+}
+
+function injectKey(body, config) {
   const env = config?.skills?.entries?.['rent-a-person-ai']?.env || {};
   const key = env.RENTAPERSON_API_KEY;
   const agentId = env.RENTAPERSON_AGENT_ID || '';
   const agentName = env.RENTAPERSON_AGENT_NAME || '';
 
   if (!key) {
+    console.warn('[rentaperson-transform] RENTAPERSON_API_KEY not found in config');
     return body;
   }
 
@@ -26,6 +45,25 @@ function transform(body, config) {
   return { ...body, message };
 }
 
-// If your OpenClaw transform expects a default export or specific signature, adjust:
+// Support multiple possible API signatures:
+// 1. transform(body, config)
+// 2. transform(payload, context) where context.config exists
+// 3. transform(payload) - load config from file
+function transform(payload, context) {
+  let body = payload;
+  let config = context;
+
+  // If context has config property, use it
+  if (context && typeof context === 'object' && context.config) {
+    config = context.config;
+  }
+
+  // If config is not provided or doesn't have skills, load from file
+  if (!config || !config.skills) {
+    config = getConfig();
+  }
+
+  return injectKey(body, config);
+}
+
 module.exports = transform;
-// or: module.exports = (payload, context) => transform(payload, context.config);
