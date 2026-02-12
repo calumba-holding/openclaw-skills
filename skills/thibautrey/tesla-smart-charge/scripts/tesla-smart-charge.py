@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 import argparse
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -28,15 +29,27 @@ class TeslaChargeOptimizer:
         self.schedule_file = self.memory_dir / "tesla-charge-schedule.json"
         self.session_state_file = self.memory_dir / "tesla-charge-session-state.json"
     
+    def _is_valid_email(self, email):
+        """Validate email format to prevent injection attacks"""
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return bool(re.match(pattern, email))
+    
     def get_current_battery(self):
         """Fetch current battery level from Tesla API"""
         try:
-            # Use Tesla skill to get status
+            # Validate email format to prevent injection
+            if not self._is_valid_email(self.tesla_email):
+                print(f"⚠️  Invalid TESLA_EMAIL format")
+                return None
+            
+            # Use Tesla skill to get status - use list args to avoid shell injection
+            env = os.environ.copy()
+            env['TESLA_EMAIL'] = self.tesla_email
             output = subprocess.check_output(
-                f'TESLA_EMAIL="{self.tesla_email}" python3 {self.tesla_skill_dir}/scripts/tesla.py status',
-                shell=True,
+                ['python3', str(self.tesla_skill_dir / 'scripts' / 'tesla.py'), 'status'],
                 stderr=subprocess.DEVNULL,
-                text=True
+                text=True,
+                env=env
             )
             
             # Extract battery percentage
@@ -52,11 +65,24 @@ class TeslaChargeOptimizer:
     def set_charge_limit(self, limit_percent):
         """Set vehicle charge limit via Tesla API"""
         try:
+            # Validate inputs to prevent injection
+            if not self._is_valid_email(self.tesla_email):
+                print(f"⚠️  Invalid TESLA_EMAIL format")
+                return False
+            
+            if not isinstance(limit_percent, int) or limit_percent < 0 or limit_percent > 100:
+                print(f"⚠️  Invalid charge limit: {limit_percent}")
+                return False
+            
+            # Use Tesla skill - use list args to avoid shell injection
+            env = os.environ.copy()
+            env['TESLA_EMAIL'] = self.tesla_email
             result = subprocess.run(
-                f'TESLA_EMAIL="{self.tesla_email}" python3 {self.tesla_skill_dir}/scripts/tesla.py charge-limit {limit_percent}',
-                shell=True,
+                ['python3', str(self.tesla_skill_dir / 'scripts' / 'tesla.py'), 
+                 'charge-limit', str(limit_percent)],
                 capture_output=True,
-                text=True
+                text=True,
+                env=env
             )
             if result.returncode == 0:
                 print(f"✅ Charge limit set to {limit_percent}%")

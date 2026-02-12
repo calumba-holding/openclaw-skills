@@ -7,6 +7,19 @@ description: Smart Tesla charging scheduler with charge limit management. Runs d
 
 Schedule Tesla charging to reach target battery % by a specific time. Runs daily via cron to check a schedule file and only charges on configured dates.
 
+## Security & Dependencies
+
+**Required:**
+- Environment variable: `TESLA_EMAIL` (your Tesla account email)
+- Skill dependency: `tesla` skill must be installed and properly configured with Tesla API credentials
+
+**Security improvements (v1.1.0+):**
+- ✅ No shell injection risk: Uses argument lists instead of shell=True
+- ✅ Email validation: TESLA_EMAIL is validated before use
+- ✅ Input validation: Charge limits are validated (0-100% range)
+- ✅ Secure env passing: Credentials passed via environment variables, not string interpolation
+- ✅ Explicit dependencies: Metadata declares required env vars and skill dependencies
+
 ## Quick Start
 
 ### 1. Set Up Schedule
