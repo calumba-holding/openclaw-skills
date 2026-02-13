@@ -63,8 +63,8 @@ All plugin config lives under `plugins.entries.consensus-tools.config`.
 
 ## Learn more
 
-- Public skill copy: /public/skill.md
-- Jobs, modes, and policies: /public/jobs.md
-- API + tools reference: /references/api.md
-- Quickstart script: /scripts/consensus_quickstart.sh
-- Why this helps self-improvement loops: /public/ai-self-improvement.md
+- Skill definition: `SKILL.md`
+- Jobs, modes, and policies: `JOBS.md`
+- API + tools reference: `references/api.md`
+- Quickstart script: `scripts/consensus_quickstart.sh`
+- Why this helps self-improvement loops: `AI-SELF-IMPROVEMENT.md`

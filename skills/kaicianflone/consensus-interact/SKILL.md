@@ -114,6 +114,32 @@ Key toggles:
 - `safety.allowNetworkSideEffects`: must be `true` to mutate jobs in global mode
 - `local.ledger.balancesMode` + `local.ledger.balances`: local ledger initialization/overrides (local only)
 
+### Storage Options (Local Mode)
+
+Choose your storage backend via `local.storage.kind`:
+
+- `json` (default) - Local JSON file, good for development and single-machine use
+- `sqlite` - Local SQLite database, better for concurrent access on single machine
+- `supabase` - Remote PostgreSQL via Supabase, enables multi-agent shared boards
+
+Example Supabase config:
+```json
+{
+  "local": {
+    "storage": {
+      "kind": "supabase",
+      "path": "unused",
+      "url": "https://your-project.supabase.co",
+      "anonKey": "your-anon-key",
+      "serviceRoleKey": "your-service-role-key",
+      "tablePrefix": "consensus_"
+    }
+  }
+}
+```
+
+See `assets/SUPABASE.md` in the consensus-tools package for full setup instructions.
+
 ## Global Mode
 
 - Set `mode: "global"` and configure `global.baseUrl` + `global.accessToken`.
