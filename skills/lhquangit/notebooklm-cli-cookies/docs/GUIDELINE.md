@@ -1,6 +1,6 @@
 # NotebookLM CLI Skill (OpenClaw) - VPS Installation Guide
 
-This guide explains how to install and run the `notebooklm-cli` OpenClaw skill on a generic Linux VPS (Ubuntu/Debian), without any browser/UI on the server.
+This guide explains how to install and run the `notebooklm-cli-cookies` OpenClaw skill on a generic Linux VPS (Ubuntu/Debian), without any browser/UI on the server.
 
 Skill slug on ClawHub (example): `notebooklm-cli-cookies`
 
@@ -45,21 +45,21 @@ clawhub whoami
 Choose your OpenClaw workspace directory, for example:
 
 ```text
-/home/ubuntu/openclaw-workdir
+~/.openclaw/workspace
 ```
 
 Install the skill into the workspace:
 
 ```bash
-cd /home/ubuntu/openclaw-workdir
+cd ~/.openclaw/workspace
 clawhub install notebooklm-cli-cookies
 ```
 
 Verify files exist:
 
 ```bash
-ls -la ./skills/notebooklm-cli/
-ls -la ./skills/notebooklm-cli/scripts/
+ls -la ./skills/notebooklm-cli-cookies/
+ls -la ./skills/notebooklm-cli-cookies/scripts/
 ```
 
 ## 3) Run the one-liner bootstrap (systemd-friendly)
@@ -67,18 +67,23 @@ ls -la ./skills/notebooklm-cli/scripts/
 After installation, run the bootstrap shipped inside the skill:
 
 ```bash
-cd /home/ubuntu/openclaw-workdir
-bash ./skills/notebooklm-cli/scripts/bootstrap_vps_systemd_one_liner.sh \
-  --workdir /home/ubuntu/openclaw-workdir \
+cd ~/.openclaw/workspace
+bash ./skills/notebooklm-cli-cookies/scripts/bootstrap_vps_systemd_one_liner.sh \
+  --workdir ~/.openclaw/workspace \
   --user ubuntu \
-  --service openclaw-telegram.service
+  --service openclaw-telegram.service \
+  --skill-name notebooklm-cli-cookies
 ```
 
 What the bootstrap does:
-- installs `jq`, `python3-pip`, `nodejs/npm` (if needed)
-- installs `nlm` (`notebooklm-mcp-cli`)
+- installs `jq`, `pipx`, and Python tooling
+- installs `nlm` (`notebooklm-mcp-cli`) with `pipx` first, then safe fallback
 - ensures `NOTEBOOKLM_MCP_CLI_PATH` is injected into OpenClaw via `~/.openclaw/openclaw.json`
 - sets up a systemd drop-in to auto-inject auth on service start (if you pass `--service`)
+
+Compatibility notes:
+- The bootstrap avoids `apt install npm` to prevent `nodejs`/`npm` conflict on NodeSource-based systems.
+- On PEP 668 systems (`externally-managed-environment`), it uses `pipx` first and only falls back to `pip --break-system-packages` if required.
 
 ## 4) Prepare NotebookLM auth (on a machine with a browser)
 
@@ -133,7 +138,7 @@ sudo systemctl restart openclaw-telegram.service
 Run as the OpenClaw user (example: `ubuntu`):
 
 ```bash
-export NOTEBOOKLM_MCP_CLI_PATH="/home/ubuntu/.notebooklm-mcp-cli"
+export NOTEBOOKLM_MCP_CLI_PATH="~/.notebooklm-mcp-cli"
 nlm login --check
 nlm notebook list --json
 ```

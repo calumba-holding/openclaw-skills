@@ -95,7 +95,7 @@ Trong NotebookLM notebook alias tai_lieu_dien: trả lời câu hỏi "giá củ
   - Ensure `profiles/default/cookies.json` and `profiles/default/metadata.json` exist.
   - Refresh cookies outside AWS (machine with browser), then redeploy secret.
 - `nlm: command not found`:
-  - Install package: `pip install notebooklm-mcp-cli` or `uv tool install notebooklm-mcp-cli`.
+  - Install package: `pipx install notebooklm-mcp-cli` (recommended), or `uv tool install notebooklm-mcp-cli`.
 
 ## Command Reference
 

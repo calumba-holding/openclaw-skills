@@ -9,7 +9,7 @@ set -euo pipefail
 # 3) copy /etc/openclaw/notebooklm-auth.json
 #
 # What it does:
-# - Installs prerequisites: jq, python3-pip, nodejs/npm (for clawhub)
+# - Installs prerequisites: jq, pipx, python3-pip/python3-venv
 # - Installs NotebookLM CLI: notebooklm-mcp-cli (provides `nlm`)
 # - Installs ClawHub CLI (provides `clawhub`) if missing
 # - Ensures the skill exists in the target workspace (skips install if already present)
@@ -35,7 +35,7 @@ usage() {
 Usage: bootstrap_vps_systemd_one_liner.sh [options]
 
 Options:
-  --workdir <dir>        OpenClaw workspace directory (default: /home/<user>/openclaw-workdir)
+  --workdir <dir>        OpenClaw workspace directory (default: /home/<user>/.openclaw/workspace)
   --user <name>          Linux user running OpenClaw (default: current user or SUDO_USER)
   --service <unit>       systemd unit name for OpenClaw (optional)
   --nlm-storage <dir>    NOTEBOOKLM_MCP_CLI_PATH (default: /home/<user>/.notebooklm-mcp-cli)
@@ -76,7 +76,7 @@ if [[ -z "${TARGET_HOME}" ]]; then
 fi
 
 if [[ -z "${WORKDIR}" ]]; then
-  WORKDIR="${TARGET_HOME}/openclaw-workdir"
+  WORKDIR="${TARGET_HOME}/.openclaw/workspace"
 fi
 
 if [[ -z "${NLM_STORAGE}" ]]; then
@@ -103,16 +103,43 @@ as_user() {
 
 require_sudo
 
-echo "[1/7] Installing OS packages (jq, python3-pip, nodejs, npm)..."
+echo "[1/7] Installing OS packages (jq, pipx, python tooling)..."
 sudo apt-get update -y
-sudo apt-get install -y jq python3-pip nodejs npm
+sudo apt-get install -y jq python3-pip python3-venv pipx
 
 echo "[2/7] Installing notebooklm-mcp-cli (nlm)..."
-as_user "python3 -m pip install --user --upgrade notebooklm-mcp-cli"
+if as_user "command -v nlm >/dev/null 2>&1"; then
+  echo "nlm already installed; skipping install."
+else
+  if as_user "command -v pipx >/dev/null 2>&1"; then
+    as_user "pipx install notebooklm-mcp-cli >/dev/null 2>&1 || pipx upgrade notebooklm-mcp-cli >/dev/null 2>&1 || true"
+    as_user "pipx ensurepath >/dev/null 2>&1 || true"
+  fi
+
+  if ! as_user "command -v nlm >/dev/null 2>&1"; then
+    # Fallback for environments where pipx is unavailable/misconfigured.
+    as_user "python3 -m pip install --user --upgrade --break-system-packages notebooklm-mcp-cli"
+  fi
+
+  if ! as_user "command -v nlm >/dev/null 2>&1"; then
+    echo "Error: failed to install 'nlm'. Install manually with one of:" >&2
+    echo "  pipx install notebooklm-mcp-cli" >&2
+    echo "  python3 -m pip install --user --upgrade --break-system-packages notebooklm-mcp-cli" >&2
+    exit 1
+  fi
+fi
 
 echo "[3/7] Installing ClawHub CLI (clawhub) if missing..."
 if ! command -v clawhub >/dev/null 2>&1; then
-  sudo npm i -g clawhub
+  if command -v npm >/dev/null 2>&1; then
+    sudo npm i -g clawhub
+  elif command -v pnpm >/dev/null 2>&1; then
+    sudo pnpm add -g clawhub
+  else
+    echo "Error: clawhub is missing and neither npm nor pnpm is available." >&2
+    echo "Install one of them, then run: npm i -g clawhub  (or pnpm add -g clawhub)" >&2
+    exit 1
+  fi
 fi
 
 echo "[4/7] Ensuring the skill exists in the workspace..."
@@ -186,12 +213,20 @@ OPENCLOW_DIR="${TARGET_HOME}/.openclaw"
 OPENCLOW_CFG="${OPENCLOW_DIR}/openclaw.json"
 sudo -u "${TARGET_USER}" -H mkdir -p "${OPENCLOW_DIR}"
 
-python3 - <<PY
-import json, pathlib, sys
+OPENCLOW_CFG_ENV="${OPENCLOW_CFG}" \
+SKILL_NAME_ENV="${SKILL_NAME}" \
+NLM_STORAGE_ENV="${NLM_STORAGE}" \
+TARGET_HOME_ENV="${TARGET_HOME}" \
+python3 - <<'PY'
+import json
+import os
+import pathlib
+import sys
 
-cfg_path = pathlib.Path(${OPENCLOW_CFG!r})
-skill_name = ${SKILL_NAME!r}
-nlm_path = ${NLM_STORAGE!r}
+cfg_path = pathlib.Path(os.environ["OPENCLOW_CFG_ENV"])
+skill_name = os.environ["SKILL_NAME_ENV"]
+nlm_path = os.environ["NLM_STORAGE_ENV"]
+target_home = os.environ["TARGET_HOME_ENV"]
 
 data = {}
 if cfg_path.exists():
@@ -210,6 +245,7 @@ entry = data["skills"]["entries"][skill_name]
 entry.setdefault("enabled", True)
 entry.setdefault("env", {})
 entry["env"].setdefault("NOTEBOOKLM_MCP_CLI_PATH", nlm_path)
+entry["env"].setdefault("PATH", f"{target_home}/.local/bin:/usr/local/bin:/usr/bin:/bin")
 
 cfg_path.write_text(json.dumps(data, indent=2) + "\\n")
 PY
