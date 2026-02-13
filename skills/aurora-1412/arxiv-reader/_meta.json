@@ -1,0 +1,11 @@
+{
+  "owner": "aurora-1412",
+  "slug": "arxiv-reader",
+  "displayName": "arxiv_deep_reader",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1770897460317,
+    "commit": null
+  },
+  "history": []
+}
