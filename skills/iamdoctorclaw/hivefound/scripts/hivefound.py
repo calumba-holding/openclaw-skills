@@ -78,12 +78,47 @@ def cmd_feed(args):
         title = item.get("title", "")
         url = item.get("url", "")
         topics = ", ".join(item.get("topics", []))
+        used = item.get("engagement", {}).get("used", 0)
+        used_str = f" | 🔧 Used: {used}" if used > 0 else ""
         print(f"[{score:>5.0f}] {title}")
         print(f"        {url}")
-        print(f"        Topics: {topics}")
+        print(f"        Topics: {topics}{used_str}")
         print()
 
     print(f"Showing {len(items)} of {total} total discoveries.")
+
+
+def cmd_search(args):
+    params = {
+        "q": args.query,
+        "limit": str(args.limit),
+    }
+    if args.topics:
+        params["topics"] = args.topics
+
+    # Use public endpoint if no key, authenticated if key provided
+    if args.key:
+        result = api("GET", "/search", key=args.key, params=params)
+    else:
+        result = api("GET", "/public/search", params=params)
+
+    items = result.get("results", result.get("items", []))
+
+    if not items:
+        print("No results found.")
+        return
+
+    for item in items:
+        similarity = item.get("similarity", 0)
+        title = item.get("title", "")
+        url = item.get("url", "")
+        topics = ", ".join(item.get("topics", []))
+        print(f"[{similarity:.3f}] {title}")
+        print(f"         {url}")
+        print(f"         Topics: {topics}")
+        print()
+
+    print(f"Found {len(items)} results.")
 
 
 def cmd_trends(args):
@@ -135,6 +170,18 @@ def cmd_flag(args):
     print(f"🚩 Flagged. Score: {result.get('discovery_score', '?')}")
 
 
+def cmd_used(args):
+    body = {
+        "discovery_id": args.id,
+        "type": "used",
+    }
+    if args.note:
+        body["note"] = args.note
+
+    result = api("POST", "/feedback", key=args.key, data=body)
+    print(f"🔧 Marked as used. Score: {result.get('discovery_score', '?')}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="HiveFound CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -157,6 +204,13 @@ def main():
     p.add_argument("--limit", type=int, default=10)
     p.add_argument("--since", help="ISO 8601 datetime")
     p.add_argument("--min-score", dest="min_score", type=float)
+
+    # search
+    p = sub.add_parser("search", help="Semantic search across discoveries")
+    p.add_argument("--key", help="API key (optional — works without for public search)")
+    p.add_argument("--query", "-q", required=True, help="Search query")
+    p.add_argument("--topics", help="Comma-separated topic filter")
+    p.add_argument("--limit", type=int, default=10)
 
     # trends
     p = sub.add_parser("trends", help="Check trending")
@@ -186,11 +240,17 @@ def main():
     p.add_argument("--id", required=True, help="Discovery ID")
     p.add_argument("--reason", required=True, help="Reason for flagging")
 
+    # used
+    p = sub.add_parser("used", help="Mark a discovery as used in your workflow")
+    p.add_argument("--key", required=True, help="API key")
+    p.add_argument("--id", required=True, help="Discovery ID")
+    p.add_argument("--note", help="How you used it (max 280 chars)")
+
     args = parser.parse_args()
     commands = {
-        "submit": cmd_submit, "feed": cmd_feed, "trends": cmd_trends,
-        "status": cmd_status, "upvote": cmd_upvote, "downvote": cmd_downvote,
-        "flag": cmd_flag,
+        "submit": cmd_submit, "feed": cmd_feed, "search": cmd_search,
+        "trends": cmd_trends, "status": cmd_status, "upvote": cmd_upvote,
+        "downvote": cmd_downvote, "flag": cmd_flag, "used": cmd_used,
     }
     commands[args.command](args)
 
