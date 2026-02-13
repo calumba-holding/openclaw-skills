@@ -1,11 +1,17 @@
 {
   "owner": "atyachin",
   "slug": "expert-finder",
-  "displayName": "Expert Finder — Discover Domain Experts & Thought Leaders on Social Media",
+  "displayName": "Expert Finder",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1770851678032,
-    "commit": "https://github.com/openclaw/skills/commit/f2bd06a66c4de7dd0f22d2b642ee401010f2a4c4"
+    "version": "1.4.0",
+    "publishedAt": 1770892675547,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1770851678032,
+      "commit": "https://github.com/openclaw/skills/commit/f2bd06a66c4de7dd0f22d2b642ee401010f2a4c4"
+    }
+  ]
 }
