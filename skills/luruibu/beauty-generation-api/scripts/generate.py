@@ -17,7 +17,8 @@ import argparse
 import os
 
 API_BASE = "https://gen1.diversityfaces.org"
-API_KEY = None  # Must be set via environment variable or command line argument
+# Free API Key - pre-configured for easy use
+API_KEY = "ak_OymjErKQRs-brINJuHFxKwIbxbZHq2KRiEzYthnwxMI"
 
 def generate_and_download(prompt, width=1024, height=1024, output_dir=None, filename=None):
     """
@@ -167,22 +168,13 @@ def main():
     
     args = parser.parse_args()
     
-    # Get API Key from argument or environment variable
+    # Get API Key from argument or environment variable, or use default
     global API_KEY
-    API_KEY = args.api_key or os.environ.get("BEAUTY_API_KEY")
-    
-    if not API_KEY:
-        print("❌ ERROR: API Key is required!")
-        print("\n📝 How to get a free API Key:")
-        print("   1. Visit: https://gen1.diversityfaces.org")
-        print("   2. Follow the instructions on the page to get your free API key")
-        print("   3. Use it with this script:\n")
-        print("   Option A - Command line:")
-        print("      python3 scripts/generate.py --prompt 'YOUR_PROMPT' --api-key 'YOUR_API_KEY'\n")
-        print("   Option B - Environment variable:")
-        print("      export BEAUTY_API_KEY='YOUR_API_KEY'")
-        print("      python3 scripts/generate.py --prompt 'YOUR_PROMPT'\n")
-        return 1
+    if args.api_key:
+        API_KEY = args.api_key
+    elif os.environ.get("BEAUTY_API_KEY"):
+        API_KEY = os.environ.get("BEAUTY_API_KEY")
+    # else: use the pre-configured free API key
     
     # Use test prompt if requested, otherwise require --prompt
     if args.test:
