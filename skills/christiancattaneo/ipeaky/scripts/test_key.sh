@@ -1,46 +1,74 @@
 #!/usr/bin/env bash
-# ipeaky - Test a stored API key
-# Usage: ./test_key.sh <key_name> [credentials_dir]
-# Supports: OPENAI_API_KEY, ELEVENLABS_API_KEY, X_API_KEY, ANTHROPIC_API_KEY
+# ipeaky - Test an API key by calling the provider's API
+# Usage: echo "KEY_VALUE" | ./test_key.sh <SERVICE>
+# Reads key from stdin. Never prints the full key.
 
 set -euo pipefail
 
-KEY_NAME="${1:?Usage: test_key.sh <key_name> [credentials_dir]}"
-CRED_DIR="${2:-$HOME/.openclaw/credentials}"
-ENV_FILE="${CRED_DIR}/ipeaky-keys.env"
+SERVICE="${1:?Usage: echo KEY | test_key.sh <SERVICE>}"
+KEY=$(cat)
 
-if [ ! -f "$ENV_FILE" ]; then
-  echo "ERROR: No keys stored." >&2
+if [ -z "$KEY" ]; then
+  echo "ERROR: No key provided on stdin"
   exit 1
 fi
 
-VAL=$(grep "^${KEY_NAME}=" "$ENV_FILE" | cut -d= -f2-)
-if [ -z "$VAL" ]; then
-  echo "ERROR: Key '${KEY_NAME}' not found." >&2
-  exit 1
-fi
+MASKED="${KEY:0:4}****"
 
-case "$KEY_NAME" in
-  OPENAI_API_KEY)
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-      -H "Authorization: Bearer ${VAL}" \
-      "https://api.openai.com/v1/models" 2>/dev/null)
-    [ "$HTTP_CODE" = "200" ] && echo "OK: OpenAI key is valid." || echo "FAIL: OpenAI returned HTTP ${HTTP_CODE}."
+case "$SERVICE" in
+  OPENAI_API_KEY|openai)
+    RESP=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $KEY" "https://api.openai.com/v1/models" 2>/dev/null)
+    CODE=$(echo "$RESP" | tail -1)
+    if [ "$CODE" = "200" ]; then
+      echo "OK: OpenAI key ($MASKED) is valid."
+    else
+      echo "FAIL: OpenAI key ($MASKED) returned HTTP $CODE."
+      exit 1
+    fi
     ;;
-  ELEVENLABS_API_KEY)
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-      -H "xi-api-key: ${VAL}" \
-      "https://api.elevenlabs.io/v1/user" 2>/dev/null)
-    [ "$HTTP_CODE" = "200" ] && echo "OK: ElevenLabs key is valid." || echo "FAIL: ElevenLabs returned HTTP ${HTTP_CODE}."
+  ELEVENLABS_API_KEY|elevenlabs)
+    RESP=$(curl -s -w "\n%{http_code}" -H "xi-api-key: $KEY" "https://api.elevenlabs.io/v1/user" 2>/dev/null)
+    CODE=$(echo "$RESP" | tail -1)
+    if [ "$CODE" = "200" ]; then
+      echo "OK: ElevenLabs key ($MASKED) is valid."
+    else
+      echo "FAIL: ElevenLabs key ($MASKED) returned HTTP $CODE."
+      exit 1
+    fi
     ;;
-  ANTHROPIC_API_KEY)
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-      -H "x-api-key: ${VAL}" \
-      -H "anthropic-version: 2023-06-01" \
-      "https://api.anthropic.com/v1/models" 2>/dev/null)
-    [ "$HTTP_CODE" = "200" ] && echo "OK: Anthropic key is valid." || echo "FAIL: Anthropic returned HTTP ${HTTP_CODE}."
+  ANTHROPIC_API_KEY|anthropic)
+    RESP=$(curl -s -w "\n%{http_code}" -H "x-api-key: $KEY" -H "anthropic-version: 2023-06-01" -H "Content-Type: application/json" \
+      "https://api.anthropic.com/v1/messages" \
+      -d '{"model":"claude-3-haiku-20240307","max_tokens":1,"messages":[{"role":"user","content":"hi"}]}' 2>/dev/null)
+    CODE=$(echo "$RESP" | tail -1)
+    if [ "$CODE" = "200" ]; then
+      echo "OK: Anthropic key ($MASKED) is valid."
+    else
+      echo "FAIL: Anthropic key ($MASKED) returned HTTP $CODE."
+      exit 1
+    fi
+    ;;
+  BRAVE_API_KEY|brave)
+    RESP=$(curl -s -w "\n%{http_code}" -H "X-Subscription-Token: $KEY" "https://api.search.brave.com/res/v1/web/search?q=test&count=1" 2>/dev/null)
+    CODE=$(echo "$RESP" | tail -1)
+    if [ "$CODE" = "200" ]; then
+      echo "OK: Brave Search key ($MASKED) is valid."
+    else
+      echo "FAIL: Brave Search key ($MASKED) returned HTTP $CODE."
+      exit 1
+    fi
+    ;;
+  GEMINI_API_KEY|gemini)
+    RESP=$(curl -s -w "\n%{http_code}" "https://generativelanguage.googleapis.com/v1/models?key=$KEY" 2>/dev/null)
+    CODE=$(echo "$RESP" | tail -1)
+    if [ "$CODE" = "200" ]; then
+      echo "OK: Gemini key ($MASKED) is valid."
+    else
+      echo "FAIL: Gemini key ($MASKED) returned HTTP $CODE."
+      exit 1
+    fi
     ;;
   *)
-    echo "INFO: No built-in test for '${KEY_NAME}'. Key is stored (${#VAL} chars)."
+    echo "OK: Key ($MASKED) stored. No built-in test for '$SERVICE'."
     ;;
 esac
