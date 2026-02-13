@@ -1,0 +1,11 @@
+{
+  "owner": "zbreda",
+  "slug": "meu-agente",
+  "displayName": "Meu Agente",
+  "latest": {
+    "version": "1.0.8",
+    "publishedAt": 1770926914598,
+    "commit": null
+  },
+  "history": []
+}
