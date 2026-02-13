@@ -1,7 +1,7 @@
 ---
 name: clawver-reviews
 description: Handle Clawver customer reviews. Monitor ratings, craft responses, track sentiment trends. Use when asked about customer feedback, reviews, ratings, or reputation management.
-version: 1.0.0
+version: 1.1.0
 homepage: https://clawver.store
 metadata: {"openclaw":{"emoji":"⭐","homepage":"https://clawver.store","requires":{"env":["CLAW_API_KEY"]},"primaryEnv":"CLAW_API_KEY"}}
 ---
@@ -14,6 +14,8 @@ Manage customer reviews on your Clawver store. Monitor ratings, respond to feedb
 
 - `CLAW_API_KEY` environment variable
 - Active store with completed orders
+
+For platform-specific good and bad API patterns from `claw-social`, use `references/api-examples.md`.
 
 ## List Reviews
 
@@ -31,22 +33,20 @@ curl https://api.clawver.store/v1/stores/me/reviews \
   "data": {
     "reviews": [
       {
-        "id": "rev_abc123",
-        "orderId": "ord_xyz789",
+        "id": "review_abc123",
+        "orderId": "order_xyz789",
         "productId": "prod_456",
-        "productName": "AI Art Pack Vol. 1",
         "rating": 5,
         "title": "Amazing quality!",
         "body": "The wallpapers are stunning.",
         "reviewerName": "John D.",
         "reviewerEmail": "john@example.com",
         "createdAt": "2024-01-15T10:30:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z",
-        "response": null
+        "updatedAt": "2024-01-15T10:30:00Z"
       },
       {
-        "id": "rev_def456",
-        "orderId": "ord_abc123",
+        "id": "review_def456",
+        "orderId": "order_abc123",
         "productId": "prod_789",
         "rating": 3,
         "body": "Good quality but shipping took longer than expected.",
@@ -61,12 +61,10 @@ curl https://api.clawver.store/v1/stores/me/reviews \
       }
     ]
   },
-  "meta": {
-    "pagination": {
-      "cursor": "next_page_id",
-      "hasMore": false,
-      "limit": 20
-    }
+  "pagination": {
+    "cursor": "next_page_id",
+    "hasMore": false,
+    "limit": 20
   }
 }
 ```
@@ -83,7 +81,7 @@ curl "https://api.clawver.store/v1/stores/me/reviews?limit=20&cursor=abc123" \
 ```python
 response = api.get("/v1/stores/me/reviews")
 reviews = response["data"]["reviews"]
-unanswered = [r for r in reviews if r["response"] is None]
+unanswered = [r for r in reviews if not r.get("response")]
 print(f"Unanswered reviews: {len(unanswered)}")
 ```
 
@@ -104,7 +102,7 @@ curl -X POST https://api.clawver.store/v1/reviews/{reviewId}/respond \
   "success": true,
   "data": {
     "review": {
-      "id": "rev_abc123",
+      "id": "review_abc123",
       "response": {
         "body": "Thank you for your kind review! We appreciate your support.",
         "createdAt": "2024-01-15T11:00:00Z"
@@ -116,7 +114,7 @@ curl -X POST https://api.clawver.store/v1/reviews/{reviewId}/respond \
 
 **Response requirements:**
 - Maximum 1000 characters
-- One response per review (cannot edit)
+- Posting again replaces the existing response for that review
 - Professional tone recommended
 
 ## Review Webhook
@@ -140,8 +138,8 @@ curl -X POST https://api.clawver.store/v1/webhooks \
   "event": "review.received",
   "timestamp": "2024-01-15T10:30:00Z",
   "data": {
-    "reviewId": "rev_abc123",
-    "orderId": "ord_xyz789",
+    "reviewId": "review_abc123",
+    "orderId": "order_xyz789",
     "rating": 5
   }
 }
@@ -249,7 +247,7 @@ def check_and_respond_to_reviews():
     
     for review in reviews:
         # Skip if already responded
-        if review["response"]:
+        if review.get("response"):
             continue
         
         # Auto-respond based on rating

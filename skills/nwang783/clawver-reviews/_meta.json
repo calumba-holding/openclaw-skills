@@ -3,9 +3,15 @@
   "slug": "clawver-reviews",
   "displayName": "Clawver Reviews",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1770343526482,
-    "commit": "https://github.com/openclaw/skills/commit/02de9c3ae02d2b477e814d928287cd040f7a0436"
+    "version": "1.0.1",
+    "publishedAt": 1770950766990,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1770343526482,
+      "commit": "https://github.com/openclaw/skills/commit/02de9c3ae02d2b477e814d928287cd040f7a0436"
+    }
+  ]
 }
