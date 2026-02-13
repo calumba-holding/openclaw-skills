@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
-const { getRepoRoot, getMemoryDir } = require('./gep/paths');
+const { getRepoRoot, getMemoryDir, getSessionScope } = require('./gep/paths');
 const { extractSignals } = require('./gep/signals');
 const {
   loadGenes,
@@ -12,6 +12,7 @@ const {
   appendCandidateJsonl,
   readRecentCandidates,
   readRecentExternalCandidates,
+  ensureAssetFiles,
 } = require('./gep/assetStore');
 const { selectGeneAndCapsule, matchPatternToSignals } = require('./gep/selector');
 const { buildGepPrompt, buildReusePrompt, buildHubMatchedBlock } = require('./gep/prompt');
@@ -159,6 +160,11 @@ function readRealSessionLog() {
     const TARGET_BYTES = 120000;
     const PER_SESSION_BYTES = 20000; // Read tail of each active session
 
+    // Session scope isolation: when EVOLVER_SESSION_SCOPE is set,
+    // only read sessions whose filenames contain the scope identifier.
+    // This prevents cross-channel/cross-project memory contamination.
+    const sessionScope = getSessionScope();
+
     // Find ALL active sessions (modified in last 24h), sorted newest first
     let files = fs
       .readdirSync(AGENT_SESSIONS_DIR)
@@ -177,7 +183,23 @@ function readRealSessionLog() {
     if (files.length === 0) return '[NO JSONL FILES]';
 
     // Skip evolver's own sessions to avoid self-reference loops
-    const nonEvolverFiles = files.filter(f => !f.name.startsWith('evolver_hand_'));
+    let nonEvolverFiles = files.filter(f => !f.name.startsWith('evolver_hand_'));
+
+    // Session scope filter: when scope is active, only include sessions
+    // whose filename contains the scope string (e.g., channel_123456.jsonl).
+    // If no sessions match the scope, fall back to all non-evolver sessions
+    // (graceful degradation -- better to evolve with global context than not at all).
+    if (sessionScope && nonEvolverFiles.length > 0) {
+      const scopeLower = sessionScope.toLowerCase();
+      const scopedFiles = nonEvolverFiles.filter(f => f.name.toLowerCase().includes(scopeLower));
+      if (scopedFiles.length > 0) {
+        nonEvolverFiles = scopedFiles;
+        console.log(`[SessionScope] Filtered to ${scopedFiles.length} session(s) matching scope "${sessionScope}".`);
+      } else {
+        console.log(`[SessionScope] No sessions match scope "${sessionScope}". Using all ${nonEvolverFiles.length} session(s) (fallback).`);
+      }
+    }
+
     const activeFiles = nonEvolverFiles.length > 0 ? nonEvolverFiles : files.slice(0, 1);
 
     // Read from multiple active sessions (up to 6) to get a full picture
@@ -318,8 +340,23 @@ const USER_FILE = path.join(WORKSPACE_ROOT, 'USER.md');
 
 function readMemorySnippet() {
   try {
-    if (!fs.existsSync(MEMORY_FILE)) return '[MEMORY.md MISSING]';
-    const content = fs.readFileSync(MEMORY_FILE, 'utf8');
+    // Session scope isolation: when a scope is active, prefer scoped MEMORY.md
+    // at memory/scopes/<scope>/MEMORY.md. Falls back to global MEMORY.md if
+    // scoped file doesn't exist (common: scoped MEMORY.md created on first evolution).
+    const scope = getSessionScope();
+    let memFile = MEMORY_FILE;
+    if (scope) {
+      const scopedMemory = path.join(MEMORY_DIR, 'scopes', scope, 'MEMORY.md');
+      if (fs.existsSync(scopedMemory)) {
+        memFile = scopedMemory;
+        console.log(`[SessionScope] Reading scoped MEMORY.md for "${scope}".`);
+      } else {
+        // First run with scope: global MEMORY.md will be used, but note it.
+        console.log(`[SessionScope] No scoped MEMORY.md for "${scope}". Using global MEMORY.md.`);
+      }
+    }
+    if (!fs.existsSync(memFile)) return '[MEMORY.md MISSING]';
+    const content = fs.readFileSync(memFile, 'utf8');
     // Optimization: Increased limit from 2000 to 50000 for modern context windows
     return content.length > 50000
       ? content.slice(0, 50000) + `\n... [TRUNCATED: ${content.length - 50000} chars remaining]`
@@ -505,6 +542,17 @@ function sleepMs(ms) {
   return new Promise(resolve => setTimeout(resolve, n));
 }
 
+// Check system load average via os.loadavg().
+// Returns { load1m, load5m, load15m }. Used for load-aware throttling.
+function getSystemLoad() {
+  try {
+    const loadavg = os.loadavg();
+    return { load1m: loadavg[0], load5m: loadavg[1], load15m: loadavg[2] };
+  } catch (e) {
+    return { load1m: 0, load5m: 0, load15m: 0 };
+  }
+}
+
 // Check how many agent sessions are actively being processed (modified in the last N minutes).
 // If the agent is busy with user conversations, evolver should back off.
 function getRecentActiveSessionCount(windowMs) {
@@ -535,6 +583,18 @@ async function run() {
     return;
   }
 
+  // SAFEGUARD: System load awareness.
+  // When system load is too high (e.g. too many concurrent processes, heavy I/O),
+  // back off to prevent the evolver from contributing to load spikes.
+  // Echo-MingXuan's Cycle #55 saw load spike from 0.02-0.50 to 1.30 before crash.
+  const LOAD_MAX = parseFloat(process.env.EVOLVE_LOAD_MAX || '2.0');
+  const sysLoad = getSystemLoad();
+  if (sysLoad.load1m > LOAD_MAX) {
+    console.log(`[Evolver] System load ${sysLoad.load1m.toFixed(2)} exceeds max ${LOAD_MAX}. Backing off ${QUEUE_BACKOFF_MS}ms.`);
+    await sleepMs(QUEUE_BACKOFF_MS);
+    return;
+  }
+
   // Loop gating: do not start a new cycle until the previous one is solidified.
   // This prevents wrappers from "fast-cycling" the Brain without waiting for the Hand to finish.
   if (bridgeEnabled && loopMode) {
@@ -558,11 +618,49 @@ async function run() {
     }
   }
 
+  // Reset per-cycle env flags to prevent state leaking between cycles.
+  // In --loop mode, process.env persists across cycles. The circuit breaker
+  // below will re-set FORCE_INNOVATION if the condition still holds.
+  delete process.env.FORCE_INNOVATION;
+
   const startTime = Date.now();
   console.log('Scanning session logs...');
 
+  // Ensure all GEP asset files exist before any operation.
+  // This prevents "No such file or directory" errors when external tools
+  // (grep, cat, etc.) reference optional append-only files like genes.jsonl.
+  try { ensureAssetFiles(); } catch (e) {
+    console.error(`[AssetInit] ensureAssetFiles failed (non-fatal): ${e.message}`);
+  }
+
   // Maintenance: Clean up old logs to keep directory scan fast
   performMaintenance();
+
+  // --- Repair Loop Circuit Breaker ---
+  // Detect when the evolver is stuck in a "repair -> fail -> repair" cycle.
+  // If the last N events are all failed repairs with the same gene, force
+  // innovation intent to break out of the loop instead of retrying the same fix.
+  const REPAIR_LOOP_THRESHOLD = 3;
+  try {
+    const allEvents = readAllEvents();
+    const recent = Array.isArray(allEvents) ? allEvents.slice(-REPAIR_LOOP_THRESHOLD) : [];
+    if (recent.length >= REPAIR_LOOP_THRESHOLD) {
+      const allRepairFailed = recent.every(e =>
+        e && e.intent === 'repair' &&
+        e.outcome && e.outcome.status === 'failed'
+      );
+      if (allRepairFailed) {
+        const geneIds = recent.map(e => (e.genes_used && e.genes_used[0]) || 'unknown');
+        const sameGene = geneIds.every(id => id === geneIds[0]);
+        console.warn(`[CircuitBreaker] Detected ${REPAIR_LOOP_THRESHOLD} consecutive failed repairs${sameGene ? ` (gene: ${geneIds[0]})` : ''}. Forcing innovation intent to break the loop.`);
+        // Set env flag that downstream code reads to force innovation
+        process.env.FORCE_INNOVATION = 'true';
+      }
+    }
+  } catch (e) {
+    // Non-fatal: if we can't read events, proceed normally
+    console.error(`[CircuitBreaker] Check failed (non-fatal): ${e.message}`);
+  }
 
   const recentMasterLog = readRealSessionLog();
   const todayLog = readRecentLog(TODAY_LOG);
@@ -729,8 +827,10 @@ async function run() {
     today_log_tail: String(todayLog || '').slice(-2500),
   };
 
+  const sessionScope = getSessionScope();
   const observations = {
     agent: AGENT_NAME,
+    session_scope: sessionScope || null,
     drift_enabled: IS_RANDOM_DRIFT,
     review_mode: IS_REVIEW_MODE,
     dry_run: IS_DRY_RUN,
@@ -744,6 +844,10 @@ async function run() {
     cwd: process.cwd(),
     evidence,
   };
+
+  if (sessionScope) {
+    console.log(`[SessionScope] Active scope: "${sessionScope}". Evolution state and memory graph are isolated.`);
+  }
 
   // Memory Graph: close last action with an inferred outcome (append-only graph, mutable state).
   try {
@@ -1081,6 +1185,19 @@ Notes:
 Recent Evolution History (last 8 cycles -- DO NOT repeat the same intent+signal+gene):
 ${recentHistorySummary}
 IMPORTANT: If you see 3+ consecutive "repair" cycles with the same gene, you MUST switch to "innovate" intent.
+${(() => {
+  // Compute consecutive failure count from recent events for context injection
+  let cfc = 0;
+  const evts = Array.isArray(recentEvents) ? recentEvents : [];
+  for (let i = evts.length - 1; i >= 0; i--) {
+    if (evts[i] && evts[i].outcome && evts[i].outcome.status === 'failed') cfc++;
+    else break;
+  }
+  if (cfc >= 3) {
+    return `\nFAILURE STREAK WARNING: The last ${cfc} cycles ALL FAILED. You MUST change your approach.\n- Do NOT repeat the same gene/strategy. Pick a completely different approach.\n- If the error is external (API down, binary missing), mark as FAILED and move on.\n- Prefer a minimal safe innovate cycle over yet another failing repair.`;
+  }
+  return '';
+})()}
 
 External candidates (A2A receive zone; staged only, never execute directly):
 ${externalCandidatesPreview}

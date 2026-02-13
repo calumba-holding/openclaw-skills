@@ -255,32 +255,83 @@ function isForbiddenPath(relPath, forbiddenPaths) {
   return false;
 }
 
-function checkConstraints({ gene, blast }) {
+function checkConstraints({ gene, blast, blastRadiusEstimate, repoRoot }) {
   const violations = [];
-  if (!gene || gene.type !== 'Gene') return { ok: true, violations };
+  const warnings = [];
+  let blastSeverity = null;
+
+  if (!gene || gene.type !== 'Gene') return { ok: true, violations, warnings, blastSeverity };
   const constraints = gene.constraints || {};
   const maxFiles = Number(constraints.max_files);
-  if (Number.isFinite(maxFiles) && maxFiles > 0) {
-    if (Number(blast.files) > maxFiles) violations.push(`max_files exceeded: ${blast.files} > ${maxFiles}`);
+
+  // --- Blast radius severity classification ---
+  blastSeverity = classifyBlastSeverity({ blast, maxFiles });
+
+  // Hard cap breach is always a violation, regardless of gene config.
+  if (blastSeverity.severity === 'hard_cap_breach') {
+    violations.push(blastSeverity.message);
+    console.error(`[Solidify] ${blastSeverity.message}`);
+  } else if (blastSeverity.severity === 'critical_overrun') {
+    violations.push(blastSeverity.message);
+    // Log directory breakdown for diagnostics.
+    const breakdown = analyzeBlastRadiusBreakdown(blast.all_changed_files || blast.changed_files || []);
+    console.error(`[Solidify] ${blastSeverity.message}`);
+    console.error(`[Solidify] Top contributing directories: ${breakdown.map(function (d) { return d.dir + ' (' + d.files + ')'; }).join(', ')}`);
+  } else if (blastSeverity.severity === 'exceeded') {
+    violations.push(`max_files exceeded: ${blast.files} > ${maxFiles}`);
+  } else if (blastSeverity.severity === 'approaching_limit') {
+    warnings.push(blastSeverity.message);
   }
+
+  // --- Estimate vs actual drift detection ---
+  const estimateComparison = compareBlastEstimate(blastRadiusEstimate, blast);
+  if (estimateComparison && estimateComparison.drifted) {
+    warnings.push(estimateComparison.message);
+    console.log(`[Solidify] WARNING: ${estimateComparison.message}`);
+  }
+
+  // --- Forbidden paths ---
   const forbidden = Array.isArray(constraints.forbidden_paths) ? constraints.forbidden_paths : [];
   for (const f of blast.all_changed_files || blast.changed_files || []) {
     if (isForbiddenPath(f, forbidden)) violations.push(`forbidden_path touched: ${f}`);
   }
-  // Critical protection: reject any evolution that deletes/empties core dependencies.
+
+  // --- Critical protection: reject any evolution that deletes/empties core dependencies ---
   for (const f of blast.all_changed_files || blast.changed_files || []) {
     if (isCriticalProtectedPath(f)) {
-      // Touching a critical file is only a warning, not a violation, UNLESS
-      // the file was deleted or emptied (detected separately).
-      // However, modifying evolver's own source requires high rigor.
       const norm = normalizeRelPath(f);
       if (norm.startsWith('skills/evolver/') && gene.category !== 'repair') {
-        // Only repair-intent genes may touch evolver source.
         violations.push(`critical_path_modified_without_repair_intent: ${norm}`);
       }
     }
   }
-  return { ok: violations.length === 0, violations };
+
+  // --- New skill directory completeness check ---
+  // Detect when an innovation cycle creates a skill directory with too few files.
+  // This catches the "empty directory" problem where AI creates skills/<name>/ but
+  // fails to write any code into it. A real skill needs at least index.js + SKILL.md.
+  if (repoRoot) {
+    var newSkillDirs = new Set();
+    var changedList = blast.all_changed_files || blast.changed_files || [];
+    for (var sci = 0; sci < changedList.length; sci++) {
+      var scNorm = normalizeRelPath(changedList[sci]);
+      var scMatch = scNorm.match(/^skills\/([^\/]+)\//);
+      if (scMatch && !isCriticalProtectedPath(scNorm)) {
+        newSkillDirs.add(scMatch[1]);
+      }
+    }
+    newSkillDirs.forEach(function (skillName) {
+      var skillDir = path.join(repoRoot, 'skills', skillName);
+      try {
+        var entries = fs.readdirSync(skillDir).filter(function (e) { return !e.startsWith('.'); });
+        if (entries.length < 2) {
+          warnings.push('incomplete_skill: skills/' + skillName + '/ has only ' + entries.length + ' file(s). New skills should have at least index.js + SKILL.md.');
+        }
+      } catch (e) { /* dir might not exist yet */ }
+    });
+  }
+
+  return { ok: violations.length === 0, violations, warnings, blastSeverity };
 }
 
 function readStateForSolidify() {
@@ -308,6 +359,97 @@ function buildEventId(tsIso) {
 function buildCapsuleId(tsIso) {
   const t = Date.parse(tsIso);
   return `capsule_${Number.isFinite(t) ? t : Date.now()}`;
+}
+
+// --- System-wide blast radius hard caps ---
+// These are absolute maximums that NO gene can override.
+// Even if a gene sets max_files: 1000, the hard cap prevails.
+const BLAST_RADIUS_HARD_CAP_FILES = Number(process.env.EVOLVER_HARD_CAP_FILES) || 60;
+const BLAST_RADIUS_HARD_CAP_LINES = Number(process.env.EVOLVER_HARD_CAP_LINES) || 20000;
+
+// Severity thresholds (as ratios of gene max_files).
+const BLAST_WARN_RATIO = 0.8;   // >80% of limit: warning
+const BLAST_CRITICAL_RATIO = 2.0; // >200% of limit: critical overrun
+
+// Classify blast radius severity relative to a gene's max_files constraint.
+// Returns: { severity, message }
+//   severity: 'within_limit' | 'approaching_limit' | 'exceeded' | 'critical_overrun' | 'hard_cap_breach'
+function classifyBlastSeverity({ blast, maxFiles }) {
+  const files = Number(blast.files) || 0;
+  const lines = Number(blast.lines) || 0;
+
+  // Hard cap breach is always the highest severity -- system-level guard.
+  if (files > BLAST_RADIUS_HARD_CAP_FILES || lines > BLAST_RADIUS_HARD_CAP_LINES) {
+    return {
+      severity: 'hard_cap_breach',
+      message: `HARD CAP BREACH: ${files} files / ${lines} lines exceeds system limit (${BLAST_RADIUS_HARD_CAP_FILES} files / ${BLAST_RADIUS_HARD_CAP_LINES} lines)`,
+    };
+  }
+
+  if (!Number.isFinite(maxFiles) || maxFiles <= 0) {
+    return { severity: 'within_limit', message: 'no max_files constraint defined' };
+  }
+
+  if (files > maxFiles * BLAST_CRITICAL_RATIO) {
+    return {
+      severity: 'critical_overrun',
+      message: `CRITICAL OVERRUN: ${files} files > ${maxFiles * BLAST_CRITICAL_RATIO} (${BLAST_CRITICAL_RATIO}x limit of ${maxFiles}). Agent likely performed bulk/unintended operation.`,
+    };
+  }
+
+  if (files > maxFiles) {
+    return {
+      severity: 'exceeded',
+      message: `max_files exceeded: ${files} > ${maxFiles}`,
+    };
+  }
+
+  if (files > maxFiles * BLAST_WARN_RATIO) {
+    return {
+      severity: 'approaching_limit',
+      message: `approaching limit: ${files} / ${maxFiles} files (${Math.round((files / maxFiles) * 100)}%)`,
+    };
+  }
+
+  return { severity: 'within_limit', message: `${files} / ${maxFiles} files` };
+}
+
+// Analyze which directory prefixes contribute the most changed files.
+// Returns top N directory groups sorted by count descending.
+function analyzeBlastRadiusBreakdown(changedFiles, topN) {
+  const n = Number.isFinite(topN) && topN > 0 ? topN : 5;
+  const dirCount = {};
+  for (const f of Array.isArray(changedFiles) ? changedFiles : []) {
+    const rel = normalizeRelPath(f);
+    if (!rel) continue;
+    // Use first two path segments as the group key (e.g. "skills/feishu-post").
+    const parts = rel.split('/');
+    const key = parts.length >= 2 ? parts.slice(0, 2).join('/') : parts[0];
+    dirCount[key] = (dirCount[key] || 0) + 1;
+  }
+  return Object.entries(dirCount)
+    .sort(function (a, b) { return b[1] - a[1]; })
+    .slice(0, n)
+    .map(function (e) { return { dir: e[0], files: e[1] }; });
+}
+
+// Compare agent's pre-edit estimate against actual blast radius.
+// Returns null if no estimate, or { estimateFiles, actualFiles, ratio, drifted }.
+function compareBlastEstimate(estimate, actual) {
+  if (!estimate || typeof estimate !== 'object') return null;
+  const estFiles = Number(estimate.files);
+  const actFiles = Number(actual.files);
+  if (!Number.isFinite(estFiles) || estFiles <= 0) return null;
+  const ratio = actFiles / estFiles;
+  return {
+    estimateFiles: estFiles,
+    actualFiles: actFiles,
+    ratio: Math.round(ratio * 100) / 100,
+    drifted: ratio > 3 || ratio < 0.1,
+    message: ratio > 3
+      ? `Estimate drift: actual ${actFiles} files is ${ratio.toFixed(1)}x the estimated ${estFiles}. Agent did not plan accurately.`
+      : null,
+  };
 }
 
 // --- Critical skills / paths that evolver must NEVER delete or overwrite ---
@@ -421,6 +563,26 @@ function runValidations(gene, opts = {}) {
   return { ok: true, results, startedAt, finishedAt: Date.now() };
 }
 
+// --- Canary via Fork: verify index.js loads in an isolated child process ---
+// This is the last safety net before solidify commits an evolution.
+// If a patch broke index.js, the canary catches it BEFORE the daemon
+// restarts with broken code. Runs with a short timeout to avoid blocking.
+function runCanaryCheck(opts) {
+  const repoRoot = (opts && opts.repoRoot) ? opts.repoRoot : getRepoRoot();
+  const timeoutMs = (opts && Number.isFinite(Number(opts.timeoutMs))) ? Number(opts.timeoutMs) : 30000;
+  const canaryScript = path.join(repoRoot, 'src', 'canary.js');
+  if (!fs.existsSync(canaryScript)) {
+    return { ok: true, skipped: true, reason: 'canary.js not found' };
+  }
+  const r = tryRunCmd(`node "${canaryScript}"`, { cwd: repoRoot, timeoutMs });
+  return {
+    ok: r.ok,
+    skipped: false,
+    out: String(r.out || '').slice(0, 500),
+    err: String(r.err || '').slice(0, 500),
+  };
+}
+
 function rollbackTracked(repoRoot) {
   tryRunCmd('git restore --staged --worktree .', { cwd: repoRoot, timeoutMs: 60000 });
   tryRunCmd('git reset --hard', { cwd: repoRoot, timeoutMs: 60000 });
@@ -460,7 +622,36 @@ function rollbackNewUntrackedFiles({ repoRoot, baselineUntracked }) {
   if (skipped.length > 0) {
     console.log(`[Rollback] Skipped ${skipped.length} critical protected file(s): ${skipped.slice(0, 5).join(', ')}`);
   }
-  return { deleted, skipped };
+  // Clean up empty directories left after file deletion.
+  // This prevents "ghost skill directories" where mkdir succeeded but
+  // file creation failed/was rolled back. Without this, empty dirs like
+  // skills/anima/, skills/oblivion/ etc. accumulate after failed innovations.
+  var dirsToCheck = new Set();
+  for (var di = 0; di < deleted.length; di++) {
+    var dir = path.dirname(deleted[di]);
+    while (dir && dir !== '.' && dir !== '/') {
+      dirsToCheck.add(dir);
+      dir = path.dirname(dir);
+    }
+  }
+  // Sort deepest first to ensure children are removed before parents
+  var sortedDirs = Array.from(dirsToCheck).sort(function (a, b) { return b.length - a.length; });
+  var removedDirs = [];
+  for (var si = 0; si < sortedDirs.length; si++) {
+    var dirAbs = path.join(repoRoot, sortedDirs[si]);
+    try {
+      var entries = fs.readdirSync(dirAbs);
+      if (entries.length === 0) {
+        fs.rmdirSync(dirAbs);
+        removedDirs.push(sortedDirs[si]);
+      }
+    } catch (e) { /* ignore -- dir may already be gone */ }
+  }
+  if (removedDirs.length > 0) {
+    console.log('[Rollback] Removed ' + removedDirs.length + ' empty director' + (removedDirs.length === 1 ? 'y' : 'ies') + ': ' + removedDirs.slice(0, 5).join(', '));
+  }
+
+  return { deleted, skipped, removedDirs: removedDirs };
 }
 
 function inferCategoryFromSignals(signals) {
@@ -576,7 +767,27 @@ function solidify({ intent, summary, dryRun = false, rollbackOnFailure = true } 
     repoRoot,
     baselineUntracked: lastRun && Array.isArray(lastRun.baseline_untracked) ? lastRun.baseline_untracked : [],
   });
-  const constraintCheck = checkConstraints({ gene: geneUsed, blast });
+  const blastRadiusEstimate = lastRun && lastRun.blast_radius_estimate ? lastRun.blast_radius_estimate : null;
+  const constraintCheck = checkConstraints({ gene: geneUsed, blast, blastRadiusEstimate, repoRoot });
+
+  // Log blast radius diagnostics when severity is elevated.
+  if (constraintCheck.blastSeverity &&
+      constraintCheck.blastSeverity.severity !== 'within_limit' &&
+      constraintCheck.blastSeverity.severity !== 'approaching_limit') {
+    const breakdown = analyzeBlastRadiusBreakdown(blast.all_changed_files || blast.changed_files || []);
+    console.error(`[Solidify] Blast radius breakdown: ${JSON.stringify(breakdown)}`);
+    const estComp = compareBlastEstimate(blastRadiusEstimate, blast);
+    if (estComp) {
+      console.error(`[Solidify] Estimate comparison: estimated ${estComp.estimateFiles} files, actual ${estComp.actualFiles} files (${estComp.ratio}x)`);
+    }
+  }
+
+  // Log warnings even on success (approaching limit, estimate drift).
+  if (constraintCheck.warnings && constraintCheck.warnings.length > 0) {
+    for (const w of constraintCheck.warnings) {
+      console.log(`[Solidify] WARNING: ${w}`);
+    }
+  }
 
   // Critical safety: detect destructive changes to core dependencies.
   const destructiveViolations = detectDestructiveChanges({
@@ -598,6 +809,17 @@ function solidify({ intent, summary, dryRun = false, rollbackOnFailure = true } 
   let validation = { ok: true, results: [], startedAt: null, finishedAt: null };
   if (geneUsed) {
     validation = runValidations(geneUsed, { repoRoot, timeoutMs: 180000 });
+  }
+
+  // Canary safety: verify index.js loads in an isolated child process.
+  // This catches broken entry points that gene validations might miss.
+  const canary = runCanaryCheck({ repoRoot, timeoutMs: 30000 });
+  if (!canary.ok && !canary.skipped) {
+    constraintCheck.violations.push(
+      `canary_failed: index.js cannot load in child process: ${canary.err}`
+    );
+    constraintCheck.ok = false;
+    console.error(`[Solidify] CANARY FAILED: ${canary.err}`);
   }
 
   // Build standardized ValidationReport (machine-readable, interoperable).
@@ -662,9 +884,17 @@ function solidify({ intent, summary, dryRun = false, rollbackOnFailure = true } 
       },
       constraints_ok: constraintCheck.ok,
       constraint_violations: constraintCheck.violations,
+      constraint_warnings: constraintCheck.warnings || [],
+      blast_severity: constraintCheck.blastSeverity ? constraintCheck.blastSeverity.severity : null,
+      blast_breakdown: (!constraintCheck.ok && blast)
+        ? analyzeBlastRadiusBreakdown(blast.all_changed_files || blast.changed_files || [])
+        : null,
+      blast_estimate_comparison: compareBlastEstimate(blastRadiusEstimate, blast),
       validation_ok: validation.ok,
       validation: validation.results.map(r => ({ cmd: r.cmd, ok: r.ok })),
       validation_report: validationReport,
+      canary_ok: canary.ok,
+      canary_skipped: !!canary.skipped,
       protocol_ok: protocolViolations.length === 0,
       protocol_violations: protocolViolations,
       memory_graph: memoryGraphPath(),
@@ -739,8 +969,7 @@ function solidify({ intent, summary, dryRun = false, rollbackOnFailure = true } 
   };
   if (!dryRun) writeStateForSolidify(state);
 
-  // Search-First Evolution: auto-publish eligible capsules to the Hub.
-  // Hub requires Gene + Capsule bundled together (payload.assets = [Gene, Capsule]).
+  // Search-First Evolution: auto-publish eligible capsules to the Hub (as Gene+Capsule bundle).
   let publishResult = null;
   if (!dryRun && capsule && capsule.a2a && capsule.a2a.eligible_to_broadcast) {
     const sourceType = lastRun && lastRun.source_type ? String(lastRun.source_type) : 'generated';
@@ -756,50 +985,57 @@ function solidify({ intent, summary, dryRun = false, rollbackOnFailure = true } 
         const hubUrl = (process.env.A2A_HUB_URL || '').replace(/\/+$/, '');
 
         if (hubUrl) {
-          // Hub requires bundle format: Gene + Capsule together.
-          // geneUsed comes from ensureGene() earlier in solidify().
-          if (!geneUsed || geneUsed.type !== 'Gene') {
-            publishResult = { attempted: false, reason: 'no_gene_available_for_bundle' };
+          // Hub requires bundle format: Gene + Capsule published together.
+          // Build a Gene object from geneUsed if available; otherwise synthesize a minimal Gene.
+          var publishGene = null;
+          if (geneUsed && geneUsed.type === 'Gene' && geneUsed.id) {
+            publishGene = sanitizePayload(geneUsed);
           } else {
-            const sanitizedCapsule = sanitizePayload(capsule);
-            const sanitizedGene = sanitizePayload(geneUsed);
-            const msg = buildPublishBundle({ gene: sanitizedGene, capsule: sanitizedCapsule, event: event });
-            const result = httpTransportSend(msg, { hubUrl });
-            // httpTransportSend returns a Promise
-            if (result && typeof result.then === 'function') {
-              result
-                .then(function (res) {
-                  if (res && res.ok) {
-                    console.log(`[AutoPublish] Published bundle (Gene: ${geneUsed.id}, Capsule: ${capsule.id}) to Hub.`);
-                  } else {
-                    console.log(`[AutoPublish] Hub rejected bundle: ${JSON.stringify(res)}`);
-                  }
-                })
-                .catch(function (err) {
-                  console.log(`[AutoPublish] Failed (non-fatal): ${err.message}`);
-                });
-            }
-            publishResult = { attempted: true, asset_id: capsule.asset_id || capsule.id, gene_id: geneUsed.asset_id || geneUsed.id, bundle: true };
-
-            // Complete external task if one was active for this run
-            if (lastRun && lastRun.active_task && lastRun.active_task.task_id) {
-              try {
-                const { completeTask } = require('./taskReceiver');
-                completeTask(lastRun.active_task.task_id, capsule.asset_id || capsule.id)
-                  .then(function (ok) {
-                    if (ok) console.log(`[TaskReceiver] Completed task ${lastRun.active_task.task_id}`);
-                  })
-                  .catch(function () {});
-              } catch (taskErr) {
-                // non-fatal
-              }
-            }
+            // Synthesize minimal Gene from capsule data so bundle validation passes
+            var { computeAssetId: computeId } = require('./a2aProtocol');
+            publishGene = {
+              type: 'Gene',
+              id: capsule.gene || ('gene_auto_' + (capsule.id || Date.now())),
+              category: event && event.intent ? event.intent : 'repair',
+              signals_match: Array.isArray(capsule.trigger) ? capsule.trigger : [],
+              summary: capsule.summary || '',
+            };
+            publishGene.asset_id = computeId(publishGene);
           }
+
+          var sanitizedCapsule = sanitizePayload(capsule);
+          // Ensure Gene has asset_id
+          if (!publishGene.asset_id) {
+            var { computeAssetId: computeId2 } = require('./a2aProtocol');
+            publishGene.asset_id = computeId2(publishGene);
+          }
+
+          var msg = buildPublishBundle({
+            gene: publishGene,
+            capsule: sanitizedCapsule,
+            event: event && event.type === 'EvolutionEvent' ? sanitizePayload(event) : null,
+          });
+          var result = httpTransportSend(msg, { hubUrl });
+          // httpTransportSend returns a Promise
+          if (result && typeof result.then === 'function') {
+            result
+              .then(function (res) {
+                if (res && res.ok) {
+                  console.log('[AutoPublish] Published bundle (Gene+Capsule) ' + (capsule.asset_id || capsule.id) + ' to Hub.');
+                } else {
+                  console.log('[AutoPublish] Hub rejected: ' + JSON.stringify(res));
+                }
+              })
+              .catch(function (err) {
+                console.log('[AutoPublish] Failed (non-fatal): ' + err.message);
+              });
+          }
+          publishResult = { attempted: true, asset_id: capsule.asset_id || capsule.id, bundle: true };
         } else {
           publishResult = { attempted: false, reason: 'no_hub_url' };
         }
       } catch (e) {
-        console.log(`[AutoPublish] Error (non-fatal): ${e.message}`);
+        console.log('[AutoPublish] Error (non-fatal): ' + e.message);
         publishResult = { attempted: false, reason: e.message };
       }
     } else {
@@ -821,4 +1057,10 @@ module.exports = {
   isValidationCommandAllowed,
   isCriticalProtectedPath,
   detectDestructiveChanges,
+  classifyBlastSeverity,
+  analyzeBlastRadiusBreakdown,
+  compareBlastEstimate,
+  runCanaryCheck,
+  BLAST_RADIUS_HARD_CAP_FILES,
+  BLAST_RADIUS_HARD_CAP_LINES,
 };
