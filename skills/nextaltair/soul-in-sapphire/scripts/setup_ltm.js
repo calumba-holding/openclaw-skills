@@ -12,6 +12,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
 
 import {
   extractPageId,
@@ -20,7 +21,7 @@ import {
   getDatabase,
   patchDataSource,
   relationSingleProperty,
-} from './notion_client.js';
+} from './notionctl_bridge.js';
 
 function die(msg) {
   process.stderr.write(String(msg) + '\n');
@@ -48,13 +49,22 @@ function identityName(workspaceRoot) {
   return name || null;
 }
 
+function expandHome(p) {
+  if (!p) return p;
+  if (p === '~') return os.homedir();
+  if (p.startsWith('~/')) return path.join(os.homedir(), p.slice(2));
+  return p;
+}
+
 function parseArgs(argv) {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const fallbackWorkspaceRoot = path.resolve(here, '..', '..', '..');
   const out = {
     parent: null,
     base: null,
     yes: false,
     outPath: path.join(os.homedir(), '.config', 'soul-in-sapphire', 'config.json'),
-    workspaceRoot: path.resolve(process.cwd(), '..', '..', '..'), // /home/altair/clawd
+    workspaceRoot: fallbackWorkspaceRoot,
   };
   const args = argv.slice(2);
   for (let i = 0; i < args.length; i++) {

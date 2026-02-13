@@ -1,6 +1,7 @@
 ---
 name: soul-in-sapphire
 description: Generic long-term memory (LTM) operations for OpenClaw using Notion (2025-09-03 data_sources). Use for durable memory writes/search, emotion-state ticks, journal writes, and model-controlled subagent spawn planning via local JSON presets.
+metadata: {"openclaw":{"emoji":"💠","requires":{"bins":["node"],"env":["NOTION_API_KEY"]},"primaryEnv":"NOTION_API_KEY","dependsOnSkills":["notion-api-automation"],"localReads":["~/.config/soul-in-sapphire/config.json"],"optionalEnv":["NOTIONCTL_PATH"]}}
 ---
 
 # soul-in-sapphire (Notion LTM)
@@ -23,6 +24,8 @@ The goal is continuity and growth, not archival volume.
 - Notion token: `NOTION_API_KEY` (or `NOTION_TOKEN`)
 - Notion API version: `2025-09-03`
 - Local config: `~/.config/soul-in-sapphire/config.json`
+- Dependency skill: `notion-api-automation` (`scripts/notionctl.mjs` is executed via local child process)
+- Optional override: `NOTIONCTL_PATH` (if set, uses explicit notionctl path instead of default sibling skill path)
 
 ## Required Notion databases and schema
 
@@ -134,13 +137,13 @@ echo '{
   "tags":["notion","openclaw"],
   "content":"Use /v1/data_sources/{id}/query.",
   "confidence":"high"
-}' | python3 skills/soul-in-sapphire/scripts/ltm_write.py
+}' | node skills/soul-in-sapphire/scripts/ltm_write.js
 ```
 
 ### 3) LTM search
 
 ```bash
-python3 skills/soul-in-sapphire/scripts/ltm_search.py --query "data_sources" --limit 5
+node skills/soul-in-sapphire/scripts/ltm_search.js --query "data_sources" --limit 5
 ```
 
 ### 4) Emotion/state tick
