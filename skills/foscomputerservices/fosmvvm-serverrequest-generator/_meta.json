@@ -1,0 +1,11 @@
+{
+  "owner": "foscomputerservices",
+  "slug": "fosmvvm-serverrequest-generator",
+  "displayName": "FOSMVVM ServerRequest Generator",
+  "latest": {
+    "version": "2.0.6",
+    "publishedAt": 1771086512355,
+    "commit": null
+  },
+  "history": []
+}
