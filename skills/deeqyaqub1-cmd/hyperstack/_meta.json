@@ -3,11 +3,16 @@
   "slug": "hyperstack",
   "displayName": "HyperStack (requires HYPERSTACK_API_KEY)",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1770873447199,
-    "commit": "https://github.com/openclaw/skills/commit/d56e51bee11935dab01e8e60e7408cb7595b2149"
+    "version": "1.0.8",
+    "publishedAt": 1771017769696,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1770873447199,
+      "commit": "https://github.com/openclaw/skills/commit/d56e51bee11935dab01e8e60e7408cb7595b2149"
+    },
     {
       "version": "1.0.4",
       "publishedAt": 1770774951138,
