@@ -1,11 +1,11 @@
 ---
 name: agent-self-governance
-description: "Self-governance protocol for autonomous agents: WAL (Write-Ahead Log), VBR (Verify Before Reporting), ADL (Anti-Divergence Limit), and VFM (Value-For-Money). Use when: (1) receiving a user correction — log it before responding, (2) making an important decision or analysis — log it before continuing, (3) pre-compaction memory flush — flush the working buffer to WAL, (4) session start — replay unapplied WAL entries to restore lost context, (5) any time you want to ensure something survives compaction, (6) before claiming a task is done — verify it, (7) periodic self-check — am I drifting from my persona? (8) cost tracking — was that expensive operation worth it?"
+description: "Self-governance protocol for autonomous agents: WAL (Write-Ahead Log), VBR (Verify Before Reporting), ADL (Anti-Divergence Limit), VFM (Value-For-Money), and IKL (Infrastructure Knowledge Logging). Use when: (1) receiving a user correction — log it before responding, (2) making an important decision or analysis — log it before continuing, (3) pre-compaction memory flush — flush the working buffer to WAL, (4) session start — replay unapplied WAL entries to restore lost context, (5) any time you want to ensure something survives compaction, (6) before claiming a task is done — verify it, (7) periodic self-check — am I drifting from my persona? (8) cost tracking — was that expensive operation worth it? (9) discovering infrastructure — log hardware/service specs immediately."
 ---
 
 # Agent Self-Governance
 
-Four protocols that prevent agent failure modes: losing context, false completion claims, persona drift, and wasteful spending.
+Five protocols that prevent agent failure modes: losing context, false completion claims, persona drift, wasteful spending, and infrastructure amnesia.
 
 ## 1. WAL (Write-Ahead Log)
 
@@ -135,3 +135,46 @@ python3 scripts/vfm.py suggest <agent_id>
 - After spawning sub-agents → log cost and outcome
 - During heartbeat → run `suggest` for optimization tips
 - Weekly review → run `report` for cost breakdown
+
+## 5. IKL (Infrastructure Knowledge Logging)
+
+**Rule: Log infrastructure facts immediately.** When you discover hardware specs, service configs, or network topology, write it down BEFORE continuing.
+
+### Triggers
+| Discovery Type | Log To | Example |
+|----------------|--------|---------|
+| Hardware specs | TOOLS.md | "GPU server has 3 GPUs: RTX 3090 + 3080 + 2070 SUPER" |
+| Service configs | TOOLS.md | "ComfyUI runs on port 8188, uses /data/ai-stack" |
+| Network topology | TOOLS.md | "Pi at 192.168.99.25, GPU server at 10.0.0.44" |
+| Credentials/auth | memory/encrypted/ | "SSH key: ~/.ssh/id_ed25519_alexchen" |
+| API endpoints | TOOLS.md or skill | "Moltbook API: POST /api/v1/posts" |
+
+### Commands to Run on Discovery
+```bash
+# Hardware discovery
+nvidia-smi --query-gpu=index,name,memory.total --format=csv
+lscpu | grep -E "Model name|CPU\(s\)|Thread"
+free -h
+df -h
+
+# Service discovery  
+systemctl list-units --type=service --state=running
+docker ps  # or podman ps
+ss -tlnp | grep LISTEN
+
+# Network discovery
+ip addr show
+cat /etc/hosts
+```
+
+### The IKL Protocol
+1. **SSH to new server** → Run hardware/service discovery commands
+2. **Before responding** → Update TOOLS.md with specs
+3. **New service discovered** → Log port, path, config location
+4. **Credentials obtained** → Encrypt and store in memory/encrypted/
+
+### Anti-Pattern: "I'll Remember"
+❌ "The GPU server has 3 GPUs" (only in conversation)
+✅ "The GPU server has 3 GPUs" → Update TOOLS.md → then continue
+
+**Memory is limited. Files are permanent. IKL before you forget.**
