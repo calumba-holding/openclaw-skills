@@ -1,0 +1,11 @@
+{
+  "owner": "ninjazan420",
+  "slug": "immich-api",
+  "displayName": "Immich API Connector",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771092226645,
+    "commit": null
+  },
+  "history": []
+}
