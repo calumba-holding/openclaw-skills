@@ -1,20 +1,20 @@
 ---
 name: ragflow
 description: Universal Ragflow API client for RAG operations. Create datasets, upload documents, run chat queries against knowledge bases. Self-hosted RAG platform integration.
-version: 1.0.0
+version: 1.0.2
 author: Ania
+env:
+  RAGFLOW_URL:
+    description: Ragflow instance URL (e.g., https://rag.example.com)
+    required: true
+  RAGFLOW_API_KEY:
+    description: Ragflow API key (use least-privilege key, can manage datasets/upload files)
+    required: true
 metadata:
   clawdbot:
     emoji: "📚"
     requires:
       bins: ["node"]
-      env:
-        RAGFLOW_URL:
-          description: Ragflow instance URL (e.g., https://rag.example.com)
-          required: true
-        RAGFLOW_API_KEY:
-          description: Ragflow API key
-          required: true
 ---
 
 # Ragflow API Client

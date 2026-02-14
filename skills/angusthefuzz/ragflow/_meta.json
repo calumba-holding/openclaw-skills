@@ -3,9 +3,15 @@
   "slug": "ragflow",
   "displayName": "Ragflow API Client",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1771095603813,
-    "commit": "https://github.com/openclaw/skills/commit/806bc813de52ed34938666eb7f56a2cd32dd889c"
+    "version": "1.0.2",
+    "publishedAt": 1771096932347,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1771095603813,
+      "commit": "https://github.com/openclaw/skills/commit/806bc813de52ed34938666eb7f56a2cd32dd889c"
+    }
+  ]
 }
