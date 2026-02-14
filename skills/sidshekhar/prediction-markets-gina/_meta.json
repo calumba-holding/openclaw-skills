@@ -1,0 +1,11 @@
+{
+  "owner": "sidshekhar",
+  "slug": "prediction-markets-gina",
+  "displayName": "Polymarket via Gina",
+  "latest": {
+    "version": "0.2.0",
+    "publishedAt": 1771066831835,
+    "commit": null
+  },
+  "history": []
+}
