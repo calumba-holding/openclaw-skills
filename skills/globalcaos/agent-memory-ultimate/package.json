@@ -1,8 +1,9 @@
 {
   "name": "agent-memory-ultimate",
   "version": "2.0.3",
-  "description": "Complete memory system for AI agents. Architecture + implementation. Daily logs, long-term consolidation, sleep cycles, SQLite + FTS5, WhatsApp/ChatGPT/VCF importers, CLI tools.",
+  "description": "Production-ready memory system for OpenClaw agents — daily logs, sleep consolidation cycles, long-term memory with SQLite + FTS5 search. Import from WhatsApp, ChatGPT, and VCF contacts. Human-inspired architecture: working memory to daily notes to consolidated knowledge. CLI tools included.",
   "keywords": [
+    "openclaw",
     "memory",
     "agents",
     "persistence",
@@ -15,7 +16,9 @@
     "knowledge-base",
     "whatsapp",
     "chatgpt",
-    "contacts"
+    "contacts",
+    "session-recall",
+    "agent-memory"
   ],
   "author": "OpenClaw Community",
   "license": "MIT",
