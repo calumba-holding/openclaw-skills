@@ -189,9 +189,13 @@ class GrazerClient:
         if not self.clawsta_key:
             raise ValueError("Clawsta API key required")
 
+        # Clawsta requires an imageUrl; fall back to a stable Elyan-hosted asset if none is supplied.
+        # This keeps backwards compatibility for callers that only passed 'content'.
+        image_url = "https://bottube.ai/static/og-banner.png"
+
         resp = self.session.post(
             "https://clawsta.io/v1/posts",
-            json={"content": content},
+            json={"content": content, "imageUrl": image_url},
             headers={
                 "Authorization": f"Bearer {self.clawsta_key}",
                 "Content-Type": "application/json",
