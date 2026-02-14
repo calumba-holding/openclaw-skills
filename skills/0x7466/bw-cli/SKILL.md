@@ -3,9 +3,10 @@ name: bw-cli
 description: Interact with Bitwarden password manager using the bw CLI. Covers authentication (login/unlock/logout/status), vault operations (list/get/create/edit/delete/restore items, folders, attachments, collections), password/passphrase generation, organization management, and Send/receive. Use for "bitwarden", "bw", "password safe", "vaultwarden", "vault", "password manager", "generate password", "get password", "unlock vault", "share send".
 metadata:
   author: tfm
-  version: "1.4.0"
+  version: "1.9.0"
   docs: https://bitwarden.com/help/cli/
   docs-md: https://bitwarden.com/help/cli.md
+  api-key-docs: https://bitwarden.com/help/personal-api-key/
 ---
 
 # Bitwarden CLI
@@ -31,28 +32,34 @@ choco install bitwarden-cli  # Windows via Chocolatey
 snap install bw              # Linux via Snap
 ```
 
-### Authentication Flow
+### Authentication Flow (Preferred: Unlock First)
 
+**Standard-Workflow (unlock-first):**
 ```bash
-# 1. Login (creates local vault copy)
-bw login                     # Interactive login
-bw login --apikey           # API key login
-bw login --sso              # SSO login
+# 1. Try unlock first (fast, most common case)
+export BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null)
 
-# 2. Unlock (generates session key)
-bw unlock                    # Interactive unlock
-bw unlock --passwordenv BW_PASSWORD     # From env
-bw unlock --passwordfile ~/.secrets     # From file
+# 2. Only if unlock fails, fall back to login
+if [ -z "$BW_SESSION" ]; then
+  bw login "$BW_EMAIL" "$BW_PASSWORD"
+  export BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw)
+fi
 
-# 3. Export session key (copy output to shell)
-export BW_SESSION="..."
-
-# 4. Sync before any vault operation
+# 3. Sync before any vault operation
 bw sync
 
-# 5. End session
+# 4. End session
 bw lock                      # Lock (keep login)
 bw logout                    # Complete logout
+```
+
+**Alternative: Direct login methods**
+```bash
+bw login                     # Interactive login (email + password)
+bw login --apikey           # API key login (uses BW_CLIENTID/BW_CLIENTSECRET from .secrets)
+bw login --sso              # SSO login
+bw unlock                    # Interactive unlock
+bw unlock --passwordenv BW_PASSWORD     # Auto-available from sourced .secrets
 ```
 
 ## Session & Configuration Commands
@@ -382,22 +389,98 @@ Available on all commands:
 
 ## Security Reference
 
-### Secure Password Storage
+### Secure Password Storage (Workspace .secrets)
 
-If saving master password for automation:
+Store the master password in a `.secrets` file in the workspace root and auto-load it:
 
 ```bash
 # Create .secrets file
-echo "BW_PASSWORD=your_password" > ~/.openclaw/workspace/.secrets
+mkdir -p ~/.openclaw/workspace
+echo "BW_PASSWORD=your_master_password" > ~/.openclaw/workspace/.secrets
 chmod 600 ~/.openclaw/workspace/.secrets
 
 # Add to .gitignore
 echo ".secrets" >> ~/.openclaw/workspace/.gitignore
 
-# Usage
-source ~/.openclaw/workspace/.secrets
+# Auto-source in shell config (run once)
+echo 'source ~/.openclaw/workspace/.secrets 2>/dev/null' >> ~/.bashrc
+# OR for zsh:
+echo 'source ~/.openclaw/workspace/.secrets 2>/dev/null' >> ~/.zshrc
+```
+
+**Now BW_PASSWORD is always available:**
+
+```bash
 bw unlock --passwordenv BW_PASSWORD
 ```
+
+**Security requirements:**
+- File must be mode `600` (user read/write only)
+- Must add `.secrets` to `.gitignore`
+- Never commit the .secrets file
+- Auto-sourcing happens on new shell sessions; run `source ~/.openclaw/workspace/.secrets` for current session
+
+### API Key Authentication (Workspace .secrets)
+
+For automated/API key login, store credentials in the same `.secrets` file:
+
+```bash
+# Add API credentials to .secrets
+echo "BW_CLIENTID=user.xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" >> ~/.openclaw/workspace/.secrets
+echo "BW_CLIENTSECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" >> ~/.openclaw/workspace/.secrets
+chmod 600 ~/.openclaw/workspace/.secrets
+```
+
+**Login with API key:**
+
+```bash
+bw login --apikey
+```
+
+**⚠️ Known Issue / Workaround**
+
+On some self-hosted Vaultwarden instances, `bw login --apikey` may fail with:
+```
+User Decryption Options are required for client initialization
+```
+
+**Workaround - Use Email/Password Login:**
+
+```bash
+# Add EMAIL to .secrets
+echo "BW_EMAIL=your@email.com" >> ~/.openclaw/workspace/.secrets
+
+# Login with email + password (instead of --apikey)
+bw login "$BW_EMAIL" "$BW_PASSWORD"
+
+# Or as one-liner
+set -a && source ~/.openclaw/workspace/.secrets && set +a && bw login "$BW_EMAIL" "$BW_PASSWORD"
+
+# Then unlock as usual
+bw unlock --passwordenv BW_PASSWORD
+```
+
+**Full workflow (recommended for self-hosted):**
+
+```bash
+# Source the .secrets file
+set -a && source ~/.openclaw/workspace/.secrets && set +a
+
+# Try unlock first (faster, works if already logged in)
+export BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw 2>/dev/null)
+
+# Only login if unlock failed (vault not initialized)
+if [ -z "$BW_SESSION" ]; then
+  bw login "$BW_EMAIL" "$BW_PASSWORD"
+  export BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw)
+fi
+
+# Ready to use
+bw sync
+bw list items
+```
+
+**Get your API key:** https://bitwarden.com/help/personal-api-key/
 
 ### Environment Variables
 
@@ -437,11 +520,13 @@ Values: `0=Text`, `1=Hidden`, `2=Boolean`.
 
 ## Best Practices
 
-1. **Always sync**: Run `bw sync` before any vault operation
-2. **Secure session**: Use `bw lock` when done
-3. **Protect secrets**: Never log BW_SESSION
-4. **Password files**: Use mode 600 for password files
-5. **Verify fingerprints**: Before confirming org members
+1. **Unlock first, login only if needed**: Try `bw unlock` first as it's faster; only run `bw login` if unlock fails (vault not initialized)
+2. **Always sync**: Run `bw sync` before any vault operation
+3. **Secure session**: Use `bw lock` when done
+4. **Protect secrets**: Never log BW_SESSION or BW_PASSWORD
+5. **Secure storage**: Keep .secrets file at mode 600, never commit it
+6. **Auto-source**: Add to ~/.bashrc or ~/.zshrc for persistent env vars
+7. **Verify fingerprints**: Before confirming org members
 
 ## Troubleshooting
 
@@ -457,3 +542,4 @@ Values: `0=Text`, `1=Hidden`, `2=Boolean`.
 **References:**
 - HTML documentation: https://bitwarden.com/help/cli/
 - Markdown (fetchable): https://bitwarden.com/help/cli.md
+- Personal API Key: https://bitwarden.com/help/personal-api-key/
