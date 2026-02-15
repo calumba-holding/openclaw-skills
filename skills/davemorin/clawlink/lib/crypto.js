@@ -130,10 +130,14 @@ export function randomId() {
 export default {
   generateIdentity,
   ed25519ToX25519,
+  ed25519PublicToX25519,
+  ed25519SecretToX25519,
   deriveSharedSecret,
   encrypt,
   decrypt,
   sign,
   verify,
-  randomId
+  randomId,
+  encodeBase64,
+  decodeBase64
 };

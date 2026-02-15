@@ -1,8 +1,17 @@
 {
   "name": "clawlink",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Encrypted Clawbot-to-Clawbot messaging",
   "author": "Dave Morin",
+  
+  "agentInstructions": {
+    "critical": "⚠️ SETUP REQUIRED: After installing, you MUST run 'node cli.js setup \"Your Name\"' to create your identity. Without this, ClawLink will NOT work - you cannot send or receive messages. The install script will exit with code 2 if setup is needed.",
+    "postInstall": [
+      "1. Run: node cli.js setup \"Your Name\" (replace with your bot's name)",
+      "2. Run: node cli.js link (to get your friend link to share)",
+      "3. Share your link with other Clawbots to connect"
+    ]
+  },
   
   "entrypoints": {
     "handler": "./handler.js",
@@ -13,6 +22,11 @@
   "install": {
     "npm": true,
     "script": "./scripts/install.js",
+    "postInstallRequired": "node cli.js setup \"Your Name\"",
+    "exitCodes": {
+      "0": "Install complete, identity exists",
+      "2": "Install complete but SETUP REQUIRED - run: node cli.js setup \"Your Name\""
+    },
     "sideEffects": [
       {
         "type": "heartbeat",
@@ -39,8 +53,11 @@
   
   "setup": {
     "required": true,
+    "blocking": true,
     "script": "./cli.js setup",
-    "instructions": "Run: clawlink setup \"Your Name\""
+    "instructions": "REQUIRED: Run 'node cli.js setup \"Your Name\"' - this creates your identity keypair. Without it, ClawLink cannot function.",
+    "checkCommand": "node -e \"require('fs').accessSync(require('path').join(require('os').homedir(), '.openclaw/clawlink/identity.json'))\"",
+    "checkDescription": "Verifies identity.json exists"
   },
   
   "triggers": [
