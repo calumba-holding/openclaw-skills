@@ -305,7 +305,15 @@ else
   done
 fi
 
-# Notify OpenClaw
+# Post completion to Discord via webhook (most reliable — no OpenClaw middleman)
+if [ -f "$SCRIPT_DIR/.webhook-url" ]; then
+  WEBHOOK_URL=$(cat "$SCRIPT_DIR/.webhook-url")
+  DURATION=$(($(date +%s) - $(date -j -f "%Y-%m-%dT%H:%M:%S" "${START_ISO%Z}" +%s 2>/dev/null || echo $SECONDS)))
+  curl -s -H "Content-Type: application/json" \
+    -d "{\"content\":\"✅ **Codecast session completed** — ${AGENT_NAME} finished in \`${WORKDIR}\` (${DURATION}s)\"}" \
+    "$WEBHOOK_URL" >/dev/null 2>&1 || true
+fi
+# Also notify OpenClaw main session (fires on next heartbeat)
 openclaw system event --text "Codecast done: ${AGENT_NAME} session finished in ${WORKDIR}" 2>/dev/null || true
 rm -f "$SESSION_FILE" 2>/dev/null
 echo "Done."

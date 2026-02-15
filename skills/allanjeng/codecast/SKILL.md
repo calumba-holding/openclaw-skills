@@ -390,6 +390,25 @@ exec command:"nohup {baseDir}/scripts/dev-relay.sh -w ~/projects/myapp -- claude
 # Step 2: Note the PID from output, monitor via ps or wait for wake event
 ```
 
+### Agent Launch Checklist (MANDATORY for OpenClaw agents)
+
+Every time you launch a codecast session, do ALL of these:
+
+1. **Start the nohup session** → note the PID from output
+2. **Post to the dev channel** → announce agent name, workdir, task
+3. **Create a watcher cron job** to detect completion and report back:
+   ```
+   cron add → every 120000ms → isolated agentTurn →
+   "Run: bash {baseDir}/scripts/codecast-watch.sh <PID> <relay-dir>
+   If output is STILL_RUNNING → reply HEARTBEAT_OK
+   If output starts with ✅ or ❌ or ⚠️ → post the output to <invoking-channel-id>, then delete this cron job (cron remove <this-job-id>)"
+   ```
+4. **Log to daily memory** → PID, relay dir, invoking channel, cron job ID
+
+The relay dir is printed at launch: `📂 Relay: /tmp/dev-relay.XXXXXX`.
+
+**Why the cron job is mandatory:** `openclaw system event` only queues for the main session heartbeat — it does NOT wake the active chat session. The cron job is the only reliable way to get notified in the channel that launched the codecast.
+
 ## Session Tracking
 
 - **Active session info:** `/tmp/dev-relay-sessions/<PID>.json` — one file per concurrent session, contains PID, agent name, start time, and relay dir for `process:submit` input forwarding. Automatically removed on session end.
