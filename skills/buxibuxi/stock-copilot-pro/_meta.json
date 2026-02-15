@@ -3,9 +3,15 @@
   "slug": "stock-copilot-pro",
   "displayName": "Stock Copilot Pro",
   "latest": {
-    "version": "0.1.0",
-    "publishedAt": 1771131572863,
-    "commit": "https://github.com/openclaw/skills/commit/4442cdaa0f1ac05610ed8db33c38b03139152eeb"
+    "version": "0.2.2",
+    "publishedAt": 1771159124874,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.1.0",
+      "publishedAt": 1771131572863,
+      "commit": "https://github.com/openclaw/skills/commit/4442cdaa0f1ac05610ed8db33c38b03139152eeb"
+    }
+  ]
 }
