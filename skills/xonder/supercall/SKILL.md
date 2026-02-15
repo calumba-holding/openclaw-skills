@@ -7,12 +7,17 @@ metadata:
     "openclaw":
       {
         "emoji": "📞",
-        "requires": { "plugins": ["supercall"] },
+        "requires": { 
+          "plugins": ["supercall"],
+          "env": ["OPENAI_API_KEY", "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"],
+          "anyBins": ["ngrok", "tailscale"]
+        },
+        "primaryEnv": "OPENAI_API_KEY",
         "install":
           [
             {
               "id": "npm",
-              "kind": "plugin",
+              "kind": "node",
               "package": "@xonder/supercall",
               "label": "Install supercall plugin (npm)",
             },
@@ -33,9 +38,28 @@ Make AI-powered phone calls with custom personas and goals using OpenAI Realtime
 - **Streaming Audio**: Bidirectional audio via WebSocket for real-time conversations
 - **Limited Access**: Unlike the standard voice_call plugin, the person on the call doesn't have access to gateway agent, reducing attack surfaces.
 
+## Credentials
+
+### Required
+
+| Credential | Source | Purpose |
+|------------|--------|---------|
+| `OPENAI_API_KEY` | [OpenAI](https://platform.openai.com/api-keys) | Powers the realtime voice AI (GPT-4o) |
+| `TWILIO_ACCOUNT_SID` | [Twilio Console](https://console.twilio.com) | Twilio account identifier |
+| `TWILIO_AUTH_TOKEN` | [Twilio Console](https://console.twilio.com) | Twilio API authentication |
+
+### Optional
+
+| Credential | Source | Purpose |
+|------------|--------|---------|
+| `NGROK_AUTHTOKEN` | [ngrok](https://dashboard.ngrok.com) | ngrok tunnel auth (only needed if using ngrok as tunnel provider) |
+
+Credentials can be set via environment variables or in the plugin config (config takes precedence).
+
 ## Installation
 
-1. Copy this skill to your OpenClaw skills directory
+1. Install the plugin via npm or copy to your OpenClaw extensions directory
+
 2. **Enable hooks** for call completion callbacks (required):
 
 ```json
@@ -47,7 +71,9 @@ Make AI-powered phone calls with custom personas and goals using OpenAI Realtime
 }
 ```
 
-Generate a token with: `openssl rand -hex 24`
+Generate a secure token with: `openssl rand -hex 24`
+
+> ⚠️ **Security**: The `hooks.token` is sensitive — it authenticates internal callbacks. Keep it secret and rotate if compromised.
 
 3. Configure the plugin in your openclaw config:
 
@@ -108,12 +134,15 @@ supercall(
 | `provider` | Voice provider (twilio/mock) | Required |
 | `fromNumber` | Caller ID (E.164 format) | Required for real providers |
 | `toNumber` | Default recipient number | - |
+| `twilio.accountSid` | Twilio Account SID | TWILIO_ACCOUNT_SID env |
+| `twilio.authToken` | Twilio Auth Token | TWILIO_AUTH_TOKEN env |
 | `streaming.openaiApiKey` | OpenAI API key for realtime | OPENAI_API_KEY env |
 | `streaming.silenceDurationMs` | VAD silence duration in ms | 800 |
 | `streaming.vadThreshold` | VAD threshold 0-1 (higher = less sensitive) | 0.5 |
 | `streaming.streamPath` | WebSocket path for media stream | /voice/stream |
 | `tunnel.provider` | Tunnel for webhooks (ngrok/tailscale-serve/tailscale-funnel) | none |
-
+| `tunnel.ngrokDomain` | Fixed ngrok domain (recommended for production) | - |
+| `tunnel.ngrokAuthToken` | ngrok auth token | NGROK_AUTHTOKEN env |
 Full realtime requires an OpenAI API key.
 
 ## Requirements
@@ -126,3 +155,34 @@ Full realtime requires an OpenAI API key.
 ## Architecture
 
 This is a fully standalone skill - it does not depend on the built-in voice-call plugin. All voice calling logic is self-contained.
+
+## Runtime Behavior and Security
+
+This plugin is **not** instruction-only. It runs code, spawns processes, opens network listeners, and writes to disk. The following describes exactly what happens at runtime.
+
+### Process spawning
+
+When `tunnel.provider` is set to `ngrok`, the plugin spawns the `ngrok` CLI binary via `child_process.spawn`. When set to `tailscale-serve` or `tailscale-funnel`, it spawns the `tailscale` CLI instead. These processes run for the lifetime of the plugin and are terminated on shutdown. If `tunnel.provider` is `none` (or a `publicUrl` is provided directly), no external processes are spawned.
+
+### Network activity
+
+- **Local webhook server**: The plugin opens an HTTP server (default `0.0.0.0:3335`) to receive Twilio webhook callbacks and WebSocket media streams.
+- **Startup self-test**: On startup, the plugin sends an HTTP POST to its own public webhook URL with an `x-supercall-self-test` header to verify connectivity. If `publicUrl` is misconfigured to point at an unintended endpoint, this self-test token could be sent there. Always verify your `publicUrl` or tunnel configuration before starting.
+- **Outbound API calls**: The plugin makes outbound requests to the OpenAI Realtime API (WebSocket) and Twilio REST API during calls.
+
+### Webhook verification
+
+- **Twilio calls**: Verified using Twilio's X-Twilio-Signature header (HMAC-SHA1).
+- **Self-test requests**: Authenticated using an internal token (`x-supercall-self-test`) generated at startup.
+- **ngrok free-tier relaxation**: On free-tier ngrok domains (`.ngrok-free.app`, `.ngrok.io`), URL reconstruction may vary due to ngrok's request rewriting; Twilio signature mismatches are logged but allowed through. Paid/custom ngrok domains (`.ngrok.app`) are verified strictly. This relaxation is limited to free-tier domains only and does not affect Tailscale or direct `publicUrl` configurations.
+
+### Data at rest
+
+Call transcripts are persisted to `~/clawd/supercall-logs`. These logs may contain sensitive conversation content. Review and rotate logs periodically.
+
+### Best practices
+
+- **Protect your credentials** — Twilio and OpenAI keys grant access to paid services
+- **Verify your public URL** — ensure `publicUrl` or tunnel config points where you expect before starting
+- **Rotate `hooks.token`** periodically and if you suspect compromise
+- **Review call logs** — transcripts stored on disk may contain sensitive content

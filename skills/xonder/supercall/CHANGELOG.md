@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0] - 2026-02-14
+
+### Changed
+- **Simplified webhook security** - Removed `skipSignatureVerification` and `allowNgrokFreeTier` config options. Twilio signatures are always verified; ngrok URL mismatches are logged but allowed (since URL reconstruction can vary). Self-test requests use a separate internal token.
+- **Updated security docs** - SKILL.md now explains how verification actually works instead of scary warnings.
+
+### Fixed
+- **Stale call cleanup** - Calls stuck in non-terminal state for >5 minutes are automatically cleaned up on startup. Prevents "Maximum concurrent calls reached" errors after gateway crashes or restarts.
+
+## [1.2.1] - 2026-02-14
+
+### Fixed
+- **Pre-flight WebSocket check** - Now tests both HTTP webhook AND WebSocket media stream endpoint before placing calls. Previously, calls could be initiated even if the WebSocket path was unreachable (e.g., ngrok tunnel misconfigured), resulting in silent calls with empty transcripts.
+
 ## [1.2.0] - 2026-02-05
 
 ### Fixed

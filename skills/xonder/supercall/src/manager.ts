@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import WebSocket from "ws";
+
 import { resolveUserPath } from "./utils.js";
 import type { VoiceCallConfig } from "./config.js";
 import type { VoiceCallProvider } from "./providers/base.js";
@@ -206,6 +208,7 @@ export class CallManager {
       throw new Error("Webhook self-test secret not initialized");
     }
 
+    // Test 1: HTTP POST to webhook endpoint
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
     try {
@@ -220,11 +223,65 @@ export class CallManager {
       if (!response.ok) {
         throw new Error(`Webhook self-test failed (HTTP ${response.status})`);
       }
-      this.lastPreflightOk = true;
-      this.lastPreflightAt = now;
     } finally {
       clearTimeout(timeout);
     }
+
+    // Test 2: WebSocket endpoint (critical for media streaming)
+    const streamPath = this.config.streaming?.streamPath || "/voice/stream";
+    const wsProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${wsProtocol}//${url.host}${streamPath}`;
+    
+    await this.testWebSocketEndpoint(wsUrl);
+
+    this.lastPreflightOk = true;
+    this.lastPreflightAt = now;
+  }
+
+  /**
+   * Test that the WebSocket endpoint is reachable.
+   * Opens a connection and immediately closes it.
+   */
+  private testWebSocketEndpoint(wsUrl: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timeoutMs = 4000;
+      let resolved = false;
+
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          ws.close();
+          reject(new Error(`WebSocket self-test timeout (${wsUrl})`));
+        }
+      }, timeoutMs);
+
+      const ws = new WebSocket(wsUrl);
+
+      ws.on("open", () => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          ws.close();
+          resolve();
+        }
+      });
+
+      ws.on("error", (err) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          reject(new Error(`WebSocket self-test failed (${wsUrl}): ${err.message}`));
+        }
+      });
+
+      ws.on("unexpected-response", (_req, res) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          reject(new Error(`WebSocket upgrade rejected (${wsUrl}): HTTP ${res.statusCode}`));
+        }
+      });
+    });
   }
 
   /**
@@ -598,6 +655,12 @@ export class CallManager {
     });
   }
 
+  /**
+   * Maximum age (in ms) for a non-terminal call to be considered active.
+   * Calls older than this are assumed stale (e.g., from a crashed process).
+   */
+  private static readonly STALE_CALL_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
   private loadActiveCalls(): void {
     const logPath = path.join(this.storePath, "calls.jsonl");
     if (!fs.existsSync(logPath)) return;
@@ -617,16 +680,41 @@ export class CallManager {
       }
     }
 
+    const now = Date.now();
+    let staleCount = 0;
+
     for (const [callId, call] of callMap) {
-      if (!TerminalStates.has(call.state)) {
-        this.activeCalls.set(callId, call);
-        if (call.providerCallId) {
-          this.providerCallIdMap.set(call.providerCallId, callId);
-        }
-        for (const eventId of call.processedEventIds) {
-          this.processedEventIds.add(eventId);
-        }
+      if (TerminalStates.has(call.state)) {
+        continue; // Already terminal, skip
       }
+
+      // Check if call is stale (started too long ago without reaching terminal state)
+      const callAge = now - (call.startedAt || 0);
+      if (callAge > CallManager.STALE_CALL_THRESHOLD_MS) {
+        staleCount++;
+        const prevState = call.state;
+        // Mark as stale and persist the terminal state
+        call.state = "error";
+        call.endedAt = now;
+        this.persistCallRecord(call);
+        console.log(
+          `[supercall] Cleaned up stale call ${callId.slice(0, 8)}... (age: ${Math.round(callAge / 1000)}s, was: ${prevState})`,
+        );
+        continue;
+      }
+
+      // Call is recent and non-terminal, consider it active
+      this.activeCalls.set(callId, call);
+      if (call.providerCallId) {
+        this.providerCallIdMap.set(call.providerCallId, callId);
+      }
+      for (const eventId of call.processedEventIds) {
+        this.processedEventIds.add(eventId);
+      }
+    }
+
+    if (staleCount > 0) {
+      console.log(`[supercall] Cleaned up ${staleCount} stale call(s) on startup`);
     }
   }
 
