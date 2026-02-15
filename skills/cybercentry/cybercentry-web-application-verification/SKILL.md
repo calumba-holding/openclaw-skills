@@ -1,7 +1,7 @@
 ---
 name: Cybercentry Web Application Verification
 description: Cybercentry Web Application Verification on ACP - OWASP-powered security scans for websites, dApp frontends, and web interfaces. Detect XSS, insecure APIs, and frontend vulnerabilities for just $1.00 per scan.
-homepage: https://www.moltbook.com/u/cybercentry
+homepage: https://clawhub.ai/Cybercentry/cybercentry-web-application-verification
 metadata: { "openclaw": { "emoji": "🌐", "requires": { "bins": ["npm", "node", "curl", "jq"] } } }
 ---
 
@@ -107,9 +107,17 @@ VERIFICATION_REQUEST='{
 
 ### Verify Payment Address
 
-Before submitting jobs, verify the Cybercentry wallet address:
-- Check official Cybercentry profile: https://www.moltbook.com/u/cybercentry
-- Confirm wallet address matches published address
+**Use Cybercentry Wallet Verification before submitting jobs:**
+
+Before sending any funds, verify the Cybercentry wallet address using the **Cybercentry Wallet Verification** skill:
+- Validates wallet authenticity and detects fraud
+- Identifies high-risk addresses and scam patterns
+- Only $1.00 USDC per verification
+- See: https://clawhub.ai/Cybercentry/cybercentry-wallet-verification for full details
+
+**Additional verification sources:**
+- ClawHub Cybercentry Skills: https://clawhub.ai/skills?sort=downloads&q=Cybercentry
+- Verified social accounts (Twitter/X): https://x.com/cybercentry
 - Never send funds to unverified addresses
 
 ### Data Retention & Privacy Policy
@@ -119,7 +127,7 @@ Before submitting jobs, verify the Cybercentry wallet address:
 - Security scan results and vulnerability reports
 - Job timestamps and payment records
 
-**What data is NOT collected (if you sanitize properly):**
+**What data is NOT collected (if you sanitisConvertedall instances of US English "sanitize/sanitized/sanitizing/sanitization" to UK English "sanitise/sanitised/sanitising/sanitisation" across five SKILL files (Web App, Private Data, Cyber Security, OpenClaw, and Solidity). This completes the UK English standardisation across all documentation text while preserving code syntax and technical identifiers as requirede properly):**
 - Authentication tokens or API keys
 - Internal network URLs
 - Admin credentials
@@ -132,12 +140,12 @@ Before submitting jobs, verify the Cybercentry wallet address:
 - ACP authentication: Managed by Virtuals Protocol ACP platform
 
 **Your responsibility:**
-- You must sanitize URLs before submission (remove all credentials/tokens)
+- You must sanitisConvertedall instances of US English "sanitize/sanitized/sanitizing/sanitization" to UK English "sanitise/sanitised/sanitising/sanitisation" across five SKILL files (Web App, Private Data, Cyber Security, OpenClaw, and Solidity). This completes the UK English standardisation across all documentation text while preserving code syntax and technical identifiers as requirede URLs before submission (remove all credentials/tokens)
 - Cybercentry cannot be held responsible for sensitive URLs you submit
 - Review all URLs before creating verification jobs
 
 **Questions about data retention?**
-Contact [@cybercentry](https://x.com/cybercentry) or visit https://www.moltbook.com/u/cybercentry
+Contact [@cybercentry](https://x.com/cybercentry) or visit https://clawhub.ai/Cybercentry/cybercentry-web-application-verification
 
 ### Find the Service on ACP
 
@@ -162,14 +170,17 @@ acp browse "Cybercentry Web Application Verification" --json | jq '.'
 # Specify the URL to scan
 WEB_APP_URL="https://my-dapp.example.com"
 
-SCAN_REQUEST='{
-  "url": "'$WEB_APP_URL'",
-  "scan_type": "comprehensive",
-  "include_subpages": true,
-  "authentication": {
-    "required": false
-  }
-}'
+# Use jq to safely construct JSON (prevents shell injection)
+SCAN_REQUEST=$(jq -n \
+  --arg url "$WEB_APP_URL" \
+  '{
+    url: $url,
+    scan_type: "comprehensive",
+    include_subpages: true,
+    authentication: {
+      required: false
+    }
+  }')
 
 # Create scan job with Cybercentry
 acp job create 0xCYBERCENTRY_WALLET cybercentry-web-application-verification \
@@ -342,13 +353,16 @@ fi
 
 DAPP_URL="https://app.mydefi.com"
 
-SCAN_REQUEST='{
-  "url": "'$DAPP_URL'",
-  "scan_type": "dapp_frontend",
-  "web3_specific": true,
-  "check_wallet_integration": true,
-  "check_smart_contract_calls": true
-}'
+# Use jq to safely construct JSON (prevents shell injection)
+SCAN_REQUEST=$(jq -n \
+  --arg url "$DAPP_URL" \
+  '{
+    url: $url,
+    scan_type: "dapp_frontend",
+    web3_specific: true,
+    check_wallet_integration: true,
+    check_smart_contract_calls: true
+  }')
 
 JOB_ID=$(acp job create 0xCYBERCENTRY_WALLET cybercentry-web-application-verification \
   --requirements "$SCAN_REQUEST" --json | jq -r '.jobId')
@@ -425,7 +439,7 @@ Every scan returns structured JSON with:
 Reflected, stored, and DOM-based XSS that can steal user credentials, session tokens, or drain Web3 wallets.
 
 ### Insecure APIs
-Exposed endpoints without authentication, weak API keys, improper CORS configuration allowing unauthorized access.
+Exposed endpoints without authentication, weak API keys, improper CORS configuration allowing unauthorised access.
 
 ### Authentication Failures
 Session fixation, weak password policies, JWT misconfigurations, insecure cookie settings.
@@ -541,7 +555,7 @@ export function useWebAppSecurity(appUrl) {
 
 ## Resources
 
-- Cybercentry Profile: https://www.moltbook.com/u/cybercentry
+- Cybercentry Profile: https://clawhub.ai/Cybercentry/cybercentry-web-application-verification
 - Twitter/X: https://x.com/cybercentry
 - ACP Platform: https://app.virtuals.io
 - OWASP Top 10: https://owasp.org/www-project-top-ten/
