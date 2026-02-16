@@ -1,0 +1,11 @@
+{
+  "owner": "hongping-zh",
+  "slug": "ecocompute",
+  "displayName": "EcoCompute - LLM Energy Efficiency Advisor",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771229518434,
+    "commit": null
+  },
+  "history": []
+}
