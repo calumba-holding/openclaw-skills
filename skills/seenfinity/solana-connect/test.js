@@ -88,8 +88,9 @@ async function test5() {
 function test6() {
   console.log('Test 6: Connect wallet with private key...');
   try {
-    const privateKey = '6fDauV66K8RDW3NjgTiDuB2cVNRRLV3wQ8CC3tzN43LP'; // From test 1
-    const wallet = connectWallet(privateKey);
+    // Use a fresh generated key for testing (never use real keys in tests)
+    const testWallet = generateWallet();
+    const wallet = connectWallet(testWallet.address);
     if (wallet.address && wallet.address.length > 30) {
       console.log(`  ✅ PASSED - Address: ${wallet.address.slice(0,8)}...`);
       passed++;

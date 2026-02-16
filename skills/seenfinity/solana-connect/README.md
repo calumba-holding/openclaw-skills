@@ -1,15 +1,28 @@
 # OpenClaw Solana Connect v2.0
 
-> The missing link between OpenClaw agents and Solana blockchain
+> The missing link between OpenClaw agents to Solana blockchain
 > **Now using @solana/kit (Solana Web3.js v2)**
 
 A purpose-built toolkit that enables autonomous AI agents running on OpenClaw to interact seamlessly with the Solana blockchain.
 
-## 🛡️ Security First
+## ⚠️ IMPORTANT: Current Limitations
 
-### Private Key Protection
+**This is a READ-ONLY toolkit for now.**
 
-**IMPORTANT:** This toolkit **NEVER returns private keys** to the agent. Private keys are handled internally for signing only.
+| Function | Status | Description |
+|----------|--------|-------------|
+| `getBalance()` | ✅ Works | Read SOL/token/NFT balances |
+| `getTransactions()` | ✅ Works | Read transaction history |
+| `getTokenAccounts()` | ✅ Works | Read token holdings |
+| `generateWallet()` | ✅ Works | Generate new addresses |
+| `connectWallet()` | ✅ Works | Validate addresses |
+| `sendSol()` | ⚠️ Simulation Only | Cannot send real transactions |
+
+**Signing is not yet implemented.** You can simulate transactions but cannot send real transactions.
+
+## 🛡️ Security: Private Keys Are Protected
+
+**This toolkit NEVER returns private keys to the agent.**
 
 - `connectWallet()` returns only the address
 - `generateWallet()` returns only the address  
@@ -99,19 +112,19 @@ npm install
 ```javascript
 const { connectWallet, getBalance, sendSol } = require('./scripts/solana.js');
 
-// Connect with a private key
+// Connect with a private key (only address is returned - private key stays internal)
 const wallet = await connectWallet(process.env.AGENT_PRIVATE_KEY);
 
-// Check balance
+// Check balance using the address
 const balance = await getBalance(wallet.address);
 
-// Send SOL (with dry-run first!)
-const result = await sendSol(wallet.privateKey, toAddress, 1.0, { dryRun: true });
+// Send SOL (dry-run mode - simulation only by default)
+// Private key is used internally for signing, never exposed
+const result = await sendSol(process.env.AGENT_PRIVATE_KEY, toAddress, 1.0, { dryRun: true });
 console.log('Simulation:', result);
 
-// If OK, send for real
-const tx = await sendSol(wallet.privateKey, toAddress, 1.0);
-console.log('Transaction:', tx.signature);
+// NOTE: Real transactions require additional security measures
+// See Security section below
 ```
 
 ---
