@@ -3,11 +3,16 @@
   "slug": "agent-hardening",
   "displayName": "Agent Hardening",
   "latest": {
-    "version": "1.0.6",
-    "publishedAt": 1771247326664,
-    "commit": "https://github.com/openclaw/skills/commit/35a07a90691bce3380c8289fed23952d3e7c9b9f"
+    "version": "1.1.1",
+    "publishedAt": 1771250062826,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.6",
+      "publishedAt": 1771247326664,
+      "commit": "https://github.com/openclaw/skills/commit/35a07a90691bce3380c8289fed23952d3e7c9b9f"
+    },
     {
       "version": "1.0.4",
       "publishedAt": 1771247117272,
