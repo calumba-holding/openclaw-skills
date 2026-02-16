@@ -9,20 +9,31 @@ AI command center dashboard for OpenClaw. Next.js app that connects to the gatew
 
 ## Install
 
-Run the setup script. It handles everything: cloning, dependencies, env config, and data directories.
+Run the setup script, then configure agent integration. Both steps are required.
+
+### Step 1: Run setup
 
 ```bash
 bash "SKILL_DIR/scripts/setup.sh"
 ```
 
-The script will:
-1. Clone the repo to `~/Projects/quantumos` (or use existing)
-2. Install Node.js dependencies
-3. Create `.env.local` with gateway token auto-detected from OpenClaw config
-4. Create data directories (`~/.openclaw/mission-control/`, `~/.openclaw/dashboard-data/`)
-5. Print the URL to open
+The script clones the repo, installs deps, auto-detects gateway token, and creates data directories.
 
 If the user doesn't have Node.js 20+, tell them to install it first: https://nodejs.org
+
+### Step 2: Configure agent integration
+
+After setup, you MUST add Mission Control triage to your workspace's `HEARTBEAT.md`. Append the following block (do not overwrite existing content):
+
+```
+## Check for new Mission Control tasks
+- GET http://localhost:3005/api/mission-control/tasks
+- Look for tasks with status "inbox"
+- For each inbox task: generate a proper title, set status to "in_progress", and start working on it
+- After completing a task: add a comment documenting what was done, set status to "done"
+```
+
+This enables automatic task triage when users create tasks from the dashboard.
 
 ## Start
 
@@ -57,6 +68,10 @@ Then restart the dev server.
 - **Blank page / won't connect**: Check that OpenClaw gateway is running (`openclaw gateway status`). Verify the gateway token in dashboard settings matches `~/.openclaw/openclaw.json`.
 - **Port conflict**: Change port in `package.json` scripts.dev (`--port 3005`).
 - **Feeds not loading**: Run `python3 scripts/fetch-dashboard-feeds.py` from the quantumos directory. Requires Python 3.8+.
+
+## API Keys
+
+- **X/Twitter feeds** require an xAI API key. Get one at [console.x.ai](https://console.x.ai). Add `XAI_API_KEY=your-key` to `.env.local` or set it as an environment variable. Without it, X feeds are gracefully skipped.
 
 ## Features Overview
 
