@@ -1,9 +1,9 @@
 ---
-slug: "json-parser"
-display_name: "Json Parser"
+name: "json-parser"
 description: "Parse and validate JSON data from construction APIs, IoT sensors, and BIM exports. Transform nested JSON to flat DataFrames."
+homepage: "https://datadrivenconstruction.io"
+metadata: {"openclaw": {"emoji": "🏷️", "os": ["win32"], "homepage": "https://datadrivenconstruction.io", "requires": {"bins": ["python3"]}}}
 ---
-
 # JSON Parser for Construction Data
 
 ## Overview

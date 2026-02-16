@@ -3,9 +3,15 @@
   "slug": "json-parser",
   "displayName": "Json Parser",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1770475382150,
-    "commit": "https://github.com/openclaw/skills/commit/ea845c82798219bde417bb7b53ec061302c6a6cf"
+    "version": "2.1.0",
+    "publishedAt": 1771170169287,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1770475382150,
+      "commit": "https://github.com/openclaw/skills/commit/ea845c82798219bde417bb7b53ec061302c6a6cf"
+    }
+  ]
 }
