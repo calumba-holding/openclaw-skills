@@ -1,10 +1,20 @@
 ---
 name: highlevel
-version: 1.1.0
-description: "Connect your AI assistant to GoHighLevel CRM via the official API v2. Manage contacts, conversations, calendars, pipelines, invoices, payments, workflows, and 30+ endpoint groups through natural language. Includes interactive setup wizard and 40+ pre-built, safe API commands. Python 3.6+ stdlib only — zero external dependencies."
+version: 1.2.0
+description: "Connect your AI assistant to GoHighLevel CRM via the official API v2. Manage contacts, conversations, calendars, pipelines, invoices, payments, workflows, and 30+ endpoint groups through natural language. Includes interactive setup wizard and 100+ pre-built, safe API commands. Python 3.6+ stdlib only — zero external dependencies."
 tags: [gohighlevel, crm, api, contacts, conversations, calendars, opportunities, invoices, workflows, automation]
 author: Ty Shane
 homepage: https://launchmyopenclaw.com
+metadata:
+  author: Ty Shane
+  version: "1.2.0"
+  clawdbot:
+    emoji: 🦞
+    homepage: "https://launchmyopenclaw.com"
+    requires:
+      env:
+        - HIGHLEVEL_TOKEN
+        - HIGHLEVEL_LOCATION_ID
 compatibility: "Requires Python 3.6+ (stdlib only, no pip installs). Requires two environment variables: HIGHLEVEL_TOKEN and HIGHLEVEL_LOCATION_ID."
 ---
 
@@ -139,6 +149,21 @@ The skill provides safe, specific functions for all major GHL operations. Each f
 | 8 | **Payments** | `/payments/` | Orders, transactions, subscriptions, coupons, providers | `payments` |
 | 9 | **Products** | `/products/` | CRUD, prices, collections, reviews, store stats | `products` |
 | 10 | **Locations** | `/locations/` | Get/update location, custom fields, custom values, tags, templates | `locations` |
+|    | | | **Custom Fields CRUD:** | |
+|    | | | `GET /locations/{id}/customFields` — List | |
+|    | | | `POST /locations/{id}/customFields` — Create | |
+|    | | | `PUT /locations/{id}/customFields/{fid}` — Update | |
+|    | | | `DELETE /locations/{id}/customFields/{fid}` — Delete | |
+|    | | | **Custom Values CRUD:** | |
+|    | | | `GET /locations/{id}/customValues` — List | |
+|    | | | `POST /locations/{id}/customValues` — Create | |
+|    | | | `PUT /locations/{id}/customValues/{vid}` — Update | |
+|    | | | `DELETE /locations/{id}/customValues/{vid}` — Delete | |
+|    | | | **Tags CRUD:** | |
+|    | | | `GET /locations/{id}/tags` — List | |
+|    | | | `POST /locations/{id}/tags` — Create | |
+|    | | | `PUT /locations/{id}/tags/{tid}` — Update | |
+|    | | | `DELETE /locations/{id}/tags/{tid}` — Delete | |
 | 11 | **Users** | `/users/` | CRUD, filter by email/role | `users` |
 | 12 | **Forms** | `/forms/` | List forms, get submissions | `forms` |
 | 13 | **Surveys** | `/surveys/` | List surveys, get submissions | `surveys` |

@@ -256,6 +256,18 @@ def get_contact(contact_id):
     return _get(f"/contacts/{cid}")
 
 
+def get_contacts_by_business(business_id):
+    """Get all contacts for a business."""
+    bid = _validate_id(business_id, "business_id")
+    return _get(f"/contacts/business/{bid}")
+
+
+def get_contact_appointments(contact_id):
+    """Get all appointments for a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    return _get(f"/contacts/{cid}/appointments")
+
+
 def create_contact(data):
     """Create a new contact. data = JSON with firstName, lastName, email, phone, etc."""
     if isinstance(data, str):
@@ -303,6 +315,78 @@ def remove_contact_tags(contact_id, tags):
 
 
 # ──────────────────────────────────────────────
+# Contact Notes
+# ──────────────────────────────────────────────
+
+def list_contact_notes(contact_id):
+    """List all notes for a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    return _get(f"/contacts/{cid}/notes")
+
+
+def create_contact_note(contact_id, body):
+    """Create a note for a contact.
+    body: The note content as string or dict {"body": "...", "type": "NOTE"}
+    """
+    cid = _validate_id(contact_id, "contact_id")
+    if isinstance(body, str):
+        body = {"body": body}
+    return _post(f"/contacts/{cid}/notes", body)
+
+
+def update_contact_note(contact_id, note_id, body):
+    """Update a note on a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    nid = _validate_id(note_id, "note_id")
+    if isinstance(body, str):
+        body = {"body": body}
+    return _put(f"/contacts/{cid}/notes/{nid}", body)
+
+
+def delete_contact_note(contact_id, note_id):
+    """Delete a note from a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    nid = _validate_id(note_id, "note_id")
+    return _delete(f"/contacts/{cid}/notes/{nid}")
+
+
+# ──────────────────────────────────────────────
+# Contact Tasks
+# ──────────────────────────────────────────────
+
+def list_contact_tasks(contact_id):
+    """List all tasks for a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    return _get(f"/contacts/{cid}/tasks")
+
+
+def create_contact_task(contact_id, data):
+    """Create a task for a contact.
+    data: dict with task details (title, dueDate, etc.)
+    """
+    cid = _validate_id(contact_id, "contact_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _post(f"/contacts/{cid}/tasks", data)
+
+
+def update_contact_task(contact_id, task_id, data):
+    """Update a task on a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    tid = _validate_id(task_id, "task_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/contacts/{cid}/tasks/{tid}", data)
+
+
+def delete_contact_task(contact_id, task_id):
+    """Delete a task from a contact."""
+    cid = _validate_id(contact_id, "contact_id")
+    tid = _validate_id(task_id, "task_id")
+    return _delete(f"/contacts/{cid}/tasks/{tid}")
+
+
+# ──────────────────────────────────────────────
 # Conversations & Messaging
 # ──────────────────────────────────────────────
 
@@ -327,6 +411,55 @@ def send_message(contact_id, message, msg_type="SMS"):
         "message": message,
     }
     return _post("/conversations/messages", body)
+
+
+def create_conversation(data):
+    """Create a new conversation."""
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _post("/conversations/", data)
+
+
+def update_conversation(conversation_id, data):
+    """Update a conversation."""
+    cid = _validate_id(conversation_id, "conversation_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/conversations/{cid}", data)
+
+
+def delete_conversation(conversation_id):
+    """Delete a conversation."""
+    cid = _validate_id(conversation_id, "conversation_id")
+    return _delete(f"/conversations/{cid}")
+
+
+def add_inbound_message(data):
+    """Add an inbound message to a conversation."""
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _post("/conversations/messages/inbound", data)
+
+
+def upload_conversation_attachment(conversation_id, file_url):
+    """Upload an attachment to a conversation."""
+    cid = _validate_id(conversation_id, "conversation_id")
+    return _post(f"/conversations/messages/upload", {
+        "conversationId": cid,
+        "url": file_url
+    })
+
+
+def get_message_recording(message_id):
+    """Get call recording for a message."""
+    mid = _validate_id(message_id, "message_id")
+    return _get(f"/conversations/messages/{mid}/recording")
+
+
+def get_message_transcription(message_id):
+    """Get call transcription for a message."""
+    mid = _validate_id(message_id, "message_id")
+    return _get(f"/conversations/messages/{mid}/transcription")
 
 
 # ──────────────────────────────────────────────
@@ -395,6 +528,44 @@ def create_opportunity(data):
         data = json.loads(data)
     data["locationId"] = LOC_ID
     return _post("/opportunities/", data)
+
+
+def update_opportunity(opp_id, data):
+    """Update an opportunity."""
+    oid = _validate_id(opp_id, "opportunity_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/opportunities/{oid}", data)
+
+
+def delete_opportunity(opp_id):
+    """Delete an opportunity."""
+    oid = _validate_id(opp_id, "opportunity_id")
+    return _delete(f"/opportunities/{oid}")
+
+
+def update_opportunity_stage(opp_id, stage_id):
+    """Update opportunity stage."""
+    oid = _validate_id(opp_id, "opportunity_id")
+    return _put(f"/opportunities/{oid}/stage", {"stageId": stage_id})
+
+
+def update_opportunity_status(opp_id, status):
+    """Update opportunity status (open, won, lost)."""
+    oid = _validate_id(opp_id, "opportunity_id")
+    return _put(f"/opportunities/{oid}/status", {"status": status})
+
+
+def add_opportunity_follower(opp_id, user_id):
+    """Add a follower to an opportunity."""
+    oid = _validate_id(opp_id, "opportunity_id")
+    return _post(f"/opportunities/{oid}/followers", {"userId": user_id})
+
+
+def remove_opportunity_follower(opp_id, user_id):
+    """Remove a follower from an opportunity."""
+    oid = _validate_id(opp_id, "opportunity_id")
+    return _delete(f"/opportunities/{oid}/followers?userId={user_id}")
 
 
 def list_pipelines():
@@ -592,6 +763,104 @@ def list_trigger_links():
 # Location & Settings
 # ──────────────────────────────────────────────
 
+
+# ──────────────────────────────────────────────
+# Custom Objects
+# ──────────────────────────────────────────────
+
+def list_object_schemas():
+    """List all custom object schemas."""
+    return _get("/objects/")
+
+
+def get_object_schema(schema_key):
+    """Get custom object schema by key."""
+    key = _validate_id(schema_key, "schema_key")
+    return _get(f"/objects/{key}")
+
+
+def update_object_schema(schema_key, data):
+    """Update custom object schema."""
+    key = _validate_id(schema_key, "schema_key")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/objects/{key}", data)
+
+
+def list_object_records(schema_key):
+    """List records for a custom object."""
+    key = _validate_id(schema_key, "schema_key")
+    return _get(f"/objects/{key}/records?locationId={urllib.parse.quote(LOC_ID, safe='')}")
+
+
+def get_object_record(schema_key, record_id):
+    """Get a custom object record."""
+    key = _validate_id(schema_key, "schema_key")
+    rid = _validate_id(record_id, "record_id")
+    return _get(f"/objects/{key}/records/{rid}")
+
+
+def create_object_record(schema_key, data):
+    """Create a custom object record."""
+    key = _validate_id(schema_key, "schema_key")
+    if isinstance(data, str):
+        data = json.loads(data)
+    data["locationId"] = LOC_ID
+    return _post(f"/objects/{key}/records", data)
+
+
+def update_object_record(schema_key, record_id, data):
+    """Update a custom object record."""
+    key = _validate_id(schema_key, "schema_key")
+    rid = _validate_id(record_id, "record_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/objects/{key}/records/{rid}", data)
+
+
+def delete_object_record(schema_key, record_id):
+    """Delete a custom object record."""
+    key = _validate_id(schema_key, "schema_key")
+    rid = _validate_id(record_id, "record_id")
+    return _delete(f"/objects/{key}/records/{rid}")
+
+
+# ──────────────────────────────────────────────
+# Businesses
+# ──────────────────────────────────────────────
+
+def list_businesses():
+    """List all businesses."""
+    return _get(f"/businesses/?locationId={urllib.parse.quote(LOC_ID, safe='')}")
+
+
+def get_business(business_id):
+    """Get a business by ID."""
+    bid = _validate_id(business_id, "business_id")
+    return _get(f"/businesses/{bid}")
+
+
+def create_business(data):
+    """Create a new business."""
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _post("/businesses/", data)
+
+
+def update_business(business_id, data):
+    """Update a business."""
+    bid = _validate_id(business_id, "business_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/businesses/{bid}", data)
+
+
+def delete_business(business_id):
+    """Delete a business."""
+    bid = _validate_id(business_id, "business_id")
+    return _delete(f"/businesses/{bid}")
+
+
 def get_location_details():
     """Get current location details."""
     loc = _validate_id(LOC_ID, "location_id")
@@ -604,16 +873,92 @@ def list_location_custom_fields():
     return _get(f"/locations/{loc}/customFields")
 
 
+def create_location_custom_field(data):
+    """Create a custom field for this location.
+    data = JSON with name, dataType, and other field properties.
+    Example: {"name": "Test Field", "dataType": "TEXT", "position": 0}
+    """
+    loc = _validate_id(LOC_ID, "location_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _post(f"/locations/{loc}/customFields", data)
+
+
+def update_location_custom_field(field_id, data):
+    """Update a custom field."""
+    loc = _validate_id(LOC_ID, "location_id")
+    fid = _validate_id(field_id, "field_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/locations/{loc}/customFields/{fid}", data)
+
+
+def delete_location_custom_field(field_id):
+    """Delete a custom field."""
+    loc = _validate_id(LOC_ID, "location_id")
+    fid = _validate_id(field_id, "field_id")
+    return _delete(f"/locations/{loc}/customFields/{fid}")
+
+
 def list_location_tags():
     """List tags for this location."""
     loc = _validate_id(LOC_ID, "location_id")
     return _get(f"/locations/{loc}/tags")
 
 
+def create_location_tag(name):
+    """Create a new tag for this location."""
+    loc = _validate_id(LOC_ID, "location_id")
+    body = {"name": name} if isinstance(name, str) else name
+    return _post(f"/locations/{loc}/tags", body)
+
+
+def update_location_tag(tag_id, name):
+    """Update a tag name."""
+    loc = _validate_id(LOC_ID, "location_id")
+    tid = _validate_id(tag_id, "tag_id")
+    body = {"name": name} if isinstance(name, str) else name
+    return _put(f"/locations/{loc}/tags/{tid}", body)
+
+
+def delete_location_tag(tag_id):
+    """Delete a tag."""
+    loc = _validate_id(LOC_ID, "location_id")
+    tid = _validate_id(tag_id, "tag_id")
+    return _delete(f"/locations/{loc}/tags/{tid}")
+
+
 def list_location_custom_values():
     """List custom values for this location."""
     loc = _validate_id(LOC_ID, "location_id")
     return _get(f"/locations/{loc}/customValues")
+
+
+def create_location_custom_value(data):
+    """Create a custom value for this location.
+    data = JSON with name and value.
+    Example: {"name": "Company Name", "value": "Acme Inc"}
+    """
+    loc = _validate_id(LOC_ID, "location_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _post(f"/locations/{loc}/customValues", data)
+
+
+def update_location_custom_value(value_id, data):
+    """Update a custom value."""
+    loc = _validate_id(LOC_ID, "location_id")
+    vid = _validate_id(value_id, "value_id")
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _put(f"/locations/{loc}/customValues/{vid}", data)
+
+
+def delete_location_custom_value(value_id):
+    """Delete a custom value."""
+    loc = _validate_id(LOC_ID, "location_id")
+    vid = _validate_id(value_id, "value_id")
+    return _delete(f"/locations/{loc}/customValues/{vid}")
 
 
 def list_courses():
@@ -641,20 +986,43 @@ COMMANDS = {
     "search_contacts": lambda: search_contacts(sys.argv[2] if len(sys.argv) > 2 else ""),
     "list_all_contacts": lambda: list_all_contacts(),
     "get_contact": lambda: get_contact(sys.argv[2]),
+    "get_contacts_by_business": lambda: get_contacts_by_business(sys.argv[2]),
+    "get_contact_appointments": lambda: get_contact_appointments(sys.argv[2]),
     "create_contact": lambda: create_contact(sys.argv[2]),
     "update_contact": lambda: update_contact(sys.argv[2], sys.argv[3]),
     "delete_contact": lambda: delete_contact(sys.argv[2]),
     "upsert_contact": lambda: upsert_contact(sys.argv[2]),
     "add_contact_tags": lambda: add_contact_tags(sys.argv[2], sys.argv[3]),
+    "list_contact_notes": lambda: list_contact_notes(sys.argv[2]),
+    "create_contact_note": lambda: create_contact_note(sys.argv[2], sys.argv[3]),
+    "update_contact_note": lambda: update_contact_note(sys.argv[2], sys.argv[3], sys.argv[4]),
+    "delete_contact_note": lambda: delete_contact_note(sys.argv[2], sys.argv[3]),
+    "list_contact_tasks": lambda: list_contact_tasks(sys.argv[2]),
+    "create_contact_task": lambda: create_contact_task(sys.argv[2], sys.argv[3]),
+    "update_contact_task": lambda: update_contact_task(sys.argv[2], sys.argv[3], sys.argv[4]),
+    "delete_contact_task": lambda: delete_contact_task(sys.argv[2], sys.argv[3]),
     "list_conversations": lambda: list_conversations(),
     "get_conversation": lambda: get_conversation(sys.argv[2]),
     "send_message": lambda: send_message(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else "SMS"),
+    "create_conversation": lambda: create_conversation(sys.argv[2]),
+    "update_conversation": lambda: update_conversation(sys.argv[2], sys.argv[3]),
+    "delete_conversation": lambda: delete_conversation(sys.argv[2]),
+    "add_inbound_message": lambda: add_inbound_message(sys.argv[2]),
+    "upload_conversation_attachment": lambda: upload_conversation_attachment(sys.argv[2], sys.argv[3]),
+    "get_message_recording": lambda: get_message_recording(sys.argv[2]),
+    "get_message_transcription": lambda: get_message_transcription(sys.argv[2]),
     "list_calendars": lambda: list_calendars(),
     "get_free_slots": lambda: get_free_slots(sys.argv[2], sys.argv[3], sys.argv[4]),
     "create_appointment": lambda: create_appointment(sys.argv[2], sys.argv[3]),
     "list_opportunities": lambda: list_opportunities(),
     "get_opportunity": lambda: get_opportunity(sys.argv[2]),
     "create_opportunity": lambda: create_opportunity(sys.argv[2]),
+    "update_opportunity": lambda: update_opportunity(sys.argv[2], sys.argv[3]),
+    "delete_opportunity": lambda: delete_opportunity(sys.argv[2]),
+    "update_opportunity_stage": lambda: update_opportunity_stage(sys.argv[2], sys.argv[3]),
+    "update_opportunity_status": lambda: update_opportunity_status(sys.argv[2], sys.argv[3]),
+    "add_opportunity_follower": lambda: add_opportunity_follower(sys.argv[2], sys.argv[3]),
+    "remove_opportunity_follower": lambda: remove_opportunity_follower(sys.argv[2], sys.argv[3]),
     "list_pipelines": lambda: list_pipelines(),
     "list_workflows": lambda: list_workflows(),
     "add_to_workflow": lambda: add_to_workflow(sys.argv[2], sys.argv[3]),
@@ -678,9 +1046,33 @@ COMMANDS = {
     "list_users": lambda: list_users(),
     "list_trigger_links": lambda: list_trigger_links(),
     "get_location_details": lambda: get_location_details(),
+    # Custom Objects
+    "list_object_schemas": lambda: list_object_schemas(),
+    "get_object_schema": lambda: get_object_schema(sys.argv[2]),
+    "update_object_schema": lambda: update_object_schema(sys.argv[2], sys.argv[3]),
+    "list_object_records": lambda: list_object_records(sys.argv[2]),
+    "get_object_record": lambda: get_object_record(sys.argv[2], sys.argv[3]),
+    "create_object_record": lambda: create_object_record(sys.argv[2], sys.argv[3]),
+    "update_object_record": lambda: update_object_record(sys.argv[2], sys.argv[3], sys.argv[4]),
+    "delete_object_record": lambda: delete_object_record(sys.argv[2], sys.argv[3]),
+    # Businesses
+    "list_businesses": lambda: list_businesses(),
+    "get_business": lambda: get_business(sys.argv[2]),
+    "create_business": lambda: create_business(sys.argv[2]),
+    "update_business": lambda: update_business(sys.argv[2], sys.argv[3]),
+    "delete_business": lambda: delete_business(sys.argv[2]),
     "list_location_custom_fields": lambda: list_location_custom_fields(),
+    "create_location_custom_field": lambda: create_location_custom_field(sys.argv[2]),
+    "update_location_custom_field": lambda: update_location_custom_field(sys.argv[2], sys.argv[3]),
+    "delete_location_custom_field": lambda: delete_location_custom_field(sys.argv[2]),
     "list_location_tags": lambda: list_location_tags(),
+    "create_location_tag": lambda: create_location_tag(sys.argv[2]),
+    "update_location_tag": lambda: update_location_tag(sys.argv[2], sys.argv[3]),
+    "delete_location_tag": lambda: delete_location_tag(sys.argv[2]),
     "list_location_custom_values": lambda: list_location_custom_values(),
+    "create_location_custom_value": lambda: create_location_custom_value(sys.argv[2]),
+    "update_location_custom_value": lambda: update_location_custom_value(sys.argv[2], sys.argv[3]),
+    "delete_location_custom_value": lambda: delete_location_custom_value(sys.argv[2]),
     "list_courses": lambda: list_courses(),
     "list_snapshots": lambda: list_snapshots(),
     "get_snapshot_status": lambda: get_snapshot_status(sys.argv[2]),

@@ -92,13 +92,14 @@ def step1_check_env():
 
 
 def step2_guide_setup(token_ok, loc_ok):
-    """Guide user through getting their token and location ID."""
+    """Guide user through getting their token and location ID - with interactive input."""
     if token_ok and loc_ok:
         p(f"\n  {check_mark()} Both variables are set! Skipping to connection test.", GREEN)
-        return
+        return None, None
 
     header("Step 2: Setting Up Your Private Integration")
 
+    # If token not set, show instructions then prompt
     if not token_ok:
         p(f"""
   {BOLD}How to get your Private Integration token:{RESET}
@@ -116,11 +117,12 @@ def step2_guide_setup(token_ok, loc_ok):
      {YELLOW}→ It is shown ONLY ONCE and cannot be retrieved later!{RESET}
 
   {BOLD}⚠️  DO NOT use Settings → API Keys — that's the old V1 method (deprecated){RESET}
-
-  Then set it in your terminal:
-  {CYAN}export HIGHLEVEL_TOKEN="your-token-here"{RESET}
 """)
+        token = input(f"{CYAN}  Enter your Private Integration token: {RESET}").strip()
+        os.environ["HIGHLEVEL_TOKEN"] = token
+        token_ok = bool(token)
 
+    # If location ID not set, show instructions then prompt
     if not loc_ok:
         p(f"""
   {BOLD}How to find your Location ID:{RESET}
@@ -132,13 +134,15 @@ def step2_guide_setup(token_ok, loc_ok):
   {BOLD}Method 2 — Business Profile:{RESET}
   Sub-account → {BOLD}Settings{RESET} → {BOLD}Business Info{RESET} (or Business Profile)
   → Location ID is in the General Information section
-
-  Then set it in your terminal:
-  {CYAN}export HIGHLEVEL_LOCATION_ID="your-location-id"{RESET}
 """)
+        loc_id = input(f"{CYAN}  Enter your Location ID: {RESET}").strip()
+        os.environ["HIGHLEVEL_LOCATION_ID"] = loc_id
+        loc_ok = bool(loc_id)
 
-    p(f"  After setting both variables, run this wizard again:", YELLOW)
-    p(f"  {CYAN}python3 scripts/setup-wizard.py{RESET}")
+    if token_ok and loc_ok:
+        p(f"\n  {check_mark()} Credentials captured! Moving to connection test...", GREEN)
+
+    return os.environ.get("HIGHLEVEL_TOKEN", ""), os.environ.get("HIGHLEVEL_LOCATION_ID", "")
 
 
 def step3_test_connection(token, loc_id):
@@ -286,10 +290,15 @@ def main():
     # Step 1: Check environment
     token, loc_id, token_ok, loc_ok = step1_check_env()
 
-    # Step 2: Guide setup if needed
+    # Step 2: Guide setup if needed (interactive)
     if not token_ok or not loc_ok:
-        step2_guide_setup(token_ok, loc_ok)
-        sys.exit(0)
+        token, loc_id = step2_guide_setup(token_ok, loc_ok)
+        if token and loc_id:
+            token_ok = True
+            loc_ok = True
+        else:
+            p("\n  Missing required credentials. Exiting.", RED)
+            sys.exit(1)
 
     # Step 3: Test connection
     connected = step3_test_connection(token, loc_id)

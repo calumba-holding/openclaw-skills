@@ -10,12 +10,31 @@
 | POST | `/locations/` | Create sub-account (Agency) |
 | DELETE | `/locations/{locationId}` | Delete sub-account (Agency) |
 | GET | `/locations/timeZones` | List all time zones |
-| GET | `/locations/{id}/customValues` | List custom values |
-| POST/PUT/DELETE | `/locations/{id}/customValues/...` | Custom value CRUD |
+
+### Custom Fields CRUD
+| Method | Path | Description |
+|--------|------|-------------|
 | GET | `/locations/{id}/customFields` | List custom fields |
-| POST/PUT/DELETE | `/locations/{id}/customFields/...` | Custom field CRUD |
+| POST | `/locations/{id}/customFields` | Create custom field |
+| PUT | `/locations/{id}/customFields/{fieldId}` | Update custom field |
+| DELETE | `/locations/{id}/customFields/{fieldId}` | Delete custom field |
+
+### Custom Values CRUD
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/locations/{id}/customValues` | List custom values |
+| POST | `/locations/{id}/customValues` | Create custom value |
+| PUT | `/locations/{id}/customValues/{valueId}` | Update custom value |
+| DELETE | `/locations/{id}/customValues/{valueId}` | Delete custom value |
+
+### Tags CRUD
+| Method | Path | Description |
+|--------|------|-------------|
 | GET | `/locations/{id}/tags` | List tags |
-| POST/PUT/DELETE | `/locations/{id}/tags/...` | Tag CRUD |
+| POST | `/locations/{id}/tags` | Create tag |
+| PUT | `/locations/{id}/tags/{tagId}` | Update tag |
+| DELETE | `/locations/{id}/tags/{tagId}` | Delete tag |
+
 | GET | `/locations/{id}/templates` | List templates |
 | GET | `/locations/{id}/tasks/search` | Search location tasks |
 
