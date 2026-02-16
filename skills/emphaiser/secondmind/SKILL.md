@@ -1,12 +1,12 @@
 ---
 name: secondmind
 emoji: 🧠
-version: 1.3.0
+version: 1.4.0
 description: >
-  Autonomous three-tier memory with proactive initiative and social intelligence.
+  Autonomous three-tier memory with proactive initiative, project tracking, and social intelligence.
   Ingests OpenClaw conversations, extracts knowledge + emotions,
   and proactively suggests automations, fixes, and project ideas.
-  v1.3.0: Semantic dedup, bulk feedback, archive retrieval, gentle reminders.
+  v1.4.0: Project tracking, semantic dedup, bulk feedback, archive retrieval, gentle reminders.
   All models via OpenRouter Cloud. Cross-platform: Linux + Windows.
 metadata:
   openclaw:
@@ -71,7 +71,7 @@ node {baseDir}/scripts/proposals.js [proposed|accepted|rejected|all]
 node {baseDir}/scripts/feedback.js accept <ID...> [comment]
 ```
 Supports multiple IDs: `/accept 1 3 5` or `/accept all`
-After accepting:
+After accepting, a **project is automatically created** to track progress.
 1. Read the proposal's `follow_up` field from the database:
    `sqlite3 {baseDir}/data/secondmind.db "SELECT follow_up, description FROM proposals WHERE id=<ID>"`
 2. If there's a follow_up question, ask the user that question
@@ -101,6 +101,20 @@ node {baseDir}/scripts/feedback.js drop all older_than 14d
 ```
 Permanently kills proposals – they will never be suggested again, not even reformulated.
 Supports: `/drop 2 4`, `/drop all`, `/drop all older_than 14d`
+
+### /projects or /pj [filter]
+```bash
+node {baseDir}/scripts/proposals.js  # (projects are shown in status)
+```
+Lists tracked projects. Filter: `active` (default), `completed`, `all`.
+Projects are auto-created when proposals are accepted.
+
+### /complete <ID...> or /done <ID...>
+```bash
+node {baseDir}/scripts/feedback.js complete <ID...>
+```
+Marks a project as completed. Completed projects are **permanently excluded** from future suggestions.
+The ID refers to the original proposal ID.
 
 ### /mute <duration> or /unmute
 ```bash

@@ -160,6 +160,24 @@ CREATE TABLE IF NOT EXISTS proposal_outcomes (
 );
 
 -- ============================================================
+-- PROJECTS: Track accepted proposals as active projects
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS projects (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  proposal_id   INTEGER UNIQUE REFERENCES proposals(id) ON DELETE SET NULL,
+  title         TEXT NOT NULL,
+  description   TEXT NOT NULL,
+  status        TEXT DEFAULT 'active',  -- active, completed, paused, abandoned
+  started_at    DATETIME DEFAULT (datetime('now')),
+  completed_at  DATETIME,
+  notes         TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_proposal ON projects(proposal_id);
+
+-- ============================================================
 -- SOZIALE INTELLIGENZ: Emotional context tracking
 -- ============================================================
 

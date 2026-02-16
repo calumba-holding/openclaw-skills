@@ -43,6 +43,18 @@ function main() {
   console.log(`\n💡 Proposals: ${p.reduce((s, x) => s + x.c, 0)} total`);
   for (const x of p) console.log(`   ${x.status}: ${x.c}`);
 
+  // Projects
+  try {
+    const proj = db.prepare(`
+      SELECT status, COUNT(*) as c FROM projects
+      GROUP BY status ORDER BY c DESC
+    `).all();
+    if (proj.length > 0) {
+      console.log(`\n📦 Projects: ${proj.reduce((s, x) => s + x.c, 0)} total`);
+      for (const x of proj) console.log(`   ${x.status}: ${x.c}`);
+    }
+  } catch { /* table might not exist yet */ }
+
   // === SOZIALE INTELLIGENZ ===
   try {
     const emoCount = db.prepare('SELECT COUNT(*) as c FROM social_context').get();

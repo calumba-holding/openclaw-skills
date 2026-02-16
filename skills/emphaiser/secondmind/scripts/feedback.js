@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // scripts/feedback.js – Bulk feedback: accept/reject/defer/drop/mute
 // v1.3.0: Multi-ID, /drop (dead), /mute, bulk transactions, event logging
-const { getDb, logProposalEvent, updateState, getState } = require('../lib/db');
+const { getDb, logProposalEvent, updateState, getState, createProjectFromProposal, archiveKnowledgeForProposal } = require('../lib/db');
 
 const STATUS_MAP = {
   accept: 'accepted', reject: 'rejected', defer: 'deferred',
@@ -130,6 +130,37 @@ function executeBulk(db, ids, newStatus, comment) {
       console.log(`${ICONS[newStatus] || '📝'} #${r.id} "${r.title}" → ${newStatus}`);
       if (newStatus === 'accepted' && r.followUp) {
         console.log(`\n💬 ${r.followUp}`);
+      }
+    }
+  }
+
+  // Auto-create projects for accepted proposals
+  if (newStatus === 'accepted') {
+    for (const r of results.filter(x => x.ok)) {
+      const project = createProjectFromProposal(r.id);
+      if (project) {
+        console.log(`📦 Project #${project.id} "${r.title}" created`);
+      }
+    }
+  }
+
+  // Auto-complete projects when proposal is completed
+  if (newStatus === 'completed') {
+    const { completeProject } = require('../lib/db');
+    for (const r of results.filter(x => x.ok)) {
+      const project = completeProject(r.id);
+      if (project) {
+        console.log(`🏁 Project "${project.title}" completed`);
+      }
+    }
+  }
+
+  // On /drop: archive related knowledge entries so they don't keep generating proposals
+  if (newStatus === 'dead') {
+    for (const r of results.filter(x => x.ok)) {
+      const archived = archiveKnowledgeForProposal(r.id);
+      if (archived > 0) {
+        console.log(`🗄️  ${archived} knowledge entry/entries archived for "${r.title}"`);
       }
     }
   }

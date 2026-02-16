@@ -2,7 +2,7 @@
 // scripts/initiative.js – Proactive Initiative Engine v1.3.0
 // Features: Archive Retrieval, Dedup Pipeline, Gentle Reminders,
 //           Conversation Opener Heuristic, Auto-Throttle, Mute Support
-const { getDb, getConfig, acquireLock, releaseLock, updateState, getState, logProposalEvent } = require('../lib/db');
+const { getDb, getConfig, acquireLock, releaseLock, updateState, getState, logProposalEvent, getProjects } = require('../lib/db');
 const { generateInitiative } = require('../lib/extractor');
 const { notifyProposals, notifyNudges } = require('../lib/notifier');
 const { dedupCheck, generateTopicHash } = require('../lib/dedup');
@@ -88,9 +88,16 @@ async function runInitiative() {
     `).all();
 
     // === PROPOSAL CONTEXT ===
+    // Full blacklist: ALL rejected/dead/completed titles (never suggest again)
+    const blacklistedTitles = db.prepare(`
+      SELECT DISTINCT title FROM proposals
+      WHERE status IN ('rejected', 'dead', 'completed')
+    `).all().map(r => r.title);
+
+    // Recent proposals (any status) - so LLM knows what's already in pipeline
     const recentProposals = db.prepare(`
       SELECT title, type, status FROM proposals
-      WHERE proposed_at > datetime('now', '-7 days')
+      WHERE proposed_at > datetime('now', '-30 days')
     `).all();
 
     const feedbackStats = db.prepare(`
@@ -112,6 +119,21 @@ async function runInitiative() {
       WHERE proposed_at > datetime('now', '-30 days')
       GROUP BY type
     `).all();
+
+    if (blacklistedTitles.length > 0) {
+      console.log(`[INITIATIVE] 🚫 ${blacklistedTitles.length} blacklisted topic(s)`);
+    }
+
+    // === PROJECTS CONTEXT ===
+    let activeProjects = [];
+    let completedProjects = [];
+    try {
+      activeProjects = getProjects('active');
+      completedProjects = getProjects('completed');
+      if (activeProjects.length > 0) {
+        console.log(`[INITIATIVE] 📦 ${activeProjects.length} active project(s), ${completedProjects.length} completed`);
+      }
+    } catch { /* table might not exist yet */ }
 
     // Skip if no activity at all
     if (recentKnowledge.length === 0 && openTodos.length === 0
@@ -164,8 +186,17 @@ async function runInitiative() {
       upcoming_events: upcomingEvents,
       recent_moods: recentMoods,
       already_proposed: recentProposals,
+      blacklisted_titles: blacklistedTitles,
       feedback_stats: feedbackStats,
       feedback_profile: feedbackProfile,
+      active_projects: activeProjects.map(p => ({
+        id: p.id, title: p.title, description: p.description,
+        started_at: p.started_at,
+      })),
+      completed_projects: completedProjects.map(p => ({
+        id: p.id, title: p.title,
+        completed_at: p.completed_at,
+      })),
       archive_context: archiveContext.map(h => ({
         title: h.title,
         summary: h.summary,
@@ -203,6 +234,29 @@ async function runInitiative() {
 
     for (const s of proposalList.slice(0, maxProposals)) {
       if (!s.title || !s.description) continue;
+
+      // === HARD BLACKLIST CHECK (safety net if LLM ignores instructions) ===
+      const titleLower = s.title.toLowerCase();
+      const descLower = (s.description || '').toLowerCase();
+      const proposalText = titleLower + ' ' + descLower;
+
+      const isBlacklisted = blacklistedTitles.some(bt => {
+        const btLower = bt.toLowerCase();
+        // Exact title match
+        if (titleLower === btLower) return true;
+        // Extract significant words (>3 chars) from blacklisted title
+        const btWords = btLower.split(/\s+/).filter(w => w.length > 3);
+        if (btWords.length === 0) return false;
+        // Count how many blacklisted keywords appear in new proposal (title + description)
+        const hits = btWords.filter(w => proposalText.includes(w));
+        // If >=50% of blacklisted keywords found → match
+        return hits.length >= btWords.length * 0.5;
+      });
+
+      if (isBlacklisted) {
+        console.log(`[INITIATIVE] 🚫 Blacklist hit: "${s.title}" – skipped`);
+        continue;
+      }
 
       // === DEDUP PIPELINE ===
       const dedupResult = await dedupCheck(db, {

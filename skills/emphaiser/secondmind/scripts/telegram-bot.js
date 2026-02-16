@@ -2,7 +2,7 @@
 // scripts/telegram-bot.js – Telegram Bot für Feedback + Status
 // Läuft als Daemon, pollt Telegram Updates, verarbeitet Commands
 const https = require('https');
-const { initSchema, getConfig, getState, updateState, logProposalEvent } = require('../lib/db');
+const { initSchema, getConfig, getState, updateState, logProposalEvent, createProjectFromProposal, completeProject, getProjects, archiveKnowledgeForProposal } = require('../lib/db');
 const { chatJSON } = require('../lib/llm');
 
 const POLL_TIMEOUT = 30; // Long-polling seconds
@@ -28,9 +28,11 @@ async function main() {
     commands: [
       { command: 'status', description: 'Show SecondMind status' },
       { command: 'proposals', description: 'List open proposals' },
+      { command: 'projects', description: 'List active projects' },
       { command: 'accept', description: 'Accept – /accept <ID...> [comment]' },
       { command: 'reject', description: 'Reject – /reject <ID...> [comment]' },
       { command: 'defer', description: 'Defer – /defer <ID...> [comment]' },
+      { command: 'complete', description: 'Mark project done – /complete <ID...>' },
       { command: 'drop', description: 'Kill forever – /drop <ID...> or /drop all' },
       { command: 'mute', description: 'Quiet mode – /mute 1d|1w' },
       { command: 'unmute', description: 'Resume notifications' },
@@ -82,7 +84,7 @@ async function handleCommand(db, text) {
   const match = text.match(/^\/(\w+)(?:\s+(.*))?$/);
   if (!match) {
     // Auch ohne / akzeptieren: "accept 3 gute idee"
-    const matchNoSlash = text.match(/^(accept|reject|defer|drop|status|proposals|search|mood|help|mute|unmute)(?:\s+(.*))?$/i);
+    const matchNoSlash = text.match(/^(accept|reject|defer|drop|complete|done|status|proposals|projects|search|mood|help|mute|unmute)(?:\s+(.*))?$/i);
     if (matchNoSlash) return handleCommand(db, `/${matchNoSlash[1]} ${matchNoSlash[2] || ''}`);
 
     // NL-Fallback: Check if this looks like feedback on recent proposals
@@ -107,6 +109,10 @@ async function handleCommand(db, text) {
     case 'proposals':
     case 'p':
       return proposalsText(db, args);
+
+    case 'projects':
+    case 'pj':
+      return projectsText(db, args);
 
     case 'accept':
     case 'a':
@@ -150,9 +156,11 @@ function helpText() {
 
 /status – Overview
 /proposals – Open proposals
+/projects – Active projects
 /accept <ID...> [comment]
 /reject <ID...> [comment]
 /defer <ID...> [comment]
+/complete <ID...> – Mark project done
 /drop <ID...> – Never suggest again
 /drop all older\\_than 14d
 /mute 1d|1w – Quiet mode
@@ -160,7 +168,7 @@ function helpText() {
 /search <term>
 /mood – Mood pulse
 
-_Shortcuts: /a /r /d /p /s_
+_Shortcuts: /a /r /d /p /pj /s_
 _Bulk: /accept 1 3 5 | /reject all_
 _NL: "Take the first two, drop the rest"_`;
 }
@@ -171,6 +179,14 @@ function statusText(db) {
   const pOpen = db.prepare("SELECT COUNT(*) as c FROM proposals WHERE status='proposed'").get();
   const pTotal = db.prepare('SELECT COUNT(*) as c FROM proposals').get();
   const buf = db.prepare('SELECT COUNT(*) as c, SUM(CASE WHEN processed=0 THEN 1 ELSE 0 END) as u FROM shortterm_buffer').get();
+
+  // Projects
+  let projLine = '';
+  try {
+    const projActive = db.prepare("SELECT COUNT(*) as c FROM projects WHERE status='active'").get();
+    const projDone = db.prepare("SELECT COUNT(*) as c FROM projects WHERE status='completed'").get();
+    projLine = `\n📦 Projects: ${projActive.c} active / ${projDone.c} done`;
+  } catch { /* table might not exist yet */ }
 
   let emo = '';
   try {
@@ -194,7 +210,7 @@ function statusText(db) {
 📚 Knowledge: ${k.c} Einträge
 🗄️ Archiv: ${a.c}
 📥 Buffer: ${buf.c} (${buf.u || 0} offen)
-💡 Proposals: ${pOpen.c} offen / ${pTotal.c} total${emo}
+💡 Proposals: ${pOpen.c} offen / ${pTotal.c} total${projLine}${emo}
 
 ⏰ Ingest: ${timeAgo(li)}
 ⏰ Consolidate: ${timeAgo(lc)}
@@ -227,6 +243,35 @@ function proposalsText(db, filter) {
     t += `\n${eff[effort]||''} ${effort}\n\n`;
   }
   return t + '_/accept <ID...> | /reject <ID...> | /drop <ID...>_';
+}
+
+function projectsText(db, filter) {
+  const status = (filter || 'active').toLowerCase();
+  let rows;
+  if (status === 'all') {
+    rows = db.prepare('SELECT * FROM projects ORDER BY started_at DESC LIMIT 20').all();
+  } else {
+    rows = db.prepare('SELECT * FROM projects WHERE status = ? ORDER BY started_at DESC LIMIT 20').all(status);
+  }
+
+  if (rows.length === 0) return `📦 No projects (${status}). Nothing tracked yet.`;
+
+  const icons = { active: '🔄', completed: '✅', paused: '⏸️', abandoned: '🚫' };
+  let t = `📦 *Projects (${status}):*\n\n`;
+  for (const p of rows) {
+    const age = Math.floor((Date.now() - new Date(p.started_at).getTime()) / 86400000);
+    t += `${icons[p.status] || '📦'} *#${p.id} ${p.title}*\n`;
+    t += `${p.description.slice(0, 120)}${p.description.length > 120 ? '...' : ''}\n`;
+    t += `📅 ${age}d old`;
+    if (p.completed_at) t += ` | ✅ ${new Date(p.completed_at).toLocaleDateString('de-DE')}`;
+    if (p.notes) t += `\n💬 _${p.notes}_`;
+    t += '\n\n';
+  }
+
+  if (status === 'active') {
+    t += '_/complete <proposal-ID> – Mark as done_';
+  }
+  return t;
 }
 
 function feedbackAction(db, args, newStatus) {
@@ -285,12 +330,42 @@ function feedbackAction(db, args, newStatus) {
     response += `\n📊 ${okCount}/${ids.length} → ${newStatus}`;
   }
 
-  // After accept: show follow-up for single proposal
+  // After accept: show follow-up for single proposal + create project
   const accepted = results.filter(r => r.ok && newStatus === 'accepted');
-  if (accepted.length === 1 && accepted[0].followUp) {
-    response += `\n\n${accepted[0].followUp}`;
-  } else if (accepted.length === 1) {
-    response += `\n\nSoll ich das direkt angehen?`;
+  if (accepted.length > 0) {
+    for (const r of accepted) {
+      const project = createProjectFromProposal(r.id);
+      if (project) {
+        response += `\n📦 Project #${project.id} created`;
+      }
+    }
+    if (accepted.length === 1 && accepted[0].followUp) {
+      response += `\n\n${accepted[0].followUp}`;
+    } else if (accepted.length === 1) {
+      response += `\n\nSoll ich das direkt angehen?`;
+    }
+  }
+
+  // After complete: mark project as completed
+  const completed = results.filter(r => r.ok && newStatus === 'completed');
+  if (completed.length > 0) {
+    for (const r of completed) {
+      const project = completeProject(r.id);
+      if (project) {
+        response += `\n🏁 Project "${project.title}" completed`;
+      }
+    }
+  }
+
+  // After drop: archive related knowledge entries
+  const dropped = results.filter(r => r.ok && newStatus === 'dead');
+  if (dropped.length > 0) {
+    for (const r of dropped) {
+      const archived = archiveKnowledgeForProposal(r.id);
+      if (archived > 0) {
+        response += `\n🗄️ ${archived} knowledge entries archived`;
+      }
+    }
   }
 
   if (comment) response += `\n💬 ${comment}`;
@@ -335,7 +410,19 @@ function feedbackAll(db, newStatus, extraArgs) {
   transaction();
   updateThrottle(newStatus);
 
-  return `${icons[newStatus]||'📝'} ${ids.length} Proposals (${label}) → *${newStatus}*`;
+  // Bulk archive knowledge for dropped proposals
+  let archivedCount = 0;
+  if (newStatus === 'dead') {
+    for (const id of ids) {
+      archivedCount += archiveKnowledgeForProposal(id);
+    }
+  }
+
+  let response = `${icons[newStatus]||'📝'} ${ids.length} Proposals (${label}) → *${newStatus}*`;
+  if (archivedCount > 0) {
+    response += `\n🗄️ ${archivedCount} knowledge entries archived`;
+  }
+  return response;
 }
 
 /**

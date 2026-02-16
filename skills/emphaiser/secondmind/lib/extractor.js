@@ -131,7 +131,21 @@ Antworte als JSON-Array:
 
 REGELN:
 - Max 3 Vorschläge (lieber 1 guter als 3 mittelmäßige)
-- NICHT was in 'already_proposed' steht
+- NICHT was in 'already_proposed' steht – auch keine Umformulierungen davon!
+
+BLACKLIST (ABSOLUT VERBOTEN – auch nicht umformuliert):
+- 'blacklisted_titles' enthält alle abgelehnten/gedroppten/erledigten Themen
+- Wenn ein Thema dort drin steht: NICHT vorschlagen, NICHT anders formulieren, NICHT als Unterpunkt einbauen
+- Beispiel: "Zenarmor härten" ist blacklisted → KEIN "Firewall-Regeln optimieren", KEIN "Netzwerksicherheit verbessern" zu diesem Thema
+- Im Zweifel: NICHT vorschlagen
+
+PROJEKTE:
+- NICHT was in 'completed_projects' steht – das ist ERLEDIGT, nie wieder vorschlagen
+- Wenn etwas in 'active_projects' steht: Nicht nochmal vorschlagen!
+  → Stattdessen: type="follow_up", frage ob der User weitermachen will oder Hilfe braucht
+  → z.B. "Hey, wie läuft's mit dem Projekt X? Brauchst du noch was?"
+
+FEEDBACK:
 - Lerne aus feedback_stats: Oft abgelehnte Typen → weniger davon
 - Wenn archive_context relevante Lösungen hat → follow_up statt neues Projekt
 - NUR JSON-Array, kein anderer Text`;

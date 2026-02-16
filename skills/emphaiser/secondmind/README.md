@@ -18,6 +18,7 @@ Created by **Emphaiser** – not a programmer, but a tinkerer who built this ent
 - **Proactive Initiative**: Analyzes your knowledge base every 6 hours and suggests automations, fixes, and project ideas
 - **Semantic Deduplication**: 3-stage pipeline (Hash → FTS Prefilter → LLM Judge) prevents repeated suggestions
 - **Social Intelligence**: Detects frustration, stress, excitement – reminds you of events, offers help during stressful times
+- **Project Tracking**: Accepted proposals become tracked projects – no more repeat suggestions for completed work
 - **Archive Retrieval**: Long-term memory is actively used when generating new suggestions ("Remember when we solved this before?")
 - **Bulk Feedback**: Accept, reject, or permanently drop multiple proposals at once – even using natural language
 - **Telegram Integration**: Push notifications + full feedback control directly in Telegram
@@ -228,9 +229,11 @@ SecondMind supports two Telegram modes:
 |---------|----------|-------------|
 | `/status` | `/es` | Full system status overview |
 | `/proposals [filter]` | `/ep`, `/p` | List proposals (proposed\|accepted\|rejected\|dead\|all) |
-| `/accept <ID...> [comment]` | `/ea`, `/a` | Accept one or more proposals |
+| `/projects [filter]` | `/pj` | List projects (active\|completed\|all) |
+| `/accept <ID...> [comment]` | `/ea`, `/a` | Accept one or more proposals (auto-creates project) |
 | `/reject <ID...> [comment]` | `/er`, `/r` | Reject one or more proposals |
 | `/defer <ID...> [comment]` | `/ed`, `/d` | Defer proposals for later |
+| `/complete <ID...>` | `/done` | Mark project as completed (never suggested again) |
 | `/drop <ID...>` | | Permanently kill proposals (never suggest again) |
 | `/drop all older_than <duration>` | | Kill all old proposals (e.g., `14d`, `2w`) |
 | `/mute <duration>` | | Pause all notifications (e.g., `1d`, `1w`, `2h`) |
@@ -295,7 +298,13 @@ Chat Transcripts (JSONL)
              ┌───────────┐    ┌──────────────┐
              │  Dedup     │    │  Proposals   │
              │  Pipeline  │    │  + Notify    │
-             └───────────┘    └──────────────┘
+             └───────────┘    └──────┬───────┘
+                                     │ /accept
+                                     ▼
+                              ┌──────────────┐
+                              │   Projects   │──▶ /complete
+                              │   Tracking   │     (never suggest again)
+                              └──────────────┘
 ```
 
 ### Pipeline Steps
@@ -315,6 +324,16 @@ SecondMind captures not just facts, but emotional context:
 - **Event tracking**: Birthdays, deadlines, recurring appointments
 - **Proactive care**: Problem open >3 days + frustration detected → suggests a fix
 - **Reminders**: Upcoming events appear in status and proposals
+
+### Project Tracking
+
+When you `/accept` a proposal, SecondMind automatically creates a tracked project:
+
+- **Active projects** are visible via `/projects` and known to the initiative engine
+- The engine will **never re-suggest** topics that already have an active or completed project
+- For active projects, the engine may ask: "How's it going with X? Need help?"
+- `/complete <ID>` marks a project as done – permanently excluded from future suggestions
+- Completed projects remain in the database as a record of what's been accomplished
 
 ### Behavior Layer
 
@@ -423,6 +442,14 @@ All settings go in `config.json` (copy from `config.example.json`).
 ---
 
 ## 📝 Changelog
+
+### v1.4.0 – "Project Tracker"
+- **Project Tracking**: `/accept` auto-creates tracked projects
+- `/complete` marks projects as done (permanently excluded from suggestions)
+- `/projects` command to view active/completed projects
+- Initiative engine checks projects before suggesting (no duplicates for active/completed)
+- Active project check-ins: "How's it going with X?"
+- Project count in `/status` output
 
 ### v1.3.0 – "From Suggestion Bot to Buddy"
 - Semantic deduplication (Hash → FTS → LLM judge)

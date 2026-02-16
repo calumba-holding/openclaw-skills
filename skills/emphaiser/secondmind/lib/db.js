@@ -71,6 +71,20 @@ function runMigrations(db) {
       INSERT INTO proposals_fts(rowid, title, description)
       VALUES (new.id, new.title, new.description);
     END`,
+
+    // === v1.4.0 – Projects Tracking ===
+    `CREATE TABLE IF NOT EXISTS projects (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      proposal_id   INTEGER UNIQUE REFERENCES proposals(id) ON DELETE SET NULL,
+      title         TEXT NOT NULL,
+      description   TEXT NOT NULL,
+      status        TEXT DEFAULT 'active',
+      started_at    DATETIME DEFAULT (datetime('now')),
+      completed_at  DATETIME,
+      notes         TEXT
+    )`,
+    "CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status)",
+    "CREATE INDEX IF NOT EXISTS idx_projects_proposal ON projects(proposal_id)",
   ];
 
   for (const sql of migrations) {
@@ -168,10 +182,124 @@ function logProposalEvent(proposalId, action, note = null) {
   `).run(proposalId, action, note);
 }
 
+// Create project from accepted proposal
+function createProjectFromProposal(proposalId) {
+  const db = getDb();
+  const p = db.prepare('SELECT * FROM proposals WHERE id = ?').get(proposalId);
+  if (!p) return null;
+
+  // Check if project already exists for this proposal
+  const existing = db.prepare('SELECT id FROM projects WHERE proposal_id = ?').get(proposalId);
+  if (existing) return existing;
+
+  const result = db.prepare(`
+    INSERT INTO projects (proposal_id, title, description, status)
+    VALUES (?, ?, ?, 'active')
+  `).run(proposalId, p.title, p.description);
+
+  logProposalEvent(proposalId, 'project_created', `Project #${result.lastInsertRowid}`);
+  return { id: result.lastInsertRowid, title: p.title };
+}
+
+// Complete a project (by project ID or proposal ID)
+function completeProject(id) {
+  const db = getDb();
+  // Try project ID first, then proposal_id
+  let project = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+  if (!project) {
+    project = db.prepare('SELECT * FROM projects WHERE proposal_id = ?').get(id);
+  }
+  if (!project) return null;
+
+  db.prepare(`
+    UPDATE projects SET status = 'completed', completed_at = datetime('now')
+    WHERE id = ?
+  `).run(project.id);
+
+  // Also complete the proposal if linked
+  if (project.proposal_id) {
+    db.prepare(`
+      UPDATE proposals SET status = 'completed', resolved_at = datetime('now')
+      WHERE id = ?
+    `).run(project.proposal_id);
+    logProposalEvent(project.proposal_id, 'completed', 'Project completed');
+  }
+
+  return project;
+}
+
+// Get all active/completed projects for initiative context
+function getProjects(status = null) {
+  const db = getDb();
+  if (status) {
+    return db.prepare('SELECT * FROM projects WHERE status = ? ORDER BY started_at DESC').all(status);
+  }
+  return db.prepare('SELECT * FROM projects ORDER BY started_at DESC').all();
+}
+
+// Archive knowledge entries related to a dropped proposal
+// Moves them to longterm_archive and marks as obsolete in knowledge_entries
+function archiveKnowledgeForProposal(proposalId) {
+  const db = getDb();
+  const proposal = db.prepare('SELECT * FROM proposals WHERE id = ?').get(proposalId);
+  if (!proposal) return 0;
+
+  let knowledgeIds = [];
+
+  // 1) Direct link via source_ids
+  try {
+    const sourceIds = JSON.parse(proposal.source_ids || '[]');
+    if (sourceIds.length > 0) {
+      knowledgeIds.push(...sourceIds.filter(id => typeof id === 'number'));
+    }
+  } catch { /* invalid JSON */ }
+
+  // 2) FTS match: find knowledge entries matching the proposal title
+  try {
+    const ftsMatches = db.prepare(`
+      SELECT ke.id FROM knowledge_entries ke
+      JOIN knowledge_fts fts ON fts.rowid = ke.id
+      WHERE knowledge_fts MATCH ? AND ke.status = 'active'
+      LIMIT 5
+    `).all(proposal.title.replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3).join(' OR '));
+    knowledgeIds.push(...ftsMatches.map(m => m.id));
+  } catch { /* FTS might fail on short titles */ }
+
+  // Deduplicate
+  knowledgeIds = [...new Set(knowledgeIds)];
+  if (knowledgeIds.length === 0) return 0;
+
+  const insertArchive = db.prepare(`
+    INSERT OR IGNORE INTO longterm_archive
+      (knowledge_id, category, title, summary, details, tags, relevance_score)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  const markObsolete = db.prepare(`
+    UPDATE knowledge_entries SET status = 'obsolete', last_updated = datetime('now')
+    WHERE id = ? AND status = 'active'
+  `);
+
+  let archived = 0;
+  const transaction = db.transaction(() => {
+    for (const id of knowledgeIds) {
+      const entry = db.prepare('SELECT * FROM knowledge_entries WHERE id = ? AND status = ?').get(id, 'active');
+      if (!entry) continue;
+
+      insertArchive.run(entry.id, entry.category, entry.title, entry.summary, entry.details, entry.tags, 0.5);
+      markObsolete.run(entry.id);
+      archived++;
+    }
+  });
+  transaction();
+  return archived;
+}
+
 module.exports = {
   getDb, initSchema, closeDb, getConfig,
   acquireLock, releaseLock,
   estimateTokens, updateState, getState,
   logProposalEvent,
+  createProjectFromProposal, completeProject, getProjects,
+  archiveKnowledgeForProposal,
   BASE_DIR
 };
