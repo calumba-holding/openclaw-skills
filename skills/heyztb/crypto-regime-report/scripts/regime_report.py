@@ -13,16 +13,31 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Config path
-CONFIG_PATH = Path(os.environ.get(
-    "REGIME_CONFIG",
-    Path(__file__).parent.parent / "references" / "config.json"
-))
+# Base directory (skill root)
+BASE_DIR = Path(__file__).parent.parent
+
+# Config path - restricted to skill directory for security
+# Only allow relative paths within the skill's references folder
+config_env = os.environ.get("REGIME_CONFIG", "")
+if config_env:
+    # If provided, must be a relative path within the skill directory
+    config_path = Path(config_env)
+    if config_path.is_absolute():
+        raise ValueError("REGIME_CONFIG must be a relative path within the skill directory")
+    CONFIG_PATH = (BASE_DIR / config_path).resolve()
+    # Ensure the resolved path is still within BASE_DIR (prevent traversal)
+    try:
+        CONFIG_PATH.relative_to(BASE_DIR)
+    except ValueError:
+        raise ValueError("REGIME_CONFIG path escapes skill directory")
+else:
+    CONFIG_PATH = BASE_DIR / "references" / "config.json"
+
 with open(CONFIG_PATH) as f:
     CONFIG = json.load(f)
 
 # Cache file
-CACHE_PATH = Path(__file__).parent.parent / "references" / "cache.json"
+CACHE_PATH = BASE_DIR / "references" / "cache.json"
 
 # Yahoo Finance symbol mapping
 YAHOO_SYMBOLS = {
@@ -312,6 +327,8 @@ def format_report(results: list, cache: dict) -> str:
         symbol = r["symbol"]
         regime = r["regime"]
         adx = r["adx"]
+        change_24h = r.get("change_24h", 0)
+        funding = r.get("funding_rate")
         
         # Check regime change
         prev_regime = cache.get(f"{symbol}_regime")
@@ -325,13 +342,23 @@ def format_report(results: list, cache: dict) -> str:
             elif regime == "Ranging" and adx > 18:
                 watching.append(f"⚠️ *{symbol}*: ADX {adx:.1f} (trending)")
         
-        # Check funding extremes
-        if r.get("funding_rate") is not None and abs(r["funding_rate"]) > 0.01:
-            direction = "longs paying" if r["funding_rate"] > 0 else "shorts paying"
-            watching.append(f"🔥 *{symbol}*: Funding {r['funding_rate']:+.2f}% ({direction})")
+        # Check contrarian funding signals (price/funding divergence)
+        # Only flag when funding is at least 0.03% in the opposite direction
+        if funding is not None and abs(funding) > 0.03:
+            if change_24h < 0 and funding > 0:
+                # Price down, longs paying → trapped longs
+                watching.append(f"⚡ *{symbol}*: CONTRARIAN - Price down, longs paying (trapped longs)")
+            elif change_24h > 0 and funding < 0:
+                # Price up, shorts paying → trapped shorts
+                watching.append(f"⚡ *{symbol}*: CONTRARIAN - Price up, shorts paying (squeeze setup)")
         
-        # Check volume spike
-        if r.get("vol_ratio", 0) > 2.0:
+        # Check funding extremes (threshold: 0.03%)
+        if funding is not None and abs(funding) > 0.03:
+            direction = "longs paying" if funding > 0 else "shorts paying"
+            watching.append(f"🔥 *{symbol}*: Funding {funding:+.2f}% ({direction})")
+        
+        # Check volume spike (threshold: 3x average)
+        if r.get("vol_ratio", 0) > 3.0:
             watching.append(f"🔊 *{symbol}*: Volume {r['vol_ratio']:.1f}x avg")
         
         # Check large OI change
@@ -442,11 +469,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--weekly", action="store_true")
-    parser.add_argument("--config", type=str)
     args = parser.parse_args()
-    
-    if args.config:
-        with open(args.config) as f:
-            CONFIG = json.load(f)
     
     main()

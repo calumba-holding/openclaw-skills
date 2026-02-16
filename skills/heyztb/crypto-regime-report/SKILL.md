@@ -76,12 +76,11 @@ Edit `{baseDir}/references/config.json` to customize your asset list:
 **Option B: Use a custom config file**
 
 ```bash
-# Via command line
-python3 {baseDir}/scripts/regime_report.py --config /path/to/my-config.json
-
-# Via environment variable
-REGIME_CONFIG=/path/to/my-config.json python3 {baseDir}/scripts/regime_report.py
+# Via environment variable (must be relative path within skill directory)
+REGIME_CONFIG=references/my-config.json python3 {baseDir}/scripts/regime_report.py
 ```
+
+**Security note:** For security, config paths are restricted to the skill directory. Absolute paths and path traversal (e.g., `../`) are not allowed.
 
 An example config is provided at `{baseDir}/references/config.example.json` — copy and modify it for your needs.
 
