@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "commander": "^14.0.3",
-    "dotenv": "^17.2.4"
-  }
-}
