@@ -3,11 +3,16 @@
   "slug": "creative-toolkit",
   "displayName": "Creative Toolkit",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1771029121671,
-    "commit": "https://github.com/openclaw/skills/commit/3cdc1a5233fa1124cf26ed6f353edabc9c8fc364"
+    "version": "1.0.2",
+    "publishedAt": 1771244846346,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1771029121671,
+      "commit": "https://github.com/openclaw/skills/commit/3cdc1a5233fa1124cf26ed6f353edabc9c8fc364"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770983443866,

@@ -1,7 +1,7 @@
 ---
 name: creative-toolkit
 description: Generate images from text with multi-provider routing — supports FLUX, SDXL, GPT Image, Seedream, and local ComfyUI workflows. Includes 1,300+ curated prompts and style-aware prompt enhancement. Use when users want to create images, design assets, enhance prompts, or manage AI art workflows.
-version: 1.0.0
+version: 1.0.2
 homepage: https://github.com/jau123/MeiGen-AI-Design-MCP
 metadata: {"clawdbot":{"emoji":"🎨","requires":{"bins":["mcporter"],"env":["MEIGEN_API_TOKEN"]},"primaryEnv":"MEIGEN_API_TOKEN"}}
 ---
@@ -201,6 +201,16 @@ Reference images work across all providers.
 | `realistic` | Camera lens, aperture, focal length, lighting direction, material textures | Product photos, portraits, architecture |
 | `anime` | Key visual composition, character details (eyes, hair, costume), trigger words | Anime illustrations, character design |
 | `illustration` | Art medium, color palette, composition direction, brush texture | Concept art, digital painting, watercolor |
+
+## Security & Privacy
+
+**Remote package execution**: This skill runs as an MCP server via `npx meigen@latest`. The package is published on [npmjs.com](https://www.npmjs.com/package/meigen) under the `meigen` name with full source code available at [GitHub](https://github.com/jau123/MeiGen-AI-Design-MCP). No code is obfuscated or minified beyond standard TypeScript compilation.
+
+**Reference image upload**: The `upload_reference_image` tool compresses local images (max 2MB, 2048px) and uploads them to a CDN for use as generation references. This is always user-initiated — the tool never accesses or uploads files without explicit invocation. Uploaded images are used solely as style references for image generation.
+
+**API tokens**: `MEIGEN_API_TOKEN` is stored locally in environment variables or `~/.config/meigen/config.json` with `chmod 600` permissions. Tokens are only sent to the configured provider's API endpoint and never logged or transmitted elsewhere.
+
+**No telemetry**: The MCP server does not collect analytics, usage data, or send any information to third parties beyond the configured image generation provider.
 
 ## Troubleshooting
 
