@@ -251,6 +251,28 @@ def convert_image_to_pdf(image_path, specs):
     return temp_pdf.name
 
 
+def _detect_pdf_orientation(pdf_path):
+    """Detect whether a PDF's first page is portrait or landscape.
+
+    Parses the MediaBox from the raw PDF bytes.  Returns 'portrait',
+    'landscape', or None if detection fails.
+    """
+    try:
+        data = Path(pdf_path).read_bytes()[:8192]  # first 8KB is enough
+        # Match /MediaBox [x1 y1 x2 y2]  (ints or floats)
+        m = re.search(
+            rb'/MediaBox\s*\[\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\]',
+            data,
+        )
+        if m:
+            x1, y1, x2, y2 = (float(v) for v in m.groups())
+            w, h = x2 - x1, y2 - y1
+            return 'portrait' if h > w else 'landscape'
+    except Exception:
+        pass
+    return None
+
+
 def print_file(file_path, printer=None, extra_options=None):
     """Print file to printer using lp command.
 
@@ -277,13 +299,16 @@ def print_file(file_path, printer=None, extra_options=None):
     ]
 
     # Add duplex if the printer supports it
+    # Detect document orientation for correct binding:
+    #   portrait  → long-edge  (book-style flip left/right)
+    #   landscape → short-edge (book-style flip left/right)
     if specs['duplex']:
-        duplex_map = {
-            'DuplexNoTumble': 'two-sided-long-edge',
-            'DuplexTumble': 'two-sided-short-edge',
-        }
-        sides = duplex_map.get(specs['duplex'], specs['duplex'])
-        cmd.extend(['-o', f'sides={sides}'])
+        orientation = _detect_pdf_orientation(file_path)
+        if orientation == 'landscape':
+            cmd.extend(['-o', 'sides=two-sided-short-edge'])
+        else:
+            # Default to long-edge (portrait / unknown)
+            cmd.extend(['-o', 'sides=two-sided-long-edge'])
 
     # Add any extra CUPS options
     for opt in (extra_options or []):
@@ -401,7 +426,6 @@ def cmd_info(args):
     field_map = [
         ("Manufacturer", "manufacturer"),
         ("ModelName", "model"),
-        ("DefaultResolution", "resolution"),
         ("ColorDevice", "color"),
         ("Throughput", "pages_per_min"),
         ("DefaultPageSize", "default_paper"),
@@ -411,6 +435,18 @@ def cmd_info(args):
         val = ppd_val(ppd_key)
         if val:
             info[json_key] = val
+
+    # Parse resolution into structured object
+    res_str = ppd_val("DefaultResolution")
+    if res_str:
+        import re as _re
+        m = _re.match(r"(\d+)(?:x(\d+))?\s*dpi", res_str, _re.IGNORECASE)
+        if m:
+            x_dpi = int(m.group(1))
+            y_dpi = int(m.group(2)) if m.group(2) else x_dpi
+            info["resolution"] = {"x_dpi": x_dpi, "y_dpi": y_dpi}
+        else:
+            info["resolution"] = res_str  # fallback to raw string
 
     # Parse paper sizes with margins
     paper_dims = {}
@@ -473,7 +509,13 @@ def cmd_info(args):
         ]
         for key, label in display_fields:
             if key in info:
-                print(f"  {label}: {info[key]}")
+                val = info[key]
+                if key == "resolution" and isinstance(val, dict):
+                    if val["x_dpi"] == val["y_dpi"]:
+                        val = f"{val['x_dpi']} dpi"
+                    else:
+                        val = f"{val['x_dpi']}x{val['y_dpi']} dpi"
+                print(f"  {label}: {val}")
 
         if slots:
             print(f"  Trays: {', '.join(slots)}")

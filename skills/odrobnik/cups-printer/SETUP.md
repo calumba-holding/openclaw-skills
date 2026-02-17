@@ -19,10 +19,10 @@ These are part of CUPS and should be pre-installed on macOS:
 ## Installation
 
 ```bash
-# Install with uv (recommended)
-uv run {baseDir}/scripts/print.py list
+# Verify setup
+python3 {baseDir}/scripts/print.py list
 
-# Or install Pillow manually
+# Install Pillow (only needed for image printing)
 pip install Pillow
 ```
 
