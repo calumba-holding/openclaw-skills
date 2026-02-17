@@ -2,11 +2,11 @@
 name: polymarket-mert-sniper
 displayName: Mert Sniper
 description: Near-expiry conviction trading on Polymarket. Snipe markets about to resolve when the odds are heavily skewed. Filter by topic, cap your bets, and only trade strong splits close to deadline.
-metadata: {"clawdbot":{"emoji":"🎯","requires":{"env":["SIMMER_API_KEY"]},"cron":null,"autostart":false}}
+metadata: {"clawdbot":{"emoji":"🎯","requires":{"env":["SIMMER_API_KEY"],"pip":["simmer-sdk"]},"cron":null,"autostart":false}}
 authors:
   - Simmer (@simmer_markets)
 attribution: "Strategy inspired by @mert — https://x.com/mert/status/2020216613279060433"
-version: "1.0.3"
+version: "1.0.4"
 published: true
 ---
 
@@ -15,6 +15,8 @@ published: true
 Near-expiry conviction trading on Polymarket. Snipe markets about to resolve when the odds are heavily skewed.
 
 > Strategy by [@mert](https://x.com/mert/status/2020216613279060433) — filter by topic, cap your bets, wait until near expiry, and only trade strong splits.
+
+> **This is a template.** The default logic (expiry + split filter) gets you started — remix it with your own filters, timing rules, or market selection criteria. The skill handles all the plumbing (market discovery, trade execution, safeguards). Your agent provides the alpha.
 
 ## When to Use This Skill
 
