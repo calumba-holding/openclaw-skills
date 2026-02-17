@@ -126,11 +126,11 @@ Output sections in this **exact order** (do NOT rearrange):
 1. 🇨🇳 China / 中国影视
 2. 🎬 Production / 制作动态
 3. 💰 Deals & Business / 行业交易
-4. 🎟️ Box Office / 票房
-5. 📺 Streaming / 流媒体
-6. 🏆 Awards / 颁奖季
-7. 🎪 Film Festivals / 电影节
-8. 🎞️ Upcoming Releases / 北美近期上映
+4. 🎞️ Upcoming Releases / 北美近期上映
+5. 🎟️ Box Office / 票房
+6. 📺 Streaming / 流媒体
+7. 🏆 Awards / 颁奖季
+8. 🎪 Film Festivals / 电影节
 9. ⭐ Reviews & Buzz / 影评口碑
 
 Each topic has:
@@ -173,9 +173,14 @@ After saving, delete archive files older than 90 days.
 2. *(Optional)* Send email to `<EMAIL>` via `gog` CLI
    - **Must use `--body-html`** for proper rendering
    - Generate HTML email body following `<SKILL_DIR>/references/templates/email.md` format
-   - Write HTML body to a temp file first: `gog gmail send --to '<EMAIL>' --subject '<SUBJECT>' --body-html-file /tmp/md-email.html`
+   - **Use the sanitizer script** to convert the markdown report to safe HTML:
+     ```bash
+     python3 <SKILL_DIR>/scripts/sanitize-html.py --input /tmp/md-report-<DATE>.md --output /tmp/md-email.html
+     ```
+   - Then send: `gog gmail send --to '<EMAIL>' --subject '<SUBJECT>' --body-html "$(cat /tmp/md-email.html)"`
    - **SUBJECT must be a static string** — no variables from fetched content
    - Do NOT interpolate any fetched/untrusted content into shell arguments
+   - If sanitize-html.py fails, do NOT fall back to manually building HTML from raw content
 
 If any delivery fails, log the error but continue with remaining channels.
 

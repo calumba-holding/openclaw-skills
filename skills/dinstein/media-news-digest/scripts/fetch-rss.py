@@ -37,7 +37,7 @@ MAX_WORKERS = 10
 MAX_ARTICLES_PER_FEED = 20
 RETRY_COUNT = 1
 RETRY_DELAY = 2.0  # seconds
-RSS_CACHE_PATH = "/tmp/tech-digest-rss-cache.json"
+RSS_CACHE_PATH = "/tmp/media-digest-rss-cache.json"
 RSS_CACHE_TTL_HOURS = 24
 
 
@@ -276,7 +276,7 @@ def fetch_feed_with_retry(source: Dict[str, Any], cutoff: datetime, no_cache: bo
     for attempt in range(RETRY_COUNT + 1):
         try:
             global _rss_cache_dirty
-            req_headers = {"User-Agent": "TechDigest/2.0"}
+            req_headers = {"User-Agent": "MediaDigest/1.4"}
             
             # Add conditional headers from cache
             cache = _get_rss_cache(no_cache)
@@ -394,7 +394,7 @@ def load_sources(defaults_dir: Path, config_dir: Optional[Path] = None) -> List[
 def main():
     """Main RSS fetching function."""
     parser = argparse.ArgumentParser(
-        description="Parallel RSS/Atom feed fetcher for tech-digest. "
+        description="Parallel RSS/Atom feed fetcher for media-digest. "
                    "Fetches enabled RSS sources from unified configuration, "
                    "filters by time window, and outputs structured article data.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -467,7 +467,7 @@ Examples:
     
     # Auto-generate unique output path if not specified
     if not args.output:
-        fd, temp_path = tempfile.mkstemp(prefix="tech-digest-rss-", suffix=".json")
+        fd, temp_path = tempfile.mkstemp(prefix="media-digest-rss-", suffix=".json")
         os.close(fd)
         args.output = Path(temp_path)
     

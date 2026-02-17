@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fetch web search results for tech digest topics.
+Fetch web search results for media digest topics.
 
 Reads topics.json, performs web searches for each topic's search queries,
 and outputs structured JSON with search results tagged by topics.
@@ -26,8 +26,10 @@ from typing import Dict, List, Any, Optional
 from urllib.request import urlopen, Request
 from urllib.parse import urlencode
 from urllib.error import URLError, HTTPError
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Tuple
 
-TIMEOUT = 15
+TIMEOUT = 30
 MAX_RESULTS_PER_QUERY = 5
 RETRY_COUNT = 1
 RETRY_DELAY = 2.0
@@ -70,44 +72,52 @@ def search_brave(query: str, api_key: str, freshness: Optional[str] = None) -> D
     headers = {
         'Accept': 'application/json',
         'X-Subscription-Token': api_key,
-        'User-Agent': 'TechDigest/2.0'
+        'User-Agent': 'MediaDigest/1.4'
     }
     
-    try:
-        req = Request(url, headers=headers)
-        with urlopen(req, timeout=TIMEOUT) as resp:
-            raw = resp.read()
-            # Handle gzip if server sends it anyway
-            if raw[:2] == b'\x1f\x8b':
-                import gzip
-                raw = gzip.decompress(raw)
-            data = json.loads(raw.decode())
-            
-        results = []
-        if 'web' in data and 'results' in data['web']:
-            for result in data['web']['results']:
-                results.append({
-                    'title': result.get('title', ''),
-                    'link': result.get('url', ''),
-                    'snippet': result.get('description', ''),
-                    'date': datetime.now(timezone.utc).isoformat()  # Search timestamp
-                })
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            req = Request(url, headers=headers)
+            with urlopen(req, timeout=TIMEOUT) as resp:
+                raw = resp.read()
+                # Handle gzip if server sends it anyway
+                if raw[:2] == b'\x1f\x8b':
+                    import gzip
+                    raw = gzip.decompress(raw)
+                data = json.loads(raw.decode())
                 
-        return {
-            'status': 'ok',
-            'query': query,
-            'results': results,
-            'total': len(results)
-        }
-        
-    except Exception as e:
-        return {
-            'status': 'error',
-            'query': query,
-            'error': str(e)[:100],
-            'results': [],
-            'total': 0
-        }
+            results = []
+            if 'web' in data and 'results' in data['web']:
+                for result in data['web']['results']:
+                    results.append({
+                        'title': result.get('title', ''),
+                        'link': result.get('url', ''),
+                        'snippet': result.get('description', ''),
+                        'date': datetime.now(timezone.utc).isoformat()  # Search timestamp
+                    })
+                    
+            return {
+                'status': 'ok',
+                'query': query,
+                'results': results,
+                'total': len(results)
+            }
+            
+        except Exception as e:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt
+                logging.warning(f"Web search retry {attempt+1}/{max_retries} for '{query}': {e} (wait {wait}s)")
+                import time
+                time.sleep(wait)
+            else:
+                return {
+                    'status': 'error',
+                    'query': query,
+                    'error': str(e)[:100],
+                    'results': [],
+                    'total': 0
+                }
 
 
 def filter_content(text: str, must_include: List[str], exclude: List[str]) -> bool:
@@ -129,8 +139,46 @@ def filter_content(text: str, must_include: List[str], exclude: List[str]) -> bo
     return True
 
 
-def search_topic_brave(topic: Dict[str, Any], api_key: str, freshness: Optional[str] = None) -> Dict[str, Any]:
-    """Search all queries for a topic using Brave API."""
+def detect_brave_rate_limit(api_key: str) -> Tuple[int, int]:
+    """Probe Brave API to detect per-second rate limit from response headers.
+    
+    Returns (max_qps, max_workers) tuple.
+    Free/basic plan: 1 QPS → (1, 1)
+    Paid plans: 15-20 QPS → (N, min(N, 5))
+    """
+    try:
+        params = urlencode({'q': 'test', 'count': 1})
+        url = f"{BRAVE_API_BASE}?{params}"
+        req = Request(url, headers={
+            'Accept': 'application/json',
+            'X-Subscription-Token': api_key,
+            'User-Agent': 'MediaDigest/1.4'
+        })
+        with urlopen(req, timeout=TIMEOUT) as resp:
+            limit_header = resp.headers.get('x-ratelimit-limit', '1')
+            per_second = int(limit_header.split(',')[0].strip())
+            resp.read()
+            
+        if per_second >= 10:
+            workers = min(per_second // 2, 5)
+            logging.info(f"Brave API paid plan detected: {per_second} QPS → {workers} parallel workers")
+            return per_second, workers
+        else:
+            logging.info(f"Brave API free/basic plan: {per_second} QPS → sequential with 1s delay")
+            return per_second, 1
+    except Exception as e:
+        logging.warning(f"Rate limit detection failed: {e}, defaulting to conservative 1 QPS")
+        return 1, 1
+
+
+def search_topic_brave(topic: Dict[str, Any], api_key: str, freshness: Optional[str] = None,
+                       max_workers: int = 1, delay: float = 0.5) -> Dict[str, Any]:
+    """Search all queries for a topic using Brave API.
+    
+    Args:
+        max_workers: Number of parallel search threads (1 = sequential)
+        delay: Delay between requests in sequential mode (ignored when parallel)
+    """
     topic_id = topic["id"]
     queries = topic["search"]["queries"]
     must_include = topic["search"].get("must_include", [])
@@ -139,24 +187,37 @@ def search_topic_brave(topic: Dict[str, Any], api_key: str, freshness: Optional[
     all_results = []
     query_stats = []
     
-    for query in queries:
-        search_result = search_brave(query, api_key, freshness)
-        query_stats.append({
-            'query': query,
-            'status': search_result['status'],
-            'count': search_result['total']
-        })
-        
-        if search_result['status'] == 'ok':
-            # Filter results based on content criteria
-            for result in search_result['results']:
-                combined_text = f"{result['title']} {result['snippet']}"
-                if filter_content(combined_text, must_include, exclude):
-                    result['topics'] = [topic_id]
-                    all_results.append(result)
-        
-        # Be nice to the API
-        time.sleep(0.5)
+    if max_workers > 1:
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(search_brave, q, api_key, freshness): q for q in queries}
+            for future in as_completed(futures):
+                search_result = future.result()
+                query_stats.append({
+                    'query': search_result['query'],
+                    'status': search_result['status'],
+                    'count': search_result['total']
+                })
+                if search_result['status'] == 'ok':
+                    for result in search_result['results']:
+                        combined_text = f"{result['title']} {result['snippet']}"
+                        if filter_content(combined_text, must_include, exclude):
+                            result['topics'] = [topic_id]
+                            all_results.append(result)
+    else:
+        for query in queries:
+            search_result = search_brave(query, api_key, freshness)
+            query_stats.append({
+                'query': query,
+                'status': search_result['status'],
+                'count': search_result['total']
+            })
+            if search_result['status'] == 'ok':
+                for result in search_result['results']:
+                    combined_text = f"{result['title']} {result['snippet']}"
+                    if filter_content(combined_text, must_include, exclude):
+                        result['topics'] = [topic_id]
+                        all_results.append(result)
+            time.sleep(delay)
     
     return {
         'topic_id': topic_id,
@@ -227,7 +288,7 @@ def convert_freshness(hours: int) -> str:
 def main():
     """Main web search function."""
     parser = argparse.ArgumentParser(
-        description="Perform web searches for tech digest topics. "
+        description="Perform web searches for media digest topics. "
                    "Can use Brave Search API (BRAVE_API_KEY) or generate interface for agents.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -295,7 +356,7 @@ Examples:
     
     # Auto-generate unique output path if not specified
     if not args.output:
-        fd, temp_path = tempfile.mkstemp(prefix="tech-digest-web-", suffix=".json")
+        fd, temp_path = tempfile.mkstemp(prefix="media-digest-web-", suffix=".json")
         os.close(fd)
         args.output = Path(temp_path)
     
@@ -332,6 +393,10 @@ Examples:
                         freshness_hours = 48
                 brave_freshness = convert_freshness(freshness_hours)
             
+            # Detect rate limit to decide concurrency
+            max_qps, max_workers = detect_brave_rate_limit(api_key)
+            delay = 1.0 / max_qps if max_workers == 1 else 0
+            
             results = []
             for topic in topics:
                 if not topic.get("search", {}).get("queries"):
@@ -339,7 +404,8 @@ Examples:
                     continue
                     
                 logger.debug(f"Searching topic: {topic['id']}")
-                result = search_topic_brave(topic, api_key, brave_freshness)
+                result = search_topic_brave(topic, api_key, brave_freshness,
+                                            max_workers=max_workers, delay=delay)
                 results.append(result)
             
             total_articles = sum(r.get("count", 0) for r in results)

@@ -33,7 +33,7 @@ MAX_WORKERS = 5  # Lower for API rate limits
 RETRY_COUNT = 1
 RETRY_DELAY = 2.0
 MAX_TWEETS_PER_USER = 10
-ID_CACHE_PATH = "/tmp/tech-digest-twitter-id-cache.json"
+ID_CACHE_PATH = "/tmp/media-digest-twitter-id-cache.json"
 ID_CACHE_TTL_DAYS = 7
 
 # Twitter API v2 endpoints
@@ -129,7 +129,7 @@ def batch_resolve_user_ids(handles: List[str], bearer_token: str, no_cache: bool
             url = f"{USER_LOOKUP_ENDPOINT}?{urlencode({'usernames': ','.join(batch)})}"
             headers = {
                 "Authorization": f"Bearer {bearer_token}",
-                "User-Agent": "TechDigest/2.0"
+                "User-Agent": "MediaDigest/1.4"
             }
             try:
                 req = Request(url, headers=headers)
@@ -194,7 +194,7 @@ def fetch_user_tweets(source: Dict[str, Any], bearer_token: str, cutoff: datetim
                 user_url = f"{USER_LOOKUP_ENDPOINT}?{urlencode({'usernames': handle})}"
                 headers = {
                     "Authorization": f"Bearer {bearer_token}",
-                    "User-Agent": "TechDigest/2.0"
+                    "User-Agent": "MediaDigest/1.4"
                 }
                 
                 req = Request(user_url, headers=headers)
@@ -208,7 +208,7 @@ def fetch_user_tweets(source: Dict[str, Any], bearer_token: str, cutoff: datetim
             
             headers = {
                 "Authorization": f"Bearer {bearer_token}",
-                "User-Agent": "TechDigest/2.0"
+                "User-Agent": "MediaDigest/1.4"
             }
             
             # Rate limit: space out API calls
@@ -406,7 +406,7 @@ Examples:
     
     # Auto-generate unique output path if not specified
     if not args.output:
-        fd, temp_path = tempfile.mkstemp(prefix="tech-digest-twitter-", suffix=".json")
+        fd, temp_path = tempfile.mkstemp(prefix="media-digest-twitter-", suffix=".json")
         os.close(fd)
         args.output = Path(temp_path)
     
