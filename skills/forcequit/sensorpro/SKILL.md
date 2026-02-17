@@ -1,6 +1,6 @@
 ---
 name: sensorpro
-description: "Use Sensorpro REST API via curl (auth/signin, contacts CRUD, campaigns, metrics/results, imports, relay email). Use when you need to integrate Sensorpro with OpenClaw: adding/updating contacts, creating/sending campaigns, querying opens/clicks/bounces, running imports, or sending one-off relay emails."
+description: "Manage your Sensorpro email marketing account in OpenClaw."
 metadata:
   openclaw:
     emoji: "📨"
@@ -11,7 +11,7 @@ metadata:
     primaryEnv: "SENSORPRO_API_KEY"
 ---
 
-Use this skill as a **practical playbook** for calling the Sensorpro REST API.
+Use this skill to **manage your Sensorpro email marketing account in OpenClaw**.
 
 Official docs:
 - Home: https://sensorpro.net/api/
