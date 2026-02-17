@@ -170,6 +170,44 @@ rm -rf ~/.openclaw/hooks/nima-bootstrap
 rm -rf /path/to/nima-core/openclaw_plugin
 ```
 
+#### ⚠️ CRITICAL: Remove old heartbeat capture service
+
+If you previously used `lilu_core/services/heartbeat.py` (or any standalone
+heartbeat capture script), **you MUST stop and remove it**. The old heartbeat
+service captures ALL session messages WITHOUT filtering, causing:
+
+- **Massive duplication** (thousands of HEARTBEAT_OK entries)
+- **System noise stored as memories** (affect states, NIMA recalls, cron outputs)
+- **Database bloat** (80%+ of entries may be spam)
+
+The `nima-memory` plugin handles ALL memory capture with proper filtering
+(Free Energy scoring, noise detection, deduplication). Running both systems
+simultaneously will fill your database with unfiltered garbage.
+
+```bash
+# 1. Kill the old heartbeat process
+pkill -f "heartbeat.py" || true
+
+# 2. Remove the LaunchAgent (macOS) if it exists
+launchctl unload ~/Library/LaunchAgents/ai.lilu.memory-heartbeat.plist 2>/dev/null
+rm -f ~/Library/LaunchAgents/ai.lilu.memory-heartbeat.plist
+
+# 3. Remove systemd service (Linux) if it exists
+systemctl --user stop lilu-heartbeat 2>/dev/null
+systemctl --user disable lilu-heartbeat 2>/dev/null
+rm -f ~/.config/systemd/user/lilu-heartbeat.service
+
+# 4. Remove or rename the old script
+mv lilu_core/services/heartbeat.py lilu_core/services/heartbeat.py.deprecated
+```
+
+**Verify it's gone:**
+```bash
+# Should return nothing:
+ps aux | grep "heartbeat.py" | grep -v grep
+ls ~/Library/LaunchAgents/*heartbeat* 2>/dev/null
+```
+
 Remove from `openclaw.json` hooks config:
 ```json
 // DELETE these entries if they exist:
@@ -230,6 +268,9 @@ Remove from `openclaw.json` hooks config:
 
 ### Migration checklist
 
+- [ ] **Kill old heartbeat.py process** (`pkill -f heartbeat.py`)
+- [ ] **Remove heartbeat LaunchAgent/systemd service** (see above)
+- [ ] **Remove or rename heartbeat.py** (`.deprecated`)
 - [ ] Install `nima-memory` plugin (see Fresh Install)
 - [ ] Update `nima-recall` hook handler
 - [ ] Remove `nima-capture` hook directory
@@ -239,6 +280,7 @@ Remove from `openclaw.json` hooks config:
 - [ ] Run `openclaw doctor --non-interactive`
 - [ ] Restart gateway: `openclaw gateway restart`
 - [ ] Verify: Send a test message, check `~/.nima/memory/graph.sqlite` for new entries
+- [ ] **Verify no old capture running:** `ps aux | grep heartbeat.py`
 
 ### Verify cleanup
 

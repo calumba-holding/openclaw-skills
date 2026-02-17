@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from "
 import { join } from "node:path";
 import os from "node:os";
 import { LEXICON, EMOJI_AFFECTS } from "./emotion-lexicon.js";
+import { resilientHook, resilientHookSync } from "../shared/resilient.js";
 
 // =============================================================================
 // CONSTANTS
@@ -483,73 +484,64 @@ export default function register(api) {
   log.info(`[nima-affect] registering — identity: ${identityName}, lexicon: ${lexiconSize} words, ${emojiSize} emoji`);
   
   // ─── Hook 1: message_received (fire-and-forget) ───
-  api.on("message_received", (event, ctx) => {
-    try {
-      const { content } = event;
-      if (!content || content.length < 2) return;
-      
-      // Skip system compaction messages
-      if (content.startsWith("Pre-compaction")) return;
-      
-      // Extract conversation ID for isolation (if available)
-      const conversationId = ctx.conversationId || ctx.channelId || ctx.chatId || null;
-      
-      const t0 = performance.now();
-      const { emotions, affects, signals, matchCount } = detectEmotions(content);
-      const detectMs = (performance.now() - t0).toFixed(2);
-      
-      if (matchCount === 0) return;
-      
-      const intensity = Math.min(1.0, 
-        Object.values(affects).reduce((sum, v) => sum + v, 0) / Math.max(1, Object.keys(affects).length)
-      );
-      
-      const updated = updateAffectState(identityName, affects, intensity, baseline, conversationId);
-      
-      const dominant = AFFECTS.reduce((best, name, i) => 
-        updated.values[i] > best.val ? { name, val: updated.values[i] } : best,
-        { name: "CARE", val: 0 }
-      );
-      
-      const topAffects = Object.entries(affects)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([k, v]) => `${k}:${v.toFixed(2)}`)
-        .join(" ");
-      
-      log.info(`[nima-affect] ${detectMs}ms | ${matchCount} words | [${topAffects}] → ${dominant.name}(${dominant.val.toFixed(2)}) | intensity=${signals?.intensityMultiplier?.toFixed(2) || "1.00"}x`);
-    } catch (err) {
-      log.debug?.(`[nima-affect] message_received error: ${err.message}`);
-    }
-  });
+  api.on("message_received", resilientHookSync("message_received", (event, ctx) => {
+    const { content } = event;
+    if (!content || content.length < 2) return;
+
+    // Skip system compaction messages
+    if (content.startsWith("Pre-compaction")) return;
+
+    // Extract conversation ID for isolation (if available)
+    const conversationId = ctx.conversationId || ctx.channelId || ctx.chatId || null;
+
+    const t0 = performance.now();
+    const { emotions, affects, signals, matchCount } = detectEmotions(content);
+    const detectMs = (performance.now() - t0).toFixed(2);
+
+    if (matchCount === 0) return;
+
+    const intensity = Math.min(1.0,
+      Object.values(affects).reduce((sum, v) => sum + v, 0) / Math.max(1, Object.keys(affects).length)
+    );
+
+    const updated = updateAffectState(identityName, affects, intensity, baseline, conversationId);
+
+    const dominant = AFFECTS.reduce((best, name, i) =>
+      updated.values[i] > best.val ? { name, val: updated.values[i] } : best,
+      { name: "CARE", val: 0 }
+    );
+
+    const topAffects = Object.entries(affects)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([k, v]) => `${k}:${v.toFixed(2)}`)
+      .join(" ");
+
+    log.info(`[nima-affect] ${detectMs}ms | ${matchCount} words | [${topAffects}] → ${dominant.name}(${dominant.val.toFixed(2)}) | intensity=${signals?.intensityMultiplier?.toFixed(2) || "1.00"}x`);
+  }, undefined));
   
   // ─── Hook 2: before_agent_start (blocking, injects context) ───
-  api.on("before_agent_start", (event, ctx) => {
-    try {
-      if (skipSubagents && ctx.sessionKey?.includes(":subagent:")) return;
-      
-      // Extract conversation ID for isolation (if available)
-      const conversationId = ctx.conversationId || ctx.channelId || ctx.chatId || null;
-      
-      // Also detect from prompt (belt & suspenders with message_received)
-      const { affects, matchCount } = detectEmotions(event.prompt);
-      
-      if (matchCount > 0) {
-        const intensity = Math.min(1.0,
-          Object.values(affects).reduce((sum, v) => sum + v, 0) / Math.max(1, Object.keys(affects).length)
-        );
-        updateAffectState(identityName, affects, intensity, baseline, conversationId);
-      }
-      
-      const affect = getCurrentAffect(identityName, baseline, conversationId);
-      const context = formatAffectContext(affect);
-      
-      return { prependContext: context };
-    } catch (err) {
-      log.debug?.(`[nima-affect] before_agent_start error: ${err.message}`);
-      return undefined;
+  api.on("before_agent_start", resilientHook("before_agent_start", async (event, ctx) => {
+    if (skipSubagents && ctx.sessionKey?.includes(":subagent:")) return;
+
+    // Extract conversation ID for isolation (if available)
+    const conversationId = ctx.conversationId || ctx.channelId || ctx.chatId || null;
+
+    // Also detect from prompt (belt & suspenders with message_received)
+    const { affects, matchCount } = detectEmotions(event.prompt);
+
+    if (matchCount > 0) {
+      const intensity = Math.min(1.0,
+        Object.values(affects).reduce((sum, v) => sum + v, 0) / Math.max(1, Object.keys(affects).length)
+      );
+      updateAffectState(identityName, affects, intensity, baseline, conversationId);
     }
-  }, { priority: 10 });
+
+    const affect = getCurrentAffect(identityName, baseline, conversationId);
+    const context = formatAffectContext(affect);
+
+    return { prependContext: context };
+  }, undefined), { priority: 10 });
   
   // ─── Hook 3: agent_end (fire-and-forget) ───
   api.on("agent_end", (event, ctx) => {

@@ -1,7 +1,7 @@
 ---
 name: nima-core
 description: Neural Integrated Memory Architecture — Graph-based memory with LadybugDB, semantic search, dynamic affect, lazy recall. Production-ready for AI agents. Learn more at nima-core.ai
-version: 2.0.11
+version: 2.0.12
 metadata: {"clawdbot":{"emoji":"🧠","requires":{"bins":["python3","node"],"env":["NIMA_DATA_DIR"]},"optional_env":{"NIMA_EMBEDDER":"voyage|openai|local (default: local)","VOYAGE_API_KEY":"Required when NIMA_EMBEDDER=voyage","OPENAI_API_KEY":"Required when NIMA_EMBEDDER=openai"},"permissions":{"reads":["~/.openclaw/agents/*/sessions/*.jsonl"],"writes":["~/.nima/"],"network":["voyage.ai (conditional)","openai.com (conditional)"]}}}
 ---
 

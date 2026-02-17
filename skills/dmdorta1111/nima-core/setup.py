@@ -13,6 +13,12 @@ setup(
     install_requires=[
         "numpy>=1.24.0",
     ],
+    extras_require={
+        "vector": [
+            "faiss-cpu>=1.7.4",
+            "voyageai>=0.2.0",
+        ],
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
