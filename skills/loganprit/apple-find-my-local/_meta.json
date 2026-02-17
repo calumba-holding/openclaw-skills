@@ -3,9 +3,15 @@
   "slug": "apple-find-my-local",
   "displayName": "Find My",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1771276043751,
-    "commit": "https://github.com/openclaw/skills/commit/0874fd4f3173f7c178fb0b9ecd4510f2fc8c03e1"
+    "version": "1.0.0",
+    "publishedAt": 1771266482597,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1771276043751,
+      "commit": "https://github.com/openclaw/skills/commit/0874fd4f3173f7c178fb0b9ecd4510f2fc8c03e1"
+    }
+  ]
 }
