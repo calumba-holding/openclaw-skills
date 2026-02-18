@@ -13,21 +13,20 @@ Every session starts fresh. No memory of yesterday. No context. You (or your age
 
 ## The Solution
 
-Two files that create continuity:
+Two templates that create continuity:
 
 1. **MEMORY.md** — Persistent context (patterns, projects, lessons)
 2. **AGENTS.md** — Operating instructions (how to work in this space)
 
-That's it. No complex infrastructure. Just markdown files that survive between sessions.
+Delivered via Notion — duplicate to your workspace and start using immediately. Works for humans tracking growth OR agents maintaining memory.
 
 ## Quick Start
 
-1. Copy templates to your workspace:
-   - `assets/MEMORY-TEMPLATE-v2.md` → `MEMORY.md`
-   - `assets/AGENTS-TEMPLATE.md` → `AGENTS.md`
-2. Create `memory/` folder for daily logs
-3. Start every session by reading MEMORY.md
-4. Document as you go
+1. **Get the templates** at [shop.vlad.chat](https://shop.vlad.chat)
+2. **Duplicate** the Notion template to your workspace
+3. **For agents:** Set up Notion API access (instructions included)
+4. **Start every session** by reading MEMORY.md
+5. **Document as you go** — the Continuity Cycle keeps you on track
 
 ## The Memory Stack
 
@@ -67,9 +66,16 @@ These work as standalone journaling frameworks or integrate with Notion for stru
 
 **Get them at:** [shop.vlad.chat](https://shop.vlad.chat)
 
-## Notion Integration (Optional)
+## How It's Delivered
 
-Want structured databases instead of flat files? The ACT Scrolls include Notion templates you can connect via API:
+The templates live in Notion. When you purchase:
+
+1. Get access via Gumroad
+2. Open the Notion template link
+3. Click "Duplicate" to copy to your workspace
+4. You now have MEMORY.md + AGENTS.md ready to use
+
+**For agents:** Connect via Notion API to read/write:
 
 ```bash
 # Set up API access
