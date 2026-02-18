@@ -3,11 +3,16 @@
   "slug": "wachai-x402",
   "displayName": "WachAI-x402",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1770643885354,
-    "commit": "https://github.com/openclaw/skills/commit/c4ace0c5d815aa304e115033a96ae6a3c9445a46"
+    "version": "1.0.2",
+    "publishedAt": 1771245787002,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1770643885354,
+      "commit": "https://github.com/openclaw/skills/commit/c4ace0c5d815aa304e115033a96ae6a3c9445a46"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770633942323,

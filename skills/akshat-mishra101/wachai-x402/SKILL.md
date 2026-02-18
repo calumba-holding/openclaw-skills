@@ -1,197 +1,197 @@
 ---
 name: x402-wach
-description: DeFi risk analysis toolkit powered by WACH.AI via x402 payments. Currently supports ERC-20 and Solana SPL token asset risk analysis. Use when the user asks to check if a token is safe, assess DeFi risk, detect honeypots, analyze liquidity, holder distribution, or smart contract vulnerabilities for tokens on Ethereum, Polygon, Base, BSC, or Solana. Costs 0.01 USDC per query on Base.
+description: DeFi risk analysis toolkit powered by WACH.AI via x402 payments using AWAL wallet custody. Use when the user asks to check if a token is safe, assess DeFi risk, detect honeypots, analyze liquidity, holder distribution, or smart contract vulnerabilities for tokens on Ethereum, Polygon, Base, BSC, or Solana. Costs 0.01 USDC per query on Base.
 license: MIT
-compatibility: Requires Node.js 18+, npm, network access, and a funded EVM wallet (USDC on Base).
+compatibility: Requires Node.js 18+, npm, network access, AWAL installed and authenticated, and a funded AWAL wallet with USDC on Base.
 metadata:
   author: quillai-network
-  version: "1.0"
+  version: "3.0"
   endpoint: https://x402.wach.ai/verify-token
   payment: 0.01 USDC on Base (automatic via x402)
 ---
 
 # x402-wach — DeFi Risk Analysis
 
-A DeFi risk analysis toolkit powered by WACH.AI, using the x402 HTTP payment protocol. Payment is handled automatically (0.01 USDC per request on Base).
+A DeFi risk analysis toolkit powered by WACH.AI, using x402 with AWAL-managed key custody.
 
-**Currently supported features:**
+## OpenClaw Hard Rules (Non-Negotiable)
 
-- **Asset Risk Analysis** — ERC-20 tokens (Ethereum, Polygon, Base, BSC) and Solana SPL tokens
+When this skill is active, OpenClaw must follow all rules below:
+
+1. **Never request or expose secrets**
+   - Never ask for private keys, seed phrases, mnemonics, wallet export files, or raw signing material.
+   - Never suggest using `wallet.json` or any local key file flow.
+
+2. **AWAL-only custody path**
+   - Always use AWAL-backed commands for setup and payments.
+   - Treat legacy local-wallet instructions as invalid for this skill version.
+
+3. **Run readiness checks before paid calls**
+   - Before `verify-risk`, ensure AWAL is ready via `wallet setup` or `wallet doctor`.
+   - If not ready, stop and guide user to login/fund flow.
+
+4. **Respect payment guardrails**
+   - Default max payment cap is `10000` atomic USDC (`$0.01`) per request.
+   - Do not raise cap unless the user explicitly asks.
+
+5. **Do not hide payment failure details**
+   - If payment fails, surface clear reason and next action (auth, balance, network, command mismatch).
+   - Do not claim success unless report payload is actually present.
+
+6. **No blind retries that may duplicate spend**
+   - For network/transient errors, retry once at most.
+   - Keep the same request context and tell the user a retry was attempted.
+
+7. **Always present source link in final report**
+   - Prefer TokenSense URL pattern:
+     - `https://tokensense.wach.ai/<chain>/<tokenAddress>`
+   - Use API source only as fallback.
 
 ## When to Use This Skill
 
-Use this skill when the user wants to:
+Use this skill when user asks to:
 
-- **Assess DeFi risk** for a specific token or asset
-- **Check if a token is safe** or a potential scam/honeypot
-- **Get token risk scores** (overall, code, market)
-- **Analyze holder distribution** (whale concentration, top holders, exchange wallets)
-- **Review liquidity health** (total liquidity, trading pairs, DEXes)
-- **Inspect smart contract security** (ownership, mint authority, freeze authority, blacklists, pausability)
-- **Look up token market data** (price, market cap, 24h volume, supply)
-
-## Installation
-
-Install the CLI globally via npm:
-
-```bash
-npm install -g @quillai-network/x402-wach
-```
-
-Or install locally in a project:
-
-```bash
-npm install @quillai-network/x402-wach
-```
-
-Verify the installation:
-
-```bash
-x402-wach --version
-```
-
-## Setup
-
-After installation, follow these steps to get ready for token analysis:
-
-### 1. Create or Import a Wallet
-
-You need an EVM wallet to sign x402 payments.
-
-```bash
-# Option A — Generate a brand new wallet
-x402-wach wallet create
-
-# Option B — Import an existing wallet by private key
-x402-wach wallet import
-```
-
-The wallet is stored securely at `~/.x402-wach/wallet.json` with restricted file permissions (owner read/write only).
-
-### 2. Fund the Wallet
-
-Each token analysis costs **0.01 USDC on Base**. Send USDC (Base network) to your wallet address.
-
-```bash
-# Check your wallet address
-x402-wach wallet info
-```
-
-You can bridge USDC from Ethereum or other chains using https://bridge.base.org.
-
-### 3. You're Ready
-
-Run the setup guide anytime:
-
-```bash
-x402-wach guide
-```
+- assess DeFi risk for a token
+- detect scam/honeypot patterns
+- inspect holder concentration/liquidity quality
+- review contract risk signals
+- get risk/market/code score breakdown
+- evaluate tokens across `eth`, `pol`, `base`, `bsc`, or `sol`
 
 ## Supported Chains
 
-| Short Name | Chain               | Token Standard | Use For                          |
-| ---------- | ------------------- | -------------- | -------------------------------- |
-| `eth`      | Ethereum            | ERC-20         | Tokens on Ethereum mainnet       |
-| `pol`      | Polygon             | ERC-20         | Tokens on Polygon                |
-| `base`     | Base                | ERC-20         | Tokens on Base                   |
-| `bsc`      | Binance Smart Chain | BEP-20         | Tokens on BSC                    |
-| `sol`      | Solana              | SPL            | Tokens on Solana                 |
+| Short Name | Chain               | Token Standard |
+| ---------- | ------------------- | -------------- |
+| `eth`      | Ethereum            | ERC-20         |
+| `pol`      | Polygon             | ERC-20         |
+| `base`     | Base                | ERC-20         |
+| `bsc`      | Binance Smart Chain | BEP-20         |
+| `sol`      | Solana              | SPL            |
 
-## Commands
+Payment is always in USDC on Base, regardless of analysis chain.
 
-### Analyze Token Risk
+## Command Playbook for OpenClaw
+
+### 1) Readiness / Setup
+
+Run:
+
+```bash
+x402-wach wallet setup
+```
+
+If setup says not ready, run:
+
+```bash
+x402-wach wallet doctor
+x402-wach wallet login <EMAIL>
+x402-wach wallet verify <FLOW_ID> <OTP>
+x402-wach wallet balance
+```
+
+Interpretation:
+
+- `✓ Ready to make x402 payments with AWAL` -> proceed to analysis.
+- `AWAL wallet is not authenticated` -> run login + verify flow.
+- `Insufficient USDC on Base` -> ask user to fund AWAL address.
+- `Could not read AWAL balance/status` -> run doctor and show raw failure.
+
+### 2) Risk Analysis
+
+Run:
 
 ```bash
 x402-wach verify-risk <TOKEN_ADDRESS> <CHAIN_SHORT_NAME>
 ```
 
-**Parameters:**
-
-- `TOKEN_ADDRESS` — The token's contract address
-  - EVM chains: `0x` followed by 40 hex characters (e.g., `0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`)
-  - Solana: Base58 string, 32–44 characters (e.g., `6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN`)
-- `CHAIN_SHORT_NAME` — One of: `eth`, `pol`, `base`, `bsc`, `sol`
-
-**Examples:**
+Preferred cap-safe form:
 
 ```bash
-# Analyze USDC on Ethereum
-x402-wach verify-risk 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 eth
-
-# Analyze TRUMP on Solana
-x402-wach verify-risk 6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN sol
-
-# Analyze USDC on Base
-x402-wach verify-risk 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 base
+x402-wach verify-risk <TOKEN_ADDRESS> <CHAIN_SHORT_NAME> --max-amount-atomic 10000
 ```
 
-### Wallet Management
+### 3) Optional Helpers
 
 ```bash
-# Create a new wallet
-x402-wach wallet create
-
-# Import an existing wallet by private key
-x402-wach wallet import
-
-# View wallet address and file location
-x402-wach wallet info
-```
-
-### Other Commands
-
-```bash
-# List all supported chains
+x402-wach wallet status
+x402-wach wallet address
 x402-wach chains
-
-# Step-by-step setup guide
 x402-wach guide
-
-# Help
-x402-wach --help
 ```
 
-## Programmatic Usage
+## Tool Result Interpretation Rules
 
-The SDK can also be used as a Node.js/TypeScript library:
+### Readiness/Doctor Output
+
+- **Contains `✓ Ready`** -> safe to proceed with paid analysis.
+- **Contains `not authenticated`** -> require OTP login/verify.
+- **Contains `Insufficient USDC`** -> request wallet funding on Base.
+- **Contains command-help text from AWAL** -> command mismatch/version issue; run `x402-wach wallet doctor` and use supported subcommands shown.
+- **Contains JSON parse errors** -> treat as AWAL output format mismatch; surface raw error and do not continue paid flow.
+
+### verify-risk Output
+
+- **`Token analysis complete!` + populated sections** -> success.
+- **Header only with empty body** -> payload unwrap issue; report as tool parsing bug.
+- **`No token found` / empty report** -> valid call, no token at address/chain.
+- **402/payment error** -> wallet balance/cap/auth issue; user action required.
+
+## Safety-Focused User Guidance
+
+When blocked, provide this exact short path:
+
+```bash
+x402-wach wallet doctor
+x402-wach wallet login <email>
+x402-wach wallet verify <flowId> <otp>
+x402-wach wallet balance
+```
+
+Then retry:
+
+```bash
+x402-wach verify-risk <TOKEN_ADDRESS> <CHAIN_SHORT_NAME> --max-amount-atomic 10000
+```
+
+## Programmatic Usage Pattern (Agent-Friendly)
 
 ```typescript
-import { verifyTokenRisk, validateTokenAddress } from "@quillai-network/x402-wach";
+import {
+  getAwalReadiness,
+  validateTokenAddress,
+  verifyTokenRisk,
+} from "@quillai-network/x402-wach";
 
-// Always validate before calling (avoids wasting USDC on invalid inputs)
-const validation = validateTokenAddress("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "eth");
-if (!validation.valid) {
-  console.error(validation.error);
-} else {
-  const report = await verifyTokenRisk("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "eth");
-  console.log(report);
-}
+const token = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const chain = "eth";
+
+const validation = validateTokenAddress(token, chain);
+if (!validation.valid) throw new Error(validation.error);
+
+const readiness = await getAwalReadiness(10_000);
+if (!readiness.ready) throw new Error(readiness.reasons.join("; "));
+
+const report = await verifyTokenRisk(token, chain, { maxAmountAtomic: 10_000 });
+console.log(report);
 ```
 
-## Output Structure
+## Expected Report Sections
 
-The risk analysis report includes (when available):
+On successful analysis, formatted output can include:
 
-- **Market Data**: Price, market cap, 24h volume, price change, total supply
-- **Risk Scores**: Overall score, code score, market score (0–100%)
-- **Honeypot Analysis**: Whether the token is a honeypot, buy/sell/transfer taxes
-- **Holders**: Total count, top holders with labels (e.g., exchange wallets), supply concentration
-- **Liquidity**: Total liquidity in USD, number of trading pairs, top DEX pairs
-- **Code Analysis**: Ownership checks, mint/freeze authority, blacklist mechanisms, pausability
-- **Social & Community**: Twitter, Discord, Telegram, website links
+- Market Data
+- Risk Scores
+- Honeypot Analysis
+- Holders
+- Liquidity
+- Code Analysis
+- Social & Community
+- Source (TokenSense link) + report timestamp
 
-## Edge Cases and Error Handling
+## Absolute Prohibitions for OpenClaw
 
-- **Invalid address format**: The CLI validates addresses client-side before making the request (and before any payment). EVM addresses must be `0x` + 40 hex chars. Solana addresses must be 32–44 base58 chars.
-- **Wrong chain for address**: The CLI detects mismatches (e.g., a Solana address used with `eth`) and suggests the correct chain.
-- **Token not found**: If no token exists at the given address on the selected chain, a clear error message is shown instead of an empty report.
-- **Insufficient USDC**: If the wallet lacks funds, the x402 payment will fail with a 402 error prompting the user to fund their wallet.
-- **No wallet configured**: The CLI will prompt the user to run `x402-wach wallet create` or `x402-wach wallet import`.
-
-## Important Notes
-
-- Each analysis costs **0.01 USDC on Base** — deducted automatically via the x402 payment protocol.
-- The **payment always happens on Base**, regardless of which chain the token being analyzed is on.
-- The wallet is stored at `~/.x402-wach/wallet.json` with restricted file permissions (owner-only).
-- Always validate the token address and chain before calling `verify-risk` to avoid paying for invalid queries.
-- This is a **DeFi risk analysis toolkit** — ERC-20/SPL asset risk analysis is the first supported feature, with more analysis types planned.
+- Do not use or suggest `wallet create`, `wallet import`, or `wallet.json`.
+- Do not ask user for private key or seed phrase.
+- Do not increase spend cap silently.
+- Do not claim analysis success when output parsing failed.
+- Do not suppress AWAL raw errors when diagnosis is needed.
