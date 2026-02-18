@@ -1,0 +1,11 @@
+{
+  "owner": "twhidden",
+  "slug": "twhidden-bitwarden",
+  "displayName": "Bitwarden & Vaultwarden Password Manager",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1771389877319,
+    "commit": null
+  },
+  "history": []
+}
