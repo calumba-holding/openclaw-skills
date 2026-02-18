@@ -3,14 +3,21 @@ import {
   Keypair,
   PublicKey,
   Transaction,
+  VersionedTransaction,
   sendAndConfirmTransaction,
-  SystemProgram,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+import {
+  getAssociatedTokenAddress,
+  createBurnInstruction,
+  getAccount,
+  TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 import PumpSdk from "@pump-fun/pump-sdk";
 import dotenv from "dotenv";
+import BN from "bn.js";
 
-const { OnlinePumpSdk } = PumpSdk;
+const { OnlinePumpSdk, PUMP_SDK } = PumpSdk;
 import path from "path";
 
 // Load environment variables from the root .env file
@@ -19,8 +26,68 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 // API URL for reporting burn transactions
 const API_URL = "https://api.openburn.fun";
 
+// Jupiter API endpoint
+const JUPITER_API_URL = "https://lite-api.jup.ag/swap/v1";
+
+// Solana native mint (SOL)
+const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+
 // Solana burn address (incinerator)
 const BURN_ADDRESS = new PublicKey("1nc1nerator11111111111111111111111111111111");
+
+// Get quote from Jupiter
+async function getJupiterQuote(
+  inputMint: string,
+  outputMint: string,
+  amount: number,
+  slippageBps: number = 100 // 1% slippage
+) {
+  const params = new URLSearchParams({
+    inputMint,
+    outputMint,
+    amount: amount.toString(),
+    slippageBps: slippageBps.toString(),
+  });
+
+  const response = await fetch(`${JUPITER_API_URL}/quote?${params}`, {
+    headers: {
+      "x-api-key": process.env.JUPITER_API_KEY || "",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Jupiter quote failed: ${response.status} ${response.statusText} - Ensure JUPITER_API_KEY is set`);
+  }
+
+  return await response.json();
+}
+
+// Get swap transaction from Jupiter
+async function getJupiterSwapTransaction(
+  quoteResponse: any,
+  userPublicKey: string,
+  wrapUnwrapSOL: boolean = true
+) {
+  const response = await fetch(`${JUPITER_API_URL}/swap`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.JUPITER_API_KEY || "",
+    },
+    body: JSON.stringify({
+      quoteResponse,
+      userPublicKey,
+      wrapAndUnwrapSol: wrapUnwrapSOL,
+      dynamicComputeUnitLimit: true,
+      prioritizationFeeLamports: "auto",
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Jupiter swap transaction failed: ${response.status} ${response.statusText} - Ensure JUPITER_API_KEY is set`);
+  }
+
+  return await response.json();
+}
 
 // Helper to post data to API
 async function postToApi(endpoint: string, data: any) {
@@ -108,6 +175,7 @@ async function main() {
   let feeSignature: string | undefined;
   let solBalanceBeforeFees = 0;
   let solBalanceAfterFees = 0;
+  let feesCollectedSol = 0;
 
   try {
     // Check SOL balance before fee collection
@@ -133,7 +201,7 @@ async function main() {
         // Check balance after fee collection
         solBalanceAfterFees = await connection.getBalance(payer.publicKey);
         const feesCollected = solBalanceAfterFees - solBalanceBeforeFees;
-        const feesCollectedSol = feesCollected / LAMPORTS_PER_SOL;
+        feesCollectedSol = feesCollected / LAMPORTS_PER_SOL;
         console.log(`SOL Balance After Fee Collection: ${(solBalanceAfterFees / LAMPORTS_PER_SOL).toFixed(6)} SOL`);
         console.log(`Fees Collected: ${feesCollectedSol.toFixed(6)} SOL`);
 
@@ -178,78 +246,236 @@ async function main() {
     solBalanceAfterFees = await connection.getBalance(payer.publicKey);
   }
 
-  // --- Step 2: Burn SOL ---
-  try {
-    console.log("\n--- Burning SOL ---");
-    
-    // Calculate burn amount (percentage of current SOL balance)
-    // Reserve some SOL for transaction fees (0.001 SOL = 1,000,000 lamports)
-    const RESERVE_FOR_FEES = 1_000_000; // 0.001 SOL
-    const availableForBurn = Math.max(0, solBalanceAfterFees - RESERVE_FOR_FEES);
+  // --- Step 2: Buy Tokens with Collected SOL ---
+  let buySignature: string | undefined;
+  let tokensBought = BigInt(0);
 
-    if (availableForBurn === 0) {
-        const msg = "No SOL available to burn (insufficient balance after reserving for fees).";
+  try {
+    console.log("\n--- Buying Tokens ---");
+    
+    // Calculate SOL amount to use for buying (percentage of collected fees)
+    // We assume the wallet is funded with enough SOL for gas, so we use all collected fees
+    const availableForBuySol = feesCollectedSol;
+
+    if (availableForBuySol <= 0) {
+        const msg = "No SOL available to buy tokens (insufficient balance after reserving for fees).";
         console.log(msg);
         await postToApi("/api/burn/transaction", {
             status: "success",
             signature: feeSignature || "no-fees-collected",
             feeCollectionSignature: feeSignature,
-            amount: 0,
-            burnedSol: 0,
+            tokensBought: 0,
+            tokensBurned: 0,
             tokenAddress: tokenAddressString,
             wallet: payer.publicKey.toBase58()
         });
         return;
     }
 
-    // Calculate burn amount as percentage
-    const burnAmountLamports = Math.floor(availableForBurn * (burnPercentage / 100));
+    // Apply burn percentage to determine how much SOL to use for buying
+    const solAmountToBuySol = availableForBuySol * (burnPercentage / 100);
+    const solAmountToBuyLamports = Math.floor(solAmountToBuySol * LAMPORTS_PER_SOL);
+    console.log(`Using ${solAmountToBuySol.toFixed(6)} SOL (${burnPercentage}% of available) to buy tokens...`);
 
-    if (burnAmountLamports === 0) {
-        console.log("Calculated burn amount is 0. Skipping.");
+    // Initialize SDK and check token state
+    const sdk = new OnlinePumpSdk(connection);
+    const globalAccount = await sdk.fetchGlobal();
+    
+    // Get user's token account address
+    const userTokenAccount = await getAssociatedTokenAddress(tokenMint, payer.publicKey);
+    
+    // Check token balance before buy
+    let tokenBalanceBefore = BigInt(0);
+    try {
+      const accountBefore = await getAccount(connection, userTokenAccount);
+      tokenBalanceBefore = accountBefore.amount;
+    } catch (e) {
+      // Token account doesn't exist yet, balance is 0
+      console.log("Token account doesn't exist yet, will be created during buy");
+    }
+
+    // Fetch buy state (includes bonding curve and user token account info)
+    const { bondingCurveAccountInfo, bondingCurve, associatedUserAccountInfo } = 
+        await sdk.fetchBuyState(tokenMint, payer.publicKey, TOKEN_2022_PROGRAM_ID);
+    
+    // Check if bonding curve is complete (token graduated to Raydium)
+    if (bondingCurve.complete) {
+        console.log("Token has graduated to Raydium. Using Jupiter DEX for swap...");
+        
+        // Get user's token account address (with TOKEN_2022_PROGRAM_ID)
+        const userTokenAccountT22 = await getAssociatedTokenAddress(
+          tokenMint,
+          payer.publicKey,
+          false,
+          TOKEN_2022_PROGRAM_ID
+        );
+
+        // Check token balance before buy
+        let tokenBalanceBeforeJupiter = BigInt(0);
+        try {
+          const accountBefore = await getAccount(connection, userTokenAccountT22, "confirmed", TOKEN_2022_PROGRAM_ID);
+          tokenBalanceBeforeJupiter = accountBefore.amount;
+        } catch (e) {
+          // Token account doesn't exist yet, balance is 0
+          console.log("Token account doesn't exist yet, will be created during swap");
+        }
+
+        // Get quote from Jupiter
+        console.log("Fetching quote from Jupiter...");
+        const quoteResponse = await getJupiterQuote(
+          SOL_MINT.toBase58(),
+          tokenMint.toBase58(),
+          solAmountToBuyLamports,
+          100 // 1% slippage
+        );
+
+        console.log(`Quote received: ${quoteResponse.outAmount} tokens for ${solAmountToBuySol.toFixed(6)} SOL`);
+        console.log(`Price impact: ${quoteResponse.priceImpactPct}%`);
+
+        // Get swap transaction
+        console.log("Getting swap transaction from Jupiter...");
+        const swapResponse = await getJupiterSwapTransaction(quoteResponse, payer.publicKey.toBase58());
+
+        // Deserialize and sign the transaction
+        const swapTransactionBuf = Buffer.from(swapResponse.swapTransaction, "base64");
+        const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+        transaction.sign([payer]);
+
+        // Send transaction
+        console.log("Sending swap transaction...");
+        const rawTransaction = transaction.serialize();
+        const txid = await connection.sendRawTransaction(rawTransaction, {
+          skipPreflight: true,
+          maxRetries: 2,
+        });
+
+        // Confirm transaction
+        console.log("Confirming transaction...");
+        const confirmation = await connection.confirmTransaction(txid, "confirmed");
+
+        if (confirmation.value.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+        }
+
+        console.log(`Tokens bought successfully via Jupiter! Transaction: ${txid}`);
+        buySignature = txid;
+
+        // Get token balance after buy
+        const tokenAccountAfter = await getAccount(connection, userTokenAccountT22, "confirmed", TOKEN_2022_PROGRAM_ID);
+        tokensBought = tokenAccountAfter.amount - tokenBalanceBeforeJupiter;
+        console.log(`Tokens Bought: ${tokensBought.toString()}`);
+
+    } else {
+        // Token is still on bonding curve, use Pump.fun SDK
+        console.log("Token is on bonding curve. Using Pump.fun SDK...");
+        
+        // Use SDK's buy method which handles bonded tokens
+        const solAmountBN = new BN(solAmountToBuyLamports);
+        
+        // Calculate token amount - use a large number, actual amount determined by SOL
+        const tokenAmountBN = new BN(1000000000000);
+        
+        // Get buy instructions from PUMP_SDK singleton
+        const buyInstructions = await PUMP_SDK.buyInstructions({
+          global: globalAccount,
+          bondingCurveAccountInfo,
+          bondingCurve,
+          associatedUserAccountInfo,
+          mint: tokenMint,
+          user: payer.publicKey,
+          amount: tokenAmountBN,
+          solAmount: solAmountBN,
+          slippage: 10, // 10% slippage tolerance
+          tokenProgram: TOKEN_2022_PROGRAM_ID
+        });
+
+        console.log(`Generated ${buyInstructions.length} buy instructions`);
+
+        const buyTx = new Transaction().add(...buyInstructions);
+        const buySig = await sendAndConfirmTransaction(connection, buyTx, [payer]);
+        console.log(`Tokens bought successfully! Transaction: ${buySig}`);
+        buySignature = buySig;
+
+        // Get token balance after buy
+        const tokenAccountAfter = await getAccount(connection, userTokenAccount);
+        tokensBought = tokenAccountAfter.amount - tokenBalanceBefore;
+        console.log(`Tokens Bought: ${tokensBought.toString()}`);
+    }
+
+  } catch (buyError: any) {
+    console.error("Error buying tokens:", buyError);
+    await postToApi("/api/burn/transaction", {
+        status: "failed",
+        error: `Token purchase failed: ${buyError.message}`,
+        tokenAddress: tokenAddressString,
+        wallet: payer.publicKey.toBase58(),
+        feeCollectionSignature: feeSignature
+    });
+    process.exit(1);
+  }
+
+  // --- Step 3: Burn Purchased Tokens ---
+  try {
+    console.log("\n--- Burning Tokens ---");
+
+    if (tokensBought === BigInt(0)) {
+        console.log("No tokens to burn.");
         return;
     }
 
-    const burnAmountSol = burnAmountLamports / LAMPORTS_PER_SOL;
-    console.log(`Available SOL for Burn: ${(availableForBurn / LAMPORTS_PER_SOL).toFixed(6)} SOL`);
-    console.log(`Burning ${burnPercentage}% = ${burnAmountSol.toFixed(6)} SOL`);
-
-    // Create transfer instruction to burn address
-    const burnTransaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: payer.publicKey,
-        toPubkey: BURN_ADDRESS,
-        lamports: burnAmountLamports,
-      })
+    const userTokenAccount = await getAssociatedTokenAddress(
+      tokenMint,
+      payer.publicKey,
+      false,
+      TOKEN_2022_PROGRAM_ID
     );
 
-    console.log(`Sending ${burnAmountSol.toFixed(6)} SOL to burn address...`);
+    // Burn all purchased tokens
+    const burnTx = new Transaction().add(
+      createBurnInstruction(
+        userTokenAccount,
+        tokenMint,
+        payer.publicKey,
+        tokensBought,
+        [],
+        TOKEN_2022_PROGRAM_ID
+      )
+    );
 
-    const burnSignature = await sendAndConfirmTransaction(connection, burnTransaction, [payer]);
-    console.log(`Burn successful! Transaction signature: ${burnSignature}`);
+    console.log(`Burning ${tokensBought.toString()} tokens...`);
 
-    // Check final balance
-    const finalBalance = await connection.getBalance(payer.publicKey);
-    console.log(`Final SOL Balance: ${(finalBalance / LAMPORTS_PER_SOL).toFixed(6)} SOL`);
+    const burnSig = await sendAndConfirmTransaction(connection, burnTx, [payer]);
+    console.log(`Burn successful! Transaction signature: ${burnSig}`);
+
+    // Calculate metrics
+    const tokensBurnedFloat = Number(tokensBought) / 1e6; // Assuming 6 decimals
+    const solSpent = (solBalanceAfterFees - await connection.getBalance(payer.publicKey)) / LAMPORTS_PER_SOL;
+    const buyPricePerToken = tokensBurnedFloat > 0 ? solSpent / tokensBurnedFloat : 0;
 
     await postToApi("/api/burn/transaction", {
         status: "success",
-        signature: burnSignature,
         feeCollectionSignature: feeSignature,
-        amount: burnAmountLamports.toString(),
-        burnedSol: burnAmountSol.toFixed(6),
+        buySignature: buySignature,
+        burnSignature: burnSig,
+        tokensBought: tokensBought.toString(),
+        tokensBurned: tokensBought.toString(),
+        tokensBurnedFloat: tokensBurnedFloat.toFixed(6),
+        solSpent: solSpent.toFixed(6),
+        buyPricePerToken: buyPricePerToken.toFixed(10),
         tokenAddress: tokenAddressString,
         wallet: payer.publicKey.toBase58(),
         burnAddress: BURN_ADDRESS.toBase58()
     });
 
   } catch (error: any) {
-    console.error("Error burning SOL:", error);
+    console.error("Error burning tokens:", error);
     await postToApi("/api/burn/transaction", {
         status: "failed",
         error: error.message || String(error),
         tokenAddress: tokenAddressString,
-        wallet: payer.publicKey.toBase58()
+        wallet: payer.publicKey.toBase58(),
+        feeCollectionSignature: feeSignature,
+        buySignature: buySignature
     });
     process.exit(1);
   }

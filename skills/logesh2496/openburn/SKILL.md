@@ -1,6 +1,6 @@
 ---
 name: openburn
-description: Automates collecting Pump.fun creator fees and burning a percentage of the collected SOL. Use this skill when the user wants to set up a regular fee collection and SOL burning schedule for their Pump.fun tokens.
+description: Automates collecting Pump.fun creator fees, buying tokens with collected SOL, and burning those tokens (buyback and burn). Use this skill when the user wants to set up a regular buyback and burn schedule for their Pump.fun tokens.
 metadata:
   {
     "openclaw":
@@ -8,12 +8,14 @@ metadata:
         "emoji": "🔥",
         "requires":
           {
-            "modules": ["@solana/web3.js", "tsx", "dotenv"],
+            "modules":
+              ["@solana/web3.js", "@solana/spl-token", "tsx", "dotenv"],
             "binaries": ["node", "pnpm"],
             "env":
               [
                 "CREATOR_WALLET_PRIVATE_KEY",
                 "PUMP_FUN_TOKEN_ADDRESS",
+                "JUPITER_API_KEY",
                 "BURN_PERCENTAGE",
                 "MIN_FEE_TO_BURN",
               ],
@@ -24,7 +26,7 @@ metadata:
               "id": "pnpm-solana",
               "kind": "npm",
               "module": "@solana/web3.js",
-              "cmd": "pnpm add @solana/web3.js @pump-fun/pump-sdk tsx dotenv -w",
+              "cmd": "pnpm add @solana/web3.js @solana/spl-token @pump-fun/pump-sdk tsx dotenv -w",
               "label": "Install dependencies",
             },
           ],
@@ -34,12 +36,13 @@ metadata:
 
 # Openburn
 
-This skill helps users automate the collection of creator fees and burning of SOL on Pump.fun.
+This skill helps users automate the buyback and burn mechanism for Pump.fun tokens.
 
 ## How It Works
 
 1. **Collect Creator Fees**: The script collects trading fees (in SOL) from both the bonding curve and AMM pools
-2. **Burn SOL**: A configurable percentage of the collected SOL is burned by transferring it to Solana's incinerator address (`1nc1nerator11111111111111111111111111111111`)
+2. **Buy Tokens**: Uses the collected SOL to purchase tokens from the bonding curve
+3. **Burn Tokens**: Burns the purchased tokens by sending them to Solana's incinerator address, creating buying pressure and driving the token price up
 
 ## Setup Instructions
 
@@ -47,7 +50,8 @@ This skill helps users automate the collection of creator fees and burning of SO
     Ask the user for the following information:
     - `PUMP_FUN_TOKEN_ADDRESS` (The token address on Pump.fun)
     - `CREATOR_WALLET_PRIVATE_KEY` (The private key of the wallet to burn from)
-    - `BURN_PERCENTAGE` (Percentage of SOL to burn after fee collection, default: 80)
+    - `JUPITER_API_KEY` (Get from [Jupiter Portal](https://portal.jup.ag/api-keys) - **Only needed if token is graduated/off-curve**)
+    - `BURN_PERCENTAGE` (Percentage of collected SOL to use for buying tokens, default: 80)
     - `MIN_FEE_TO_BURN` (Minimum SOL fees required to proceed with burn, default: 0.1)
 
     > [!IMPORTANT]
@@ -63,6 +67,7 @@ This skill helps users automate the collection of creator fees and burning of SO
     ```env
     PUMP_FUN_TOKEN_ADDRESS=...
     CREATOR_WALLET_PRIVATE_KEY=...
+    JUPITER_API_KEY=...
     BURN_PERCENTAGE=80
     MIN_FEE_TO_BURN=0.1
     ```
