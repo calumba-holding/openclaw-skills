@@ -1,6 +1,6 @@
 ---
 name: moltflow-ai
-description: "AI-powered WhatsApp features: auto-replies, voice transcription, RAG knowledge base, and style profiles. Use when: ai reply, transcribe voice, knowledge base, upload document, train style, learn mode."
+description: "AI-powered WhatsApp features: auto-replies, voice transcription, RAG knowledge base, and style profiles. Use when: ai reply, transcribe voice, knowledge base, upload document, build style, learn mode."
 source: "MoltFlow Team"
 version: "2.11.8"
 risk: safe
@@ -23,7 +23,7 @@ AI-powered capabilities for WhatsApp automation: voice transcription, RAG knowle
 - "Transcribe a voice message" or "convert audio to text"
 - "Upload a document to knowledge base" or "ingest PDF"
 - "Search knowledge base" or "find in documents"
-- "Train style profile" or "learn my writing style"
+- "Build style profile" or "learn my writing style"
 - "Generate an AI reply" or "auto-reply to customer"
 - "Preview AI response" or "test reply generation"
 - "List knowledge sources" or "delete document"
@@ -226,13 +226,13 @@ Configure AI writing style profiles scoped to individual chats or as a general p
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/ai/style/train` | Start training a style profile |
-| GET | `/ai/style/status/{task_id}` | Check training status |
+| POST | `/ai/style/train` | Start building a style profile |
+| GET | `/ai/style/status/{task_id}` | Check build status |
 | GET | `/ai/style/profile` | Get a style profile |
 | GET | `/ai/style/profiles` | List all style profiles |
 | DELETE | `/ai/style/profile/{profile_id}` | Delete a style profile |
 
-### Train Style Profile
+### Build Style Profile
 
 **POST** `/ai/style/train`
 
@@ -247,11 +247,11 @@ Configure AI writing style profiles scoped to individual chats or as a general p
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `contact_id` | string | No | Legacy — use `wa_chat_id` instead |
-| `session_id` | UUID | No | Session to scope training to |
-| `wa_chat_id` | string | No | Chat to scope training to (WhatsApp JID). Omit for general profile |
+| `session_id` | UUID | No | Session to scope the build to |
+| `wa_chat_id` | string | No | Chat to scope the build to (WhatsApp JID). Omit for general profile |
 | `name` | string | No | Profile name (e.g., "Sales", "Support", "Family") |
 
-**Note:** Omit both `session_id` and `wa_chat_id` to train a general profile from all messages.
+**Note:** Omit both `session_id` and `wa_chat_id` to build a general profile from all conversations.
 
 **Response** `200 OK`:
 
@@ -264,7 +264,7 @@ Configure AI writing style profiles scoped to individual chats or as a general p
 }
 ```
 
-Training runs asynchronously. Check progress with the status endpoint.
+The build runs asynchronously. Check progress with the status endpoint.
 
 ### Get Style Profile
 
@@ -368,7 +368,7 @@ Generate intelligent reply suggestions using RAG context and style profiles.
 | `contact_id` | string | required | WhatsApp JID of the contact |
 | `context` | string | required | Customer question or prompt for reply generation (max 2000 chars) |
 | `use_rag` | boolean | `true` | Include knowledge base context in generation |
-| `apply_style` | boolean | `true` | Apply trained style profile to response |
+| `apply_style` | boolean | `true` | Apply style profile to response |
 | `profile_id` | UUID | `null` | Specific style profile to use (skips auto-selection cascade) |
 | `session_id` | UUID | `null` | Session for cascade profile resolution |
 | `approved` | boolean | `false` | Set `true` to confirm an approval-required reply |
@@ -431,7 +431,7 @@ curl -X POST https://apiv2.waiflow.app/api/v2/ai/generate-reply \
   }'
 ```
 
-### Train a style profile
+### Build a style profile
 
 ```bash
 curl -X POST https://apiv2.waiflow.app/api/v2/ai/style/train \

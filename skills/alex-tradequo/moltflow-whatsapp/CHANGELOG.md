@@ -24,7 +24,7 @@ All notable changes to the **MoltFlow Skills** package are documented here.
 ## v2.11.0 (2026-02-15)
 
 ### Added
-- **ERC-8004 Agent Registration** — MoltFlow registered as Agent #25248 on Ethereum mainnet
+- **ERC-8004 Agent Registration** — MoltFlow registered as Agent #25477 on Ethereum mainnet
 - ERC-8004 section in SKILL.md with registry details and discovery URLs
 - New keywords: `erc8004`, `ethereum-agent`, `on-chain-agent`
 
@@ -161,7 +161,7 @@ All notable changes to the **MoltFlow Skills** package are documented here.
 
 - **All-in-One WhatsApp API** — Sessions, messaging, groups, labels, webhooks, AI replies, reviews, and A2A unified under a single skill.
 - **Agent-to-Agent Protocol** — JSON-RPC 2.0 with end-to-end encryption.
-- **AI That Learns Your Voice** — Train style profiles from message history. Auto-replies sound like you.
+- **AI That Learns Your Voice** — Build style profiles from conversation context. Auto-replies sound like you.
 - Full API reference with curl examples across 6 modules.
 
 ---

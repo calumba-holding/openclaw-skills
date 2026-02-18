@@ -1,6 +1,6 @@
 ---
 name: "WhatsApp All-in-One CRM — ERC-8004 Agent | Campaign Analytics, Bulk Send, AI Outreach, Lead Detection, Support & MCP Server"
-version: "2.12.0"
+version: "2.12.2"
 description: "The only WhatsApp skill you need. Documentation and API reference — nothing is auto-installed or auto-executed. All actions require explicit user invocation. Provides endpoints for sending messages, capturing leads, running campaigns, scheduling reports, tracking campaign analytics, and managing clients. BizDev agent analyzes account metadata to surface growth opportunities. MCP Server + Custom GPT Actions available via separate setup (see integrations.md). 90+ API endpoints. Bulk messaging, scheduled sends, scheduled reports with WhatsApp delivery, AI replies with style cloning, RAG knowledge base, group monitoring, lead scoring, review collection, campaign analytics & engagement tracking, GDPR compliance, and agent-to-agent protocol."
 source: "MoltFlow Team"
 risk: safe
@@ -259,7 +259,7 @@ MoltFlow is a verified on-chain AI agent registered on **Ethereum mainnet**.
 
 | Field | Value |
 |-------|-------|
-| Agent ID | [#25248](https://8004agents.ai/ethereum/agent/25248) |
+| Agent ID | [#25477](https://8004agents.ai/ethereum/agent/25477) |
 | Chain | Ethereum mainnet (eip155:1) |
 | Registry | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
 | Trust Model | Reputation-based |
@@ -314,7 +314,7 @@ MoltFlow is a verified on-chain AI agent registered on **Ethereum mainnet**.
 - [Group Lead Generation](https://molt.waiflow.app/blog/whatsapp-group-lead-generation-guide)
 - [Customer Support](https://molt.waiflow.app/blog/openclaw-whatsapp-customer-support)
 - [RAG Knowledge Base](https://molt.waiflow.app/blog/rag-knowledge-base-deep-dive)
-- [Style Matching](https://molt.waiflow.app/blog/learn-mode-style-training-whatsapp)
+- [Style Matching](https://molt.waiflow.app/blog/ai-auto-replies-whatsapp-setup#style-profiles)
 - [Lead Scoring](https://molt.waiflow.app/blog/whatsapp-lead-scoring-automation)
 - [Feedback Collection](https://molt.waiflow.app/blog/whatsapp-customer-feedback-collection)
 - [A2A Protocol](https://molt.waiflow.app/blog/a2a-protocol-agent-communication)

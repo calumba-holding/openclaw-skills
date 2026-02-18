@@ -1,13 +1,18 @@
 {
   "owner": "alex-tradequo",
   "slug": "moltflow-whatsapp",
-  "displayName": "MoltFlow WhatsApp — ERC-8004 Agent | Lead Mining, AI Outreach, Bulk Campaigns & MCP",
+  "displayName": "WhatsApp All-in-One CRM — ERC-8004 Agent | Campaign Analytics, Bulk Send, AI Outreach, Lead Detection, Support & MCP Server",
   "latest": {
-    "version": "2.12.0",
-    "publishedAt": 1771314526677,
-    "commit": "https://github.com/openclaw/skills/commit/1056891578f067379ffcd531b8d14de8b720cf85"
+    "version": "2.12.2",
+    "publishedAt": 1771318536036,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.12.0",
+      "publishedAt": 1771314526677,
+      "commit": "https://github.com/openclaw/skills/commit/1056891578f067379ffcd531b8d14de8b720cf85"
+    },
     {
       "version": "2.11.8",
       "publishedAt": 1771237850028,
