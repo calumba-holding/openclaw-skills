@@ -3,11 +3,16 @@
   "slug": "startup-0to1",
   "displayName": "Raon Os",
   "latest": {
-    "version": "0.7.12",
-    "publishedAt": 1771428335672,
-    "commit": "https://github.com/openclaw/skills/commit/5b3aed138352fdb6a68253fcc8b58a87fe75b853"
+    "version": "0.7.13",
+    "publishedAt": 1771429345244,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.7.12",
+      "publishedAt": 1771428335672,
+      "commit": "https://github.com/openclaw/skills/commit/5b3aed138352fdb6a68253fcc8b58a87fe75b853"
+    },
     {
       "version": "0.7.9",
       "publishedAt": 1771414089542,
