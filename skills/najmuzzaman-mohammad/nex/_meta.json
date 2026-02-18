@@ -3,11 +3,16 @@
   "slug": "nex",
   "displayName": "Nex.ai",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1771162730868,
-    "commit": "https://github.com/openclaw/skills/commit/6f94c77dc82e5b5490ee03acc08e47bd45a4b4ca"
+    "version": "1.0.5",
+    "publishedAt": 1771358923549,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1771162730868,
+      "commit": "https://github.com/openclaw/skills/commit/6f94c77dc82e5b5490ee03acc08e47bd45a4b4ca"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771158200341,

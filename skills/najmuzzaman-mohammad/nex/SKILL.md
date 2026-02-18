@@ -1,12 +1,12 @@
 ---
 name: nex
-description: Access your Nex CRM - manage records, lists, tasks, notes, query your context graph, and receive real-time insights
+description: Share real-time organizational context with your AI agent — query your context graph, manage records, and receive live insights
 metadata: {"clawdbot": {"emoji": "\U0001F4CA", "homepage": "https://github.com/nex-crm/nex-as-a-skill", "primaryEnv": "NEX_API_KEY", "requires": {"env": ["NEX_API_KEY"], "bins": ["curl", "jq", "bash"]}, "files": ["scripts/nex-api.sh"]}}
 ---
 
-# Nex - CRM & Context Graph
+# Nex - Real-time Organizational Context for AI Agents
 
-Nex gives your AI agent full CRM access: create and manage records, define custom schemas, build relationships, track tasks and notes, query your context graph, process conversations, and receive real-time insights.
+Nex shares real-time organizational context with your AI agent: query your context graph, process conversations, receive live insights, and manage the underlying records, schemas, relationships, tasks, and notes.
 
 ## Setup
 
@@ -31,16 +31,21 @@ Nex gives your AI agent full CRM access: create and manage records, define custo
 
 - All API calls are routed through a validated wrapper script (`scripts/nex-api.sh`)
 - The wrapper validates that all requests go to `https://app.nex.ai/api/developers` only
-- No user input is interpolated into shell command strings
 - API key is read from `$NEX_API_KEY` environment variable (never from prompts)
-- JSON request bodies are passed via stdin to avoid shell injection
+- JSON request bodies are passed via stdin (`printf '%s'` pipe) to avoid shell injection
 - The wrapper uses `set -euo pipefail` for safe shell execution
+
+**IMPORTANT — Safe command construction**:
+- **NEVER** interpolate user-supplied text directly into the shell command string
+- **ALWAYS** use `printf '%s' '{...}'` to pipe JSON via stdin — `printf '%s'` does not interpret escape sequences or variables in the format argument
+- If user input must appear in a JSON body, construct the JSON object using jq: `jq -n --arg q "user text" '{query: $q}'`
+- The examples below use hardcoded JSON for clarity — when building commands with dynamic values, always use the jq construction pattern above
 
 ## External Endpoints
 
 | URL Pattern | Methods | Data Sent |
 |-------------|---------|-----------|
-| `https://app.nex.ai/api/developers/v1/*` | GET, POST, PUT, PATCH, DELETE | CRM records, queries, text content |
+| `https://app.nex.ai/api/developers/v1/*` | GET, POST, PUT, PATCH, DELETE | Context queries, records, insights, text content |
 
 ## How to Make API Calls
 
@@ -61,16 +66,16 @@ All API calls go through the wrapper script at `{baseDir}/scripts/nex-api.sh`:
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"query\":\"What do I know about John?\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/ask",
+  "command": "printf '%s' '{\"query\":\"What do I know about John?\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/ask",
   "timeout": 120
 }
 ```
 
-**GET with jq filter** (3rd argument):
+**GET with jq post-processing** (pipe output through jq):
 ```json
 {
   "tool": "exec",
-  "command": "bash {baseDir}/scripts/nex-api.sh GET '/v1/insights?last=1h' '[.insights[] | {type, content}]'",
+  "command": "bash {baseDir}/scripts/nex-api.sh GET '/v1/insights?last=1h' | jq '[.insights[] | {type, content}]'",
   "timeout": 120
 }
 ```
@@ -88,18 +93,18 @@ All API calls go through the wrapper script at `{baseDir}/scripts/nex-api.sh`:
 
 Nex API responses (especially Insights and List Records) can be 10KB-100KB+. The exec tool may truncate output. **You MUST handle this properly.**
 
-**Use the wrapper's jq filter (3rd arg)** to extract only what you need:
+**Pipe output through jq** to extract only what you need:
 ```json
 {
   "tool": "exec",
-  "command": "bash {baseDir}/scripts/nex-api.sh GET '/v1/insights?last=1h' '[.insights[] | {type, content, confidence_level, who: .target.hint, evidence: [.evidence[].excerpt]}]'",
+  "command": "bash {baseDir}/scripts/nex-api.sh GET '/v1/insights?last=1h' | jq '[.insights[] | {type, content, confidence_level, who: .target.hint}]'",
   "timeout": 120
 }
 ```
 
 **Rules for processing API output**:
-1. **Validate JSON before parsing.** If the response doesn't start with `{` or `[`, the output may be truncated — retry once with a narrower jq filter.
-2. **Use jq filters to keep responses small.** Extract only the fields you need rather than fetching full payloads.
+1. **Validate JSON before parsing.** If the response doesn't start with `{` or `[`, the output may be truncated — retry with a smaller page size or time window.
+2. **Use jq to keep responses small.** Pipe output through jq to extract only the fields you need.
 3. **Present insights to the user for review.** Summarize what was returned and let the user decide which insights to act on.
 
 ## API Scopes
@@ -162,7 +167,7 @@ Create a new custom object type.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"name\":\"Project\",\"name_plural\":\"Projects\",\"slug\":\"project\",\"description\":\"Project tracker\",\"type\":\"custom\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects",
+  "command": "printf '%s' '{\"name\":\"Project\",\"name_plural\":\"Projects\",\"slug\":\"project\",\"description\":\"Project tracker\",\"type\":\"custom\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects",
   "timeout": 120
 }
 ```
@@ -246,7 +251,7 @@ Update an existing object definition.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"name\":\"Updated Project\",\"description\":\"Updated description\"}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/objects/project",
+  "command": "printf '%s' '{\"name\":\"Updated Project\",\"description\":\"Updated description\"}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/objects/project",
   "timeout": 120
 }
 ```
@@ -285,7 +290,7 @@ Add a new attribute to an object type.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"name\":\"Status\",\"slug\":\"status\",\"type\":\"select\",\"description\":\"Current status\",\"options\":{\"is_required\":true,\"select_options\":[{\"name\":\"Open\"},{\"name\":\"In Progress\"},{\"name\":\"Done\"}]}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/project/attributes",
+  "command": "printf '%s' '{\"name\":\"Status\",\"slug\":\"status\",\"type\":\"select\",\"description\":\"Current status\",\"options\":{\"is_required\":true,\"select_options\":[{\"name\":\"Open\"},{\"name\":\"In Progress\"},{\"name\":\"Done\"}]}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/project/attributes",
   "timeout": 120
 }
 ```
@@ -307,7 +312,7 @@ Update an existing attribute definition.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"name\":\"Updated Status\",\"options\":{\"is_required\":false}}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/objects/project/attributes/456",
+  "command": "printf '%s' '{\"name\":\"Updated Status\",\"options\":{\"is_required\":false}}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/objects/project/attributes/456",
   "timeout": 120
 }
 ```
@@ -346,7 +351,7 @@ Create a new record for an object type.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"attributes\":{\"name\":{\"first_name\":\"Jane\",\"last_name\":\"Doe\"},\"email\":\"jane@example.com\",\"company\":\"Acme Corp\"}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/person",
+  "command": "printf '%s' '{\"attributes\":{\"name\":{\"first_name\":\"Jane\",\"last_name\":\"Doe\"},\"email\":\"jane@example.com\",\"company\":\"Acme Corp\"}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/person",
   "timeout": 120
 }
 ```
@@ -382,7 +387,7 @@ Create a record if it doesn't exist, or update it if a match is found on the spe
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"matching_attribute\":\"email\",\"attributes\":{\"name\":\"Jane Doe\",\"email\":\"jane@example.com\",\"job_title\":\"VP of Sales\"}}' | bash {baseDir}/scripts/nex-api.sh PUT /v1/objects/person",
+  "command": "printf '%s' '{\"matching_attribute\":\"email\",\"attributes\":{\"name\":\"Jane Doe\",\"email\":\"jane@example.com\",\"job_title\":\"VP of Sales\"}}' | bash {baseDir}/scripts/nex-api.sh PUT /v1/objects/person",
   "timeout": 120
 }
 ```
@@ -415,7 +420,7 @@ Update specific attributes on an existing record. Only the provided attributes a
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"attributes\":{\"job_title\":\"CTO\",\"phone\":\"+1-555-0123\"}}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/records/789",
+  "command": "printf '%s' '{\"attributes\":{\"job_title\":\"CTO\",\"phone\":\"+1-555-0123\"}}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/records/789",
   "timeout": 120
 }
 ```
@@ -451,7 +456,7 @@ List records for an object type with optional filtering, sorting, and pagination
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"attributes\":\"all\",\"limit\":10,\"offset\":0,\"sort\":{\"attribute\":\"updated_at\",\"direction\":\"desc\"}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/person/records",
+  "command": "printf '%s' '{\"attributes\":\"all\",\"limit\":10,\"offset\":0,\"sort\":{\"attribute\":\"updated_at\",\"direction\":\"desc\"}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/person/records",
   "timeout": 120
 }
 ```
@@ -540,7 +545,7 @@ Define a relationship type between two object types.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"type\":\"one_to_many\",\"entity_definition_1_id\":\"123\",\"entity_definition_2_id\":\"456\",\"entity_1_to_2_predicate\":\"has\",\"entity_2_to_1_predicate\":\"belongs to\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/relationships",
+  "command": "printf '%s' '{\"type\":\"one_to_many\",\"entity_definition_1_id\":\"123\",\"entity_definition_2_id\":\"456\",\"entity_1_to_2_predicate\":\"has\",\"entity_2_to_1_predicate\":\"belongs to\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/relationships",
   "timeout": 120
 }
 ```
@@ -605,7 +610,7 @@ Link two records using an existing relationship definition.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"definition_id\":\"789\",\"entity_1_id\":\"1001\",\"entity_2_id\":\"2002\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/records/1001/relationships",
+  "command": "printf '%s' '{\"definition_id\":\"789\",\"entity_1_id\":\"1001\",\"entity_2_id\":\"2002\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/records/1001/relationships",
   "timeout": 120
 }
 ```
@@ -681,7 +686,7 @@ Create a new list under an object type.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"name\":\"VIP Contacts\",\"slug\":\"vip-contacts\",\"description\":\"High-value contacts\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/contact/lists",
+  "command": "printf '%s' '{\"name\":\"VIP Contacts\",\"slug\":\"vip-contacts\",\"description\":\"High-value contacts\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/objects/contact/lists",
   "timeout": 120
 }
 ```
@@ -730,7 +735,7 @@ Add an existing record to a list.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"parent_id\":\"789\",\"attributes\":{\"status\":\"active\"}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/lists/456",
+  "command": "printf '%s' '{\"parent_id\":\"789\",\"attributes\":{\"status\":\"active\"}}' | bash {baseDir}/scripts/nex-api.sh POST /v1/lists/456",
   "timeout": 120
 }
 ```
@@ -745,7 +750,7 @@ Add a record to a list, or update its list-specific attributes if already a memb
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"parent_id\":\"789\",\"attributes\":{\"priority\":\"high\"}}' | bash {baseDir}/scripts/nex-api.sh PUT /v1/lists/456",
+  "command": "printf '%s' '{\"parent_id\":\"789\",\"attributes\":{\"priority\":\"high\"}}' | bash {baseDir}/scripts/nex-api.sh PUT /v1/lists/456",
   "timeout": 120
 }
 ```
@@ -762,7 +767,7 @@ Get paginated records from a specific list.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"attributes\":\"all\",\"limit\":20}' | bash {baseDir}/scripts/nex-api.sh POST /v1/lists/456/records",
+  "command": "printf '%s' '{\"attributes\":\"all\",\"limit\":20}' | bash {baseDir}/scripts/nex-api.sh POST /v1/lists/456/records",
   "timeout": 120
 }
 ```
@@ -777,7 +782,7 @@ Update list-specific attributes for a record within a list.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"attributes\":{\"status\":\"closed-won\"}}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/lists/456/records/789",
+  "command": "printf '%s' '{\"attributes\":{\"status\":\"closed-won\"}}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/lists/456/records/789",
   "timeout": 120
 }
 ```
@@ -821,7 +826,7 @@ Create a new task, optionally linked to records and assigned to users.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"title\":\"Follow up with client\",\"description\":\"Discuss contract renewal\",\"priority\":\"high\",\"due_date\":\"2026-03-01T09:00:00Z\",\"entity_ids\":[\"1001\",\"1002\"],\"assignee_ids\":[\"50\"]}' | bash {baseDir}/scripts/nex-api.sh POST /v1/tasks",
+  "command": "printf '%s' '{\"title\":\"Follow up with client\",\"description\":\"Discuss contract renewal\",\"priority\":\"high\",\"due_date\":\"2026-03-01T09:00:00Z\",\"entity_ids\":[\"1001\",\"1002\"],\"assignee_ids\":[\"50\"]}' | bash {baseDir}/scripts/nex-api.sh POST /v1/tasks",
   "timeout": 120
 }
 ```
@@ -912,7 +917,7 @@ Update a task's fields. All fields are optional.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"priority\":\"urgent\",\"is_completed\":true}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/tasks/800",
+  "command": "printf '%s' '{\"priority\":\"urgent\",\"is_completed\":true}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/tasks/800",
   "timeout": 120
 }
 ```
@@ -953,7 +958,7 @@ Create a new note, optionally linked to a record.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"title\":\"Meeting notes\",\"content\":\"Discussed Q3 roadmap...\",\"entity_id\":\"1001\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/notes",
+  "command": "printf '%s' '{\"title\":\"Meeting notes\",\"content\":\"Discussed Q3 roadmap...\",\"entity_id\":\"1001\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/notes",
   "timeout": 120
 }
 ```
@@ -1024,7 +1029,7 @@ Update a note's fields.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"title\":\"Updated meeting notes\",\"content\":\"Added action items...\"}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/notes/900",
+  "command": "printf '%s' '{\"title\":\"Updated meeting notes\",\"content\":\"Added action items...\"}' | bash {baseDir}/scripts/nex-api.sh PATCH /v1/notes/900",
   "timeout": 120
 }
 ```
@@ -1063,7 +1068,7 @@ Search records by name across all object types.
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"query\":\"john doe\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/search",
+  "command": "printf '%s' '{\"query\":\"john doe\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/search",
   "timeout": 120
 }
 ```
@@ -1111,7 +1116,7 @@ Use this when you need to recall information about contacts, companies, or relat
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"query\":\"What do I know about John Smith?\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/ask",
+  "command": "printf '%s' '{\"query\":\"What do I know about John Smith?\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/ask",
   "timeout": 120
 }
 ```
@@ -1151,7 +1156,7 @@ Use this to ingest new information from conversations, meeting notes, or other t
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"content\":\"Had a great call with John Smith from Acme Corp.\",\"context\":\"Sales call notes\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/text",
+  "command": "printf '%s' '{\"content\":\"Had a great call with John Smith from Acme Corp.\",\"context\":\"Sales call notes\"}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/text",
   "timeout": 120
 }
 ```
@@ -1216,7 +1221,7 @@ Check the processing status and results after calling ProcessText.
 Use natural language to search your context graph and generate a curated list of contacts or companies. **Use this when you know the object type** (contact or company) and want AI to filter and rank matches. If you're unsure which object type applies or the question is open-ended, use the **Ask API** instead.
 
 **Endpoint**: `POST /v1/context/list/jobs`
-**Scope**: `record.read`
+**Scope**: `list.member.write`
 
 **Request body**:
 - `query` (required) -- Natural language search query
@@ -1227,7 +1232,7 @@ Use natural language to search your context graph and generate a curated list of
 ```json
 {
   "tool": "exec",
-  "command": "echo '{\"query\":\"high priority contacts in enterprise deals\",\"object_type\":\"contact\",\"limit\":20,\"include_attributes\":true}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/list/jobs",
+  "command": "printf '%s' '{\"query\":\"high priority contacts in enterprise deals\",\"object_type\":\"contact\",\"limit\":20,\"include_attributes\":true}' | bash {baseDir}/scripts/nex-api.sh POST /v1/context/list/jobs",
   "timeout": 120
 }
 ```
@@ -1247,7 +1252,7 @@ Use natural language to search your context graph and generate a curated list of
 Check status and results of an AI list generation job. Poll until `status` is `completed` or `failed`.
 
 **Endpoint**: `GET /v1/context/list/jobs/{job_id}`
-**Scope**: `record.read`
+**Scope**: `list.member.read`
 
 **Query Parameters**:
 - `include_attributes` (boolean, optional) -- Include full attributes for each entity
@@ -1331,11 +1336,11 @@ Between two dates:
 }
 ```
 
-**Recommended: Use jq filter (3rd arg) to extract a summary** (responses can be 10-100KB+):
+**Recommended: Pipe through jq to extract a summary** (responses can be 10-100KB+):
 ```json
 {
   "tool": "exec",
-  "command": "bash {baseDir}/scripts/nex-api.sh GET '/v1/insights?last=1h' '{insight_count: (.insights | length), insights: [.insights[] | {type, content, confidence_level, who: .target.hint, entity_type: .target.entity_type}]}'",
+  "command": "bash {baseDir}/scripts/nex-api.sh GET '/v1/insights?last=1h' | jq '{insight_count: (.insights | length), insights: [.insights[] | {type, content, confidence_level, who: .target.hint, entity_type: .target.entity_type}]}'",
   "timeout": 120
 }
 ```
@@ -1425,7 +1430,7 @@ Receive insights as they are discovered in real time.
 - Before responding to a message, query for context about the person
 - After a conversation, process the transcript to update the context graph
 - When asked about relationships or history with contacts/companies
-- Creating or updating CRM records from conversation context
+- Creating or updating records from conversation context
 - Building targeted lists from your contact database
 - Looking up record details before a meeting
 - Creating tasks and notes to track follow-ups
@@ -1435,4 +1440,4 @@ Receive insights as they are discovered in real time.
 **Not for**:
 - General knowledge questions (use web search)
 - Real-time calendar/scheduling (use calendar tools)
-- Direct CRM data entry that requires the full Nex UI
+- Bulk data entry that requires the full Nex UI
