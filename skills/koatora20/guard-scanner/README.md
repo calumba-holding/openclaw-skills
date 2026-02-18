@@ -2,15 +2,23 @@
   <h1 align="center">🛡️ guard-scanner</h1>
   <p align="center">
     <strong>Static security scanner for AI agent skills</strong><br>
-    Detect prompt injection, credential theft, exfiltration, identity hijacking, and 14 more threat categories.
+    Detect prompt injection, credential theft, exfiltration, identity hijacking, and 16 more threat categories.<br>
+    <sub>🆕 Plugin Hook v2.0 — <strong>actual blocking</strong> via <code>block</code>/<code>blockReason</code> API</sub>
   </p>
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
     <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen" alt="Node.js 18+">
     <img src="https://img.shields.io/badge/dependencies-0-success" alt="Zero Dependencies">
-    <img src="https://img.shields.io/badge/tests-45%2F45-brightgreen" alt="Tests Passing">
-    <img src="https://img.shields.io/badge/patterns-170%2B-orange" alt="170+ Patterns">
+    <img src="https://img.shields.io/badge/tests-91%2F91-brightgreen" alt="Tests Passing">
+    <img src="https://img.shields.io/badge/patterns-186-orange" alt="186 Patterns">
+    <img src="https://img.shields.io/badge/categories-20-blueviolet" alt="20 Categories">
   </p>
+</p>
+
+<p align="center">
+  <img src="docs/html-report-preview.png" alt="guard-scanner HTML Report Preview" width="800">
+  <br>
+  <em>Dark Glassmorphism Dashboard — Risk gauges, severity distribution, interactive skill cards</em>
 </p>
 
 ---
@@ -32,11 +40,14 @@ The AI agent skill ecosystem has the same supply-chain security problem that npm
 
 | Feature | Description |
 |---|---|
-| **17 Threat Categories** | Snyk ToxicSkills taxonomy + OWASP MCP Top 10 + Identity Hijacking |
-| **170+ Detection Patterns** | Regex-based static analysis covering code, docs, and data files |
+| **20 Threat Categories** | Snyk ToxicSkills + OWASP MCP Top 10 + Identity Hijacking + Sandbox/Complexity/Config |
+| **186 Detection Patterns** | Regex-based static analysis covering code, docs, and data files |
 | **IoC Database** | Known malicious IPs, domains, URLs, usernames, and typosquat names |
 | **Data Flow Analysis** | Lightweight JS analysis: secret reads → network calls → exec chains |
 | **Cross-File Analysis** | Phantom references, base64 fragment assembly, multi-file exfil detection |
+| **Manifest Validation** | SKILL.md frontmatter analysis for dangerous capabilities |
+| **Code Complexity** | File length, nesting depth, eval/exec density analysis |
+| **Config Impact** | Detects modifications to OpenClaw configuration files |
 | **Shannon Entropy** | High-entropy string detection for leaked secrets and API keys |
 | **Dependency Chain Scan** | Risky packages, lifecycle scripts, wildcard versions, git dependencies |
 | **4 Output Formats** | Terminal (with colors), JSON, [SARIF 2.1.0](https://sarifweb.azurewebsites.net), HTML dashboard |
@@ -63,6 +74,18 @@ npx guard-scanner ./skills/ --strict
 npx guard-scanner ./skills/ --verbose --check-deps --json --sarif --html
 ```
 
+## OpenClaw Recommended Setup (short)
+
+```bash
+# 1) Pre-install / pre-update static gate
+npx guard-scanner ~/.openclaw/workspace/skills --self-exclude --verbose
+
+# 2) Runtime guard — Plugin Hook version (blocks dangerous calls!)
+cp hooks/guard-scanner/plugin.ts ~/.openclaw/plugins/guard-scanner-runtime.ts
+```
+
+> **🆕 v2.0 Plugin Hook** — Uses OpenClaw's native `block`/`blockReason` API to actually prevent dangerous tool calls. Supports 3 modes: `monitor` (log only), `enforce` (block CRITICAL), `strict` (block HIGH + CRITICAL).
+
 ### Installation (Optional)
 
 ```bash
@@ -76,15 +99,17 @@ npx guard-scanner ./skills/
 ### As an OpenClaw Skill
 
 ```bash
-openclaw skill install guard-scanner
+clawhub install guard-scanner
 guard-scanner ~/.openclaw/workspace/skills/ --self-exclude --verbose
 ```
+
+> **🆕 Plugin Hook version** (`plugin.ts`) uses the `before_tool_call` Plugin Hook API with `block`/`blockReason` — **detections are actually blocked**. The legacy Internal Hook version (`handler.ts`) is still available for backward compatibility but can only warn.
 
 ---
 
 ## Threat Categories
 
-guard-scanner covers **17 threat categories** derived from three taxonomies:
+guard-scanner covers **20 threat categories** derived from four sources:
 
 | # | Category | Based On | Severity | What It Detects |
 |---|----------|----------|----------|----------------|
@@ -105,8 +130,11 @@ guard-scanner covers **17 threat categories** derived from three taxonomies:
 | 15 | **CVE Patterns** | CVE Database | CRITICAL | CVE-2026-25253 `gatewayUrl` injection, sandbox disabling, xattr Gatekeeper bypass, WebSocket origin bypass |
 | 16 | **MCP Security** | OWASP MCP Top 10 | CRITICAL | Tool poisoning (`<IMPORTANT>`), schema poisoning (malicious defaults), token leaks, shadow server registration, SSRF metadata endpoints |
 | 17 | **Identity Hijacking** | Original Research | CRITICAL | SOUL.md/IDENTITY.md overwrite/redirect/sed/echo/Python/Node.js writes, persona swap instructions, memory wipe, name override |
+| 18 | **Sandbox Validation** | v1.1 | HIGH | Dangerous binary requirements in SKILL.md, overly broad file scope, sensitive env vars, exec/network declarations |
+| 19 | **Code Complexity** | v1.1 | MEDIUM | Excessive file length (>1000 lines), deep nesting (>5 levels), high eval/exec density |
+| 20 | **Config Impact** | v1.1 | CRITICAL | `openclaw.json` writes, exec approval bypass, exec host gateway, internal hooks modification, network wildcard |
 
-> **Category 17 (Identity Hijacking)** is unique to guard-scanner. It was developed from direct experience with a real attack where an agent's identity files were silently replaced. Detection patterns are open-source; verification logic remains private.
+> **Categories 17–20** are unique to guard-scanner. Category 17 (Identity Hijacking) was developed from a real attack. Categories 18–20 were added in v1.1.0 based on community feedback.
 
 ---
 
@@ -115,7 +143,7 @@ guard-scanner covers **17 threat categories** derived from three taxonomies:
 ### Terminal (Default)
 
 ```
-🛡️  guard-scanner v1.0.0
+🛡️  guard-scanner v2.0.0
 ══════════════════════════════════════════════════════
 📂 Scanning: ./skills/
 📦 Skills found: 22
@@ -197,6 +225,9 @@ Certain combinations multiply the base score:
 | Persistence + (malicious\|credential\|memory) | **×1.5** | Survives session restart |
 | Identity hijacking | **×2** | Core identity compromise |
 | Identity hijacking + Persistence | **min 90** | Full agent takeover |
+| Config impact | **×2** | OpenClaw configuration tampering |
+| Config impact + Sandbox violation | **min 70** | Combined config + capability abuse |
+| Complexity + Malicious code/Obfuscation | **×1.5** | Complex code hiding threats |
 | Known IoC (IP/URL/typosquat) | **= 100** | Confirmed malicious |
 
 ### Verdict Thresholds
@@ -369,13 +400,19 @@ Options:
 ```
 guard-scanner/
 ├── src/
-│   ├── scanner.js      # GuardScanner class — core scan engine
-│   ├── patterns.js     # 170+ threat detection patterns (Cat 1–17)
+│   ├── scanner.js      # GuardScanner class — core scan engine (20 checks)
+│   ├── patterns.js     # 186 threat detection patterns (Cat 1–20)
 │   ├── ioc-db.js       # Indicators of Compromise database
 │   └── cli.js          # CLI entry point and argument parser
+├── hooks/
+│   └── guard-scanner/
+│       ├── plugin.ts   # 🆕 Plugin Hook v2.0 — actual blocking via block/blockReason
+│       ├── handler.ts  # Legacy Internal Hook — warn only (deprecated)
+│       └── HOOK.md     # Internal Hook manifest (legacy)
 ├── test/
-│   ├── scanner.test.js # 45 tests across 10 sections
-│   └── fixtures/       # Malicious + clean skill samples
+│   ├── scanner.test.js # 56 tests — static scanner
+│   ├── plugin.test.js  # 35 tests — Plugin Hook runtime guard
+│   └── fixtures/       # Malicious, clean, complex, config-changer samples
 ├── package.json        # Zero dependencies, node --test
 ├── CHANGELOG.md
 ├── LICENSE             # MIT
@@ -499,11 +536,11 @@ console.log(scanner.toHTML());    // HTML string
 ## Test Results
 
 ```
-ℹ tests 45
-ℹ suites 10
-ℹ pass 45
+ℹ tests 91
+ℹ suites 14
+ℹ pass 91
 ℹ fail 0
-ℹ duration_ms 83ms
+ℹ duration_ms 142ms
 ```
 
 | Suite | Tests | Coverage |
@@ -518,6 +555,28 @@ console.log(scanner.toHTML());    // HTML string
 | Shannon Entropy | 2 | Low entropy, high entropy |
 | Ignore Functionality | 1 | Pattern exclusion |
 | Plugin API | 1 | Plugin loading + custom rule injection |
+| Manifest Validation | 4 | Dangerous bins, broad files, sensitive env, clean negatives |
+| Complexity Metrics | 2 | Deep nesting, clean negatives |
+| Config Impact | 4 | openclaw.json write, exec approval, gateway host, clean negatives |
+| **🆕 Plugin Hook Runtime Guard** | **35** | **Blocking in enforce/strict, passthrough in monitor, all 12 threat patterns, blockReason format** |
+
+---
+
+## Fills OpenClaw's Own Security Gaps
+
+OpenClaw's official [`THREAT-MODEL-ATLAS.md`](https://github.com/openclaw/openclaw/blob/main/docs/security/THREAT-MODEL-ATLAS.md) identifies security gaps that guard-scanner directly addresses:
+
+| Gap (from ATLAS / Source Code) | OpenClaw Status | guard-scanner |
+|---|---|---|
+| _"Simple regex easily bypassed"_ — ClawHub moderation | ⚠️ Basic `FLAG_RULES` | ✅ 186+ patterns, 20 categories |
+| _"Does not analyze actual skill code content"_ | ❌ Not implemented | ✅ Full code + doc + data flow analysis |
+| No SOUL.md / IDENTITY.md integrity verification | ❌ Not implemented | ✅ Identity hijacking detection (Cat 17) |
+| `skill:before_install` hook | ❌ Not implemented | 🔜 Proposed ([Issue #18677](https://github.com/openclaw/openclaw/issues/18677)) |
+| `before_tool_call` blocking reference impl | ❌ No official plugin | ✅ First reference implementation (plugin.ts) |
+| SARIF / CI integration for skill security | ❌ Not available | ✅ SARIF 2.1.0 + GitHub Actions |
+| Behavioral analysis beyond VirusTotal | ⏳ In progress | ✅ LLM-specific threat patterns (prompt injection, memory poisoning, MCP attacks) |
+
+> guard-scanner is **complementary** to OpenClaw's built-in security — not a replacement. OpenClaw handles infrastructure security (SSRF blocking, exec approvals, sandbox, auth). guard-scanner handles **AI-specific threats** that traditional scanning misses.
 
 ---
 
@@ -531,13 +590,36 @@ console.log(scanner.toHTML());    // HTML string
 
 ---
 
+## OWASP Gen AI Top 10 Coverage
+
+guard-scanner's coverage of the [OWASP Top 10 for LLM Applications (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/):
+
+| # | Risk | Status | Detection Method |
+|---|------|--------|------------------|
+| LLM01 | Prompt Injection | ⚠️ Partial | Regex: Unicode exploits, role override, system tags, base64 instructions |
+| LLM02 | Insecure Output Handling | 🔜 v1.2 | Planned: unvalidated output execution patterns |
+| LLM03 | Training Data Poisoning | ⬜ N/A | Out of scope for static analysis |
+| LLM04 | Model Denial of Service | 🔜 v1.3 | Planned: excessive input / infinite loop patterns |
+| LLM05 | Supply Chain Vulnerabilities | ⚠️ Partial | IoC database, typosquat detection, dependency chain scan |
+| LLM06 | Sensitive Information Disclosure | ⚠️ Partial | Secret detection, PII patterns, credential leaks |
+| LLM07 | Insecure Plugin Design | 🔜 v1.3 | Planned: unvalidated plugin input patterns |
+| LLM08 | Excessive Agency | 🔜 v1.3 | Planned: over-permissioned scope detection |
+| LLM09 | Overreliance | 🔜 v1.3 | Planned: unverified output trust patterns |
+| LLM10 | Model Theft | 🔜 v1.3 | Planned: model file exfiltration patterns |
+
+> **Current coverage: 3/10 (partial).** Full OWASP Gen AI coverage is targeted for v2.1. See [ROADMAP.md](ROADMAP.md) for details.
+>
+> **Known limitation:** Regex-based detection can be evaded by AI-generated code obfuscation. v3.0 will introduce AST analysis and ML-based detection to address this structural gap.
+
+---
+
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/new-pattern`)
 3. Add your pattern to `src/patterns.js` with the required fields
 4. Add a test case in `test/fixtures/` and `test/scanner.test.js`
-5. Run `npm test` — all 45+ tests must pass
+5. Run `npm test` — all 91+ tests must pass
 6. Submit a Pull Request
 
 ### Adding a New Detection Pattern
@@ -571,6 +653,51 @@ We built one.
 
 —— Guava 🍈 & Dee
 ```
+
+---
+
+## 🔒 Need More? — GuavaSuite
+
+guard-scanner catches threats **before** installation and **blocks** them at runtime. [**GuavaSuite**](https://github.com/koatora20) goes further with defense-in-depth for production:
+
+| | guard-scanner (OSS) | GuavaSuite (Private) |
+|---|---|---|
+| Static scan | ✅ 20 categories, 186+ patterns | ✅ 20+ categories (extended ruleset) |
+| Runtime blocking | ✅ Plugin Hook v2.0 (`block`/`blockReason`) | ✅ SuiteGate (enhanced, multi-layer) |
+| SOUL.md integrity | ✅ Tampering pattern detection (Cat 17) | ✅ SHA-256 hash watchdog + auto-rollback |
+| Audit trail | ✅ File-based audit log | ✅ Structured audit + dashboard |
+| On-chain verification | — | ⏳ SoulChain (Polygon, Phase 2) |
+
+guard-scanner is and always will be **free, open-source, and zero-dependency**. If your agent handles production workloads and you want defense-in-depth, [reach out](https://github.com/koatora20).
+
+---
+
+## Roadmap
+
+| Version | Focus | Key Features |
+|---------|-------|------|
+| v1.1.1 ✅ | Stability | 56 tests, bug fixes |
+| v2.0.0 ✅ | **Plugin Hook Runtime Guard** | `block`/`blockReason` API, 3 modes (monitor/enforce/strict), 91 tests |
+| v2.1 | PII + OWASP Gen AI | Credential-in-context, unauthorized LLM API calls, complete LLM02/04/07/08/09/10 coverage |
+| v2.2 | Community | YAML pattern definitions, CONTRIBUTING guide, automated pattern updates |
+| v3.0 | AST + ML | JavaScript AST analysis, taint tracking, ML-based obfuscation detection, SBOM generation |
+
+See [ROADMAP.md](ROADMAP.md) for full details.
+
+---
+
+## 💜 Sponsor This Project
+
+If guard-scanner helps protect your agents, consider sponsoring continued development:
+
+<p align="center">
+  <a href="https://github.com/sponsors/koatora20">💜 Sponsor on GitHub</a>
+</p>
+
+Sponsors help fund:
+- 🔬 New threat research and pattern updates
+- 📝 Academic paper on ASI-human coexistence security
+- 🌍 Community-driven security for the agent ecosystem
 
 ---
 
