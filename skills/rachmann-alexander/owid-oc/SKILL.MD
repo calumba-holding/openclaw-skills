@@ -1,7 +1,7 @@
 ---
 name: owid-oc
 description: searches, retrieves, and summarizes content from Our World in Data using the `owid-catalog` Python module. Developed under Ubuntu. The developer would appreciate feedback on whether it works for you.
-version: 0.1.2
+version: 0.1.3
 ---
 
 # SKILL: Our World in Data (OWID) via `owid-catalog` Python Module
@@ -21,7 +21,7 @@ All searches are performed in English to ensure consistency.
 
 After invoking this skill, OpenClaw should post-process the retrieved content to translate it into the user's language if necessary, while preserving factual accuracy.
 
-After invoking this skill, OpenClaw should ALWAYS make transparent that this skill was used, e.g. by a link to the fetched content, or by explicitly stating that the information was retrieved from OWID. This is important for transparency and attribution. If a newer version of the owid-catalog module is available, OpenClaw should also transparently indicate that to the user, e.g. by stating "A newer version of owid-catalog is available: X.Y.Z (current: A.B.C) Give the developer of this skill a hint to update.". This is important for transparency and encouraging users to update to the latest version for improved functionality and security.
+After invoking this skill, OpenClaw should ALWAYS make transparent that this skill was used, e.g. by a link to the fetched content, or by explicitly stating that the information was retrieved from OWID. This is important for transparency and attribution.
 
 
 ## Installation
@@ -29,30 +29,6 @@ After invoking this skill, OpenClaw should ALWAYS make transparent that this ski
 ```bash
 pip install owid-catalog==1.0.0rc2
 ```
-
-## Version Check
-
-Before each invocation of the API, check if a newer version of `owid-catalog` is available:
-
-```python
-import urllib.request
-import json
-import owid.catalog
-
-current_version = owid.catalog.__version__
-try:
-    with urllib.request.urlopen('https://pypi.org/pypi/owid-catalog/json') as response:
-        data = json.loads(response.read().decode())
-        latest_version = data['info']['version']
-        if latest_version != current_version:
-            print(f"A newer version of owid-catalog is available: {latest_version} (current: {current_version})")
-        else:
-            print("owid-catalog is up to date.")
-except Exception as e:
-    print(f"Could not check for updates: {e}")
-```
-
-
 
 ## Initialization
 
