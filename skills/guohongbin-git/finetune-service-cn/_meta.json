@@ -1,0 +1,11 @@
+{
+  "owner": "guohongbin-git",
+  "slug": "finetune-service-cn",
+  "displayName": "Fine-tune Service CN | 模型微调服务",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771330655468,
+    "commit": null
+  },
+  "history": []
+}
