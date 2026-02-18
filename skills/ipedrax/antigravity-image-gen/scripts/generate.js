@@ -15,7 +15,7 @@ const path = require('node:path');
 
 // --- Config ---
 const ENDPOINT = "https://daily-cloudcode-pa.sandbox.googleapis.com/v1internal:streamGenerateContent?alt=sse";
-const PROFILE_PATH = "/home/ubuntu/.clawdbot/agents/main/agent/auth-profiles.json";
+const PROFILE_PATH = process.env.OPENCLAW_AUTH_PATH || path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw/agents/main/agent/auth-profiles.json');
 // Project ID found in auth profile or fallback
 const FALLBACK_PROJECT_ID = "junoai-465910"; 
 
@@ -44,7 +44,7 @@ if (!prompt) {
 }
 
 if (!outputFile) {
-    const dir = path.join(process.env.HOME || '/home/ubuntu', 'clawd/generated-images');
+    const dir = path.join(process.env.USERPROFILE || process.env.HOME || '/home/ubuntu', 'Pictures', 'Clawd');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     outputFile = path.join(dir, `antigravity_${Date.now()}.png`);
 }
