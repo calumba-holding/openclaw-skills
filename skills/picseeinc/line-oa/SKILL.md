@@ -7,114 +7,123 @@ description: Operate LINE Official Account Manager (chat.line.biz) via browser a
 
 ⚠️ **CRITICAL**: Always use `profile:"openclaw"` (isolated browser) for all browser actions. Never use Chrome relay. Keep the same `targetId` across operations to avoid losing the tab.
 
+⚠️ **CONTEXT Management**:
+- Snapshot results are large. Do NOT repeat them in thinking.
+- Extract needed info and process immediately. Do not re-describe the entire snapshot.
+- **Preferred approach**: Use `snapshot refs:"aria" compact:true` to find element refs, then `act` + `click`/`type` with ref.
+- **Avoid**: Hard-coded `evaluate` with `textContent.includes()` — unreliable due to DOM timing and structure variations.
+
+⚠️ **AUTO-LOGIN SCRIPTS**:
+- `auto-login.mjs` is a **reference implementation** (not directly executable by agents)
+- `login-flow.md` is the **agent-executable version** (use this for automation)
+- **Why separate?** Agents use browser tool calls, not Node module imports
+
 ## Configuration
 
 Before first use, check if `config.json` exists:
 ```
-read file_path:"<skill_dir>/config.json"
+read file_path:"skills/line-oa/config.json"
 ```
 
-If missing, tell the user to run the setup wizard:
+⚠️ **PATH RULE**: Always use workspace-relative paths starting from `skills/line-oa/`. Never use `../` or absolute paths starting with `/`.
+
+If missing, help the user run the following command to start the setup wizard:
 ```bash
-cd <skill_dir>
+cd skills/line-oa
 node scripts/setup.js
 ```
 
-The setup script will guide them through configuration interactively.
+# Enter LINE OA Manager
+This is the first step for all operations below.
 
-## Quick Start Workflow
-
-When user asks to check LINE messages:
-
-1. **Check config** → if missing, prompt user to run setup
-2. **Open browser** → `browser action:"open"` with chatUrl
-3. **Wait 2s** → let page load
-4. **Snapshot** → check if already on chat list page
-5. **If on chat list** (see chat items + "Click a chat to start talking!"):
-   - ✅ **PROCEED to List Unread Messages section**
-6. **If on login page** (see "LINE Account" or "Business Account" button):
-   - Click through login flow
-   - Wait and snapshot again
-   - Verify you reached chat list before proceeding
-7. **Run list-unread.js** → extract and report unread conversations
-
-**Key rule**: Always verify you're on the chat list page (Step 5 check) before running the unread script.
-
-## Login
-
-**IMPORTANT**: Follow these steps in order. After each action, CHECK if you've reached the chat list before proceeding.
-
-### Step 1: Load config and open browser
-
-1. Read the chat URL from config:
+1. **Check and start browser service:**
    ```
-   read file_path:"<skill_dir>/config.json"
+   browser action:"status"
    ```
-   Parse the JSON and extract `chatUrl`. If the file doesn't exist, prompt the user to run setup first.
+   If `"running": false`, start the browser service:
+   ```
+   browser action:"start" profile:"openclaw"
+   ```
+   Wait 2-3 seconds for the service to initialize.
 
-2. Open the chat interface:
+2. **Read config to get chatUrl:**
    ```
-   browser action:"open" profile:"openclaw" targetUrl:"<chatUrl_from_config>"
+   read file_path:"skills/line-oa/config.json"
    ```
-   This returns a `targetId` — **save it for all subsequent operations**.
+   Extract `chatUrl` from the JSON (e.g., `https://chat.line.biz/U1234567890abcdef1234567890abcdef/`).
 
-### Step 2: Check if already logged in
-
-3. Wait 2 seconds for page to load:
+2. **Open browser:**
    ```
-   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":2000}
+   browser action:"open" profile:"openclaw" targetUrl:"<chatUrl>"
+   ```
+   Capture `targetId` and `url` from response.
+
+3. **Wait for page load:**
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<targetId>" request:{"kind":"wait","timeMs":2000}
    ```
 
-4. Take a snapshot to see what page you're on:
+4. **Check current URL:**
    ```
-   browser action:"snapshot" profile:"openclaw" targetId:"<your_targetId>" refs:"aria"
+   browser action:"act" profile:"openclaw" targetId:"<targetId>" request:{"kind":"evaluate","fn":"function(){return window.location.href;}"}
    ```
-
-5. **CHECK THE SNAPSHOT** — you are logged in if you see:
-   - Multiple chat items with names like "John Smith", "Alice Chen", "Sarah Johnson" etc.
-   - Text "Click a chat to start talking!"
-   - A banner with "LINE Official Account Manager" heading
-   - A textbox with placeholder "Search"
    
-   **If you see these elements → SKIP to "List Unread Messages" section. Login is complete.**
+   Key result: If the current URL matches `chatUrl`, you have successfully logged in! Go to step 5, else proceed to troubleshooting.
 
-### Step 3: Handle login page (only if not logged in)
+   ### Troubleshooting
+   If you see the login page (the URL redirects to `account.line.biz`), use these automation scripts:
 
-6. If the snapshot shows a login page with buttons "LINE Account" or "Business Account":
-   - Click the green "LINE Account" button (look for button with text "LINE Account" or similar):
-     ```
-     browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"click","ref":"<button_ref>"}
-     ```
+   a. **Click LINE Account button:**
+      ```
+      read file_path:"skills/line-oa/scripts/click-line-account.js"
+      ```
+      Execute the script directly:
+      ```
+      browser action:"act" profile:"openclaw" targetId:"<targetId>" request:{"kind":"evaluate","fn":"<script_content>"}
+      ```
+      Wait 2 seconds.
 
-7. Wait 2 seconds, then snapshot again:
+   b. **Click Login button:**
+      ```
+      read file_path:"skills/line-oa/scripts/click-login.js"
+      ```
+      Execute the script directly:
+      ```
+      browser action:"act" profile:"openclaw" targetId:"<targetId>" request:{"kind":"evaluate","fn":"<script_content>"}
+      ```
+      Wait 3 seconds.
+
+   c. **Reload chatUrl:**
+      ```
+      browser action:"navigate" profile:"openclaw" targetId:"<targetId>" targetUrl:"<chatUrl>"
+      ```
+      Wait 2 seconds, then take snapshot to verify left-side chat list is visible.
+
+   ###  After Check
+
+5. **Proceed with the user's other requests.**
+6. **Clean Up Browser Tabs**:
+   
+   a. Open a blank tab:
    ```
-   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":2000}
+   browser action:"open" profile:"openclaw" targetUrl:"about:blank"
    ```
+   
+   b. Get all tabs:
    ```
-   browser action:"snapshot" profile:"openclaw" targetId:"<your_targetId>" refs:"aria"
+   browser action:"tabs" profile:"openclaw"
    ```
-
-8. If you see a "Login" or "Sign in" button, click it:
+   
+   c. Close all tabs except the newest one (about:blank):
    ```
-   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"click","ref":"<login_button_ref>"}
+   browser action:"close" profile:"openclaw" targetId:"<your_targetId>"
    ```
+   
+   **Important**: Always clean up tabs after all operations to prevent resource accumulation. The blank tab keeps the browser service running for faster next use.
 
-9. Wait 3 seconds for redirect:
-   ```
-   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":3000}
-   ```
+## Check LINE Messages
 
-10. Take another snapshot and **CHECK AGAIN** using the criteria in Step 5. If you see the chat list, proceed to list unread messages.
-
-### Troubleshooting
-
-- **URL check**: If `url` in snapshot response contains `https://chat.line.biz/xxx` and snapshot has multiple link elements with chat names → you are logged in
-- **If stuck on login**: Tell the user to manually complete authentication in the OpenClaw browser tab, then continue
-- **Session expired**: If you see "LINE Business ID" heading or login forms after opening chatUrl, the session expired — follow Step 6-10
-
-## List Unread Messages
-
-Extracts unread chats from the left-side chat list. Does NOT require clicking into each conversation.
+Extracts all chats from the left-side chat list with unread status. Does NOT require clicking into each chat.
 
 **Prerequisites**: You must be logged in and on the chat list page (see Login section Step 5 for verification).
 
@@ -122,70 +131,171 @@ Extracts unread chats from the left-side chat list. Does NOT require clicking in
 
 1. Read the script content:
    ```
-   read file_path:"<skill_dir>/scripts/list-unread.js"
+   read file_path:"skills/line-oa/scripts/list-chats.js"
    ```
-   You will see a script wrapped in `(() => { ... })()` format.
-
 2. Run the script via browser evaluate:
    
-   ⚠️ **CRITICAL**: Browser evaluate requires `function(){...}` format, NOT `(() => {...})()` format.
-   
-   ❌ **WRONG** (will fail with "Invalid evaluate function"):
-   ```json
-   {"kind":"evaluate","fn":"(() => { const items = ...; })()"}
+   Pass the script content directly as the `fn` parameter:
    ```
-   
-   ✅ **CORRECT** (use this format):
-   ```json
-   {"kind":"evaluate","fn":"function(){const items=document.querySelectorAll('.list-group-item-chat');return Array.from(items).map(el=>{const h6=el.querySelector('h6');const preview=el.querySelector('.text-muted.small');const prevText=preview?.textContent?.trim()||'';const allMuted=el.querySelectorAll('.text-muted');let time='';for(const m of allMuted){const t=m.textContent.trim();if(t&&t.length<20&&t!==prevText)time=t;}const dot=el.querySelector('span.badge.badge-pin');const unread=!!dot&&getComputedStyle(dot).display!=='none';return{name:h6?.textContent?.trim()||'',time,lastMsg:prevText.substring(0,100),unread};}).filter(i=>i.name);}"}
-   ```
-   
-   Full browser call:
-   ```
-   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"function(){const items=document.querySelectorAll('.list-group-item-chat');return Array.from(items).map(el=>{const h6=el.querySelector('h6');const preview=el.querySelector('.text-muted.small');const prevText=preview?.textContent?.trim()||'';const allMuted=el.querySelectorAll('.text-muted');let time='';for(const m of allMuted){const t=m.textContent.trim();if(t&&t.length<20&&t!==prevText)time=t;}const dot=el.querySelector('span.badge.badge-pin');const unread=!!dot&&getComputedStyle(dot).display!=='none';return{name:h6?.textContent?.trim()||'',time,lastMsg:prevText.substring(0,100),unread};}).filter(i=>i.name);}"}
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"<script_content>"}
    ```
 
-3. The script returns a JSON array of **all** chat items: `[{ name, time, lastMsg, unread }]`
-   - `name`: sender display name (who sent the message)
-   - `time`: timestamp shown in chat list (e.g., "21:32", "Yesterday", "Friday")
-   - `lastMsg`: last message preview text, truncated to ~100 chars
-   - `unread`: boolean — `true` if green dot is present, `false` otherwise
+3. The script returns a JSON array of **all** chat items with structure:
+   ```
+   [{ name: string, time: string, lastMsg: string, unread: boolean }]
+   ```
+   - `name`: customer display name
+   - `time`: timestamp (e.g., "21:32", "Yesterday", "Friday")
+   - `lastMsg`: last message preview (~100 chars)
+   - `unread`: `true` if green dot present, `false` otherwise
 
-### Example Output
-
-```json
-[
-  {
-    "name": "John Smith",
-    "time": "21:32",
-    "lastMsg": "Good evening! Thank you for your message. We will respond within 12 hours as this is outside our support hours.",
-    "unread": false
-  },
-  {
-    "name": "Alice Chen",
-    "time": "Yesterday",
-    "lastMsg": "Hello! Thank you for reaching out. Happy New Year! 🎊 I've confirmed your payment was successful ✅",
-    "unread": true
-  }
-]
-```
+4. **Get URLs for unread chats** (optional but recommended for faster follow-up):
+   
+   For each unread chat, click into it to get the direct URL, then return to list:
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"function(){const items=document.querySelectorAll('.list-group-item-chat');const target=Array.from(items).find(el=>{const h6=el.querySelector('h6');return h6&&h6.textContent.includes('<customer_name>');});if(target){const link=target.querySelector('a.d-flex');if(link){link.click();return {clicked:true};}return {linkNotFound:true};}return {itemNotFound:true};}"}
+   ```
+   
+   Wait 500ms, then get the URL:
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"function(){return window.location.href;}"}
+   ```
+   
+   Navigate back to list:
+   ```
+   browser action:"navigate" profile:"openclaw" targetId:"<your_targetId>" targetUrl:"<chatUrl>"
+   ```
+   
+   Wait 1 second before processing next unread chat.
+   
+   **Result**: Store the chat URL (e.g., `https://chat.line.biz/Uebba4fb369276676ecc288d8b7181e49/chat/U803dc04f...`) alongside the chat info for faster access later.
 
 ### How to Report Results
 
-- **If there are unread messages** (`unread: true`):
-  - List each unread conversation with name, time, and preview
-  - Example: "There is 1 unread message: Alice Chen (Yesterday): Hello! Thank you for reaching out. Happy New Year!..."
-
-- **If no unread messages**:
-  - Say: "No unread messages at this time"
+- **If `unread: true` exists**: List each unread chat with name, time, preview, and URL (if obtained)
+- **If no unread**: Say "No unread messages at this time"
 
 ### Notes
 
 - **Unread indicator**: `span.badge.badge-pin` inside each chat list item (green dot)
 - **Limitation**: `lastMsg` shows the last message in the thread, which may be an auto-response rather than the customer's original message
-- **To read full conversation**: Click the chat item link — the conversation opens in the right panel and marks the message as read
+- **Chat URLs**: Getting URLs requires clicking each chat. Do this for unread chats to enable faster replies later.
+- **To read full messages**: See "View Specific Messages" section below
+
+## View Specific Messages
+
+Opens any chat (read or unread) and displays its messages. Works for viewing message history, checking context, or preparing to reply.
+
+**Prerequisites**: You must be logged in and on the chat list page. You should know the customer name (from `list-chats.js` or user request).
+
+### Steps
+
+1. **Find and click the chat item** to open messages:
+   
+   Use evaluate to find the chat item by name (more reliable than snapshot for dynamic chat list):
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"function(){const items=document.querySelectorAll('.list-group-item-chat');const target=Array.from(items).find(el=>{const h6=el.querySelector('h6');return h6&&h6.textContent.includes('<customer_name>');});if(target){const link=target.querySelector('a.d-flex');if(link){link.click();return {clicked:true};}return {linkNotFound:true};}return {itemNotFound:true};}"}
+   ```
+   Replace `<customer_name>` with the actual customer name.
+
+2. **Wait for messages panel to load:**
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":2000}
+   ```
+
+3. **Take a screenshot to view the messages:**
+   ```
+   browser action:"screenshot" profile:"openclaw" targetId:"<your_targetId>"
+   ```
+   
+   The screenshot will show:
+   - Recent messages in the chat (right panel)
+   - Customer info and tags (far right panel)
+   - Auto-response status banner (if active)
+
+4. **Optional: Read recent messages programmatically**
+   
+   If you need structured message data instead of a screenshot, read and run this script:
+   ```
+   read file_path:"skills/line-oa/scripts/read-messages.js"
+   ```
+   Execute:
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"<script_content>"}
+   ```
+   
+   Returns an array of recent messages with:
+   - `time`: timestamp
+   - `text`: message content
+   - `isCustomer`: true if from customer, false if from you
+   - `hasImage`: true if message contains an image
+
+### Navigation Tips
+
+**To scroll to earlier messages:**
+- The messages panel auto-scrolls to the bottom by default
+- To see earlier history, use:
+  ```
+  browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"evaluate","fn":"function(){const panel=document.querySelector('.conversation-panel, .messages-container, [class*=\"chat-container\"]');if(panel){panel.scrollTo({top:0,behavior:'smooth'});return {scrolled:true};}return {error:'Messages panel not found'};}"}
+  ```
+- Wait 1 second after scrolling, then take another screenshot
+
+**Common issues:**
+- If messages don't load: increase wait time to 3000ms
+- If customer name has special characters: use partial match (e.g., "Ray" instead of "Ray👋fn.soci.vip")
+- If click fails: the chat might not be visible in the current scroll position of the left panel
+
+### Handling Images
+
+When you see images in the screenshot or `hasImage: true` in message data:
+
+1. **Find and download the image:**
+   ```javascript
+   function(){
+     const allPhotoImgs = Array.from(document.querySelectorAll('img[alt="Photo"]'));
+     const targetImg = allPhotoImgs.find(img => {
+       const parent = img.closest('.chat');
+       return parent && !parent.classList.contains('chat-reverse') && parent.innerText.includes('<time>');
+     });
+     
+     if (!targetImg) return {error: 'Image not found'};
+     
+     const parent = targetImg.closest('.chat');
+     const downloadLink = Array.from(parent.querySelectorAll('a')).find(a => a.textContent.trim() === 'Download');
+     
+     if (downloadLink) {
+       downloadLink.click();
+       return {clicked: true};
+     }
+     return {error: 'Download link not found'};
+   }
+   ```
+   Replace `<time>` with the message timestamp (e.g., "09:11").
+
+2. **Wait and locate downloaded file:**
+   ```
+   browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":2000}
+   ```
+   ```
+   exec command:"ls -t ~/Downloads/line_oa_chat_*.jpg 2>/dev/null | head -1"
+   ```
+
+3. **Send to user:**
+   ```
+   message action:"send" target:"<user>" filePath:"<path>" message:"Customer sent this image"
+   ```
+
+**Note:** Downloaded images are named `line_oa_chat_YYMMDD_HHMMSS.jpg`
 
 ## Reply to a Message
+
+**⚡ Fast Path**: If you already have the chat URL from a previous "Check LINE Messages" operation, skip steps 1-2 and go directly to step 3:
+```
+browser action:"navigate" profile:"openclaw" targetId:"<your_targetId>" targetUrl:"<chat_url>"
+```
+Wait 2 seconds, then proceed to step 3.
+
+**Standard Path** (when you don't have the chat URL):
 
 1. Take a snapshot to find the chat item:
    ```
@@ -212,40 +322,38 @@ Extracts unread chats from the left-side chat list. Does NOT require clicking in
 
 ## Manage Notes
 
-Each chat has a Notes panel on the right side. Notes are internal-only (not visible to customers). Max 300 characters per note.
+Notes panel is on the right side. Notes are internal-only (not visible to customers). Max 300 characters per note.
 
 ### Add a note
-1. Open the conversation.
-2. Click the **+** button next to the Notes heading in the right panel.
-3. Type content in the textarea.
-4. Click **Save**.
+1. Open the chat
+2. Click the **+** button next to Notes heading
+3. Type content in textarea
+4. Click **Save**
 
 ### Edit a note
-1. Find the note in the right panel.
-2. Click the pencil icon at the note's bottom-right corner.
-3. Modify the textarea content.
-4. Click **Save**.
+1. Click the pencil icon at note's bottom-right
+2. Modify textarea content
+3. Click **Save**
 
 ### Delete a note
-1. Click the trash icon at the note's bottom-right corner.
-2. A confirmation dialog appears — click **Delete** to confirm.
+1. Click trash icon at note's bottom-right
+2. Confirm by clicking **Delete**
 
 ## Manage Tags
 
 Tags are shown in the right panel below the user's name. They are predefined labels for categorizing chats.
 
 ### Add a tag
-1. Open the conversation.
-2. Click the **Add tags** link (or the pencil icon next to existing tags) in the right panel.
-3. The Edit tags modal opens, showing an input field and all available tags.
-4. Click a tag from the "All tags" list to select it (it moves to the input field).
-5. Click **Save**.
+1. Open the chat
+2. Click **Add tags** link (or pencil icon next to existing tags)
+3. Edit tags modal opens
+4. Click a tag from "All tags" list to select
+5. Click **Save**
 
 ### Remove a tag
-1. Open the Edit tags modal (same as above).
-2. Click the **×** next to the tag in the input field to deselect it.
-3. Click **Save**.
-
+1. Open Edit tags modal
+2. Click **×** next to the tag in input field
+3. Click **Save**
 
 ## Switch Account
 
@@ -275,7 +383,6 @@ LINE OA Manager can manage multiple official accounts. Switch between them using
 6. Wait for the page to load the new account's chat list:
    ```
    browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":2000}
-   ```
 
 ## Notes
 

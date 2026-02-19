@@ -1,11 +1,14 @@
 /**
- * List chat items from LINE OA chat list with unread detection.
- * Run via browser evaluate on chat.line.biz.
+ * List all chat items from LINE OA chat list with unread status.
+ * Run via browser evaluate on chat.line.biz (chat list page).
  *
  * Returns: [{ name, time, lastMsg, unread }]
- * Unread selector: span.badge.badge-pin
+ * - name: customer display name
+ * - time: last message time (e.g., "11:56", "Monday", "2/10")
+ * - lastMsg: preview of last message (up to 100 chars)
+ * - unread: true if green dot (span.badge.badge-pin) is visible
  */
-(() => {
+function() {
   const items = document.querySelectorAll('.list-group-item-chat');
   return Array.from(items).map(el => {
     const h6 = el.querySelector('h6');
@@ -31,4 +34,4 @@
       unread
     };
   }).filter(i => i.name);
-})()
+}
