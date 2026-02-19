@@ -1,0 +1,11 @@
+{
+  "owner": "flightpath",
+  "slug": "mac-calendar",
+  "displayName": "Mac Calendar",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771386328634,
+    "commit": null
+  },
+  "history": []
+}
