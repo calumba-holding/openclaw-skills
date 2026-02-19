@@ -1,7 +1,7 @@
 ---
 name: skill-releaser
 description: Release skills to ClawhHub through the full publication pipeline — auto-scaffolding, OPSEC scan, dual review (agent + user), force-push release, security scan verification. Use when releasing a skill, preparing a skill for release, reviewing a skill for publication, or checking release readiness.
-version: 1.4.2
+version: 1.5.0
 triggers:
   - release skill
   - publish skill
@@ -328,9 +328,11 @@ gh repo view your-org/openclaw-skill-{name} --json description,repositoryTopics 
 
 Single commit, clean history, one repo. No dual-repo complexity.
 
-### Step 11: Publish to ClawhHub
+### Step 11: Prepare Publish Package and Request Approval
 
-**Before running the publish command, extract all parameters from `skill.yml` — never guess or hardcode:**
+**ClawhHub publish is an irreversible external action. It requires explicit user approval via a D-## ID before execution.**
+
+Extract the publish parameters and log an approval request — do NOT run `clawhub publish` yet:
 
 ```bash
 # Extract publish parameters directly from skill.yml
@@ -342,14 +344,26 @@ echo "slug:         $SLUG"
 echo "display_name: $DISPLAY_NAME"
 echo "version:      $VERSION"
 
-# Verify all three are non-empty before proceeding
 if [ -z "$SLUG" ] || [ -z "$DISPLAY_NAME" ] || [ -z "$VERSION" ]; then
-  echo "ERROR: Missing slug, display_name, or version in skill.yml — fix before publishing"
+  echo "ERROR: Missing slug, display_name, or version in skill.yml — fix before proceeding"
   exit 1
 fi
 ```
 
-If `display_name` is missing from `skill.yml`, add it now (see Step 1.5). Do not proceed with an empty display name.
+If `display_name` is missing from `skill.yml`, add it now (see Step 1.5).
+
+**Then add a pending publish entry to ESCALATIONS.md:**
+```
+D-##: Publish {display_name} v{version} (slug: {slug}) to ClawhHub? — yes/no
+```
+
+**Stop here. Wait for My Lord to reply "D-## yes" before proceeding to Step 11.5.**
+
+Only proceed to Step 11.5 if My Lord has explicitly approved this specific publish in the current session.
+
+### Step 11.5: Execute Publish + Verify (APPROVAL REQUIRED)
+
+**Only run this step after receiving explicit "D-## yes" from My Lord.**
 
 ```bash
 clawhub publish /tmp/skill-release-{name} \
@@ -359,7 +373,7 @@ clawhub publish /tmp/skill-release-{name} \
   --changelog "{summary of changes from CHANGELOG.md}"
 ```
 
-### Step 11.5: Post-Publish Verification (Content Match)
+**Post-publish verification — verify the live listing matches skill.yml exactly:**
 
 After publishing, verify the live listing matches the source skill.yml exactly.
 **This step catches wrong titles, version mismatches, and stale metadata before delivery.**
