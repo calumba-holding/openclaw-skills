@@ -1,0 +1,11 @@
+{
+  "owner": "tradmangh",
+  "slug": "m365-mailbox",
+  "displayName": "M365 Mailbox (Graph)",
+  "latest": {
+    "version": "0.1.1",
+    "publishedAt": 1771456468068,
+    "commit": null
+  },
+  "history": []
+}
