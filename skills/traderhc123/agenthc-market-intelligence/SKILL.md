@@ -1,6 +1,6 @@
 ---
 name: agenthc-market-intelligence
-description: Real-time stock market data and trading intelligence API. 85 intelligence modules including 40 encoded intelligence skills — equities, bonds, crypto, bitcoin, macro economics, Fed policy, treasury yields, VIX, options flow, sector rotation, regime detection, and technical analysis. Finance data for AI agents with Bitcoin Lightning micropayments.
+description: Real-time stock market data and trading intelligence API. 85 intelligence modules, 40 encoded intelligence skills, and 7 named alert packages — equities, bonds, crypto, bitcoin, macro economics, Fed policy, treasury yields, VIX, options flow, sector rotation, regime detection, and technical analysis. Finance data for AI agents with Bitcoin Lightning micropayments.
 homepage: https://api.traderhc.com/docs
 metadata:
   clawdbot:
@@ -13,7 +13,7 @@ metadata:
 
 # Stock Market Intelligence
 
-Institutional-grade market intelligence API for AI agents. 85 intelligence modules (including 40 encoded intelligence skills with historical calibration) covering equities, bonds, crypto, macro, Fed, liquidity, regime detection, alpha signals, options flow, and more. Bitcoin Lightning micropayments. Built by @traderhc.
+Institutional-grade market intelligence API for AI agents. 85 intelligence modules, 40 encoded intelligence skills, and 7 named alert packages covering equities, bonds, crypto, macro, Fed, liquidity, regime detection, alpha signals, options flow, and more. Real-time alerts via webhook and Discord. Bitcoin Lightning micropayments. Built by @traderhc.
 
 ## Setup
 
@@ -243,6 +243,63 @@ curl -s -X POST "https://api.traderhc.com/api/v1/intelligence/batch" \
   -d '{"modules": ["market_intelligence", "bond_intelligence", "fed_intelligence"]}' | jq '.'
 ```
 
+## Alert Packages (NEW)
+
+Named, curated alert products that deliver enriched market intelligence via **webhook** (AI agents) or **Discord** (human traders). Each alert includes signal data, regime context, positioning implications, affected tickers, and what to watch next.
+
+### List Available Packages
+
+```bash
+curl -s "https://api.traderhc.com/api/v1/alert-packages" | jq '.packages'
+```
+
+### Subscribe to a Package
+
+```bash
+# Webhook delivery (for AI agents)
+curl -s -X POST "https://api.traderhc.com/api/v1/alert-packages/regime_shift/subscribe" \
+  -H "X-API-Key: $AGENTHC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"delivery_channels": ["webhook"], "callback_url": "https://mybot.example.com/alerts"}' | jq '.'
+
+# Discord delivery (for human traders)
+curl -s -X POST "https://api.traderhc.com/api/v1/alert-packages/volatility/subscribe" \
+  -H "X-API-Key: $AGENTHC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"delivery_channels": ["discord"], "discord_webhook_url": "https://discord.com/api/webhooks/..."}' | jq '.'
+```
+
+### Available Packages
+
+| Package | Tier | Price | Triggers On |
+|---------|------|-------|-------------|
+| **Regime Shift Alerts** | Premium | 25K sats/mo | Market regime transitions (12 states) |
+| **Tail Risk Alerts** | Institutional | 100K sats/mo | Crisis detection (score 0-100, 12 crisis types) |
+| **Volatility Alerts** | Premium | 25K sats/mo | VIX spikes, vol regime changes, term structure |
+| **Credit Cycle Alerts** | Premium | 25K sats/mo | Credit spread blowouts, cycle phase shifts, stress |
+| **Liquidity Regime Alerts** | Institutional | 100K sats/mo | Fed net liquidity regime shifts |
+| **Cross-Market Alerts** | Premium | 25K sats/mo | Correlation breaks, alpha signal flips |
+| **Smart Money Alerts** | Institutional | 100K sats/mo | Smart vs dumb money divergence extremes |
+
+### Alert Delivery
+
+Every alert is enriched with:
+- **Signal data** — raw trigger values (VIX level, regime name, score, etc.)
+- **Regime context** — current market regime from the regime engine
+- **Implications** — 3-4 actionable positioning recommendations
+- **Affected tickers** — relevant instruments ($SPY, $VIX, $TLT, etc.)
+- **What to watch** — key levels and events to monitor next
+- **Related signals** — insights from encoded intelligence skills
+
+Delivery channels:
+- **Webhook** — HMAC-SHA256 signed JSON POST to your callback URL
+- **Discord** — Rich embeds with urgency color-coding (red/orange/yellow/blue)
+- **SSE** — Server-Sent Events stream for real-time push
+
+### Discord Channel
+
+Join **#agenthc-market-alerts** for live alert demos.
+
 ## Real-Time Events (Webhooks)
 
 Subscribe to 20+ market event types via webhooks with HMAC-SHA256 signatures:
@@ -366,7 +423,7 @@ Pre-scored, historically-calibrated pattern recognition. Each skill returns stru
 | risk_drawdown_expectation | Institutional | Risk-adjusted drawdown estimates with Kelly sizing |
 | bond_yield_regime | Institutional | Yield regime classification with equity/credit implications |
 | geopolitical_risk_premium | Institutional | Composite geopolitical risk premium in basis points |
-| vix_regime_intelligence | Institutional | VIX regime (7 levels) with 30d forward SPX returns |
+| vix_regime_intelligence | **Free** | VIX regime (7 levels) with 30d forward SPX returns |
 | yield_curve_stress_signal | Institutional | 2s10s recession probability, un-inversion alert |
 | commodity_macro_signal | Institutional | Gold/Oil/Copper cross-commodity macro regime |
 | dxy_impact_matrix | Institutional | Dollar regime with cross-asset impact mapping |
