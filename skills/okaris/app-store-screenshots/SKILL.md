@@ -1,12 +1,6 @@
 ---
 name: app-store-screenshots
-description: |
-  App Store and Google Play screenshot creation with exact platform specs.
-  Covers iOS/Android dimensions, gallery ordering, device mockups, and preview videos.
-  Use for: app store optimization, ASO, app screenshots, app preview, play store listing.
-  Triggers: app store screenshots, aso, app store optimization, play store screenshots,
-  app preview, app listing, ios screenshots, android screenshots, app store images,
-  app mockup, device mockup, app gallery, store listing
+description: "App Store and Google Play screenshot creation with exact platform specs. Covers iOS/Android dimensions, gallery ordering, device mockups, and preview videos. Use for: app store optimization, ASO, app screenshots, app preview, play store listing. Triggers: app store screenshots, aso, app store optimization, play store screenshots, app preview, app listing, ios screenshots, android screenshots, app store images, app mockup, device mockup, app gallery, store listing"
 allowed-tools: Bash(infsh *)
 ---
 
@@ -26,6 +20,8 @@ infsh app run falai/flux-dev-lora --input '{
   "height": 1536
 }'
 ```
+
+> **Install note:** The [install script](https://cli.inference.sh) only detects your OS/architecture, downloads the matching binary from `dist.inference.sh`, and verifies its SHA-256 checksum. No elevated permissions or background processes. [Manual install & verification](https://dist.inference.sh/cli/checksums.txt) available.
 
 ## Platform Specifications
 
@@ -261,10 +257,10 @@ Google Play Console supports store listing experiments:
 ## Related Skills
 
 ```bash
-npx skills add inferencesh/skills@ai-image-generation
-npx skills add inferencesh/skills@ai-video-generation
-npx skills add inferencesh/skills@image-upscaling
-npx skills add inferencesh/skills@prompt-engineering
+npx skills add inference-sh/skills@ai-image-generation
+npx skills add inference-sh/skills@ai-video-generation
+npx skills add inference-sh/skills@image-upscaling
+npx skills add inference-sh/skills@prompt-engineering
 ```
 
 Browse all apps: `infsh app list`
