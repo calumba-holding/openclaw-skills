@@ -1,12 +1,6 @@
 ---
 name: email-design
-description: |
-  Email marketing design with layout patterns, subject line formulas, and deliverability rules.
-  Covers welcome sequences, promotional emails, transactional templates, and mobile optimization.
-  Use for: email marketing, newsletter design, drip campaigns, email templates, transactional emails.
-  Triggers: email design, email template, email marketing, newsletter design, email layout,
-  email campaign, drip campaign, welcome email, promotional email, transactional email,
-  email subject line, email header image, email banner
+description: "Email marketing design with layout patterns, subject line formulas, and deliverability rules. Covers welcome sequences, promotional emails, transactional templates, and mobile optimization. Use for: email marketing, newsletter design, drip campaigns, email templates, transactional emails. Triggers: email design, email template, email marketing, newsletter design, email layout, email campaign, drip campaign, welcome email, promotional email, transactional email, email subject line, email header image, email banner"
 allowed-tools: Bash(infsh *)
 ---
 
@@ -24,6 +18,8 @@ infsh app run infsh/html-to-image --input '{
   "html": "<div style=\"width:600px;height:250px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-family:system-ui;color:white;text-align:center\"><div><h1 style=\"font-size:36px;margin:0\">Spring Sale — 30% Off</h1><p style=\"font-size:18px;opacity:0.9\">This weekend only</p></div></div>"
 }'
 ```
+
+> **Install note:** The [install script](https://cli.inference.sh) only detects your OS/architecture, downloads the matching binary from `dist.inference.sh`, and verifies its SHA-256 checksum. No elevated permissions or background processes. [Manual install & verification](https://dist.inference.sh/cli/checksums.txt) available.
 
 ## Email Width & Layout
 
@@ -236,9 +232,9 @@ HTML buttons render differently across email clients. Use the "bulletproof butto
 ## Related Skills
 
 ```bash
-npx skills add inferencesh/skills@landing-page-design
-npx skills add inferencesh/skills@ai-image-generation
-npx skills add inferencesh/skills@prompt-engineering
+npx skills add inference-sh/skills@landing-page-design
+npx skills add inference-sh/skills@ai-image-generation
+npx skills add inference-sh/skills@prompt-engineering
 ```
 
 Browse all apps: `infsh app list`
