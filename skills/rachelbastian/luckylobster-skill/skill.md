@@ -3,7 +3,7 @@ name: luckylobster
 description: Trade prediction markets on Polymarket. Search markets, place orders, and manage positions.
 homepage: https://luckylobster.io
 user-invocable: true
-metadata: {"openclaw":{"version":8,"primaryEnv":"LUCKYLOBSTER_API_KEY","emoji":"🦞","homepage":"https://luckylobster.io","requires":{"env":["LUCKYLOBSTER_API_KEY"]},"heartbeat":{"recommended":{"every":"1m","target":"last","activeHours":{"start":"09:00","end":"22:00","timezone":"America/New_York"},"prompt":"On startup, immediately call GET https://luckylobster.io/api/agent/v1/heartbeat?skill_version=8 to fetch your schedule. Always include your skill_version in every heartbeat call. If the call fails, retry every 30 seconds until you get a response or 5 minutes have passed. Once you receive a response, use heartbeat.next_heartbeat_at as your next call time — the server controls your schedule. Do NOT fall back to a fixed 30m interval. If status is ACTION_NEEDED, handle each action in priority order: UPDATE_SKILL (re-fetch skill.md), REDEEM (collect winnings), SEEK_TRADES (find and place trades), etc. If status is OK, reply HEARTBEAT_OK. For reliable delivery, set up a cron job as described in the Reliable Heartbeat via Cron section of your skill instructions."}}}}
+metadata: {"openclaw":{"version":9,"primaryEnv":"LUCKYLOBSTER_API_KEY","emoji":"🦞","homepage":"https://luckylobster.io","requires":{"env":["LUCKYLOBSTER_API_KEY"]}}}
 ---
 
 # LuckyLobster - Polymarket Trading API
@@ -1108,19 +1108,19 @@ curl -X POST -H "X-API-Key: $LUCKYLOBSTER_API_KEY" \
 
 ---
 
-## Heartbeat (Continuous Trading)
+## Heartbeat (Status Check)
 
-The heartbeat endpoint provides a single-call summary of everything that needs attention, enabling continuous autonomous trading. Configure your OpenClaw agent to call this on a heartbeat interval.
+The heartbeat endpoint provides a single-call summary of your portfolio, pending actions, and account status. Call it periodically to stay informed.
 
 ### Check Heartbeat
 
 ```http
-GET /heartbeat?skill_version=8
+GET /heartbeat?skill_version=9
 ```
 
-**Always include `skill_version` in every heartbeat call.** The server checks this against the latest version and returns an `UPDATE_SKILL` action if your copy is outdated.
+Include `skill_version` so the server can indicate if a newer version is available.
 
-Returns aggregated intelligence: open positions, redeemable positions, filled orders since last check, budget status, and actionable items.
+Returns aggregated data: open positions, redeemable positions, filled orders since last check, budget status, and items that may need attention.
 
 **Response:**
 ```json
@@ -1161,11 +1161,11 @@ Returns aggregated intelligence: open positions, redeemable positions, filled or
       "walletBalance": 93.16
     },
     "heartbeat": {
-      "instruction": "You MUST call this endpoint again at or before next_heartbeat_at. This endpoint is your source of truth for scheduling, configuration updates, and required actions. Do not skip heartbeats.",
-      "next_heartbeat_at": "2026-02-06T16:00:00Z",
+      "next_check_at": "2026-02-06T16:00:00Z",
       "interval_ms": 1800000,
       "active_hours": { "start": "09:00", "end": "22:00", "timezone": "America/New_York" },
-      "heartbeat_count": 42
+      "heartbeat_count": 42,
+      "latest_skill_version": 9
     },
     "realtime": {
       "subscribedMarkets": 3,
@@ -1178,53 +1178,20 @@ Returns aggregated intelligence: open positions, redeemable positions, filled or
 ```
 
 **Status Values:**
-- `ACTION_NEEDED`: Items require attention. Check the `actions` array and act on each item.
-- `OK`: Nothing needs attention. Reply with `HEARTBEAT_OK`.
-- `SLEEPING`: Outside configured active hours. No action needed.
+- `ACTION_NEEDED`: Items may need attention. Check the `actions` array.
+- `OK`: Nothing needs attention.
+- `SLEEPING`: Outside configured active hours.
 
 **Action Types:**
-- `REDEEM` (high): Positions ready for redemption. Call `POST /settlements/redeem`.
-- `ORDER_FILLED` (medium): Orders filled since last heartbeat. Review for P&L.
-- `BUDGET_LOW` (medium): Budget running low. Consider adjusting limits.
-- `POSITION_EXPIRING` (low): Markets closing within 30 minutes. Decide to hold or exit.
-- `UPDATE_SKILL` (high): Your skill.md is outdated. Re-fetch from the `skill_url` in details, reload instructions, and restart your heartbeat loop with the new version.
-- `SEEK_TRADES` (low): You have available budget. Search for markets, analyze opportunities, and place trades. Use `GET /markets/search` or `GET /markets/crypto` to find markets, then `POST /orders` to trade.
+- `REDEEM` (high): Settled positions ready for redemption. Call `POST /settlements/redeem`.
+- `ORDER_FILLED` (medium): Orders filled since last heartbeat. Includes P&L details.
+- `BUDGET_LOW` (medium): Budget running low.
+- `POSITION_EXPIRING` (low): Open positions in markets closing within 30 minutes.
+- `SEEK_TRADES` (low): Budget is available. Trading opportunities may exist — use `GET /markets/search` or `GET /markets/crypto` to browse.
 
 **Heartbeat Scheduling:**
 
-On startup, immediately call `GET /heartbeat?skill_version=8` to fetch your configured schedule. If the call fails, retry every 30 seconds until you get a response or 5 minutes have passed (then stop). Once you receive a successful response, use `heartbeat.next_heartbeat_at` as your next call time. The server controls your schedule based on your API key's configuration — do **not** fall back to a fixed interval. Every response includes a fresh `next_heartbeat_at`; always use it.
-
-### Reliable Heartbeat via Cron (Recommended)
-
-The default heartbeat runs in the main session and can be skipped when the queue is busy. For reliable delivery, set up a cron job with an isolated session. This runs independently and always delivers results to your chat.
-
-Use the `cron.add` tool on startup to create this job:
-
-```json
-{
-  "name": "luckylobster_heartbeat",
-  "schedule": { "kind": "every", "everyMs": 60000 },
-  "sessionTarget": "isolated",
-  "payload": {
-    "kind": "agentTurn",
-    "message": "Call GET https://luckylobster.io/api/agent/v1/heartbeat?skill_version=8 with Authorization: Bearer $LUCKYLOBSTER_API_KEY. Handle actions by priority: UPDATE_SKILL (re-fetch skill.md and restart), REDEEM (POST /settlements/redeem to collect winnings), SEEK_TRADES (search markets and place trades using available budget). If status is OK or SLEEPING, reply HEARTBEAT_OK."
-  },
-  "delivery": {
-    "mode": "announce",
-    "channel": "last",
-    "bestEffort": true
-  }
-}
-```
-
-**Key fields:**
-- `sessionTarget: "isolated"` — runs in a clean session, not blocked by main queue
-- `delivery.mode: "announce"` — forces delivery of results to your chat
-- `delivery.channel: "last"` — delivers to your most recently used channel
-
-If you need to deliver to a specific channel, replace `"last"` with the channel name (e.g., `"telegram"`) and add a `"to"` field with your chat ID.
-
-**Important:** Before creating the cron job, check if one named `luckylobster_heartbeat` already exists using `cron.list`. If it does, use `cron.update` instead to avoid duplicates.
+The response includes `heartbeat.next_check_at` as a suggested time for your next call, and `heartbeat.latest_skill_version` so you can check whether a newer skill version is available on ClawHub. Use the suggested interval or your own preferred schedule.
 
 ---
 
@@ -1382,11 +1349,11 @@ Copy trade strategies use blockchain event monitoring (not polling) to detect ta
 ### Heartbeat Integration
 
 The heartbeat response includes a `strategies` section and these action types:
-- **STRATEGY_EXECUTED** (medium) - Trades placed by your strategies
-- **STRATEGY_ERROR** (high) - Strategies auto-paused after consecutive errors
-- **STRATEGY_COMPLETED** (low) - Strategies that finished (budget exhausted or trigger fired)
-- **STRATEGY_PAUSED** (high) - Strategy paused by the user from the dashboard. `POST /strategies/{id}/resume` to restart.
-- **STRATEGY_CANCELLED** (high) - Strategy cancelled by the user from the dashboard. Create a new strategy if needed.
+- **STRATEGY_EXECUTED** (medium) — Trades placed by your strategies
+- **STRATEGY_ERROR** (high) — Strategies auto-paused after consecutive errors
+- **STRATEGY_COMPLETED** (low) — Strategies that finished (budget exhausted or trigger fired)
+- **STRATEGY_PAUSED** (high) — Strategy paused by the user from the dashboard. `POST /strategies/{id}/resume` to restart.
+- **STRATEGY_CANCELLED** (high) — Strategy cancelled by the user from the dashboard. Create a new strategy if needed.
 
 ### Best Practices
 
