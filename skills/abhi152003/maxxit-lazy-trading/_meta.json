@@ -3,11 +3,16 @@
   "slug": "maxxit-lazy-trading",
   "displayName": "Maxxit Lazy Trader",
   "latest": {
-    "version": "1.2.2",
-    "publishedAt": 1771412476932,
-    "commit": "https://github.com/openclaw/skills/commit/70c6c5d64ea4415cd93727c67c4372ee52f08821"
+    "version": "1.2.3",
+    "publishedAt": 1771482008861,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.2",
+      "publishedAt": 1771412476932,
+      "commit": "https://github.com/openclaw/skills/commit/70c6c5d64ea4415cd93727c67c4372ee52f08821"
+    },
     {
       "version": "1.2.0",
       "publishedAt": 1771334534986,
