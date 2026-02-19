@@ -3,11 +3,16 @@
   "slug": "vibe-check",
   "displayName": "Vibe Check",
   "latest": {
-    "version": "0.1.4",
-    "publishedAt": 1771314744388,
-    "commit": "https://github.com/openclaw/skills/commit/50964d1d8537ba71ad0436ed52102dd97aaec9fb"
+    "version": "0.2.0",
+    "publishedAt": 1771471486464,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.1.4",
+      "publishedAt": 1771314744388,
+      "commit": "https://github.com/openclaw/skills/commit/50964d1d8537ba71ad0436ed52102dd97aaec9fb"
+    },
     {
       "version": "0.1.3",
       "publishedAt": 1771229361809,
