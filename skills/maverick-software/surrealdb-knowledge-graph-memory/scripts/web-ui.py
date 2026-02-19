@@ -36,12 +36,12 @@ except ImportError:
 # ============================================
 
 SCRIPT_DIR = Path(__file__).parent
-DATA_DIR = Path.home() / ".clawdbot" / "memory"
+DATA_DIR = Path.home() / ".openclaw" / "memory"
 DB_FILE = DATA_DIR / "knowledge.db"
 
 CONFIG = {
     "connection": "ws://localhost:8000/rpc",
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": "root",
     "password": "root",
@@ -355,7 +355,7 @@ def init_schema() -> dict:
                 "--conn", "http://localhost:8000",
                 "--user", "root",
                 "--pass", "root",
-                "--ns", "clawdbot",
+                "--ns", "openclaw",
                 "--db", "memory",
                 str(schema_file)
             ],

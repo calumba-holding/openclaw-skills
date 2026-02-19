@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-# SurrealDB Memory Skill - Clawdbot Integration Installer
-# This script patches Clawdbot to add the Memory UI tab and gateway handlers
+# SurrealDB Memory Skill - OpenClaw Integration Installer
+# This script patches OpenClaw to add the Memory UI tab and gateway handlers
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
-INTEGRATION_DIR="${SKILL_DIR}/clawdbot-integration"
+INTEGRATION_DIR="${SKILL_DIR}/openclaw-integration"
 
 # Colors
 RED='\033[0;31m'
@@ -16,24 +16,24 @@ NC='\033[0m' # No Color
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║       SurrealDB Memory - Clawdbot Integration Installer      ║"
+echo "║       SurrealDB Memory - OpenClaw Integration Installer      ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Find Clawdbot installation
-if [ -n "$CLAWDBOT_DIR" ]; then
-    CLAWDBOT_ROOT="$CLAWDBOT_DIR"
-elif [ -d "$HOME/clawdbot" ]; then
-    CLAWDBOT_ROOT="$HOME/clawdbot"
-elif [ -d "/opt/clawdbot" ]; then
-    CLAWDBOT_ROOT="/opt/clawdbot"
+# Find OpenClaw installation
+if [ -n "$OPENCLAW_DIR" ]; then
+    CLAWDBOT_ROOT="$OPENCLAW_DIR"
+elif [ -d "$HOME/openclaw" ]; then
+    CLAWDBOT_ROOT="$HOME/openclaw"
+elif [ -d "/opt/openclaw" ]; then
+    CLAWDBOT_ROOT="/opt/openclaw"
 else
-    echo -e "${RED}ERROR: Could not find Clawdbot installation.${NC}"
-    echo "Set CLAWDBOT_DIR environment variable or install Clawdbot first."
+    echo -e "${RED}ERROR: Could not find OpenClaw installation.${NC}"
+    echo "Set OPENCLAW_DIR environment variable or install OpenClaw first."
     exit 1
 fi
 
-echo "Found Clawdbot at: $CLAWDBOT_ROOT"
+echo "Found OpenClaw at: $CLAWDBOT_ROOT"
 echo ""
 
 # Check if already integrated
@@ -174,13 +174,13 @@ else
 fi
 
 echo ""
-echo "=== Step 3: Rebuilding Clawdbot ==="
+echo "=== Step 3: Rebuilding OpenClaw ==="
 echo "Run these commands to complete installation:"
 echo ""
 echo "  cd $CLAWDBOT_ROOT"
 echo "  npm run build"
 echo "  npm run ui:build"
-echo "  clawdbot gateway restart"
+echo "  openclaw gateway restart"
 echo ""
 
 echo "=== Step 4: Start SurrealDB ==="

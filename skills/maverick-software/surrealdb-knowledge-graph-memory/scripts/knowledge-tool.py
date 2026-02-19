@@ -18,7 +18,7 @@ import sys
 # Configuration
 SURREAL_CONFIG = {
     "connection": "http://localhost:8000",
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": "root",
     "password": "root",

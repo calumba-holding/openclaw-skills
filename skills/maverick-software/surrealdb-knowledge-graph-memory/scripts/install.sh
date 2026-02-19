@@ -64,7 +64,7 @@ fi
 surreal version
 
 # Create data directory
-DATA_DIR="${HOME}/.clawdbot/memory"
+DATA_DIR="${HOME}/.openclaw/memory"
 mkdir -p "$DATA_DIR"
 echo "Data directory: $DATA_DIR"
 
@@ -85,6 +85,6 @@ echo ""
 echo "=== Installation Complete ==="
 echo ""
 echo "Next steps:"
-echo "  1. Start SurrealDB:  surreal start --user root --pass root file:~/.clawdbot/memory/knowledge.db"
+echo "  1. Start SurrealDB:  surreal start --user root --pass root file:~/.openclaw/memory/knowledge.db"
 echo "  2. Initialize schema: ./scripts/init-db.sh"
 echo "  3. (Optional) Migrate: python3 scripts/migrate-sqlite.py"

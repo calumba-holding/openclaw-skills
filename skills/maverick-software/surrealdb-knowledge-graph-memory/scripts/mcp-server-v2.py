@@ -24,7 +24,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 # Configuration
 SURREAL_CONFIG = {
     "connection": os.environ.get("SURREAL_URL", "http://localhost:8000"),
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": os.environ.get("SURREAL_USER", "root"),
     "password": os.environ.get("SURREAL_PASS", "root"),

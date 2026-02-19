@@ -9,16 +9,16 @@ import type { GatewayRequestHandlers } from "./types.js";
 const execAsync = promisify(exec);
 
 const SURREALDB_PORT = 8000;
-const DATA_DIR = path.join(os.homedir(), ".clawdbot", "memory");
+const DATA_DIR = path.join(os.homedir(), ".openclaw", "memory");
 const DB_FILE = path.join(DATA_DIR, "knowledge.db");
 
 // Find skill directory (search common locations)
 function findSkillDir(): string | null {
   const candidates = [
-    path.join(os.homedir(), "clawdbot", "skills", "surrealdb-memory"),
-    path.join(os.homedir(), "clawd", "skills", "surrealdb-memory"),
-    path.join(os.homedir(), "clawdbot-workspace", "skills", "surrealdb-memory"),
-    path.join(os.homedir(), ".clawdbot", "skills", "surrealdb-memory"),
+    path.join(os.homedir(), "openclaw", "skills", "surrealdb-memory"),
+    path.join(os.homedir(), "openclaw", "skills", "surrealdb-memory"),
+    path.join(os.homedir(), "openclaw-workspace", "skills", "surrealdb-memory"),
+    path.join(os.homedir(), ".openclaw", "skills", "surrealdb-memory"),
   ];
 
   for (const dir of candidates) {
@@ -117,7 +117,7 @@ async function checkSchemaInitialized(): Promise<{
     }
 
     const { stdout } = await execAsync(
-      `echo "INFO FOR DB;" | "${surrealPath}" sql --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns clawdbot --db memory`,
+      `echo "INFO FOR DB;" | "${surrealPath}" sql --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns openclaw --db memory`,
       { timeout: 10000 }
     );
 
@@ -185,7 +185,7 @@ async function getStats() {
     ].join("\n");
 
     const { stdout } = await execAsync(
-      `echo "${queries}" | "${surrealPath}" sql --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns clawdbot --db memory`,
+      `echo "${queries}" | "${surrealPath}" sql --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns openclaw --db memory`,
       { timeout: 15000 }
     );
 
@@ -347,7 +347,7 @@ async function initSchema(): Promise<{
 
     try {
       const { stdout, stderr } = await execAsync(
-        `"${surrealPath}" import --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns clawdbot --db memory "${schemaFile}"`,
+        `"${surrealPath}" import --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns openclaw --db memory "${schemaFile}"`,
         { timeout: 30000 }
       );
       return { success: true, stdout, stderr };
@@ -456,7 +456,7 @@ async function runMaintenance(
     }
 
     const { stdout } = await execAsync(
-      `echo "${query}" | "${surrealPath}" sql --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns clawdbot --db memory`,
+      `echo "${query}" | "${surrealPath}" sql --conn http://localhost:${SURREALDB_PORT} --user root --pass root --ns openclaw --db memory`,
       { timeout: 60000 }
     );
 

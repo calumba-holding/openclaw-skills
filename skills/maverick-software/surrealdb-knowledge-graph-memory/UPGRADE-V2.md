@@ -6,7 +6,7 @@ This upgrade adds **Working Memory**, **Episodic Memory**, **Synchronous Writes*
 
 ```bash
 # 1. Ensure SurrealDB is running
-pgrep surreal || ~/.surrealdb/surreal start --user root --pass root file:~/.clawdbot/memory/knowledge.db &
+pgrep surreal || ~/.surrealdb/surreal start --user root --pass root file:~/.openclaw/memory/knowledge.db &
 
 # 2. Apply v2 schema
 ./scripts/migrate-v2.sh
@@ -18,7 +18,7 @@ pgrep surreal || ~/.surrealdb/surreal start --user root --pass root file:~/.claw
 #   "command": "python3 scripts/mcp-server-v2.py"
 
 # 4. Create working memory directory
-mkdir -p ~/clawd/.working-memory
+mkdir -p ~/.openclaw/workspace/.working-memory
 ```
 
 ## Architecture Overview

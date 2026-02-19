@@ -7,7 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA_FILE="$SCRIPT_DIR/schema-v2.sql"
 SURREAL_URL="${SURREAL_URL:-http://localhost:8000}"
-SURREAL_NS="${SURREAL_NS:-clawdbot}"
+SURREAL_NS="${SURREAL_NS:-openclaw}"
 SURREAL_DB="${SURREAL_DB:-memory}"
 SURREAL_USER="${SURREAL_USER:-root}"
 SURREAL_PASS="${SURREAL_PASS:-root}"
@@ -20,7 +20,7 @@ echo ""
 # Check if SurrealDB is running
 if ! curl -s "$SURREAL_URL/health" > /dev/null 2>&1; then
     echo "ERROR: SurrealDB not reachable at $SURREAL_URL"
-    echo "Start it with: surreal start --user root --pass root file:~/.clawdbot/memory/knowledge.db"
+    echo "Start it with: surreal start --user root --pass root file:~/.openclaw/memory/knowledge.db"
     exit 1
 fi
 

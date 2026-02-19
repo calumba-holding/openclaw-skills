@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Migrate existing Clawdbot SQLite memory to SurrealDB knowledge graph.
+Migrate existing OpenClaw SQLite memory to SurrealDB knowledge graph.
 
 Usage:
-    python3 migrate-sqlite.py [--source ~/.clawdbot/memory/main.sqlite] [--dry-run]
+    python3 migrate-sqlite.py [--source ~/.openclaw/memory/main.sqlite] [--dry-run]
 """
 
 import argparse
@@ -32,7 +32,7 @@ from importlib import import_module
 # Load config
 DEFAULT_CONFIG = {
     "connection": "ws://localhost:8000/rpc",
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": "root",
     "password": "root",
@@ -42,7 +42,7 @@ DEFAULT_CONFIG = {
 def load_config() -> dict:
     """Load configuration."""
     config_paths = [
-        Path.home() / ".clawdbot" / "surrealdb-memory.yaml",
+        Path.home() / ".openclaw" / "surrealdb-memory.yaml",
         Path("surrealdb-memory.yaml"),
     ]
     
@@ -62,8 +62,8 @@ CONFIG = load_config()
 
 
 def find_sqlite_databases() -> list[Path]:
-    """Find existing Clawdbot SQLite memory databases."""
-    memory_dir = Path.home() / ".clawdbot" / "memory"
+    """Find existing OpenClaw SQLite memory databases."""
+    memory_dir = Path.home() / ".openclaw" / "memory"
     if not memory_dir.exists():
         return []
     
@@ -178,7 +178,7 @@ async def main():
     else:
         databases = find_sqlite_databases()
         if not databases:
-            print("No SQLite databases found in ~/.clawdbot/memory/")
+            print("No SQLite databases found in ~/.openclaw/memory/")
             return
         
         print("Found databases:")

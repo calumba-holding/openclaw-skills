@@ -28,7 +28,7 @@ from dataclasses import dataclass, field, asdict
 # Configuration
 # ============================================
 
-WORKSPACE_DIR = Path(os.environ.get("CLAWD_WORKSPACE", Path.home() / "clawd"))
+WORKSPACE_DIR = Path(os.environ.get("OPENCLAW_WORKSPACE", Path.home() / ".openclaw" / "workspace"))
 WORKING_MEMORY_DIR = WORKSPACE_DIR / ".working-memory"
 CURRENT_TASK_FILE = WORKING_MEMORY_DIR / "current-task.yaml"
 HISTORY_DIR = WORKING_MEMORY_DIR / "history"

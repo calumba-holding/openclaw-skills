@@ -42,10 +42,10 @@ export OPENAI_API_KEY="sk-..."
 
 ```bash
 # Create data directory
-mkdir -p ~/.clawdbot/memory
+mkdir -p ~/.openclaw/memory
 
 # Start server (keep running or use systemd)
-surreal start --bind 127.0.0.1:8000 --user root --pass root file:~/.clawdbot/memory/knowledge.db
+surreal start --bind 127.0.0.1:8000 --user root --pass root file:~/.openclaw/memory/knowledge.db
 ```
 
 ### 5. Initialize Schema
@@ -75,7 +75,7 @@ Add to your mcporter config (`~/.config/mcporter/servers.json` or workspace `con
 ### 7. Create Working Memory Directory
 
 ```bash
-mkdir -p ~/clawd/.working-memory
+mkdir -p ~/.openclaw/workspace/.working-memory
 ```
 
 ---
@@ -186,7 +186,7 @@ em.store_episode(episode_data)
 
 1. **Copy gateway handler:**
    ```bash
-   cp clawdbot-integration/gateway/memory.ts /path/to/clawdbot/src/gateway/server-methods/
+   cp openclaw-integration/gateway/memory.ts /path/to/openclaw/src/gateway/server-methods/
    ```
 
 2. **Add to server-methods.ts:**
@@ -199,8 +199,8 @@ em.store_episode(episode_data)
 
 3. **Copy UI files:**
    ```bash
-   cp clawdbot-integration/ui/memory-view.ts /path/to/clawdbot/src/control-ui/views/
-   cp clawdbot-integration/ui/memory-controller.ts /path/to/clawdbot/src/control-ui/controllers/
+   cp openclaw-integration/ui/memory-view.ts /path/to/openclaw/src/control-ui/views/
+   cp openclaw-integration/ui/memory-controller.ts /path/to/openclaw/src/control-ui/controllers/
    ```
 
 4. **Register the tab** in nav.ts:
@@ -210,7 +210,7 @@ em.store_episode(episode_data)
 
 5. **Rebuild:**
    ```bash
-   cd /path/to/clawdbot && npm run build
+   cd /path/to/openclaw && npm run build
    ```
 
 ---
@@ -260,7 +260,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/%u/.surrealdb/surreal start --bind 127.0.0.1:8000 --user root --pass root file:/home/%u/.clawdbot/memory/knowledge.db
+ExecStart=/home/%u/.surrealdb/surreal start --bind 127.0.0.1:8000 --user root --pass root file:/home/%u/.openclaw/memory/knowledge.db
 Restart=on-failure
 RestartSec=5
 
@@ -323,11 +323,11 @@ python3 -c "import openai; print(openai.embeddings.create(model='text-embedding-
 
 ## Configuration
 
-Create `~/.clawdbot/surrealdb-memory.yaml` for custom settings:
+Create `~/.openclaw/surrealdb-memory.yaml` for custom settings:
 
 ```yaml
 connection: "http://localhost:8000"
-namespace: clawdbot
+namespace: openclaw
 database: memory
 user: root
 password: root
@@ -360,7 +360,7 @@ working_memory:
 
 1. **Backup data:**
    ```bash
-   cp -r ~/.clawdbot/memory ~/.clawdbot/memory.backup
+   cp -r ~/.openclaw/memory ~/.openclaw/memory.backup
    ```
 
 2. **Apply v2 schema:**
@@ -372,7 +372,7 @@ working_memory:
 
 4. **Create working memory directory:**
    ```bash
-   mkdir -p ~/clawd/.working-memory
+   mkdir -p ~/.openclaw/workspace/.working-memory
    ```
 
 5. **Verify:**

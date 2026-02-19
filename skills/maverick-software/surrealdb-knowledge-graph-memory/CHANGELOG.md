@@ -2,6 +2,46 @@
 
 All notable changes to the SurrealDB Memory skill will be documented in this file.
 
+## [2.1.1] - 2026-02-18
+
+### Fixed
+- **Clawdbot → OpenClaw migration**: All stale path references updated
+  - `gateway/memory.ts`: Skill search path `~/clawd/` → `~/openclaw/`
+  - `extract-knowledge.py`: Workspace path → `OPENCLAW_WORKSPACE` env var with `~/.openclaw/workspace` default
+  - `working_memory.py`: `CLAWD_WORKSPACE` → `OPENCLAW_WORKSPACE` env var
+  - `integrate-openclaw.sh`: All Clawdbot references → OpenClaw
+  - `migrate-sqlite.py`: Description references updated
+  - `schema-v2-additive.sql`: Namespace `clawdbot` → `openclaw`
+- Aligned skill.json version with CHANGELOG (was stuck at 2.0.0)
+
+## [2.1.0] - 2026-02-17
+
+### Added
+- **Redesigned Dashboard UI** - Two-column layout for better UX
+  - Left column: Dashboard (stats, confidence bar, system health)
+  - Right column: Operations (extraction, maintenance, tips)
+  - Installation section now only shows when setup is needed
+- **Progress Bars** for extraction operations
+  - Real-time progress tracking with percentage
+  - Pulsing animation during initialization
+  - Step counters (e.g., "3/7 files")
+  - Auto-refresh of stats on completion
+- **memory_inject Tool** for intelligent context injection
+  - Returns formatted context ready for prompt injection
+  - Configurable max facts, max episodes, confidence threshold
+  - Includes related entities when enabled
+
+### Changed
+- UI now shows "Online/Setup Required" badge in header
+- Auto-Repair button only appears when system needs setup
+- Removed OpenAI warning from UI (implied for AI systems)
+- Updated documentation with new UI layout details
+- Updated skill.json with accurate requirements and security declarations
+
+### Fixed
+- Progress bars now show immediately when operations start
+- Better state management for extraction polling
+
 ## [2.0.0] - 2026-02-17
 
 ### Added
@@ -96,7 +136,7 @@ Run `./scripts/migrate-v2.sh` to apply schema changes.
 ## [1.1.0] - 2026-02-09
 
 ### Added
-- Gateway integration (`clawdbot-integration/gateway/memory.ts`)
+- Gateway integration (`openclaw-integration/gateway/memory.ts`)
 - Relation discovery with AI
 - Control UI support
 - Health checks and auto-repair

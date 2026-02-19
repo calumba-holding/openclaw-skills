@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Optional
 
 # Session cache for async prefetch results
-SESSION_CACHE_FILE = Path.home() / ".clawdbot" / "memory" / "session-cache.json"
+SESSION_CACHE_FILE = Path.home() / ".openclaw" / "memory" / "session-cache.json"
 
 try:
     from surrealdb import Surreal
@@ -42,7 +42,7 @@ except ImportError:
 
 CONFIG = {
     "connection": "http://localhost:8000",
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": "root",
     "password": "root",

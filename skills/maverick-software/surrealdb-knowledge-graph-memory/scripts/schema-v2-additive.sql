@@ -1,6 +1,6 @@
 -- SurrealDB Knowledge Graph Memory Schema v2.0 - Additive Migration
 -- Only adds NEW tables and indexes; modifies existing fields safely
--- Run with: surreal import --conn http://localhost:8000 --ns clawdbot --db memory schema-v2-additive.surql
+-- Run with: surreal import --conn http://localhost:8000 --ns openclaw --db memory schema-v2-additive.surql
 
 -- ============================================
 -- NEW TABLE: Episodes (Task Histories)

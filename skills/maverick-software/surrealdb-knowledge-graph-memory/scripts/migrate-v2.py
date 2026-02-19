@@ -16,7 +16,7 @@ import sys
 # Configuration
 SURREAL_CONFIG = {
     "connection": os.environ.get("SURREAL_URL", "http://localhost:8000"),
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": os.environ.get("SURREAL_USER", "root"),
     "password": os.environ.get("SURREAL_PASS", "root"),
@@ -118,7 +118,7 @@ def main():
         db = get_db()
     except Exception as e:
         print(f"ERROR: Could not connect to SurrealDB: {e}")
-        print("Start it with: surreal start --user root --pass root file:~/.clawdbot/memory/knowledge.db")
+        print("Start it with: surreal start --user root --pass root file:~/.openclaw/memory/knowledge.db")
         sys.exit(1)
     
     if args.force:

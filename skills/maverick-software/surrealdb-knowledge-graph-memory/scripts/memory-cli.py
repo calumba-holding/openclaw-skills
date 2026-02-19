@@ -43,7 +43,7 @@ except ImportError:
 
 DEFAULT_CONFIG = {
     "connection": "ws://localhost:8000/rpc",
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": "root",
     "password": "root",
@@ -75,8 +75,8 @@ DEFAULT_CONFIG = {
 def load_config() -> dict:
     """Load configuration from file or use defaults."""
     config_paths = [
-        Path.home() / ".clawdbot" / "surrealdb-memory.yaml",
-        Path.home() / ".config" / "clawdbot" / "surrealdb-memory.yaml",
+        Path.home() / ".openclaw" / "surrealdb-memory.yaml",
+        Path.home() / ".config" / "openclaw" / "surrealdb-memory.yaml",
         Path("surrealdb-memory.yaml"),
     ]
     

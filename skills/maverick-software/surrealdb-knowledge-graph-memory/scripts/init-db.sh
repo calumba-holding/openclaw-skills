@@ -8,7 +8,7 @@ SCHEMA_FILE="${SCRIPT_DIR}/schema.sql"
 DB_HOST="${SURREALDB_HOST:-http://localhost:8000}"
 DB_USER="${SURREALDB_USER:-root}"
 DB_PASS="${SURREALDB_PASS:-root}"
-DB_NS="${SURREALDB_NS:-clawdbot}"
+DB_NS="${SURREALDB_NS:-openclaw}"
 DB_DB="${SURREALDB_DB:-memory}"
 
 echo "=== Initializing SurrealDB Memory Schema ==="
@@ -30,7 +30,7 @@ if ! curl -s "${DB_HOST}/health" > /dev/null 2>&1; then
     echo "WARNING: Database not responding at $DB_HOST"
     echo ""
     echo "Start the database first:"
-    echo "  surreal start --user root --pass root file:~/.clawdbot/memory/knowledge.db"
+    echo "  surreal start --user root --pass root file:~/.openclaw/memory/knowledge.db"
     echo ""
     read -p "Start database now? [Y/n] " -n 1 -r
     echo
@@ -40,7 +40,7 @@ if ! curl -s "${DB_HOST}/health" > /dev/null 2>&1; then
     fi
     
     # Start database in background
-    DATA_DIR="${HOME}/.clawdbot/memory"
+    DATA_DIR="${HOME}/.openclaw/memory"
     mkdir -p "$DATA_DIR"
     surreal start --user "$DB_USER" --pass "$DB_PASS" "file:${DATA_DIR}/knowledge.db" &
     SURREAL_PID=$!

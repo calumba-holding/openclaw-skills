@@ -26,14 +26,14 @@ from typing import Optional
 # Configuration
 # ============================================
 
-WORKSPACE_DIR = Path.home() / "clawd"
-STATE_FILE = Path.home() / ".clawdbot" / "memory" / "extraction-state.json"
-SESSION_CACHE_FILE = Path.home() / ".clawdbot" / "memory" / "session-cache.json"
-PROGRESS_FILE = Path.home() / ".clawdbot" / "memory" / "extraction-progress.json"
+WORKSPACE_DIR = Path(os.environ.get("OPENCLAW_WORKSPACE", Path.home() / ".openclaw" / "workspace"))
+STATE_FILE = Path.home() / ".openclaw" / "memory" / "extraction-state.json"
+SESSION_CACHE_FILE = Path.home() / ".openclaw" / "memory" / "session-cache.json"
+PROGRESS_FILE = Path.home() / ".openclaw" / "memory" / "extraction-progress.json"
 
 SURREAL_CONFIG = {
     "connection": "http://localhost:8000",
-    "namespace": "clawdbot",
+    "namespace": "openclaw",
     "database": "memory",
     "user": "root",
     "password": "root",

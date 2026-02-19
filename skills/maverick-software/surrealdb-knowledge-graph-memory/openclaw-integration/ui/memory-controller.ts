@@ -1,6 +1,17 @@
 import type { GatewayBrowserClient } from "../gateway";
 import type { MemoryHealthStatus, MemoryStats } from "../views/memory";
 
+export type ExtractionProgress = {
+  running: boolean;
+  phase?: string;
+  current?: number;
+  total?: number;
+  percent?: number;
+  message?: string;
+  detail?: string;
+  error?: string;
+};
+
 export type MemoryState = {
   client: GatewayBrowserClient | null;
   connected: boolean;
@@ -10,7 +21,10 @@ export type MemoryState = {
   memoryError: string | null;
   memoryMaintenanceLog: string | null;
   memoryInstallLog: string | null;
+  memoryExtractionLog: string | null;
+  memoryExtractionProgress: ExtractionProgress | null;
   memoryBusyAction: string | null;
+  _progressPollInterval?: ReturnType<typeof setInterval>;
 };
 
 function getErrorMessage(err: unknown) {
@@ -210,5 +224,99 @@ export async function runMemoryMaintenance(
     state.memoryError = getErrorMessage(err);
   } finally {
     state.memoryBusyAction = null;
+  }
+}
+
+export async function pollExtractionProgress(state: MemoryState) {
+  if (!state.client || !state.connected) return;
+  
+  try {
+    const result = (await state.client.request("memory.extractionProgress", {})) as ExtractionProgress | undefined;
+    if (result) {
+      state.memoryExtractionProgress = result;
+      
+      // If completed, stop polling and refresh stats
+      if (!result.running && state._progressPollInterval) {
+        clearInterval(state._progressPollInterval);
+        state._progressPollInterval = undefined;
+        await loadMemoryStatus(state);
+      }
+    }
+  } catch {
+    // Ignore polling errors
+  }
+}
+
+function startProgressPolling(state: MemoryState) {
+  // Clear any existing interval
+  if (state._progressPollInterval) {
+    clearInterval(state._progressPollInterval);
+  }
+  
+  // Poll every 500ms
+  state._progressPollInterval = setInterval(() => {
+    pollExtractionProgress(state);
+  }, 500);
+  
+  // Initial poll
+  pollExtractionProgress(state);
+}
+
+function stopProgressPolling(state: MemoryState) {
+  if (state._progressPollInterval) {
+    clearInterval(state._progressPollInterval);
+    state._progressPollInterval = undefined;
+  }
+}
+
+export async function runMemoryExtraction(
+  state: MemoryState,
+  operation: "extract" | "relations" | "full"
+) {
+  if (!state.client || !state.connected) return;
+  if (state.memoryBusyAction) return;
+
+  const actionName = operation === "relations" ? "relations" : operation === "full" ? "full-extract" : "extract";
+  state.memoryBusyAction = actionName;
+  state.memoryExtractionLog = null;
+  state.memoryExtractionProgress = { running: true, phase: "starting", percent: 0, message: "Starting..." };
+
+  // Start polling for progress
+  startProgressPolling(state);
+
+  try {
+    const params: { full?: boolean; reconcile?: boolean; relations?: boolean; timeoutMs: number } = {
+      timeoutMs: 300000, // 5 minutes - extraction can take a while
+    };
+
+    if (operation === "extract") {
+      // Just extract changed files
+    } else if (operation === "relations") {
+      params.relations = true;
+    } else if (operation === "full") {
+      params.full = true;
+    }
+
+    const result = (await state.client.request("memory.runExtraction", params)) as 
+      | { success: boolean; output?: string; stderr?: string; error?: string }
+      | undefined;
+
+    if (result) {
+      if (result.success) {
+        state.memoryExtractionLog = result.output || "Extraction completed successfully";
+      } else {
+        state.memoryExtractionLog = result.error || result.stderr || "Extraction failed";
+        state.memoryError = result.error || "Extraction failed";
+      }
+    }
+
+    await loadMemoryStatus(state);
+  } catch (err) {
+    state.memoryError = getErrorMessage(err);
+    state.memoryExtractionLog = getErrorMessage(err);
+  } finally {
+    stopProgressPolling(state);
+    state.memoryBusyAction = null;
+    state.memoryExtractionProgress = null;
   }
 }
