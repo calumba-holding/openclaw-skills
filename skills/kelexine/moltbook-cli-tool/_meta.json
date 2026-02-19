@@ -3,9 +3,15 @@
   "slug": "moltbook-cli-tool",
   "displayName": "MoltBook CLI",
   "latest": {
-    "version": "0.7.2",
-    "publishedAt": 1771262116118,
-    "commit": "https://github.com/openclaw/skills/commit/fbd7f541b965bafe6e0ae01e9eaf19a969110fb3"
+    "version": "0.7.8",
+    "publishedAt": 1771487812364,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.7.2",
+      "publishedAt": 1771262116118,
+      "commit": "https://github.com/openclaw/skills/commit/fbd7f541b965bafe6e0ae01e9eaf19a969110fb3"
+    }
+  ]
 }
