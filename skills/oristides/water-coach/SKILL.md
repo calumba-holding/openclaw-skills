@@ -4,10 +4,10 @@ description: "Hydration tracking and coaching skill. Use when user wants to trac
 compatibility: "Requires python3, openclaw cron feature, heartbeat feature"
 metadata: {"clawdbot":{"emoji":"💧"} 
   author: oristides
-  version: "1.5.0"
+  version: "1.5.1"
 ---
 
-# 💧 Water Coach v1.5.0
+# 💧 Water Coach v1.5.1
 
 
 
@@ -62,6 +62,17 @@ Every water log entry captures:
 water audit msg_123
 # Returns: entry data + surrounding messages for context
 ```
+
+> ⚠️ **Privacy Notice**: The audit trail feature can read your conversation transcripts to link water entries with messages. By default, this is **disabled** (`audit_auto_capture: false`). To enable it:
+> 
+> ```bash
+> # Edit water_config.json and set:
+> "audit_auto_capture": true
+> ```
+> 
+> **Why would you want this?** If you need proof of water intake for medical/legal purposes, the audit provides conversation context showing exactly when you logged water.
+> 
+> **Why disable it?** If you discuss sensitive topics in your chats, you may prefer not to have that content read by the skill.
 
 ---
 

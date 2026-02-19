@@ -96,6 +96,7 @@ def create_default_config():
             "goal_multiplier": 35,
             "default_goal_ml": None,
             "cutoff_hour": 22,
+            "audit_auto_capture": False,
             "reminder_slots": [
                 {"name": "morning", "hour": 9},
                 {"name": "lunch", "hour": 12},

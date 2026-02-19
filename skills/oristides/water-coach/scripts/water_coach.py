@@ -172,15 +172,21 @@ def main():
                 update_goal = "--update-goal" in args
                 print(json.dumps(update_user_weight(weight, update_goal)))
         elif command == "audit":
-            # Get entry by message_id with context
+            # Get entry by message_id with optional context
             msg_id = args[0] if args else ""
             if not msg_id:
                 print(json.dumps({"error": "Usage: water audit <message_id>"}))
             else:
                 # Get water entry
                 entry = get_entry_by_message_id(msg_id)
-                # Get message context from transcript
-                context = get_message_context(msg_id)
+                
+                # Get message context only if auto-capture is enabled
+                config = load_config()
+                context = None
+                if config.get("settings", {}).get("audit_auto_capture", False):
+                    context = get_message_context(msg_id)
+                else:
+                    context = {"warning": "Message context disabled. Set audit_auto_capture=true in config to enable."}
                 
                 result = {
                     "entry": entry,

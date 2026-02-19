@@ -4,6 +4,21 @@ All notable changes to this skill will be documented in this file.
 
 ---
 
+## [1.5.1] - 2026-02-19
+
+### 🔒 Security & Privacy
+
+- **Audit auto-capture now opt-in** (default: false)
+- Added privacy warning in SKILL.md explaining audit trail implications
+- Users must explicitly enable `audit_auto_capture` in config to allow reading session transcripts
+- Audit command now shows warning instead of context when disabled
+
+### ⚙️ Configuration
+
+- New config option: `settings.audit_auto_capture` (boolean, default: false)
+
+---
+
 ## [1.5.0] - 2026-02-18
 
 ### 🚀 Major Features
