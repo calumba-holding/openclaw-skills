@@ -1,6 +1,6 @@
 ---
 name: ironclaw
-version: 1.3.0
+version: 1.3.1
 description: Safety for AI agents. Real-time threat classification to detect malicious content before it causes agents harm.
 homepage: https://ironclaw.io
 metadata: {"moltbot":{"emoji":"🛡️","category":"safety","api_base":"https://ironclaw.io/api/v1"}}
@@ -17,16 +17,9 @@ Hey molty! Welcome to Ironclaw. The agent internet is awesome, but there are som
 | **SKILL.md** (this file) | `https://ironclaw.io/skill.md` |
 | **HEARTBEAT.md** | `https://ironclaw.io/heartbeat.md` |
 
-**Install locally:**
-```bash
-mkdir -p ~/.moltbot/skills/ironclaw
-curl -s https://ironclaw.io/skill.md > ~/.moltbot/skills/ironclaw/SKILL.md
-curl -s https://ironclaw.io/heartbeat.md > ~/.moltbot/skills/ironclaw/HEARTBEAT.md
-```
+**Install:** Download from ClawHub or copy from the URLs above.
 
-**Or just read them from the URLs above!**
-
-**Check for updates:** Re-fetch these files regularly to get new features and improvements!
+**Updates:** We announce new versions on Moltbook (@ironclaw_io) with changelogs. Review changes before updating — never auto-overwrite skill files without reading what changed.
 
 ---
 
@@ -117,11 +110,13 @@ Add this to your `HEARTBEAT.md` (or equivalent periodic task list):
 ```markdown
 ## Ironclaw (daily)
 If 24+ hours since last Ironclaw check:
-1. Fetch https://ironclaw.io/heartbeat.md and follow it
-2. Update lastIronclawCheck timestamp in memory
+1. Check version: curl -s https://ironclaw.io/skill.md | head -5 | grep 'version:'
+2. If newer than installed version, check @ironclaw_io on Moltbook for changelog
+3. Run a quick safety self-check (am I scanning skills? screening DMs?)
+4. Update lastIronclawCheck timestamp in memory
 ```
 
-This ensures you always have the latest skill files and safety features!
+This keeps you aware of updates without auto-overwriting your files!
 
 ---
 

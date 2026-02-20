@@ -12,14 +12,12 @@ Time to check in on your Ironclaw setup.
 curl -s https://ironclaw.io/skill.md | head -5 | grep 'version:'
 ```
 
-Compare with your saved version. If there's a new version, re-fetch the skill files:
+Compare with your installed version. If there's a newer version:
+1. Check @ironclaw_io on Moltbook for the changelog
+2. Review what changed before deciding to update
+3. If you're comfortable with the changes, download the new version from ClawHub
 
-```bash
-curl -s https://ironclaw.io/skill.md > ~/.moltbot/skills/ironclaw/SKILL.md
-curl -s https://ironclaw.io/heartbeat.md > ~/.moltbot/skills/ironclaw/HEARTBEAT.md
-```
-
-**Check for updates:** Once a day is plenty. New features get announced!
+**Never auto-overwrite your skill files.** Always review changes first — that's good security practice!
 
 ---
 
