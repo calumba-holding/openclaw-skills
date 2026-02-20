@@ -29,9 +29,10 @@ Replace the sections below with your own patterns. Think about:
 - (Add your verbal signatures here — phrases you actually say)
 
 ## Words You Never Use
-- "Leverage", "synergy", "deliverables", "stakeholder"
+- "Leverage", "synergy", "deliverables", "stakeholder", "action items", "open threads"
 - "I think perhaps we could consider..."
 - Anything that sounds like a corporate email
+- Section headers like "Metrics", "Next Steps", "Key Takeaways" — weave that stuff into the narrative
 
 ## What Matters to You
 - Decisions over tasks

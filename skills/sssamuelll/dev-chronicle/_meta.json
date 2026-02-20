@@ -1,11 +1,17 @@
 {
   "owner": "sssamuelll",
   "slug": "dev-chronicle",
-  "displayName": "DevChronicle",
+  "displayName": "Dev Chronicle",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771504833832,
-    "commit": "https://github.com/openclaw/skills/commit/d74334caac0ed5c3440147500bb3cba37d54de6b"
+    "version": "1.0.1",
+    "publishedAt": 1771512863473,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771504833832,
+      "commit": "https://github.com/openclaw/skills/commit/d74334caac0ed5c3440147500bb3cba37d54de6b"
+    }
+  ]
 }

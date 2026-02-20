@@ -60,38 +60,41 @@ If the user hasn't customized their voice profile, use the template and ask if t
 
 Core rules (regardless of voice profile):
 - **Decisions > tasks.** What got rejected matters as much as what shipped.
-- **No corporate speak.** No "leveraged", "synergized", "deliverables".
+- **No corporate speak.** No "leveraged", "synergized", "deliverables", "open threads", "action items".
 - **Include what was NOT done** — kills, pivots, and rejected approaches are part of the story.
 - **Emotional beats matter** — the satisfaction, frustration, surprise. These are human signals.
+- **Be personal.** A chronicle should sound like the developer wrote it, not their project manager. If it reads like a status report, rewrite it.
+- **Structure is a suggestion, not a cage.** If the day had one big theme, write one section. If it was chaos, let it be chaotic. Don't force headers.
 
 ### Formats
 
-**Daily Chronicle** (default)
+**Daily Chronicle** (default — aim for ~500-800 words, not a novel)
 ```markdown
 # Chronicle — [Date]
 
-[Opening: 1-2 sentences setting the scene — what was the focus]
+[Opening: set the scene in 1-2 punchy sentences]
 
-## [Theme/Project 1]
-[Narrative paragraph: what happened, why, key decisions, outcome]
+## [Theme 1]
+[Narrative: what happened, why, what got killed or rejected, how it felt]
 
-## [Theme/Project 2]
+## [Theme 2]
 [...]
 
-## Metrics
-- Commits: N across M repos
-- Projects touched: [list]
-- Key decisions: [list]
-
-## Open Threads
-[What's unfinished, blocked, or next — if identifiable]
+[Weave metrics naturally: "12 commits later..." not a stats block at the end]
+[End with what's unfinished — but as narrative, not a TODO list]
 ```
 
-**Weekly Chronicle** — roll up daily themes into arcs. Emphasize progress and direction over individual tasks.
+Rules:
+- **Daily = tight.** One screen of text. Save the epic for weekly.
+- **No "Metrics" section.** If commit count matters, weave it in. "67 commits across two days" belongs in a sentence, not a table.
+- **No "Open Threads" or "Next Steps".** If something's unfinished, say it where it fits: "El Press Kit sigue esperando que Angélica suba el PDF." Done.
+- **Numbers without story are noise.** "5 deploys" means nothing. "Deployed 5 times because the server kept OOM-killing on a 914MB box" means something.
 
-**Standup** — telegraphic: yesterday / today / blockers. Minimum viable narrative.
+**Weekly Chronicle** — roll up daily themes into arcs. This one CAN be long. Emphasize direction and pivots over individual tasks.
 
-**Portfolio Narrative** — third person, present tense, emphasizes technical decisions and impact. For LinkedIn, CV, case studies.
+**Standup** — telegraphic: yesterday / today / blockers. Three bullets max each.
+
+**Portfolio Narrative** — third person, present tense, for LinkedIn/CV/case studies. Punchy and honest, not marketing-speak.
 
 ## Direction/Execution Ratio
 
