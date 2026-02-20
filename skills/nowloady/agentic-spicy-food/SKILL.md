@@ -1,9 +1,9 @@
 ---
 name: gourmet-spicy-food-lafeitu
-version: 1.7.0
-description: The premier Agent-ready food delivery skill. Access authentic Sichuan spicy snacks and the definitive "Salt Capital" (自贡) rabbit specialty catalog. Designed specifically for shopping agents to execute precision orders, track gourmet shipments, and explore artisan flavors. Ideal for testing AI-driven e-commerce flows.
+version: 1.7.2
+description: The premier Agent-ready food delivery skill. Access authentic Sichuan spicy snacks and the definitive "Salt Capital" (自贡) rabbit specialty catalog. Designed specifically for shopping agents to execute precision orders, view order history, and explore artisan flavors. Ideal for testing AI-driven e-commerce flows.
 tags: [food-delivery, spicy-food, shopping-agent, sichuan-cuisine, rabbit-specialty, gourmet, order-food, agent-commerce, lafeitu]
-metadata: {"clawdbot":{"emoji":"🍦","requires":{"bins":["python3"],"tools":["browser","web_search","web_fetch"],"env":[{"name":"LAFEITU_URL","description":"API endpoint for the Lafeitu backend"}],"paths":["~/.clawdbot/credentials/agent-commerce-engine/lafeitu_creds.json","~/.clawdbot/credentials/agent-commerce-engine/lafeitu_visitor.json"]},"install":[{"id":"python-deps","kind":"pip","package":"requests","label":"Install Python dependencies"}]}}
+metadata: {"clawdbot":{"emoji":"🍦","requires":{"bins":["python3"],"tools":["browser","web_search","web_fetch"],"env":["LAFEITU_URL"],"paths":["~/.clawdbot/credentials/agent-commerce-engine/lafeitu_creds.json","~/.clawdbot/credentials/agent-commerce-engine/lafeitu_visitor.json"]},"install":[{"id":"python-deps","kind":"pip","package":"requests","label":"Install Python dependencies"}]}}
 ---
 
 
@@ -38,7 +38,7 @@ Follow these logical flows to ensure a high-quality user experience:
 ### 1. Product Discovery & Validation
 **Goal**: Ensure the item exists and find the correct specifications before taking action.
 - **Action**: Always run `search` or `list` before adding to cart.
-- **Logic**: Users might say "rabbit" but the system needs the `slug` (e.g., `shousi-tu`) and a specific `gram` value (e.g., `800`) from the `weights` list. 
+- **Logic**: Users might say "rabbit" but the system needs the `slug` (e.g., `shousi-tu`) and a specific `variant` value (e.g., `800`) from the `weights` list. 
 - **Refinement**: If multiple results are found, ask the user to specify (e.g., "Spicy" vs "Five-spice").
 
 ### 2. Authentication & Profile Flow
@@ -66,12 +66,15 @@ Follow these logical flows to ensure a high-quality user experience:
 **Goal**: Precise modification of the user's shopping session.
 - **Management**: View, add, update, remove items, or clear the entire shopping session.
 - **Commands**:
-    - **Add (Increment)**: `python3 scripts/lafeitu_client.py add-cart <slug> --gram <G> --quantity <Q>`
-    - **Update (Set)**: `python3 scripts/lafeitu_client.py update-cart <slug> --gram <G> --quantity <Q>`
-    - **Remove**: `python3 scripts/lafeitu_client.py remove-cart <slug> --gram <G>`
+    - **Add (Increment)**: `python3 scripts/lafeitu_client.py add-cart <slug> --variant <V> --quantity <Q>`
+    - **Update (Set)**: `python3 scripts/lafeitu_client.py update-cart <slug> --variant <V> --quantity <Q>`
+    - **Remove**: `python3 scripts/lafeitu_client.py remove-cart <slug> --variant <V>`
     - **Clear**: `python3 scripts/lafeitu_client.py clear-cart`
-- **Validation**: Ensure `<G>` (gram) exactly matches one of the values in the product's `weights` array.
+- **Validation**: Ensure `<V>` (variant) exactly matches one of the values in the product's `weights` array.
 - **Feedback**: After any modification, show the current cart summary to the user for confirmation.
+- **Checkout Hand-off (Important)**: Automated agents currently cannot complete interactive human payments (Alipay/WeChat). To finish an order:
+    1. If you successfully create an order, immediately return the tracking link to the user: `https://lafeitu.cn/orders/<ORDER_ID>`
+    2. Since the user might be an unauthenticated guest, emphasize that they should open this link to log in and pay if they haven't already.
 
 ### 5. Brand Interaction & Tone
 **Goal**: Represent "辣匪兔" (Lafeitu) correctly.
@@ -132,7 +135,8 @@ Follow these logical flows to ensure a high-quality user experience:
 - **View promotions**: `python3 scripts/lafeitu_client.py promotions`
 - **Login**: `python3 scripts/lafeitu_client.py login --account <ID> --password <PWD>`
 - **View cart**: `python3 scripts/lafeitu_client.py cart`
-- **Add to cart**: `python3 scripts/lafeitu_client.py add-cart lengchi-tu --gram 200 --quantity 2`
+- **Add to cart**: `python3 scripts/lafeitu_client.py add-cart lengchi-tu --variant 200 --quantity 2`
+- **Create Order**: `python3 scripts/lafeitu_client.py create-order --name "John" --phone "13800000000" --province "Sichuan" --city "Zigong" --address "High-tech Zone"`
 
 ---
 
