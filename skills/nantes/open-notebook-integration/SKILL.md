@@ -9,50 +9,111 @@ A skill for integrating OpenClaw agents with open-notebook, a local AI research 
 - Enables saving and querying knowledge across sessions (second brain for agents)
 - Supports local Ollama models (free, no API costs)
 
-## How to Use
-
-### Prerequisites
+## Prerequisites
 
 1. **Install Docker Desktop** (required for open-notebook)
 2. **Install Ollama** with a model (e.g., qwen3-4b-thinking-32k)
 3. **Run open-notebook:**
    ```powershell
-   cd open-notebook
+   docker compose -f docker-compose-host-ollama.yml up -d
+   ```
+   
+   Or use the default compose:
+   ```powershell
    docker compose up -d
    ```
 
-### Configuration
+## Setup
 
 The skill expects open-notebook at:
 - UI: http://localhost:8502
 - API: http://localhost:5055
 
-### Notebook IDs (update these)
+## Functions (INCLUDED)
 
+This skill provides these PowerShell functions directly:
+
+### Add-ToNotebook
 ```powershell
-$SIMULATION = "notebook:ihiaw1ep16ij3itytijx"
-$CONSCIOUSNESS = "notebook:mmuorp1168o6p8d3k01c"
-$ENJAMBRE = "notebook:p9164t1pws74mikbeh4y"
-$OSIRIS = "notebook:v4amwn05fk2z02e7vlio"
-$RESEARCH = "notebook:dds1adprglymbbwv85vx"
+function Add-ToNotebook {
+    param(
+        [string]$Content,
+        [string]$NotebookId = "YOUR_NOTEBOOK_ID"
+    )
+    $body = @{
+        content = $Content
+        notebook_id = $NotebookId
+        type = "text"
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "http://localhost:5055/api/sources/json" -Method Post -ContentType "application/json" -Body $body
+}
 ```
 
-## Functions
-
-### Save to Notebook
+### Search-Notebook
 ```powershell
-Add-ToNotebook -Content "your text here" -NotebookId $ENJAMBRE
+function Search-Notebook {
+    param(
+        [string]$Query,
+        [string]$NotebookId = "YOUR_NOTEBOOK_ID"
+    )
+    $body = @{
+        question = $Query
+        notebook_ids = @($NotebookId)
+        strategy_model = "model:YOUR_MODEL_ID"
+        answer_model = "model:YOUR_MODEL_ID"
+        final_answer_model = "model:YOUR_MODEL_ID"
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "http://localhost:5055/api/search/ask" -Method Post -ContentType "application/json" -Body $body
+}
 ```
 
-### Query Notebook
+### New-Notebook
 ```powershell
-Search-Notebook -Query "your question" -NotebookId $ENJAMBRE
+function New-Notebook {
+    param(
+        [string]$Name,
+        [string]$Description = ""
+    )
+    $body = @{
+        name = $Name
+        description = $Description
+    } | ConvertTo-Json
+    Invoke-RestMethod -Uri "http://localhost:5055/api/notebooks" -Method Post -ContentType "application/json" -Body $body
+}
 ```
 
-### Create Notebook
+## Notebook IDs
+
+After creating notebooks, update these variables in your scripts:
+
 ```powershell
-New-Notebook -Name "My Research" -Description "Description here"
+$SIMULATION = "notebook:YOUR_SIMULATION_ID"
+$CONSCIOUSNESS = "notebook:YOUR_CONSCIOUSNESS_ID"
+$ENJAMBRE = "notebook:YOUR_ENJAMBRE_ID"
+$OSIRIS = "notebook:YOUR_OSIRIS_ID"
+$RESEARCH = "notebook:YOUR_RESEARCH_ID"
 ```
+
+## Example Usage
+
+```powershell
+# Create a new notebook
+New-Notebook -Name "My Research" -Description "Research notes"
+
+# Save content
+Add-ToNotebook -Content "This is my insight" -NotebookId "notebook:xxx"
+
+# Query knowledge
+$result = Search-Notebook -Query "What did I learn about X?" -NotebookId "notebook:xxx"
+```
+
+## Configuration Required
+
+Before using, you MUST:
+1. Run open-notebook with Docker
+2. Create notebooks via the UI (http://localhost:8502) or API
+3. Get your notebook IDs from the API response
+4. Update the $NotebookId parameters in the functions
 
 ## Requirements
 
@@ -65,3 +126,7 @@ New-Notebook -Name "My Research" -Description "Description here"
 - If API fails, check containers: `docker ps`
 - Check open-notebook logs: `docker compose logs`
 - Verify Ollama is running: `curl http://localhost:11434/api/tags`
+
+## Version
+
+1.0.1 - Improved documentation, included function examples

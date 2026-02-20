@@ -1,11 +1,17 @@
 {
   "owner": "nantes",
   "slug": "open-notebook-integration",
-  "displayName": "Open Notebook Integration",
+  "displayName": "Open Notebook Skill",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771596402492,
-    "commit": "https://github.com/openclaw/skills/commit/82948a0b284c1c352583128b8ec125b89b660a39"
+    "version": "1.0.1",
+    "publishedAt": 1771596520117,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771596402492,
+      "commit": "https://github.com/openclaw/skills/commit/82948a0b284c1c352583128b8ec125b89b660a39"
+    }
+  ]
 }
