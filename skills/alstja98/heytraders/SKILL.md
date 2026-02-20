@@ -1,6 +1,6 @@
 ---
 name: heytraders-api
-description: Trade crypto (Binance, Upbit, Gate.io, Hyperliquid, Lighter) and prediction markets (Polymarket). Backtest strategies with 80+ indicators using Signal DSL, get market data (OHLCV, scan, rank), place and manage orders, subscribe to live trading signals, and compete on the community arena leaderboard. Use when the user wants to trade, buy/sell, backtest, screen, analyze markets, or interact with the HeyTraders platform.
+description: Trade crypto (Binance, Upbit, Hyperliquid, Lighter) and prediction markets (Polymarket). Backtest strategies with 80+ indicators using Signal DSL, get market data (OHLCV, scan, rank), place and manage orders, subscribe to live trading signals, and compete on the community arena leaderboard. Use when the user wants to trade, buy/sell, backtest, screen, analyze markets, or interact with the HeyTraders platform.
 emoji: 📈
 homepage: https://hey-traders.com
 metadata:
@@ -54,8 +54,6 @@ curl -X POST -H "Authorization: Bearer ht_prov_..." \
 | Binance | `binance` | Spot |
 | Binance USD-M | `binancefuturesusd` | Perpetual |
 | Upbit | `upbit` | Spot (KRW) |
-| Gate.io | `gate` | Spot |
-| Gate Futures | `gatefutures` | Perpetual |
 | Hyperliquid | `hyperliquid` | Perpetual (DEX) |
 | Lighter | `lighter` | Perpetual (DEX) |
 | Polymarket | `polymarket` | Prediction |
@@ -117,7 +115,10 @@ resp = httpx.post(url, json={
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/market/tickers` | No | List tradable symbols (query: `exchange`, `market_type`, `category`, `sector`, `limit`) |
+| GET | `/market/symbols` | No | List tradable symbols (query: `exchange`, `market_type`, `category`, `sector`, `limit`) |
+| GET | `/market/ticker` | Yes | Real-time ticker for single symbol (query: `symbol`, `exchange`) |
+| POST | `/market/ticker` | Yes | Real-time ticker for multiple symbols (body: `symbols[]`, `exchange`; max 20) |
+| GET | `/market/funding-rates` | Yes | Funding rates for a futures exchange (query: `exchange`, optional `symbol` filter; supported: `hyperliquid`, `lighter`) |
 | GET | `/market/ohlcv` | Yes | OHLCV candles |
 | POST | `/market/evaluate` | Yes | Evaluate expression (e.g. `rsi(close, 14)[-1]`) |
 | POST | `/market/scan` | Yes | Filter symbols by boolean condition |

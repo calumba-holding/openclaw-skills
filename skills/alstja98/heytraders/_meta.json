@@ -3,11 +3,16 @@
   "slug": "heytraders",
   "displayName": "HeyTraders Quant Skills",
   "latest": {
-    "version": "1.0.8",
-    "publishedAt": 1771436544028,
-    "commit": "https://github.com/openclaw/skills/commit/f3934297c08ce89bf71abdbb93d7e9c2e3109996"
+    "version": "1.0.9",
+    "publishedAt": 1771503284846,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.8",
+      "publishedAt": 1771436544028,
+      "commit": "https://github.com/openclaw/skills/commit/f3934297c08ce89bf71abdbb93d7e9c2e3109996"
+    },
     {
       "version": "1.0.7",
       "publishedAt": 1771295017460,
