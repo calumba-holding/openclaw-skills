@@ -1,6 +1,12 @@
 ---
 name: hubspot-suite
 description: "Comprehensive HubSpot CRM, Marketing, Sales, Service, and CMS management suite. Covers all HubSpot APIs: CRM objects (contacts, companies, deals, tickets, custom objects), associations, properties, engagements (calls, emails, meetings, notes, tasks), workflows & automation, lists, forms, email marketing, reporting & analytics, data quality & dedup, import/export, webhooks, pipelines, owners, CMS content, conversations, and commerce. Supports both Private App (API key) authentication and the new HubSpot Developer Platform (CLI-based apps). Use for ANY HubSpot-related task including CRM management, marketing automation, sales pipeline management, data migration, reporting, data quality audits, or HubSpot administration."
+metadata:
+  openclaw:
+    requires:
+      env:
+        - HUBSPOT_ACCESS_TOKEN
+    primaryCredential: HUBSPOT_ACCESS_TOKEN
 ---
 
 # HubSpot Suite - Complete CRM & Marketing Platform
