@@ -1,6 +1,6 @@
 ---
 name: consensus-interact
-description: Operate consensus.tools end-to-end (post jobs, create submissions, cast votes, resolve results) using either a local-first board or a hosted board (depending on how you run it). Hosted boards are optional and coming soon.
+description: Use the open-source @consensus-tools/consensus-tools engine to run multi-LLM policy-based decision workflows: post jobs, collect submissions, cast votes, and resolve outcomes with customizable consensus logic gates. The engine is local-first by design; consensus.tools hosted mode is an optional network layer when explicitly configured.
 homepage: https://github.com/kaicianflone/consensus-interact
 source: https://github.com/kaicianflone/consensus-interact
 upstream:
