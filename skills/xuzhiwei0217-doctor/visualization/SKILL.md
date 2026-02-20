@@ -4,14 +4,8 @@ description: AI-driven professional data visualization for financial analysis. C
 metadata:
   {
     "openclaw": {
-      "requires": { "bins": ["node"] },
-      "install": [
-        {
-          "id": "deps",
-          "kind": "exec",
-          "command": "npm install chart.js canvas"
-        }
-      ]
+      "requires": { "tools": ["canvas"] },
+      "install": []
     }
   }
 ---

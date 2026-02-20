@@ -3,9 +3,15 @@
   "slug": "visualization",
   "displayName": "Visualization",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771598910550,
-    "commit": "https://github.com/openclaw/skills/commit/cf5f499a1ba90d741c507cef64d6003bc759c50b"
+    "version": "1.0.2",
+    "publishedAt": 1771601287061,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771598910550,
+      "commit": "https://github.com/openclaw/skills/commit/cf5f499a1ba90d741c507cef64d6003bc759c50b"
+    }
+  ]
 }
