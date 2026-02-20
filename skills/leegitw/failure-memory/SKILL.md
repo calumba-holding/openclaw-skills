@@ -1,6 +1,6 @@
 ---
 name: failure-memory
-version: 1.2.0
+version: 1.4.0
 description: Stop making the same mistakes — turn failures into patterns that prevent recurrence
 author: Live Neon <contact@liveneon.dev>
 homepage: https://github.com/live-neon/skills/tree/main/agentic/failure-memory
@@ -136,7 +136,7 @@ AI systems often make the same mistakes repeatedly — deleting working code, mi
 
 ## Detection Triggers
 
-Agent scans for these patterns to auto-invoke `/fm detect`:
+These patterns indicate when `/fm detect` should be invoked (user or orchestrator triggers):
 
 | Pattern | Source | Action |
 |---------|--------|--------|
@@ -304,6 +304,16 @@ This skill reads/writes:
 - Observations are stored in `.learnings/` within the current workspace only
 - No cross-project or cross-session data access occurs
 - Pattern matching is local to the configured workspace
+
+**Detection trigger clarification:**
+The "Detection Triggers" table describes patterns that indicate when a user or orchestrator
+should invoke `/fm detect`. This skill does NOT autonomously scan for these patterns
+(`disable-model-invocation: true`). The patterns are guidance for when to manually invoke
+the skill, not autonomous behavior.
+
+**Provenance note:**
+This skill is developed by Live Neon (https://github.com/live-neon/skills) and published
+to ClawHub under the `leegitw` account. Both refer to the same maintainer.
 
 ## Acceptance Criteria
 
