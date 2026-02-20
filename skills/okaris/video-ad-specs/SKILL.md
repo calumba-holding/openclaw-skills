@@ -1,12 +1,6 @@
 ---
 name: video-ad-specs
-description: |
-  Video ad creation with exact platform-specific specs for TikTok, Instagram, YouTube, Facebook, LinkedIn.
-  Covers dimensions, duration limits, AIDA framework, and caption requirements.
-  Use for: video ads, social media ads, paid media creative, video marketing, ad production.
-  Triggers: video ad, social media ad, tiktok ad, instagram ad, youtube ad, facebook ad,
-  linkedin ad, video creative, ad specs, paid media, video marketing, ad production,
-  reels ad, stories ad, pre roll, bumper ad
+description: "Video ad creation with exact platform-specific specs for TikTok, Instagram, YouTube, Facebook, LinkedIn. Covers dimensions, duration limits, AIDA framework, and caption requirements. Use for: video ads, social media ads, paid media creative, video marketing, ad production. Triggers: video ad, social media ad, tiktok ad, instagram ad, youtube ad, facebook ad, linkedin ad, video creative, ad specs, paid media, video marketing, ad production, reels ad, stories ad, pre roll, bumper ad"
 allowed-tools: Bash(infsh *)
 ---
 
@@ -24,6 +18,8 @@ infsh app run bytedance/seedance-1-5-pro --input '{
   "prompt": "vertical video, person excitedly unboxing a product, clean modern room, bright natural lighting, social media ad style, authentic feeling, 9:16 format"
 }'
 ```
+
+> **Install note:** The [install script](https://cli.inference.sh) only detects your OS/architecture, downloads the matching binary from `dist.inference.sh`, and verifies its SHA-256 checksum. No elevated permissions or background processes. [Manual install & verification](https://dist.inference.sh/cli/checksums.txt) available.
 
 ## Platform Specifications
 
@@ -247,10 +243,10 @@ infsh app run infsh/caption-videos --input '{
 ## Related Skills
 
 ```bash
-npx skills add inferencesh/skills@ai-video-generation
-npx skills add inferencesh/skills@video-prompting-guide
-npx skills add inferencesh/skills@text-to-speech
-npx skills add inferencesh/skills@prompt-engineering
+npx skills add inference-sh/skills@ai-video-generation
+npx skills add inference-sh/skills@video-prompting-guide
+npx skills add inference-sh/skills@text-to-speech
+npx skills add inference-sh/skills@prompt-engineering
 ```
 
 Browse all apps: `infsh app list`
