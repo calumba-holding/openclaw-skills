@@ -63,7 +63,7 @@ Or browse at [clawhub.ai/skills/agent-deep-research](https://clawhub.ai/skills/a
 ## Prerequisites
 
 - A Google API key (see [Configuration](#configuration))
-- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- [uv](https://docs.astral.sh/uv/) (see [install docs](https://docs.astral.sh/uv/getting-started/installation/))
 
 ## Configuration
 
@@ -222,6 +222,10 @@ Key flags:
 | `--dry-run` | Estimate costs without starting research |
 | `--format {md,html,pdf}` | Output format (default: md; pdf requires weasyprint) |
 | `--prompt-template {typescript,python,general,auto}` | Domain-specific prompt prefix (default: auto-detect from context) |
+| `--depth {quick,standard,deep}` | Research depth: quick (~2-5min), standard (~5-15min), deep (~15-45min) |
+| `--max-cost USD` | Abort if estimated cost exceeds limit |
+| `--input-file PATH` | Read query from file (for long/complex queries) |
+| `--no-cache` | Skip cache, force fresh research |
 
 ### Output Formats
 
