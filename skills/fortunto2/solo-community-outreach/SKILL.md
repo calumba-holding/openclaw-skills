@@ -4,7 +4,7 @@ description: Find relevant Reddit, HN, and ProductHunt threads and draft value-f
 license: MIT
 metadata:
   author: fortunto2
-  version: "1.1.0"
+  version: "1.1.1"
   openclaw:
     emoji: "💬"
 allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, AskUserQuestion, mcp__solograph__web_search, mcp__solograph__kb_search, mcp__solograph__project_info
@@ -17,18 +17,11 @@ Find relevant community threads (Reddit, Hacker News, ProductHunt) and draft con
 
 ## MCP Tools (use if available)
 
-- `web_search(query, engines, include_raw_content)` — search Reddit (PullPush), HN, web
+- `web_search(query, engines, include_raw_content)` — search Reddit, HN, web
 - `kb_search(query)` — find related methodology
 - `project_info(name)` — get project details
 
-If MCP tools are not available, use Claude WebSearch/WebFetch as fallback.
-
-## SearXNG Engine Notes
-
-- `engines: "reddit"` — PullPush API backend, returns selftext in content
-- `site:news.ycombinator.com` via Google — HN (native engine broken)
-- `site:producthunt.com` — Product Hunt launches
-- `site:indiehackers.com` — Indie Hackers discussions
+If MCP tools are not available, use WebSearch/WebFetch as fallback.
 
 ## Steps
 
@@ -45,7 +38,7 @@ If MCP tools are not available, use Claude WebSearch/WebFetch as fallback.
 3. **Search communities** (run searches in parallel):
 
    ### 3a. Reddit
-   For each keyword group, search via MCP `web_search(query, engines="reddit")` or WebSearch:
+   For each keyword group, search via MCP `web_search(query)` or WebSearch:
    - `"{problem} reddit"` — pain point threads
    - `"{solution category} recommendations reddit"` — recommendation requests
    - `"{competitor} alternative reddit"` — competitor frustration
@@ -170,9 +163,9 @@ If MCP tools are not available, use Claude WebSearch/WebFetch as fallback.
 
 ## Common Issues
 
-### SearXNG not available
-**Cause:** SSH tunnel not active or server down.
-**Fix:** Run `make search-tunnel` in solopreneur. If still down, skill falls back to Claude WebSearch.
+### Web search not available
+**Cause:** MCP web_search tool not configured or WebSearch not accessible.
+**Fix:** Use WebSearch/WebFetch as primary. For better results with engine routing (Reddit, HN), set up [SearXNG](https://github.com/fortunto2/searxng-docker-tavily-adapter) (private, self-hosted, free) and configure solograph MCP.
 
 ### No relevant threads found
 **Cause:** Niche too small or wrong keywords.

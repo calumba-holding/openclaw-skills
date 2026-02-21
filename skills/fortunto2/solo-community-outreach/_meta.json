@@ -3,9 +3,15 @@
   "slug": "solo-community-outreach",
   "displayName": "Community Outreach",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771537324311,
-    "commit": "https://github.com/openclaw/skills/commit/0ca6fb438cb9f7eb4b208faba2a8e14a6a760bae"
+    "version": "1.1.1",
+    "publishedAt": 1771711557270,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771537324311,
+      "commit": "https://github.com/openclaw/skills/commit/0ca6fb438cb9f7eb4b208faba2a8e14a6a760bae"
+    }
+  ]
 }
