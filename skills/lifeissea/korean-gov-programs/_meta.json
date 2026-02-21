@@ -3,11 +3,16 @@
   "slug": "korean-gov-programs",
   "displayName": "Korean Gov Programs",
   "latest": {
-    "version": "1.0.5",
-    "publishedAt": 1771510365376,
-    "commit": "https://github.com/openclaw/skills/commit/ef02daeb9f43465d6ea802ebeab4c2e890d3af84"
+    "version": "1.0.6",
+    "publishedAt": 1771635890930,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.5",
+      "publishedAt": 1771510365376,
+      "commit": "https://github.com/openclaw/skills/commit/ef02daeb9f43465d6ea802ebeab4c2e890d3af84"
+    },
     {
       "version": "1.0.2",
       "publishedAt": 1771494927268,
