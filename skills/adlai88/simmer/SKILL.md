@@ -1,6 +1,6 @@
 ---
 name: simmer
-version: 1.16.4
+version: 1.16.5
 published: true
 description: The best prediction market interface for AI agents. Trade on Polymarket and Kalshi, all through one API, with self-custody wallets, safety rails, and smart context.
 homepage: https://simmer.markets
