@@ -1,157 +1,72 @@
-# CRO Tools & Integrations
+# CRO Tools Reference
 
 ## Analytics Platforms
 
-### Google Analytics 4 (GA4)
-**Use for:** Funnel analysis, drop-off rates, traffic source performance
-- Conversion paths and attribution
-- Segment comparison (device, source, geography)
-- Export to BigQuery for advanced analysis
+| Platform | Best For |
+|----------|----------|
+| Google Analytics 4 | Free, funnel analysis, traffic sources |
+| Mixpanel | Event-based funnels, SaaS products |
+| Amplitude | Behavioral cohorts, user paths |
 
-**Key reports:**
-- Funnel exploration (custom funnels)
+**Key reports to check:**
+- Funnel exploration (drop-off points)
 - Path exploration (user journeys)
 - Cohort analysis (retention)
 
-### Mixpanel
-**Use for:** Event-based funnels, retention, feature adoption
-- More flexible than GA4 for product analytics
-- Better for SaaS conversion tracking
-- Real-time insights
-
-### Amplitude
-**Use for:** Behavioral cohorts, user paths, experiment analysis
-- Strong for identifying high-converting behaviors
-- Path finder for optimization opportunities
-- Built-in experimentation analysis
-
 ## A/B Testing Tools
 
-### VWO (Visual Website Optimizer)
-**Use for:** Full-stack testing with visual editor
-- Create variants without code
-- Bayesian statistics engine
-- Heatmaps and session recordings included
+| Tool | Best For |
+|------|----------|
+| VWO | Visual editor, marketing teams |
+| Optimizely | Enterprise, server-side testing |
+| Google Optimize | Budget-conscious, GA integration |
+| LaunchDarkly | Feature flags, product teams |
 
-**When to use:** Marketing teams, landing page tests, low-code needs
+**Choosing a tool:**
+- Low traffic (<5k/month): Use simpler tools or qualitative testing
+- Medium traffic: VWO or AB Tasty
+- High traffic: Optimizely or custom solution
 
-### Optimizely
-**Use for:** Enterprise testing, feature flags, personalization
-- Server-side and client-side testing
-- Stats accelerator for faster results
-- Multi-page experiments
+## Heatmaps and Session Recording
 
-**When to use:** Large traffic, complex tests, product experiments
+| Tool | Best For |
+|------|----------|
+| Hotjar | All-in-one (heatmaps, recordings, feedback) |
+| FullStory | Frustration detection, rage clicks |
+| Microsoft Clarity | Free alternative, unlimited recordings |
 
-### LaunchDarkly
-**Use for:** Feature flags with targeting
-- Progressive rollouts
-- A/B testing at code level
-- Kill switches for quick rollback
-
-**When to use:** Product teams, feature releases, backend experiments
-
-## Heatmaps & Session Recording
-
-### Hotjar
-**Use for:** Visual understanding of user behavior
-- Click, scroll, and move heatmaps
-- Session recordings
-- Form analytics
-- Feedback polls
-
-**Best for:** Qualitative insights, hypothesis generation
-
-### FullStory
-**Use for:** Frustration detection, rage clicks, error analysis
-- Auto-captures all interactions
-- Search sessions by behavior
-- Frustration scoring
-
-**Best for:** Identifying UX problems at scale
-
-### Microsoft Clarity
-**Use for:** Free alternative to Hotjar
-- Unlimited recordings
-- Rage click detection
-- Integration with GA4
-
-**Best for:** Budget-conscious, good-enough insights
+**Use for:** Hypothesis generation, understanding WHY users drop off.
 
 ## Form Analytics
 
-### Zuko (formerly Formisimo)
-**Use for:** Field-level conversion analysis
-- Time per field
-- Abandonment by field
-- Error rates
-- Comparison between form versions
+| Tool | Best For |
+|------|----------|
+| Zuko | Field-level analysis, enterprise |
+| Hotjar Forms | Basic metrics, part of Hotjar suite |
 
-### Hotjar Forms
-**Use for:** Basic form analytics
-- Abandonment rates
-- Field interaction times
-- Part of Hotjar suite
+**Key metrics:** Time per field, abandonment by field, error rates.
 
 ## Speed Testing
 
-### Google PageSpeed Insights
-**Use for:** Core Web Vitals, quick diagnostics
-- Lab and field data
-- Specific recommendations
-- API for automation
+| Tool | Best For |
+|------|----------|
+| PageSpeed Insights | Quick Core Web Vitals check |
+| WebPageTest | Detailed waterfall analysis |
+| Lighthouse | CI integration, local testing |
 
-### WebPageTest
-**Use for:** Detailed waterfall analysis
-- Multiple locations and devices
-- Video comparison
-- Custom scripting
+**Remember:** Speed directly impacts conversion. A 1-second delay can reduce conversions by 7%.
 
-### Lighthouse (Chrome DevTools)
-**Use for:** Local testing, CI integration
-- Performance scoring
-- Accessibility checks
-- SEO basics
+## Recommended Stack by Stage
 
-## Tag Management
+| Stage | Stack |
+|-------|-------|
+| Startup | GA4 + Clarity + PageSpeed |
+| Growth | GA4 + Mixpanel + Hotjar + VWO |
+| Scale | Amplitude + FullStory + Optimizely |
 
-### Google Tag Manager (GTM)
-**Use for:** Deploying tracking without code changes
-- Conversion pixels
-- Event tracking
-- A/B test snippets
+## Event Naming Convention
 
-### Segment
-**Use for:** Single source of truth for events
-- Send data to multiple tools
-- Clean event taxonomy
-- Server-side tracking
-
-## Recommended Stack by Size
-
-### Startup (<10k monthly visitors)
-- GA4 (free)
-- Microsoft Clarity (free)
-- Google Optimize successor or VWO (free tier)
-- PageSpeed Insights
-
-### Growth (10k-100k visitors)
-- GA4 + Mixpanel
-- Hotjar
-- VWO or AB Tasty
-- GTM
-
-### Scale (100k+ visitors)
-- Amplitude or Mixpanel
-- FullStory
-- Optimizely
-- Segment
-- Custom dashboards
-
-## Integration Patterns
-
-### Event Tracking Standard
-Use consistent naming:
+Use consistent naming across all tools:
 ```
 [Object]_[Action]
 form_started
@@ -160,18 +75,4 @@ checkout_initiated
 purchase_completed
 ```
 
-### Passing Experiment Data
-Send variant info to analytics:
-```javascript
-dataLayer.push({
-  event: 'experiment_viewed',
-  experiment_id: 'pricing_test_v2',
-  variant: 'annual_discount'
-});
-```
-
-### Connecting Tools
-1. A/B tool → Analytics (for deeper analysis)
-2. Heatmap tool → A/B tool (for variant insights)
-3. Form tool → Analytics (for funnel context)
-4. Speed tool → Alerting (for regressions)
+This enables cross-tool analysis and easier debugging.
