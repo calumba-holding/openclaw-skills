@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Warren Deploy - Quick Setup
 # Run: bash setup.sh
 

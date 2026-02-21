@@ -1,7 +1,7 @@
 ---
 name: warren-deploy
 description: Deploy websites and files permanently on MegaETH mainnet using SSTORE2. Agents use their own wallet and pay gas.
-metadata: {"openclaw":{"emoji":"⛓️","homepage":"https://thewarren.app","requires":{"anyBins":["node"]}}}
+metadata: {"openclaw":{"emoji":"⛓️","homepage":"https://thewarren.app","source":"https://github.com/planetai87/warren-tools","requires":{"anyBins":["node"],"env":["PRIVATE_KEY"]},"primaryEnv":"PRIVATE_KEY"}}
 user-invocable: true
 ---
 
@@ -30,32 +30,20 @@ bash setup.sh
 
 ## Prerequisites
 
-### 1. Create a Wallet
+### 1. Wallet + MegaETH ETH
 
-```bash
-node -e "const w = require('ethers').Wallet.createRandom(); console.log('Address:', w.address); console.log('Private Key:', w.privateKey)"
-```
+You need a wallet with real ETH on MegaETH mainnet for gas fees.
 
-Set the private key:
+- Bridge ETH from Ethereum via the official MegaETH bridge.
+- Approximate cost: ~0.001 ETH per site deploy.
+
+Set your private key:
 
 ```bash
 export PRIVATE_KEY=0xYourPrivateKey
 ```
 
-### 2. Get MegaETH ETH
-
-You need real ETH on MegaETH mainnet for gas fees.
-
-- Bridge ETH from Ethereum via the official MegaETH bridge.
-- Approximate cost: ~0.001 ETH per site deploy.
-
-Check balance:
-
-```bash
-node -e "const{ethers}=require('ethers');new ethers.JsonRpcProvider('https://mainnet.megaeth.com/rpc',4326).getBalance('$YOUR_ADDRESS').then(b=>console.log(ethers.formatEther(b),'ETH'))"
-```
-
-### 3. Genesis Access Requirement
+### 2. Genesis Access Requirement
 
 The deploy script checks access in this order:
 
@@ -67,6 +55,19 @@ Default `RABBIT_AGENT_ADDRESS`: `0x3f0CAbd6AB0a318f67aAA7af5F774750ec2461f2` (ov
 If you override or unset it, mint a human key manually at:
 
 - https://thewarren.app/mint
+
+## Environment Variables
+
+| Variable | Required | Default | Purpose |
+|----------|----------|---------|---------|
+| `PRIVATE_KEY` | **Yes** | — | Wallet private key for signing transactions |
+| `RPC_URL` | No | `https://mainnet.megaeth.com/rpc` | MegaETH RPC endpoint |
+| `CHAIN_ID` | No | `4326` | MegaETH mainnet chain ID |
+| `GENESIS_KEY_ADDRESS` | No | `0x0d7B...5a88` | Genesis Key NFT contract |
+| `RABBIT_AGENT_ADDRESS` | No | `0x3f0C...61f2` | 0xRabbit.agent NFT contract |
+| `MASTER_NFT_ADDRESS` | No | `0xf299...eFC` | MasterNFT registry contract |
+| `CHUNK_SIZE` | No | `15000` | Bytes per chunk (15KB) |
+| `GROUP_SIZE` | No | `500` | Max addresses per tree node |
 
 ## Deploy
 
@@ -127,18 +128,11 @@ for i in $(seq 1 5); do
 done
 ```
 
-### Deploy a larger site (~50KB)
+### Deploy a file
 
 ```bash
-python3 -c "
-html = '<html><body>'
-for i in range(1000):
-    html += f'<p>Paragraph {i}: Lorem ipsum dolor sit amet</p>'
-html += '</body></html>'
-print(html)
-" > large-site.html
-
-PRIVATE_KEY=0x... node deploy.js --file large-site.html --name "Large Site"
+cd {baseDir}
+PRIVATE_KEY=0x... node deploy.js --file ./my-site.html --name "Large Site"
 ```
 
 ## View Sites
@@ -167,3 +161,11 @@ https://thewarren.app/v/site={TOKEN_ID}
 - Max 500KB per deployment.
 - Default chunk size is 15KB (`CHUNK_SIZE=15000`).
 - You pay gas from your own wallet.
+
+## Security & Privacy
+
+- **No data exfiltration**: Content is sent only as blockchain transactions to the configured RPC endpoint. No intermediary servers.
+- **PRIVATE_KEY handling**: Used solely to sign transactions. Never logged, stored on disk, or transmitted to third parties.
+- **Network endpoints**: Only the configured `RPC_URL` (default: `mainnet.megaeth.com/rpc`). No other outbound connections.
+- **File access**: Reads only the single file specified by `--file`. No directory scanning or glob expansion.
+- **No telemetry**: No analytics, tracking, or usage reporting.

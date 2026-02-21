@@ -3,11 +3,16 @@
   "slug": "warren-deploy-mainnet",
   "displayName": "Warren Website Deploy(mainnet)",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1771511811045,
-    "commit": "https://github.com/openclaw/skills/commit/cf0f7ed5c300f09f5bd1581f20b7a381d9f86079"
+    "version": "1.0.6",
+    "publishedAt": 1771557195028,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1771511811045,
+      "commit": "https://github.com/openclaw/skills/commit/cf0f7ed5c300f09f5bd1581f20b7a381d9f86079"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771073058924,
