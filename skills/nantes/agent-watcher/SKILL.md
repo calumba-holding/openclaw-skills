@@ -124,4 +124,4 @@ else {
 
 ## Version
 
-1.0.1 - Fixed: Added environment variables, explicit API key usage in headers
+1.0.4 - Description now mentions file AND notebook
