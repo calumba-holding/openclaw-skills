@@ -1,6 +1,6 @@
 # 🛒 bring-list — The Best Bring! Skill for OpenClaw
 
-**Zero dependencies. Most features. Clean code. No security flags.**
+**Lightweight. Most features. Clean code. Privacy-first.**
 
 The only Bring! skill that runs everywhere — just `curl` and `jq`, no Node.js, no Python, no pip, no npm. Works on any Linux, any container, any VPS out of the box.
 
@@ -19,7 +19,7 @@ Other skills only do add + remove. **bring-list** does everything:
 - ✅ View all your lists and items
 - ✅ JSON output for automation
 
-### 🪶 Zero dependencies
+### 🪶 Lightweight
 | | **bring-list** | Others |
 |---|---|---|
 | Needs | `curl` + `jq` | Node.js + npm, or Python + pip |
@@ -28,6 +28,7 @@ Other skills only do add + remove. **bring-list** does everything:
 
 ### 🧠 Built for AI agents
 - **Step-by-step Agent Setup Guide** — your agent knows exactly how to help you set up
+- **Privacy-first credential setup** — your agent asks whether you want to share credentials in chat or enter them privately in your own terminal
 - **Default list support** — say "put milk on the list" without naming the list every time
 - **Partial name matching** — "einkauf" finds "Einkaufsliste"
 - **Smart argument parsing** — the agent figures out what's an item and what's a list name
@@ -90,6 +91,8 @@ Your agent handles the rest.
 ## Privacy
 
 Your credentials never leave your machine. They're stored locally and only sent directly to Bring!'s servers. No third-party services, no telemetry, no cloud.
+
+During setup, your agent gives you the choice: share credentials in chat (convenient, written directly to file and never repeated), or enter them privately in your own terminal via `read -s` (credentials never appear in chat at all).
 
 ## License
 

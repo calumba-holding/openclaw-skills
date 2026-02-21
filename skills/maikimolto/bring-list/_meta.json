@@ -3,11 +3,16 @@
   "slug": "bring-list",
   "displayName": "Bring! List",
   "latest": {
-    "version": "1.2.2",
-    "publishedAt": 1771516090053,
-    "commit": "https://github.com/openclaw/skills/commit/439f29c80823457a2e54ef35aa21f7c3ff09cd4c"
+    "version": "1.2.4",
+    "publishedAt": 1771520007689,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.2",
+      "publishedAt": 1771516090053,
+      "commit": "https://github.com/openclaw/skills/commit/439f29c80823457a2e54ef35aa21f7c3ff09cd4c"
+    },
     {
       "version": "1.2.1",
       "publishedAt": 1771313703703,

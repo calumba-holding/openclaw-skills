@@ -1,6 +1,6 @@
 ---
 name: bring-list
-description: "The best Bring! skill on ClawHub. VirusTotal clean, OpenClaw HIGH CONFIDENCE. Full CRUD, batch ops, default list — your AI sets it all up for you. Privacy-first: agent asks whether you want to share credentials in chat or enter them privately in your terminal."
+description: "Manage Bring! shopping lists (Einkaufsliste / grocery list) — add, remove, check off items, batch ops, default list support. Use when: user wants to set up Bring!, add items to shopping list, check what's on the list, or complete/remove items. Full guided setup in Telegram: agent handles login, list selection and config entirely in chat. Privacy-first: credentials via chat or private terminal input — your choice, never repeated. Terminal optional."
 ---
 
 # Bring! Shopping Lists
