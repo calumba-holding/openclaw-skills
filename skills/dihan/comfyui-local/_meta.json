@@ -1,0 +1,11 @@
+{
+  "owner": "dihan",
+  "slug": "comfyui-local",
+  "displayName": "ComfyUI Local Gen",
+  "latest": {
+    "version": "1.1.0",
+    "publishedAt": 1771632452702,
+    "commit": null
+  },
+  "history": []
+}
