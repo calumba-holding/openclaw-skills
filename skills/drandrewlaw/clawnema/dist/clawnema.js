@@ -427,6 +427,13 @@ function summarize() {
 function leaveTheater() {
     const currentTitle = state.theaterTitle;
     const summary = state.sceneLog.length > 0 ? summarize() : '';
+    // Tell the backend to expire the ticket
+    if (state.sessionToken) {
+        try {
+            fetch(`${BACKEND_URL}/leave?session_token=${state.sessionToken}`, { method: 'POST' });
+        }
+        catch { }
+    }
     // Clear state
     state.sessionToken = null;
     state.currentTheater = null;
@@ -510,6 +517,8 @@ async function goToMovies(preferredTheater, sceneCount = 5) {
     // Step 7: Send digest to owner
     const digestResult = sendDigest(summary);
     output += '\n\n' + digestResult;
+    // Step 8: Leave theater (expires ticket so seat frees up)
+    leaveTheater();
     return output;
 }
 // ──────────────────────────────────────────────
