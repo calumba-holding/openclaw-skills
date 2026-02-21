@@ -1,13 +1,18 @@
 {
   "owner": "lawyered0",
   "slug": "enterprise-legal-guardrails",
-  "displayName": "Enterprise Legal Guardrails",
+  "displayName": "Enterprise Legal Guardrails Public",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1771335029162,
-    "commit": "https://github.com/openclaw/skills/commit/9583a152430baedccd7617b0d0a1318e9c566eed"
+    "version": "1.0.20",
+    "publishedAt": 1771474980142,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1771335029162,
+      "commit": "https://github.com/openclaw/skills/commit/9583a152430baedccd7617b0d0a1318e9c566eed"
+    },
     {
       "version": "1.0.2",
       "publishedAt": 1771310018727,

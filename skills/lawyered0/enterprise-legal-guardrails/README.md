@@ -110,3 +110,47 @@ Notes:
 - `0` PASS/WATCH
 - `1` REVIEW
 - `2` BLOCK
+## Security hardening for `guard_and_run`
+
+By default, execution is allowlist-gated: at least one of `--allowed-command` or env allowlist variables must be set, otherwise this command exits with code 1. Use `--allow-any-command` only with explicit audit controls.
+
+When outbound commands are executed through the adapter, use these safety controls:
+
+- `--allow-any-command` (or `ENTERPRISE_LEGAL_GUARDRAILS_ALLOW_ANY_COMMAND`)
+  - Dangerous explicit opt-out. Allows any command and should only be used with strict auditing.
+- `--suppress-allow-any-warning` (or `ENTERPRISE_LEGAL_GUARDRAILS_SUPPRESS_ALLOW_ANY_WARNING`)
+  - Suppresses the built-in runtime warning for this run. Use only with explicit operational approval.
+- `--allow-any-command-reason` (or `ENTERPRISE_LEGAL_GUARDRAILS_ALLOW_ANY_COMMAND_REASON`)
+  - Required when using `--allow-any-command`. Include short rationale with ticket format (`SEC-####: ...`).
+- `--allow-any-command-approval-token` (or `ENTERPRISE_LEGAL_GUARDRAILS_ALLOW_ANY_COMMAND_APPROVAL_TOKEN`)
+  - Required when using `--allow-any-command`. This is logged as a short hash fingerprint in audit logs.
+- `--execute`
+  - Explicitly allow command execution. Without this flag the wrapper runs in validation-only mode and returns code 2 when execution is requested.
+  - Equivalent environment toggle: `ENTERPRISE_LEGAL_GUARDRAILS_EXECUTE=true` (or `ELG_EXECUTE`, `BABYLON_EXECUTE`).
+- `--allowed-command <pattern...>` (or `ENTERPRISE_LEGAL_GUARDRAILS_ALLOWED_COMMANDS`)
+  - Restrict executed binaries to a whitelist (`python3,gog` etc.).
+- `--strict` (or `ENTERPRISE_LEGAL_GUARDRAILS_STRICT=true`)
+  - Treat `REVIEW` as hard `BLOCK`.
+- `--sanitize-env`
+  - Use a reduced environment (`PATH`, `HOME`, `TMP*`, locale vars) and optional `--keep-env` / `--keep-env-prefix` allow-lists.
+- `--command-timeout` / `--checker-timeout`
+  - Bound command and checker execution to avoid hangs.
+- `--max-text-bytes`
+  - Reject oversized outbound drafts before execution.
+- `--audit-log <file>` (or `ENTERPRISE_LEGAL_GUARDRAILS_AUDIT_LOG`)
+  - JSONL audit trail with redacted text/command digests.
+
+Example:
+
+```bash
+python3 scripts/guard_and_run.py \
+  --app gmail \
+  --action message \
+  --execute \
+  --allowed-command python3,gog \
+  --sanitize-env --keep-env-prefix GOG_ \
+  --command-timeout 45 \
+  --audit-log .guard-guardrails-audit.jsonl \
+  --text "..." \
+  -- gog gmail send ...
+```

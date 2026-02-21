@@ -111,17 +111,17 @@ For skills/tools without native guardrail hooks (for example: Gmail, custom webs
 publishing, custom message bots), run outbound operations through the wrapper:
 
 ```bash
-python3 /path/to/enterprise-legal-guardrails/scripts/guard_and_run.py   --app <app_name>   --action <post|comment|message|trade|market-analysis|generic>   --text "$DRAFT"   -- <outbound command...>
+python3 /path/to/enterprise-legal-guardrails/scripts/guard_and_run.py   --app <app_name>   --action <post|comment|message|trade|market-analysis|generic> --execute --text "$DRAFT"   -- <outbound command...>
 ```
 
 Examples:
 
 ```bash
 # Gmail via gog
-python3 /path/to/enterprise-legal-guardrails/scripts/guard_and_run.py   --app gmail --action message   --text "Hello, ..."   -- gog gmail send --to user@domain.com --subject "Update" --body "Hello, ..."
+python3 /path/to/enterprise-legal-guardrails/scripts/guard_and_run.py   --app gmail --action message --execute --text "Hello, ..."   -- gog gmail send --to user@domain.com --subject "Update" --body "Hello, ..."
 
 # Website/publication publish flow
-python3 /path/to/enterprise-legal-guardrails/scripts/guard_and_run.py   --app website --action post   --text "$POST_COPY"   -- npm run publish-post "$POST_COPY"
+python3 /path/to/enterprise-legal-guardrails/scripts/guard_and_run.py   --app website --action post --execute --text "$POST_COPY"   -- npm run publish-post "$POST_COPY"
 ```
 
 Use this wrapper to apply the same policy checks in non-Babylon outbound flows.
@@ -138,3 +138,32 @@ See `references/guardrail-policy-map.md` for the full policy rule set and sugges
 
 A distributable bundle is available at:
 - `dist/enterprise-legal-guardrails.skill`
+### Hardening controls for `guard_and_run.py`
+
+For non-native outbound integrations, treat `guard_and_run` as an execution
+boundary. Recommended flags/env:
+
+Execution safety is allowlist-first by default. Wrapper requires explicit
+`--allowed-command` (or env alias) unless `--allow-any-command` is explicitly enabled.
+
+- `--allow-any-command` / `ENTERPRISE_LEGAL_GUARDRAILS_ALLOW_ANY_COMMAND`
+  - Explicitly bypass allowlist enforcement (unsafe; audit-first use only).
+- `--suppress-allow-any-warning` / `ENTERPRISE_LEGAL_GUARDRAILS_SUPPRESS_ALLOW_ANY_WARNING`
+  - Suppresses the runtime safety warning when `--allow-any-command` is intentionally enabled.
+- `--allow-any-command-reason` / `ENTERPRISE_LEGAL_GUARDRAILS_ALLOW_ANY_COMMAND_REASON`
+  - Mandatory rationale for any `allow-any` bypass invocation. Suggested format: `SEC-1234: emergency fix`.
+- `--allow-any-command-approval-token` / `ENTERPRISE_LEGAL_GUARDRAILS_ALLOW_ANY_COMMAND_APPROVAL_TOKEN`
+  - Mandatory approval token for any `allow-any` bypass invocation; stored as a short token fingerprint in audit logs.
+- `--allowed-command <exe...>` / `ENTERPRISE_LEGAL_GUARDRAILS_ALLOWED_COMMANDS`
+  - Allow-list executables (supports comma/space lists and wildcards).
+- `--execute` / `ENTERPRISE_LEGAL_GUARDRAILS_EXECUTE`
+  - Enables execution after guard checks. Without this flag, runs are validation-only.
+- `--strict` / `ENTERPRISE_LEGAL_GUARDRAILS_STRICT`
+  - Escalate `REVIEW` to hard block.
+- `--sanitize-env`
+- `--keep-env <VAR...>` / `--keep-env-prefix <PREFIX...>`
+- `--command-timeout`, `--checker-timeout`, `--max-text-bytes`
+- `--audit-log <file>` / `ENTERPRISE_LEGAL_GUARDRAILS_AUDIT_LOG`
+
+These flags provide execution safety, command scoping, and immutable trail for
+post-incident review without changing checker logic.
