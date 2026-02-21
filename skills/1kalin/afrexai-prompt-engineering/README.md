@@ -1,20 +1,18 @@
 # Prompt Engineering Mastery ⚡
 
-> The complete prompt engineering system — 10 phases, 8 ready-to-use patterns, scoring rubrics, and agent design templates. Turn vague instructions into reliable AI outputs.
+**The complete prompt engineering system for AI agents and developers.** Design, optimize, debug, and score prompts for any LLM — Claude, GPT, Gemini, Llama, Mistral.
 
-## What This Skill Does
+## What You Get
 
-Equips your AI agent with a comprehensive prompt engineering methodology:
-
-- **7 Building Blocks** — anatomy of every effective prompt
-- **7 Core Techniques** — direct instruction, chain-of-thought, few-shot, role prompting, structured tags, constraints, decomposition
-- **7 Advanced Techniques** — self-critique, multi-perspective debate, structured output enforcement, iterative refinement, RAG prompting, calibrated confidence, adversarial testing
-- **System Prompt Design** — complete agent identity + instruction architecture with anti-patterns
-- **0-100 Quality Scoring** — weighted rubric across 7 dimensions
-- **8 Ready-to-Use Patterns** — extractor, classifier, transformer, evaluator, decision maker, researcher, code generator, summarizer
-- **Optimization Workflow** — draft→test→fail→diagnose→fix→retest→ship
-- **Prompt Security** — injection prevention, jailbreak resistance, data leakage rules
-- **ROI Measurement** — metrics to prove your prompts are working
+- **CRAFT Framework** — Structured method for building prompts that work first time
+- **10 Core Techniques** — Zero-shot, few-shot, chain-of-thought, persona stacking, meta-prompting, and more
+- **Advanced Patterns** — Prompt chaining, RAG prompting, self-evaluation, constitutional AI
+- **Model-Specific Optimization** — Claude, GPT-4, Gemini, and open-source tuning guides
+- **5 Domain Templates** — Code generation, data extraction, content writing, analysis, email
+- **Debugging Toolkit** — 8 common failures with exact fixes
+- **0-100 Scoring Rubric** — Objectively measure prompt quality across 6 dimensions
+- **Real-World Catalog** — Production-ready prompts for feedback analysis, ADRs, sales sequences
+- **10 Anti-Patterns** — What never to do (and what to do instead)
 
 ## Install
 
@@ -24,24 +22,22 @@ clawhub install afrexai-prompt-engineering
 
 ## Quick Start
 
-Just ask your agent:
-- "Score this prompt" — get a 0-100 quality rating
-- "Improve this prompt" — step-by-step optimization
-- "Break this prompt" — find vulnerabilities
-- "Make this an agent" — design a complete system prompt
+Tell your agent: `"Review this prompt"` — it'll run the health check and score it 0-100.
+
+Or: `"Build a prompt for [task]"` — it'll use the CRAFT method with examples and test cases.
 
 ## ⚡ Level Up
 
-Want industry-specific prompt templates for your vertical?
+Want industry-specific AI context packs with tailored prompts, workflows, and automation playbooks?
 
-**[AfrexAI Context Packs — $47](https://afrexai-cto.github.io/context-packs/)** include domain-tuned prompt libraries for SaaS, Fintech, Healthcare, Legal, Construction, Ecommerce, Recruitment, Manufacturing, Real Estate, and Professional Services.
+**[$47 Context Packs](https://afrexai-cto.github.io/context-packs/)** — 10 verticals: SaaS, Fintech, Healthcare, Legal, Ecommerce, Construction, Manufacturing, Real Estate, Recruitment, Professional Services.
 
 ## 🔗 More Free Skills by AfrexAI
 
-- `afrexai-lead-hunter` — Complete lead generation system
-- `afrexai-seo-content-engine` — SEO content methodology
-- `afrexai-code-reviewer` — SPEAR code review framework
-- `afrexai-data-analyst` — DICE data analysis framework
-- `afrexai-business-automation` — 5-phase automation lifecycle
+- [afrexai-seo-content-engine](https://clawhub.com/skills/afrexai-seo-content-engine) — SEO content system
+- [afrexai-lead-hunter](https://clawhub.com/skills/afrexai-lead-hunter) — Lead generation engine
+- [afrexai-code-reviewer](https://clawhub.com/skills/afrexai-code-reviewer) — Code review with SPEAR framework
+- [afrexai-sales-playbook](https://clawhub.com/skills/afrexai-sales-playbook) — Complete B2B sales system
+- [afrexai-data-analyst](https://clawhub.com/skills/afrexai-data-analyst) — Data analysis with DICE framework
 
 **[Browse all AfrexAI skills →](https://afrexai-cto.github.io/context-packs/)**
