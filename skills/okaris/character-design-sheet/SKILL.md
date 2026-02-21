@@ -1,12 +1,6 @@
 ---
 name: character-design-sheet
-description: |
-  Character consistency across AI-generated images with reference sheets and LoRA techniques.
-  Covers turnaround views, expression sheets, color palettes, and style consistency tricks.
-  Use for: character design, game art, illustration, animation, comics, visual novels.
-  Triggers: character design, character sheet, character consistency, character reference,
-  turnaround sheet, expression sheet, character art, consistent character, character concept,
-  reference sheet, character creation, oc design, character bible
+description: "Character consistency across AI-generated images with reference sheets and LoRA techniques. Covers turnaround views, expression sheets, color palettes, and style consistency tricks. Use for: character design, game art, illustration, animation, comics, visual novels. Triggers: character design, character sheet, character consistency, character reference, turnaround sheet, expression sheet, character art, consistent character, character concept, reference sheet, character creation, oc design, character bible"
 allowed-tools: Bash(infsh *)
 ---
 
@@ -26,6 +20,8 @@ infsh app run falai/flux-dev-lora --input '{
   "height": 1024
 }'
 ```
+
+> **Install note:** The [install script](https://cli.inference.sh) only detects your OS/architecture, downloads the matching binary from `dist.inference.sh`, and verifies its SHA-256 checksum. No elevated permissions or background processes. [Manual install & verification](https://dist.inference.sh/cli/checksums.txt) available.
 
 ## The Consistency Problem
 
@@ -273,9 +269,9 @@ Recommended scale: 0.8
 ## Related Skills
 
 ```bash
-npx skills add inferencesh/skills@ai-image-generation
-npx skills add inferencesh/skills@flux-image
-npx skills add inferencesh/skills@prompt-engineering
+npx skills add inference-sh/skills@ai-image-generation
+npx skills add inference-sh/skills@flux-image
+npx skills add inference-sh/skills@prompt-engineering
 ```
 
 Browse all apps: `infsh app list`
