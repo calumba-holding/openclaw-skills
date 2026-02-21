@@ -3,14 +3,39 @@
   "info": {
     "title": "Ceaser x402 ZK Facilitator API",
     "description": "x402-compatible ZK proof facilitator for privacy protocols on Base L2. Two services in one: (1) Generic x402 ZK Facilitator for gasless withdrawals via zk-relay scheme, (2) Ceaser Protocol API for direct interaction with the privacy pool.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "contact": {
       "name": "ZYRKOM",
       "url": "https://ceaser.org"
     },
     "license": {
       "name": "MIT"
-    }
+    },
+    "x-openclaw-skills": [
+      {
+        "slug": "ceaser",
+        "name": "Ceaser",
+        "version": "1.4.0",
+        "install": "clawhub install ceaser",
+        "url": "https://clawhub.ai/Zyra-V21/ceaser",
+        "description": "Read-only queries + shield/unshield via CLI subcommands. User signs transactions manually (e.g., MetaMask). Maximum privacy -- no intermediate wallet, no on-chain links.",
+        "signingMode": "manual",
+        "privacyLevel": "maximum",
+        "requires": ["curl", "jq", "node", "npx"]
+      },
+      {
+        "slug": "ceaser-send",
+        "name": "Ceaser Private Send",
+        "version": "1.3.0",
+        "install": "clawhub install ceaser-send",
+        "url": "https://clawhub.ai/Zyra-V21/ceaser-send",
+        "description": "Fully automated shield-to-unshield flow using an ephemeral hot wallet. Agent signs transactions automatically. Reduced privacy -- creates observable on-chain links between user wallet and hot wallet (funding + refund).",
+        "signingMode": "auto",
+        "privacyLevel": "reduced",
+        "privacyWarning": "Auto-signing creates funding and refund links visible on-chain. Use ceaser (manual) for maximum privacy.",
+        "requires": ["curl", "jq", "node", "npx"]
+      }
+    ]
   },
   "servers": [
     {
