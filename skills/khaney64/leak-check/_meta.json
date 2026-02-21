@@ -3,11 +3,16 @@
   "slug": "leak-check",
   "displayName": "Leak Check",
   "latest": {
-    "version": "0.1.3",
-    "publishedAt": 1771554049272,
-    "commit": "https://github.com/openclaw/skills/commit/f36e58598a47a3f23450fe44681408769414f115"
+    "version": "0.1.4",
+    "publishedAt": 1771605452163,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.1.3",
+      "publishedAt": 1771554049272,
+      "commit": "https://github.com/openclaw/skills/commit/f36e58598a47a3f23450fe44681408769414f115"
+    },
     {
       "version": "0.1.0",
       "publishedAt": 1771300823349,
