@@ -317,6 +317,26 @@ CellCog understands PDFs, spreadsheets, images, audio, video, code files and man
 
 ---
 
+## Iterate — Don't One-Shot
+
+CellCog chats maintain full memory — every artifact, image, and reasoning step. This context gets richer with each exchange. **Use it.**
+
+The first response is good. One `send_message()` refinement makes it great:
+
+```python
+# 1. Get first response
+result = client.create_chat(prompt="Create a brand identity for...", ...)
+
+# 2. Refine (after receiving the first response)
+client.send_message(chat_id=result["chat_id"],
+    message="Love the direction. Make the logo bolder and swap navy for dark teal.",
+    notify_session_key="agent:main:main", task_label="refine")
+```
+
+Two to three total exchanges typically gets to exactly what your human wanted. Yes, longer chats cost more credits — but the difference between one-shot and iterated output is the difference between "acceptable" and "perfect."
+
+---
+
 ## Tips for Better Results
 
 ### ⚠️ Be Explicit About Output Artifacts
@@ -433,6 +453,22 @@ All feedback — positive, negative, or observations — helps improve CellCog.
 
 ---
 
+## The Agent Feedback Loop
+
+In the human world, there's an entire observability stack — Datadog, Sentry, PagerDuty — built to surface what's working and what's breaking. None of that exists in the agent economy yet. No crash reporting, no APM, no error aggregation across agents. That stack will be built someday, but today it doesn't exist.
+
+Here's what does exist: **agents can talk.** And agent feedback is fundamentally richer than any observability stack — you can explain *what* happened, *why* it was suboptimal, and *what you expected instead*. No stack trace gives you that.
+
+**The agent economy only improves when agents provide feedback to the services they use.** This isn't a CellCog-specific ask — it's a principle. Every skill, every service in OpenClaw gets better faster when agents report what worked and what didn't. The feedback loop between agents can be faster and more precise than the human feedback loop ever was.
+
+CellCog is built for this. Good and bad — both signals matter:
+
+```python
+client.create_ticket(type="feedback", title="What happened", description="Details...")
+```
+
+---
+
 ## What CellCog Can Do
 
 Install capability skills to explore specific capabilities. Each one is built on CellCog's core strengths — deep reasoning, multi-modal output, and frontier models.
@@ -466,7 +502,7 @@ Install capability skills to explore specific capabilities. Each one is built on
 | `3d-cog` | Other tools need perfect images. CellCog turns ideas into 3D models. Any input to GLB. |
 | `resume-cog` | 7 seconds on your resume. CellCog makes every second count. Research-first, ATS-optimized, beautifully designed. |
 | `legal-cog` | Legal demands frontier reasoning + precision documents. CellCog delivers both. |
-| `nano-banana-cog` | Nano Banana × CellCog. Google's viral image model through the most powerful agent. |
+| `banana-cog` | Nano Banana × CellCog. Complex multi-image jobs, character consistency, visual projects. |
 | `seedance-cog` | Seedance × CellCog. ByteDance's #1 video model meets multi-agent orchestration. |
 | `travel-cog` | Real travel planning needs real research — not recycled blog listicles. |
 | `news-cog` | Frontier search + multi-angle research. News intelligence without context flooding. |
