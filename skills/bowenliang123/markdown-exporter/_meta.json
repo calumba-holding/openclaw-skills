@@ -3,9 +3,15 @@
   "slug": "markdown-exporter",
   "displayName": "Markdown Exporter",
   "latest": {
-    "version": "3.5.5",
-    "publishedAt": 1771664357603,
-    "commit": "https://github.com/openclaw/skills/commit/78a9117a7e75b3ee1b4954e847b8031ada864d9e"
+    "version": "3.6.7",
+    "publishedAt": 1771776614400,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "3.5.5",
+      "publishedAt": 1771664357603,
+      "commit": "https://github.com/openclaw/skills/commit/78a9117a7e75b3ee1b4954e847b8031ada864d9e"
+    }
+  ]
 }
