@@ -5,6 +5,27 @@ All notable changes to NIMA Core will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2026-02-22
+
+### Fixed
+- **CRITICAL:** ClawHub package was missing entire `nima_core/cognition/` directory (10 files) due to `.clawhubignore` glob pattern bug — `*` excluded subdirectory contents even when parent was re-included
+- **CRITICAL:** All OpenClaw hook files missing from package (`openclaw_hooks/nima-memory/*.py`, `openclaw_hooks/nima-recall-live/*.py`, `openclaw_hooks/nima-affect/*`) — same `.clawhubignore` root cause
+- Fixed `.clawhubignore` to use `!dir/**` pattern for recursive re-inclusion
+
+### Changed
+- README.md fully rewritten — consolidated all features (v2.0–v3.0), added package contents tree, simplified configuration docs, removed outdated sections
+- Version badges updated to 3.0.2
+
+## [3.0.0] - 2026-02-22
+
+### Changed
+- Version alignment across all modules to 3.0.0
+- Package audit and dependency cleanup
+- SKILL.md version bump
+
+### Known Issues
+- Package published to ClawHub was incomplete (fixed in 3.0.2)
+
 ## [2.5.0] - 2026-02-21
 
 ### Added

@@ -27,19 +27,182 @@ import { execFileSync } from "node:child_process";
 import os from "node:os";
 import { randomBytes } from "node:crypto";
 
-// AUDIT FIX 2026-02-16: Import error handling utilities (Issues #1-4)
-// Addresses: Silent failures, missing retry logic, JSON parse errors
-import { 
-  retrySync, 
-  safeJsonParse, 
-  wrapError, 
-  isTransientError,
-  createCircuitBreaker,
-  retryWithBackoff
-} from "../shared/error-handling.js";
+// ═══════════════════════════════════════════════════════════════════════════════
+// INLINED: shared/error-handling.js + utils/async-python.js
+// Self-contained — no cross-directory imports needed.
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// Async Python execution with rate limiting and circuit breaker
-import { execPython } from "../utils/async-python.js";
+import { promisify } from "node:util";
+import { execFile } from "node:child_process";
+
+// --- Error Handling Utilities ---
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isTransientError(err) {
+  if (!err) return false;
+  const message = (err.message || '').toLowerCase();
+  const code = err.code || '';
+  const status = err.status || err.statusCode || 0;
+  if (['ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND', 'EPIPE'].includes(code)) return true;
+  if (message.includes('sqlite_busy') || message.includes('sqlite_locked') || message.includes('database is locked')) return true;
+  if (status === 429 || (status >= 500 && status < 600)) return true;
+  if (message.includes('timeout') || message.includes('timed out')) return true;
+  if (message.includes('rate limit') || message.includes('too many requests')) return true;
+  return false;
+}
+
+async function retryWithBackoff(fn, options = {}) {
+  const { maxRetries = 3, baseDelayMs = 1000, maxDelayMs = 10000, shouldRetry = isTransientError, onRetry = null } = options;
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try { return await fn(); } catch (err) {
+      lastError = err;
+      if (attempt >= maxRetries || !shouldRetry(err)) throw err;
+      const exponentialDelay = baseDelayMs * Math.pow(2, attempt - 1);
+      const delay = Math.min(exponentialDelay + Math.random() * 0.3 * exponentialDelay, maxDelayMs);
+      if (onRetry) onRetry(attempt, err, delay);
+      await sleep(delay);
+    }
+  }
+  throw lastError || new Error('Retry failed');
+}
+
+function retrySync(fn, options = {}) {
+  const { maxRetries = 3, baseDelayMs = 500, maxDelayMs = 5000, shouldRetry = isTransientError, onRetry = null } = options;
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try { return fn(); } catch (err) {
+      lastError = err;
+      if (attempt >= maxRetries || !shouldRetry(err)) throw err;
+      const delay = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
+      if (onRetry) onRetry(attempt, err, delay);
+      const buffer = new SharedArrayBuffer(4);
+      Atomics.wait(new Int32Array(buffer), 0, 0, delay);
+    }
+  }
+  throw lastError || new Error('Retry failed');
+}
+
+function safeJsonParse(jsonString, options = {}) {
+  const { context = 'JSON', validator = null, defaultValue = undefined } = options;
+  if (jsonString === null || jsonString === undefined || jsonString === '') {
+    if (defaultValue !== undefined) return defaultValue;
+    throw new Error(`${context}: Empty or null input`);
+  }
+  const str = String(jsonString).trim();
+  if (!str) {
+    if (defaultValue !== undefined) return defaultValue;
+    throw new Error(`${context}: Empty string after trimming`);
+  }
+  let parsed;
+  try { parsed = JSON.parse(str); } catch (parseErr) {
+    const preview = str.length > 500 ? str.substring(0, 500) + '...' : str;
+    const err = new Error(`${context}: Invalid JSON - ${parseErr.message}. Preview: ${preview}`);
+    if (defaultValue !== undefined) { console.error(`[safe-json-parse] ${err.message}`); return defaultValue; }
+    throw err;
+  }
+  if (validator && typeof validator === 'function') {
+    try { if (!validator(parsed)) {
+      const err = new Error(`${context}: Validation failed`);
+      if (defaultValue !== undefined) return defaultValue;
+      throw err;
+    }} catch (e) {
+      if (e.message.includes('Validation failed')) throw e;
+      if (defaultValue !== undefined) return defaultValue;
+      throw e;
+    }
+  }
+  return parsed;
+}
+
+function wrapError(err, context, metadata = {}) {
+  const wrapped = new Error(`[${context}] ${err.message}`);
+  wrapped.cause = err;
+  wrapped.originalStack = err.stack;
+  if (err.code) wrapped.code = err.code;
+  for (const [k, v] of Object.entries(metadata)) wrapped[k] = v;
+  wrapped.stack = `${wrapped.stack}\n\nCaused by:\n${err.stack}`;
+  return wrapped;
+}
+
+function createCircuitBreaker(options = {}) {
+  const { failureThreshold = 5, resetTimeoutMs = 30000, successThreshold = 2 } = options;
+  let state = 'CLOSED', failures = 0, successes = 0, lastFailureTime = 0;
+  return {
+    getState() { return state; },
+    async execute(fn) {
+      if (state === 'OPEN') {
+        if (Date.now() - lastFailureTime > resetTimeoutMs) { state = 'HALF_OPEN'; successes = 0; }
+        else throw new Error('Circuit breaker is OPEN');
+      }
+      try {
+        const result = await fn();
+        if (state === 'HALF_OPEN') { successes++; if (successes >= successThreshold) { state = 'CLOSED'; failures = 0; } }
+        else failures = 0;
+        return result;
+      } catch (err) { failures++; lastFailureTime = Date.now(); if (failures >= failureThreshold) state = 'OPEN'; throw err; }
+    },
+    reset() { state = 'CLOSED'; failures = 0; successes = 0; lastFailureTime = 0; }
+  };
+}
+
+// --- Async Python Execution ---
+
+const execFileAsync = promisify(execFile);
+
+class SimpleRateLimiter {
+  constructor(tokensPerInterval, interval) {
+    this.tokensPerInterval = tokensPerInterval;
+    this.interval = interval === 'second' ? 1000 : interval;
+    this.tokens = tokensPerInterval;
+    this.lastRefill = Date.now();
+  }
+  async removeTokens(count) {
+    this.refill();
+    if (this.tokens >= count) { this.tokens -= count; return true; }
+    const timeToNext = this.interval - (Date.now() - this.lastRefill);
+    if (timeToNext > 0) { await new Promise(r => setTimeout(r, timeToNext)); this.refill(); }
+    if (this.tokens >= count) { this.tokens -= count; return true; }
+    return false;
+  }
+  refill() {
+    if (Date.now() - this.lastRefill >= this.interval) { this.tokens = this.tokensPerInterval; this.lastRefill = Date.now(); }
+  }
+}
+
+const pythonSpawnLimiter = new SimpleRateLimiter(10, 'second');
+
+async function execPython(scriptPath, args = [], options = {}) {
+  const { breakerId = "default", ...execOptions } = options;
+  // Simple per-id breaker
+  if (!execPython._breakers) execPython._breakers = new Map();
+  if (!execPython._breakers.has(breakerId)) {
+    execPython._breakers.set(breakerId, { failures: 0, lastFail: 0, state: "CLOSED" });
+  }
+  const b = execPython._breakers.get(breakerId);
+  if (b.state === "OPEN") {
+    if (Date.now() - b.lastFail > 60000) b.state = "HALF-OPEN";
+    else throw new Error(`Circuit breaker '${breakerId}' is OPEN`);
+  }
+  await pythonSpawnLimiter.removeTokens(1);
+  try {
+    const venvPython = join(os.homedir(), ".openclaw", "workspace", ".venv", "bin", "python3");
+    let cmd, finalArgs;
+    if (scriptPath.endsWith(".py") || scriptPath === "python3") {
+      cmd = venvPython; finalArgs = scriptPath === "python3" ? args : [scriptPath, ...args];
+    } else { cmd = scriptPath; finalArgs = args; }
+    const { stdout } = await execFileAsync(cmd, finalArgs, { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024, ...execOptions });
+    b.failures = 0; b.state = "CLOSED";
+    return stdout;
+  } catch (err) { b.failures++; b.lastFail = Date.now(); if (b.failures >= 5) b.state = "OPEN"; throw err; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// END INLINED UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
 
 // Circuit breaker to prevent cascading failures to SQLite
 const dbCircuitBreaker = createCircuitBreaker({
@@ -397,6 +560,13 @@ function cleanInputText(text) {
   // Remove [message_id: ...] trailers
   cleaned = cleaned.replace(/\[message_id:\s*[^\]]+\]\s*/gi, "");
 
+  // Remove "Conversation info (untrusted metadata)" blocks (JSON metadata injected by gateway)
+  cleaned = cleaned.replace(/Conversation info \(untrusted metadata\)[^\n]*\n?```json[\s\S]*?```\s*/gi, "");
+  cleaned = cleaned.replace(/Conversation info \(untrusted metadata\)[^\n]*\n/gi, "");
+
+  // Remove inbound metadata JSON blocks
+  cleaned = cleaned.replace(/```json\s*\{\s*"(?:schema|message_id|sender)"[\s\S]*?\}\s*```\s*/g, "");
+
   // Remove heartbeat instruction text (system mechanics)
   cleaned = cleaned.replace(/Read HEARTBEAT\.md if it exists[^\n]*\n*/gi, "");
 
@@ -609,9 +779,14 @@ function extractLayers(messages, ctx) {
       }
     }
     
-    // HEURISTIC: If still "unknown" and in main session, default to owner
+    // HEURISTIC: If still "unknown" or generic "user"/"User" and in main session, default to owner
     // This handles messages with timestamp prefixes (no channel prefix) in direct chats
-    if (inputWho === "unknown" && ctx?.sessionKey === "agent:main:main") {
+    // Also handles TUI/webchat where sender info may not be properly passed
+    const isGenericUser = inputWho === "unknown" || String(inputWho).toLowerCase() === "user";
+    const isMainSession = ctx?.sessionKey === "agent:main:main" || String(ctx?.conversationId ?? "").includes("main");
+    const isDavidUser = String(ctx?.userId ?? "") === "5556407150" || String(ctx?.from ?? "").includes("5556407150") || ctx?.accountId === "default";
+    
+    if ((isGenericUser && isMainSession) || isDavidUser) {
       inputWho = "David Dorta";
     }
 
@@ -947,17 +1122,17 @@ async function _storeMemoryInternal(record) {
     conversation_id: record.metadata.conversationId,
     fe_score: record.metadata.feScore || 0.5,
     input: {
-      text: record.layers.input.text,
-      summary: record.layers.input.summary,
-      who: record.layers.input.who,
+      text: record.layers.input?.text ?? "",
+      summary: record.layers.input?.summary ?? "",
+      who: record.layers.input?.who ?? "unknown",
     },
     contemplation: {
-      text: record.layers.contemplation.text,
-      summary: record.layers.contemplation.summary,
+      text: record.layers.contemplation?.text ?? "",
+      summary: record.layers.contemplation?.summary ?? "",
     },
     output: {
-      text: record.layers.output.text,
-      summary: record.layers.output.summary,
+      text: record.layers.output?.text ?? "",
+      summary: record.layers.output?.summary ?? "",
     },
   };
 
@@ -1211,8 +1386,8 @@ function escapeLikePattern(pattern) {
 // PLUGIN EXPORT
 // =============================================================================
 
-// Import live recall hook
-import nimaRecallLivePlugin from "./recall-hook.js";
+// Live recall hook is handled by nima-recall-live extension (disabled here to prevent double injection)
+// import nimaRecallLivePlugin from "./recall-hook.js";
 
 export default function nimaMemoryPlugin(api, config) {
   // ─── Config with defaults ───
@@ -1357,15 +1532,13 @@ export default function nimaMemoryPlugin(api, config) {
       }
       
       // Skip if input was purely heartbeat instruction (already filtered by cleanInputText)
-      // Guard against null/undefined contemplation
-      const contemplationText = layers.contemplation?.text || "";
-      if (!layers.input.text && !contemplationText) {
+      if (!layers.input.text && !layers.contemplation?.text) {
         captureMetrics.filteredEmpty++;
         return;
       }
 
       // Skip system noise (gateway restarts, doctor hints, JSON system messages)
-      if (isLowQualityMemory(layers.input.text, layers.output.text, contemplationText)) {
+      if (isLowQualityMemory(layers.input.text, layers.output.text, layers.contemplation?.text || "")) {
         log.debug?.(`[nima-memory] Skipping system noise memory`);
         captureMetrics.filteredNoise++;
         return;
@@ -1489,6 +1662,5 @@ export default function nimaMemoryPlugin(api, config) {
     });
   }
 
-  // Register live recall hook (queries memory on every message)
-  nimaRecallLivePlugin(api, config);
+  // Live recall handled by nima-recall-live extension (removed duplicate here)
 }

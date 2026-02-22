@@ -25,7 +25,15 @@ import { join } from "node:path";
 import os from "node:os";
 import { LEXICON, EMOJI_AFFECTS } from "./emotion-lexicon.js";
 import { analyzeAffect } from "./vader-affect.js";
-import { resilientHook, resilientHookSync } from "../shared/resilient.js";
+// --- Inlined: shared/resilient.js (self-contained, no cross-dir imports) ---
+function _logHookError(name, err) { console.error(`[HookError] Hook '${name}' failed: ${err.message}`); }
+function resilientHook(name, fn, fallback = undefined) {
+  return async function(event, ctx) { try { return await fn(event, ctx); } catch (err) { _logHookError(name, err); return fallback; } };
+}
+function resilientHookSync(name, fn, fallback = undefined) {
+  return function(event, ctx) { try { return fn(event, ctx); } catch (err) { _logHookError(name, err); return fallback; } };
+}
+// --- End inlined ---
 
 // =============================================================================
 // CONSTANTS

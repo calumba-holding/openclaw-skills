@@ -5,7 +5,7 @@
 <h1 align="center">NIMA Core</h1>
 
 <p align="center">
-  <strong>Neural Integrated Memory Architecture</strong><br/>
+  <strong>Noosphere Integrated Memory Architecture</strong><br/>
   Persistent memory, emotional intelligence, and semantic recall for AI agents.
 </p>
 
@@ -17,8 +17,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.3.0-blue" alt="Version" />
-  <img src="https://img.shields.io/badge/python-3.8%2B-green" alt="Python" />
+  <img src="https://img.shields.io/badge/version-3.0.3-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/python-3.9%2B-green" alt="Python" />
   <img src="https://img.shields.io/badge/node-18%2B-green" alt="Node" />
   <img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="License" />
 </p>
@@ -58,40 +58,36 @@ Your bot now has persistent memory. Every conversation is captured, indexed, and
 
 ---
 
-## 🆕 What's New in v2.3.0
+## 🆕 What's New in v3.0
 
-### Memory Pruner — Forgetting as a Feature
-Old conversations pile up. The new **memory pruner** automatically distills aging transcripts into compact semantic summaries, then suppresses the raw noise. Your bot's memory gets *smarter*, not just *bigger*.
+### Complete Cognitive Architecture
 
-```bash
-# Run manually
-python -m nima_core.memory_pruner --min-age 14 --live
+NIMA is no longer just memory — it's a **full cognitive stack** for AI agents:
 
-# Or let the nightly cron handle it
-```
+| Module | What It Does | Since |
+|--------|-------------|-------|
+| **Memory Capture** | 3-layer capture (input/contemplation/output) with 4-phase noise filtering | v2.0 |
+| **Semantic Recall** | Vector + text hybrid search, ecology scoring, token-budgeted injection | v2.0 |
+| **Dynamic Affect** | Panksepp 7-affect emotional state tracking (SEEKING, RAGE, FEAR, LUST, CARE, PANIC, PLAY) | v2.1 |
+| **Memory Pruner** | LLM distillation of old conversations into semantic gists, 30-day suppression limbo | v2.3 |
+| **Dream Consolidation** | Nightly synthesis — extracts insights and patterns from episodic memory via LLM | v2.4 |
+| **Hive Mind** | Multi-agent memory sharing via shared LadybugDB + optional Redis pub/sub | v2.5 |
+| **Precognition** | Temporal pattern mining → predictive memory pre-loading | v2.5 |
+| **Lucid Moments** | Spontaneous surfacing of emotionally-resonant memories | v2.5 |
 
-- LLM distillation via Anthropic API (stdlib only — no `anthropic` package needed)
-- Extractive fallback when no API key
-- 30-day suppression limbo (restorable if needed)
-- Configurable: `NIMA_DISTILL_MODEL`, `NIMA_DB_PATH`, `NIMA_DATA_DIR`
+### v3.0.2 Bug Fixes
+- **Fixed:** ClawHub package was missing `nima_core/cognition/` directory and all OpenClaw hook files due to `.clawhubignore` glob pattern bug
+- **Fixed:** All subdirectories now correctly included in published package
 
-### Infrastructure Modules
-Production-ready internals:
-- **`logging_config.py`** — Singleton logger, file + console, `NIMA_LOG_LEVEL` env var
-- **`metrics.py`** — Thread-safe counters, timings, gauges with `Timer` context manager
-- **`connection_pool.py`** — SQLite connection pool, WAL mode, max 5 connections
-
-### v2.2.0 Highlights
-- **VADER Affect Analyzer** — Contextual sentiment with caps boost, negation, idiom recognition
-- **4-Phase Noise Remediation** — Empty validation → heartbeat filter → dedup → metrics
-- **3000-token recall budget** (was 500) — 6x more context per response
-- **Resilient hook wrappers** — Auto-retry with exponential backoff, no more crash loops
+### v3.0.0 Highlights
+- Version alignment across all modules
+- Full package audit and dependency cleanup
 
 ---
 
 ## 🧠 How It Works
 
-```
+```text
   User message arrives
          │
          ▼
@@ -126,224 +122,171 @@ Production-ready internals:
 
 ---
 
+## 📦 Package Contents
+
+```text
+nima-core/
+├── SKILL.md                          # ClawHub skill definition
+├── README.md                         # This file
+├── CHANGELOG.md                      # Full version history
+├── install.sh                        # One-command installer
+├── setup.py                          # pip install support
+├── requirements.txt                  # Core dependencies
+│
+├── nima_core/                        # Python core library
+│   ├── __init__.py                   # Lazy imports, version, public API
+│   ├── connection_pool.py            # SQLite connection pool (WAL, thread-safe)
+│   ├── logging_config.py             # Singleton logger
+│   ├── metrics.py                    # Thread-safe counters/timings
+│   ├── memory_pruner.py              # Episodic distillation engine
+│   ├── dream_consolidation.py        # Nightly memory synthesis
+│   ├── hive_mind.py                  # Multi-agent memory sharing
+│   ├── precognition.py               # Temporal pattern mining
+│   ├── lucid_moments.py              # Spontaneous memory surfacing
+│   └── cognition/                    # Emotional intelligence
+│       ├── dynamic_affect.py         # Panksepp 7-affect system
+│       ├── emotion_detection.py      # Text emotion extraction
+│       ├── affect_correlation.py     # Cross-affect analysis
+│       ├── affect_history.py         # Temporal affect tracking
+│       ├── affect_interactions.py    # Affect coupling dynamics
+│       ├── archetypes.py             # Personality baselines
+│       ├── personality_profiles.py   # JSON personality configs
+│       ├── response_modulator_v2.py  # Affect → response modulation
+│       └── exceptions.py             # Custom exceptions
+│
+├── openclaw_hooks/                   # OpenClaw plugin hooks
+│   ├── nima-memory/                  # Capture hook
+│   │   ├── index.js                  # Hook entry point
+│   │   ├── openclaw.plugin.json      # Plugin manifest
+│   │   ├── ladybug_store.py          # LadybugDB storage backend
+│   │   ├── embeddings.py             # Multi-provider embedding
+│   │   ├── backfill.py               # Historical transcript import
+│   │   ├── health_check.py           # DB integrity checks
+│   │   └── ...                       # Migration, benchmarks, docs
+│   ├── nima-recall-live/             # Recall hook
+│   │   ├── index.js                  # Hook entry point
+│   │   ├── lazy_recall.py            # Current recall engine
+│   │   ├── ladybug_recall.py         # LadybugDB-native recall
+│   │   └── build_embedding_index.py  # Offline index builder
+│   ├── nima-affect/                  # Affect hook
+│   │   ├── index.js                  # Hook entry point
+│   │   ├── vader-affect.js           # VADER sentiment analyzer
+│   │   └── emotion-lexicon.js        # Emotion keyword lexicon
+│   └── shared/                       # Shared utilities
+│       ├── resilient.js              # Auto-retry with backoff
+│       └── error-handling.js         # Graceful error wrappers
+```
+
+---
+
 ## 🔧 Configuration
 
 ### Embedding Providers
 
 NIMA needs an embedding model to create searchable memory vectors. **Pick one:**
 
-<table>
-<tr><th>Provider</th><th>Setup</th><th>Dims</th><th>Cost</th><th>Quality</th><th>Best For</th></tr>
-<tr>
-<td><b>🏠 Local (default)</b></td>
-<td>
+| Provider | Setup | Dims | Cost | Best For |
+|----------|-------|------|------|----------|
+| **🏠 Local** (default) | `NIMA_EMBEDDER=local` + `pip install sentence-transformers` | 384 | Free | Privacy, offline, dev |
+| **🚀 Voyage AI** | `NIMA_EMBEDDER=voyage` + `VOYAGE_API_KEY` | 1024 | $0.12/1M tok | Production (best quality/cost) |
+| **🤖 OpenAI** | `NIMA_EMBEDDER=openai` + `OPENAI_API_KEY` | 1536 | $0.13/1M tok | If you already use OpenAI |
+| **🦙 Ollama** | `NIMA_EMBEDDER=ollama` + `NIMA_OLLAMA_MODEL` | 768 | Free | Local GPU |
 
-```bash
-export NIMA_EMBEDDER=local
-pip install sentence-transformers
-```
-
-</td>
-<td>384</td><td>Free</td><td>Good</td><td>Privacy-first, offline, dev</td>
-</tr>
-<tr>
-<td><b>🚀 Voyage AI</b></td>
-<td>
-
-```bash
-export NIMA_EMBEDDER=voyage
-export VOYAGE_API_KEY=pa-xxx
-```
-
-</td>
-<td>1024</td><td>$0.12/1M tokens</td><td>Excellent</td><td>Production, best quality/cost</td>
-</tr>
-<tr>
-<td><b>🤖 OpenAI</b></td>
-<td>
-
-```bash
-export NIMA_EMBEDDER=openai
-export OPENAI_API_KEY=sk-xxx
-```
-
-</td>
-<td>1536</td><td>$0.13/1M tokens</td><td>Excellent</td><td>If you already use OpenAI</td>
-</tr>
-<tr>
-<td><b>🦙 Ollama</b></td>
-<td>
-
-```bash
-export NIMA_EMBEDDER=ollama
-export NIMA_OLLAMA_MODEL=nomic-embed-text
-# Ollama must be running locally
-```
-
-</td>
-<td>768</td><td>Free</td><td>Good</td><td>Local GPU, custom models</td>
-</tr>
-<tr>
-<td><b>💡 Custom Local Model</b></td>
-<td>
-
-```bash
-export NIMA_EMBEDDER=local
-export NIMA_LOCAL_MODEL=all-mpnet-base-v2  # or any sentence-transformers model
-pip install sentence-transformers
-```
-
-</td>
-<td>384-768</td><td>Free</td><td>Good</td><td>Custom embedding model</td>
-</tr>
-</table>
-
-> **Don't have a preference?** Leave `NIMA_EMBEDDER` unset — it defaults to `local` with `all-MiniLM-L6-v2`. Free, works offline, no API keys. Upgrade to Voyage later when you want better recall quality.
+> **Don't have a preference?** Leave `NIMA_EMBEDDER` unset — defaults to `local` with `all-MiniLM-L6-v2`. Free, offline, no API keys.
 
 ### Database Backend
 
-<table>
-<tr><th></th><th>SQLite (default)</th><th>LadybugDB (recommended)</th></tr>
-<tr><td><b>Setup</b></td><td>Zero config</td><td><code>pip install real-ladybug</code></td></tr>
-<tr><td><b>Text Search</b></td><td>31ms</td><td>9ms (3.4x faster)</td></tr>
-<tr><td><b>Vector Search</b></td><td>External only</td><td>Native HNSW (18ms)</td></tr>
-<tr><td><b>Graph Queries</b></td><td>SQL JOINs</td><td>Native Cypher</td></tr>
-<tr><td><b>DB Size</b></td><td>~91 MB</td><td>~50 MB (44% smaller)</td></tr>
-<tr><td><b>Best For</b></td><td>Getting started</td><td>Production</td></tr>
-</table>
+| | SQLite (default) | LadybugDB (recommended) |
+|--|-----------------|------------------------|
+| **Setup** | Zero config | `pip install real-ladybug` |
+| **Text Search** | 31ms | **9ms** (3.4x faster) |
+| **Vector Search** | External only | **Native HNSW** (18ms) |
+| **Graph Queries** | SQL JOINs | **Native Cypher** |
+| **DB Size** | ~91 MB | **~50 MB** (44% smaller) |
 
 ```bash
-# Start with SQLite (automatic, nothing to do)
-
 # Upgrade to LadybugDB when ready:
 pip install real-ladybug
-python scripts/ladybug_parallel.py --migrate
+python -c "from nima_core.storage import migrate; migrate()"
 ```
 
-### Full Environment Variables
+### Environment Variables
 
 ```bash
-# Required: none! Defaults work out of the box.
-
-# Embedding provider (default: local)
+# Embedding (default: local — no keys needed)
 NIMA_EMBEDDER=local|voyage|openai|ollama
+VOYAGE_API_KEY=pa-xxx
+OPENAI_API_KEY=sk-xxx
+NIMA_OLLAMA_MODEL=nomic-embed-text
 
-# Provider-specific keys
-VOYAGE_API_KEY=pa-xxx                    # For voyage
-OPENAI_API_KEY=sk-xxx                    # For openai
-NIMA_OLLAMA_MODEL=nomic-embed-text       # For ollama
-NIMA_LOCAL_MODEL=all-MiniLM-L6-v2       # For local/sentence-transformers
+# Data paths
+NIMA_DATA_DIR=~/.nima/memory
+NIMA_DB_PATH=~/.nima/memory/ladybug.lbug
 
-# Data paths (defaults shown)
-NIMA_DATA_DIR=~/.nima/memory             # Where memories live
-NIMA_DB_PATH=~/.nima/memory/ladybug.lbug # LadybugDB path
-
-# Memory pruner
-NIMA_DISTILL_MODEL=claude-haiku-4-5      # LLM model for distillation (any Anthropic model)
-ANTHROPIC_API_KEY=sk-ant-xxx             # For LLM distillation (optional)
-NIMA_CAPTURE_CLI=/path/to/capture        # Custom capture CLI
+# Memory pruner (optional)
+NIMA_DISTILL_MODEL=claude-haiku-4-5
+ANTHROPIC_API_KEY=sk-ant-xxx
 
 # Logging
-NIMA_LOG_LEVEL=INFO                      # DEBUG, INFO, WARNING, ERROR
-
-# Debug
-NIMA_DEBUG_RECALL=1                      # Verbose recall logging
+NIMA_LOG_LEVEL=INFO
+NIMA_DEBUG_RECALL=1
 ```
 
 ---
 
-## 🔌 Hook Setup for Bots
+## 🔌 Hook Installation
 
-### Automatic (recommended)
-
+### Quick Install
 ```bash
 ./install.sh
 openclaw gateway restart
 ```
 
-### Manual
-
-**1. Copy hooks to extensions:**
+### Manual Install
 ```bash
+# Copy hooks to extensions
 cp -r openclaw_hooks/nima-memory ~/.openclaw/extensions/
 cp -r openclaw_hooks/nima-recall-live ~/.openclaw/extensions/
 cp -r openclaw_hooks/nima-affect ~/.openclaw/extensions/
-```
 
-**2. Add to `openclaw.json`:**
-```json
+# Add to openclaw.json
 {
   "plugins": {
-    "allow": ["nima-memory", "nima-recall-live", "nima-affect"],
-    "entries": {
-      "nima-memory": {
-        "enabled": true,
-        "skip_subagents": true,
-        "skip_heartbeats": true,
-        "noise_filtering": {
-          "filter_heartbeat_mechanics": true,
-          "filter_system_noise": true
-        }
-      },
-      "nima-recall-live": {
-        "enabled": true,
-        "max_results": 7,
-        "token_budget": 3000,
-        "use_ladybug": true,
-        "compressed_format": true
-      },
-      "nima-affect": {
-        "enabled": true,
-        "identity_name": "my_bot",
-        "baseline": "guardian"
-      }
-    }
+    "allow": ["nima-memory", "nima-recall-live", "nima-affect"]
   }
 }
-```
 
-**3. Restart:**
-```bash
+# Restart
 openclaw gateway restart
 ```
 
-### Verify It's Working
-
+### Verify
 ```bash
-# Check hooks are loaded
-openclaw status
-
-# Send a test message and check memory was captured
-ls ~/.nima/memory/
-
-# Check affect state
-cat ~/.nima/affect/affect_state.json
+openclaw status          # Hooks loaded?
+ls ~/.nima/memory/       # Memories captured?
+cat ~/.nima/affect/affect_state.json  # Affect state?
 ```
 
 ---
 
 ## 🎭 Affect System
 
-NIMA tracks emotional state across conversations using **Panksepp's 7 primary affects** — the neurobiological basis of mammalian emotions:
+Tracks emotional state using **Panksepp's 7 primary affects**:
 
-| Affect | What It Feels Like | Triggers |
-|--------|-------------------|----------|
-| **SEEKING** | Curiosity, excitement, anticipation | Questions, exploration, new topics |
-| **RAGE** | Frustration, assertion, boundaries | Conflict, demands, criticism |
-| **FEAR** | Caution, vigilance, protection | Threats, uncertainty, risk |
-| **LUST** | Desire, attraction, motivation | Goals, wants, enthusiasm |
-| **CARE** | Nurturing, empathy, connection | Sharing, vulnerability, support |
-| **PANIC** | Separation distress, sensitivity | Loss, rejection, loneliness |
-| **PLAY** | Joy, humor, social bonding | Jokes, creativity, fun |
+| Affect | Feels Like | Triggers |
+|--------|-----------|----------|
+| **SEEKING** | Curiosity, anticipation | Questions, new topics |
+| **RAGE** | Frustration, boundaries | Conflict, demands |
+| **FEAR** | Caution, vigilance | Threats, uncertainty |
+| **LUST** | Desire, motivation | Goals, enthusiasm |
+| **CARE** | Nurturing, empathy | Sharing, vulnerability |
+| **PANIC** | Distress, sensitivity | Loss, rejection |
+| **PLAY** | Joy, humor, bonding | Jokes, creativity |
 
 ### Archetype Presets
 
-Your bot's emotional personality:
-
 ```python
 from nima_core import DynamicAffectSystem
-
-# Pick a personality
 affect = DynamicAffectSystem(identity_name="my_bot", baseline="guardian")
 ```
 
@@ -355,68 +298,95 @@ affect = DynamicAffectSystem(identity_name="my_bot", baseline="guardian")
 | **Empath** | Deeply feeling | CARE, PANIC | RAGE |
 | **Sage** | Balanced, wise | SEEKING | All balanced |
 
-See [docs/AFFECTIVE_CORE_PROFILES_GUIDE.md](./docs/AFFECTIVE_CORE_PROFILES_GUIDE.md) for the full guide.
+---
+
+## 🌙 Dream Consolidation
+
+Nightly synthesis extracts insights and patterns from recent memories:
+
+```bash
+# Run manually
+python -m nima_core.dream_consolidation
+
+# Or schedule via OpenClaw cron (runs at 2 AM)
+```
+
+### How It Works
+1. Pulls recent episodic memories from LadybugDB
+2. LLM extracts `Insight` and `Pattern` objects
+3. VSA-style vector blending compresses semantics
+4. Stores consolidated dream memories back to DB
+5. Prunes raw material after successful consolidation
+
+---
+
+## 🐝 Hive Mind
+
+Share memory across multiple agents:
+
+```python
+from nima_core import HiveMind
+
+hive = HiveMind(db_path="~/.nima/memory/ladybug.lbug")
+
+# Inject context into a sub-agent's prompt
+context = hive.build_agent_context("research quantum computing", max_memories=8)
+
+# Capture results back
+hive.capture_agent_result("researcher-1", "Found 3 key papers...", "claude-sonnet-4-5")
+```
+
+Optional Redis pub/sub for real-time agent communication:
+```bash
+pip install nima-core[hive]
+```
+
+---
+
+## 🔮 Precognition
+
+Mine temporal patterns and pre-load relevant memories before the user asks:
+
+```python
+from nima_core import NimaPrecognition
+
+precog = NimaPrecognition(db_path="~/.nima/memory/ladybug.lbug")
+precog.run_mining_cycle()  # Extract patterns → generate predictions → store
+```
+
+---
+
+## 💡 Lucid Moments
+
+Spontaneously surface emotionally-resonant memories:
+
+```python
+from nima_core import LucidMoments
+
+lucid = LucidMoments(db_path="~/.nima/memory/ladybug.lbug")
+moment = lucid.surface_moment()  # Returns a natural "this just came to me..." message
+```
+
+Safety: trauma keyword filtering, quiet hours, daily caps, minimum gap enforcement.
 
 ---
 
 ## 🧹 Memory Pruner
 
-Over time, raw conversation transcripts pile up. The pruner distills them into compact summaries:
-
-```
-Before: 829 raw turns taking up space
-After:  5 semantic summaries + 829 turns suppressed (30-day limbo)
-```
-
-### Usage
+Distill old conversations into compact semantic summaries:
 
 ```bash
-# Dry run (preview what would be pruned)
+# Preview
 python -m nima_core.memory_pruner --min-age 14
 
 # Live run
 python -m nima_core.memory_pruner --min-age 14 --live
 
-# Process up to 10 sessions
-python -m nima_core.memory_pruner --min-age 7 --max-sessions 10 --live
-
-# Check suppression status
-python -m nima_core.memory_pruner --status
-
-# Restore a memory from suppression
+# Restore from suppression
 python -m nima_core.memory_pruner --restore 12345
 ```
 
-### How It Works
-
-1. Finds conversation turns older than `--min-age` days
-2. Groups them into sessions (4-hour gap heuristic)
-3. Sends each session to Claude Haiku for semantic distillation
-4. Stores the compact gist as a new "contemplation" memory
-5. Suppresses original turn IDs in a registry (30-day limbo, restorable)
-6. Recall automatically surfaces distillates instead of raw turns
-
-**No database writes.** Suppression is file-based — zero risk of LadybugDB issues.
-
-### Automate It
-
-```bash
-# Cron job example (nightly at 2 AM)
-0 2 * * * cd $HOME/.openclaw/workspace/nima-core && python -m nima_core.memory_pruner --min-age 7 --live --max-sessions 10  # adjust path to your nima-core install
-```
-
-Or use OpenClaw cron:
-```json
-{
-  "name": "nima-memory-pruner",
-  "schedule": { "kind": "cron", "expr": "0 2 * * *", "tz": "America/New_York" },
-  "payload": {
-    "kind": "agentTurn",
-    "message": "Run: python -m nima_core.memory_pruner --min-age 7 --live --max-sessions 10"
-  },
-  "sessionTarget": "isolated"
-}
-```
+No database writes — suppression is file-based, fully reversible within 30 days.
 
 ---
 
@@ -424,97 +394,51 @@ Or use OpenClaw cron:
 
 | Operation | SQLite | LadybugDB |
 |-----------|--------|-----------|
-| Text search | 31ms | 9ms |
-| Vector search | — | 18ms |
-| Full recall cycle | ~50ms | ~30ms |
-| Recall context overhead | ~180 tokens | ~30 tokens |
-| Database size (10K memories) | ~91 MB | ~50 MB |
+| Text search | 31ms | **9ms** |
+| Vector search | — | **18ms** |
+| Full recall cycle | ~50ms | **~30ms** |
+| Context overhead | ~180 tokens | **~30 tokens** |
 
 ---
 
 ## 🔒 Privacy
 
-**What NIMA accesses:**
-- ✅ Conversation transcripts → stored locally in `~/.nima/`
-- ✅ Embedding API (only when using Voyage/OpenAI) → sends text for vectorization
-- 🔒 **Local embedding mode** → zero external network calls
-
-**What NIMA never does:**
-- ❌ Send data to NIMA servers (there are none)
-- ❌ Track usage or analytics
-- ❌ Phone home
-
-**Your data stays on your machine.** The only external calls are to your chosen embedding provider, and you can avoid even that by using local embeddings.
-
-**Fine-grained controls:**
-```json
-{
-  "nima-memory": {
-    "skip_subagents": true,
-    "skip_heartbeats": true,
-    "noise_filtering": { "filter_system_noise": true }
-  }
-}
-```
+- ✅ All data stored locally in `~/.nima/`
+- ✅ Local embedding mode = **zero external calls**
+- ❌ No NIMA servers, no tracking, no analytics
+- 🔒 Embedding API calls only when using Voyage/OpenAI (opt-in)
 
 ---
 
 ## 🔄 Upgrading
 
-### From v2.2.x → v2.3.x
+### From v2.x → v3.x
 
 ```bash
 git pull origin main
 pip install -e .  # or: pip install nima-core --upgrade
-
-# New modules are automatic — no config changes needed
 openclaw gateway restart
 ```
+
+No breaking changes — v3.0 is a package consolidation release. All v2.x configs continue to work.
 
 ### From v1.x → v2.x
 
 ```bash
-# Backup first
 cp -r ~/.nima ~/.nima.backup
-
-# Update hooks
 rm -rf ~/.openclaw/extensions/nima-*
 cp -r openclaw_hooks/* ~/.openclaw/extensions/
-
-# Optional: Migrate to LadybugDB
-pip install real-ladybug
-python scripts/ladybug_parallel.py --migrate
-
+pip install real-ladybug  # optional
 openclaw gateway restart
 ```
-
-See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for the full guide.
-
----
-
-## 📚 Documentation
-
-| Guide | What's in it |
-|-------|-------------|
-| [SETUP_GUIDE.md](./SETUP_GUIDE.md) | Detailed step-by-step installation |
-| [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) | Common commands cheat sheet |
-| [docs/DATABASE_OPTIONS.md](./docs/DATABASE_OPTIONS.md) | SQLite vs LadybugDB deep dive |
-| [docs/EMBEDDING_PROVIDERS.md](./docs/EMBEDDING_PROVIDERS.md) | All embedding options explained |
-| [docs/AFFECTIVE_CORE_PROFILES_GUIDE.md](./docs/AFFECTIVE_CORE_PROFILES_GUIDE.md) | Personality archetypes guide |
-| [docs/DYNAMIC_AFFECT.md](./docs/DYNAMIC_AFFECT.md) | Full affect system documentation |
-| [CHANGELOG.md](./CHANGELOG.md) | Version history |
 
 ---
 
 ## 🤝 Contributing
 
-PRs welcome. The repo uses:
-- **CodeRabbit** and **Gemini Code Assist** for automated review
-- Python 3.8+ compatibility (no walrus operators)
-- Conventional commits
+PRs welcome. Python 3.9+ compatibility, conventional commits.
 
 ```bash
-# Dev setup
 git clone https://github.com/lilubot/nima-core.git
 cd nima-core
 pip install -e ".[vector]"
@@ -525,7 +449,7 @@ python -m pytest tests/
 
 ## License
 
-MIT License — free to use for any AI agent, commercial or personal.
+MIT License — free for any AI agent, commercial or personal.
 
 ---
 

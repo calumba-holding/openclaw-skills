@@ -12,10 +12,41 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { execPython } from "../utils/async-python.js"; // Async wrapper
 import { existsSync, writeFileSync, readFileSync, unlinkSync, mkdtempSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import os from "node:os";
+import { promisify } from "node:util";
+import { execFile } from "node:child_process";
+
+// --- Inlined: utils/async-python.js (self-contained, no cross-dir imports) ---
+const execFileAsync = promisify(execFile);
+class _RateLimiter {
+  constructor(t, i) { this.max = t; this.interval = i === 'second' ? 1000 : i; this.tokens = t; this.lastRefill = Date.now(); }
+  async removeTokens(c) {
+    this._refill(); if (this.tokens >= c) { this.tokens -= c; return true; }
+    const wait = this.interval - (Date.now() - this.lastRefill);
+    if (wait > 0) { await new Promise(r => setTimeout(r, wait)); this._refill(); }
+    if (this.tokens >= c) { this.tokens -= c; return true; } return false;
+  }
+  _refill() { if (Date.now() - this.lastRefill >= this.interval) { this.tokens = this.max; this.lastRefill = Date.now(); } }
+}
+const _pyLimiter = new _RateLimiter(10, 'second');
+const _breakers = new Map();
+async function execPython(scriptPath, args = [], options = {}) {
+  const { breakerId = "default", ...execOpts } = options;
+  if (!_breakers.has(breakerId)) _breakers.set(breakerId, { failures: 0, lastFail: 0, state: "CLOSED" });
+  const b = _breakers.get(breakerId);
+  if (b.state === "OPEN") { if (Date.now() - b.lastFail > 60000) b.state = "HALF-OPEN"; else throw new Error(`Circuit breaker '${breakerId}' is OPEN`); }
+  await _pyLimiter.removeTokens(1);
+  try {
+    const venvPy = join(os.homedir(), ".openclaw", "workspace", ".venv", "bin", "python3");
+    const cmd = (scriptPath.endsWith(".py") || scriptPath === "python3") ? venvPy : scriptPath;
+    const finalArgs = scriptPath === "python3" ? args : scriptPath.endsWith(".py") ? [scriptPath, ...args] : args;
+    const { stdout } = await execFileAsync(cmd, finalArgs, { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024, ...execOpts });
+    b.failures = 0; b.state = "CLOSED"; return stdout;
+  } catch (err) { b.failures++; b.lastFail = Date.now(); if (b.failures >= 5) b.state = "OPEN"; throw err; }
+}
+// --- End inlined ---
 
 // Debug flag - gate ALL verbose logging behind this
 const DEBUG_RECALL = process.env.NIMA_DEBUG_RECALL === "1";
