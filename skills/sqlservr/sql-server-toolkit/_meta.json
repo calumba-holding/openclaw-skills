@@ -1,0 +1,11 @@
+{
+  "owner": "sqlservr",
+  "slug": "sql-server-toolkit",
+  "displayName": "sql-server-toolkit",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1771658884450,
+    "commit": null
+  },
+  "history": []
+}
