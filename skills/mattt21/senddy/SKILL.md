@@ -1,7 +1,7 @@
 ---
 name: senddy
 description: Create and manage private stablecoin wallets using Senddy's zero-knowledge protocol on Base. Use when building payment agents, bots, server-side apps, or any system that needs private USDC transfers. Covers @senddy/node for headless agents and @senddy/client for browser apps.
-metadata: {"openclaw":{"requires":{"env":["SENDDY_API_KEY"]},"primaryEnv":"SENDDY_API_KEY","emoji":"🛡️","homepage":"https://www.senddy.com"}}
+metadata: {"openclaw":{"requires":{"env":["SENDDY_API_KEY","AGENT_SEED_HEX"]},"primaryEnv":"SENDDY_API_KEY","emoji":"🛡️","homepage":"https://senddy.com"}}
 ---
 
 # Senddy Private Wallet
@@ -222,6 +222,107 @@ agent.destroy(); // Zeros key material and cleans up resources
 
 Always call `destroy()` when done (especially in short-lived processes).
 
+## CRITICAL: Run as a Persistent Process
+
+**Do NOT create a new agent and call `init()` on every request.** The `init()`
+call takes 5-15 seconds because it compiles WASM, loads the SRS into memory,
+and syncs the full state from the subgraph. Re-initializing on every request
+will make the agent unusably slow.
+
+Instead, run the agent as a **long-lived background process** that initializes
+once and handles requests over a local HTTP API or Unix socket:
+
+```typescript
+// senddy-daemon.ts — run once, stays alive forever
+import { createSenddyAgent, toUSDC, isValidSenddyAddress } from '@senddy/node';
+import { createServer } from 'node:http';
+
+const agent = createSenddyAgent({
+  seed: Buffer.from(process.env.AGENT_SEED_HEX!, 'hex'),
+  apiKey: process.env.SENDDY_API_KEY!,
+});
+
+await agent.init();
+console.log(`Agent ready: ${agent.getReceiveAddress()}`);
+
+// Periodic sync to stay up-to-date
+setInterval(() => agent.sync().catch(console.error), 30_000);
+
+// Simple JSON-RPC over HTTP
+const server = createServer(async (req, res) => {
+  if (req.method !== 'POST') { res.writeHead(405); res.end(); return; }
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  const { method, params } = JSON.parse(Buffer.concat(chunks).toString());
+
+  try {
+    let result: any;
+    switch (method) {
+      case 'getBalance':
+        result = await agent.getBalance();
+        result = { ...result, shares: result.shares.toString(), estimatedUSDC: result.estimatedUSDC.toString() };
+        break;
+      case 'getAddress':
+        result = { address: agent.getReceiveAddress() };
+        break;
+      case 'transfer':
+        result = await agent.transfer(params.to, toUSDC(params.amount), params.opts);
+        result = { ...result, shares: result.shares.toString() };
+        break;
+      case 'withdraw':
+        result = await agent.withdraw(params.to, toUSDC(params.amount));
+        result = { ...result, shares: result.shares.toString() };
+        break;
+      case 'sync':
+        result = await agent.sync();
+        break;
+      case 'getTransactions':
+        result = await agent.getTransactions(params);
+        break;
+      default:
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: `Unknown method: ${method}` }));
+        return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, result }));
+  } catch (err: any) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: err.message }));
+  }
+});
+
+const PORT = parseInt(process.env.SENDDY_DAEMON_PORT ?? '0');
+server.listen(PORT, '127.0.0.1', () => {
+  const addr = server.address() as import('node:net').AddressInfo;
+  console.log(`Senddy daemon on :${addr.port}`);
+});
+```
+
+Start the daemon once. It picks a free port automatically (or set
+`SENDDY_DAEMON_PORT` to pin one). Read the port from stdout and use it
+for all subsequent requests:
+
+```bash
+AGENT_SEED_HEX="your64charhex..." SENDDY_API_KEY="sk_live_..." \
+  npx tsx senddy-daemon.ts
+# Output: "Senddy daemon on :18790"  (port varies)
+```
+
+Then query it instantly from any client:
+```bash
+# Check balance (use the port printed at startup)
+curl -s -X POST http://127.0.0.1:18790 \
+  -d '{"method":"getBalance"}' | jq
+
+# Transfer
+curl -s -X POST http://127.0.0.1:18790 \
+  -d '{"method":"transfer","params":{"to":"senddy1...","amount":"5.00"}}' | jq
+```
+
+For a complete daemon example with process management, see [examples.md](examples.md).
+
 ## Gotchas
 
 - **No deposits**: Agents can't deposit directly. Fund them by sending a
@@ -229,7 +330,9 @@ Always call `destroy()` when done (especially in short-lived processes).
 - **In-memory storage**: Notes are lost on process restart. The agent re-syncs
   from the subgraph on `init()`, so this is safe — just costs a few seconds.
 - **First init downloads SRS**: The first `init()` downloads a ~16 MB
-  structured reference string (cached for subsequent runs in Node.js).
+  structured reference string (cached to `~/.bb-crs/` for subsequent runs).
+- **WASM compilation**: Even with cached SRS, `init()` takes 5-15s to compile
+  the WASM prover. Always run the agent persistently, not per-request.
 - **Shares vs USDC**: Internal values are in 18-decimal shares. Use
   `balance.estimatedUSDC` and `toUSDC()` for human-readable amounts.
 

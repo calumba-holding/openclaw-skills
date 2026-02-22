@@ -1,12 +1,94 @@
 # Senddy Node — Examples
 
-## 1. Payment Bot
+## 1. Persistent Daemon (Recommended for All Agents)
+
+Run the agent as a long-lived process with a local HTTP API.
+This is the **recommended pattern** — `init()` takes 5-15s due to WASM
+compilation and subgraph sync, so you should only do it once.
+
+```typescript
+// senddy-daemon.ts
+import { createSenddyAgent, toUSDC, isValidSenddyAddress } from '@senddy/node';
+import { createServer } from 'node:http';
+
+const agent = createSenddyAgent({
+  seed: Buffer.from(process.env.AGENT_SEED_HEX!, 'hex'),
+  apiKey: process.env.SENDDY_API_KEY!,
+});
+
+console.log('Initializing agent (this takes 5-15s on first run)...');
+await agent.init();
+console.log(`Agent ready: ${agent.getReceiveAddress()}`);
+
+// Background sync every 30s
+setInterval(() => agent.sync().catch(console.error), 30_000);
+
+function serializeBigInts(obj: any): any {
+  if (typeof obj === 'bigint') return obj.toString();
+  if (Array.isArray(obj)) return obj.map(serializeBigInts);
+  if (obj && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj).map(([k, v]) => [k, serializeBigInts(v)])
+    );
+  }
+  return obj;
+}
+
+const server = createServer(async (req, res) => {
+  if (req.method !== 'POST') { res.writeHead(405); res.end(); return; }
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  const { method, params } = JSON.parse(Buffer.concat(chunks).toString());
+
+  try {
+    let result: any;
+    switch (method) {
+      case 'getBalance':    result = await agent.getBalance(); break;
+      case 'getAddress':    result = { address: agent.getReceiveAddress() }; break;
+      case 'transfer':      result = await agent.transfer(params.to, toUSDC(params.amount), params.opts); break;
+      case 'withdraw':      result = await agent.withdraw(params.to, toUSDC(params.amount)); break;
+      case 'sync':          result = await agent.sync(); break;
+      case 'getTransactions': result = await agent.getTransactions(params); break;
+      default:
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `Unknown method: ${method}` }));
+        return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, result: serializeBigInts(result) }));
+  } catch (err: any) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: err.message }));
+  }
+});
+
+const PORT = parseInt(process.env.SENDDY_DAEMON_PORT ?? '0');
+server.listen(PORT, '127.0.0.1', () => {
+  const addr = server.address() as import('node:net').AddressInfo;
+  console.log(`Senddy daemon on :${addr.port}`);
+});
+```
+
+Start it once in the background. It picks a free port automatically
+(or set `SENDDY_DAEMON_PORT` to pin one):
+```bash
+AGENT_SEED_HEX="..." SENDDY_API_KEY="sk_live_..." npx tsx senddy-daemon.ts &
+# Output: "Senddy daemon on :18790"  (port varies)
+```
+
+Query it from any script or agent (instant responses — use the port from stdout):
+```bash
+curl -s -X POST http://127.0.0.1:18790 -d '{"method":"getBalance"}' | jq
+curl -s -X POST http://127.0.0.1:18790 -d '{"method":"transfer","params":{"to":"senddy1...","amount":"5.00"}}' | jq
+```
+
+## 2. Payment Bot
 
 A bot that checks for incoming transfers and logs them:
 
 ```typescript
 import { createSenddyAgent, toUSDC } from '@senddy/node';
-import { randomBytes } from 'node:crypto';
 
 const agent = createSenddyAgent({
   seed: Buffer.from(process.env.AGENT_SEED_HEX!, 'hex'),
@@ -32,7 +114,7 @@ setInterval(async () => {
 }, 30_000);
 ```
 
-## 2. Tipping Agent
+## 3. Tipping Agent
 
 Send small tips to Senddy addresses:
 
@@ -66,7 +148,7 @@ async function sendTip(recipient: string, amountUSDC: string, memo?: string) {
 await sendTip('senddy1qw508d6q...', '1.00', 'Great work!');
 ```
 
-## 3. Treasury Agent (Scheduled Withdrawal)
+## 4. Treasury Agent (Scheduled Withdrawal)
 
 Consolidate notes and withdraw to a public address on a schedule:
 
@@ -111,7 +193,7 @@ async function sweepToTreasury(publicAddress: `0x${string}`, minAmount: string) 
 await sweepToTreasury('0xYourPublicTreasury...', '100.00');
 ```
 
-## 4. Multi-Agent Setup (Department Wallets)
+## 5. Multi-Agent Setup (Department Wallets)
 
 Multiple wallets from a single master seed:
 
@@ -144,7 +226,7 @@ await agents.operations.transfer(
 );
 ```
 
-## 5. Event-Driven Agent
+## 6. Event-Driven Agent
 
 React to balance changes in real-time:
 
@@ -177,7 +259,7 @@ const SYNC_INTERVAL_MS = 60_000;
 setInterval(() => agent.sync().catch(console.error), SYNC_INTERVAL_MS);
 ```
 
-## 6. Prepare/Submit Pattern (Two-Phase Transfer)
+## 7. Prepare/Submit Pattern (Two-Phase Transfer)
 
 Separate proof generation from submission (useful for approval flows):
 
@@ -207,7 +289,7 @@ const result = await agent.submitTransfer(prepared);
 console.log(`Submitted: ${result.txHash}`);
 ```
 
-## 7. Seed Management
+## 8. Seed Management
 
 Generate and persist seeds securely:
 
