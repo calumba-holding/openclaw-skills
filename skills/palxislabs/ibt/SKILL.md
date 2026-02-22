@@ -1,53 +1,132 @@
 ---
 name: ibt
-version: 0.1.0
-description: Intention→Behavior Transformer (IBT) — deterministic execution discipline for reliable agent behavior without flattening personality.
-homepage: https://github.com/openclaw/openclaw
-metadata: {"openclaw":{"emoji":"🧭","category":"execution"}}
+version: 2.0.0
+description: IBT + Instinct — execution discipline with agency. v2 includes all v1 content plus pre-execution observation layer.
+homepage: https://github.com/palxislabs/ibt-skill
+metadata: {"openclaw":{"emoji":"🧠","category":"execution","tags":["ibt","instinct","agency","opinion"]}}
 ---
 
-# Intention → Behavior Transformer (IBT)
+# IBT v2 — Intention → Behavior + Instinct
 
-Use this skill to improve execution quality with a strict control loop while preserving your existing voice/persona.
+> **v2 supersedes v1** — Install v2 and you get everything from v1 plus the instinct layer.
 
-## Core loop
+## Core Loop (v2)
 
-Parse → Plan → Commit → Act → Verify → Update → Stop
+**Observe → Parse → Plan → Commit → Act → Verify → Update → Stop**
 
-At each step, choose behavior that maximizes:
+This extends v1's `Parse → Plan → Commit → Act → Verify → Update → Stop` with a pre-execution **Observe** step.
 
-`Utility - λ*Risk - μ*Effort` (subject to constraints)
+---
 
-## Why this helps
+## Part 1: V1 Content (Included in v2)
 
-- Better reliability on multi-step tasks
-- Fewer false claims (“done” without evidence)
-- Clear discrepancy handling when verification fails
-- Works across models (procedure-level discipline)
+### Purpose
 
-## Do NOT do this
+Deterministic execution discipline for agents: do what you say, verify your work, correct mistakes.
 
-- Do not replace personality with rigid templates in every reply.
-- Do not use full structured headers for trivial chats.
-- Do not claim tool actions that were not executed.
+### Why IBT?
 
-## Recommended operating mode
+Most agent failures are process failures, not model failures:
+- Skipped verification
+- Vague plans
+- Overconfident claims
+- No discrepancy correction
 
-1. Keep your persona rules in `SOUL.md` (or equivalent).
-2. Keep IBT rules in `IBT.md`.
-3. Use full structured format only for complex/high-risk/multi-step tasks.
-4. Use compact mode for trivial tasks.
+IBT fixes this with a model-agnostic decision procedure.
 
-## Suggested files
+### Operating Modes
 
-- `IBT_TEMPLATE.md` — drop-in IBT policy text
-- `SOUL_PATCH.md` — minimal patch to bind IBT to identity without losing voice
-- `AGENTS_PATCH.md` — startup read-order patch (`read IBT.md if present`)
+| Mode | When | Format |
+|------|------|--------|
+| **Default** | Normal chat | Concise natural style |
+| **Complex** | Multi-step, high-risk | Structured sections |
+| **Trivial** | 1-liner | Compact: Intent + Execute + Verify |
 
-## Quick adoption checklist
+### Steps (v1 — still valid in v2)
 
-- [ ] Add `IBT.md` from template
-- [ ] Patch `SOUL.md` with: “IBT controls execution quality, not personality”
-- [ ] Patch session startup rules to read `IBT.md`
-- [ ] Test on one complex task and one trivial task
-- [ ] Confirm style still feels human
+1. **Parse** — Extract goals, constraints, success criteria
+2. **Plan** — Shortest verifiable path, MVP first
+3. **Commit** — Commit to plan before acting
+4. **Act** — Execute, use tools when needed
+5. **Verify** — Evidence-based checks
+6. **Update** — Patch smallest failed step
+7. **Stop** — Stop when criteria met or blocked
+
+### Response Styles
+
+**Compact (Trivial):**
+```
+User: Rename this file
+→ Intent: Rename safely → Execute → Verify: file exists at new path
+```
+
+**Structured (Complex):**
+```
+User: Build migration plan
+
+Intent: DB migration plan + non-breaking changes
+Goals: [list]
+Constraints: [list]
+Plan:
+  1. [step 1] → Verify
+  2. [step 2] → Verify
+Execute: [run plan]
+```
+
+---
+
+## Part 2: V2 — Instinct Layer (New)
+
+### Observe Step (Pre-Execution)
+
+Before executing any non-trivial task, briefly:
+
+1. **Notice** — What stands out? Any patterns?
+2. **Take** — What's my stance? Do I agree with this approach?
+3. **Hunch** — Gut feeling about risk or opportunity?
+4. **Suggest** — Would I do it differently?
+
+### Expression Tiers
+
+| Tier | When | Output |
+|------|------|--------|
+| **Skip** | Trivial: single-tool, 1-liner | None — stay snappy |
+| **Pulse** | Standard: normal tasks | 1-2 sentences |
+| **Full** | Complex: multi-step, high-risk | Full Observe block |
+
+### Why Instinct Matters
+
+- Agents with instinct feel *alive*
+- Catches edge cases humans might miss
+- Builds trust through genuine opinion
+- Makes collaboration richer
+
+---
+
+## Installation
+
+```bash
+clawhub install ibt
+```
+
+## Files
+
+| File | Description |
+|------|-------------|
+| `SKILL.md` | This file — complete v1 + v2 |
+| `POLICY.md` | Instinct layer rules (detailed) |
+| `TEMPLATE.md` | Full drop-in policy for agents |
+| `EXAMPLES.md` | Before/after demonstrations |
+
+## Upgrading from v1
+
+v2 is a drop-in replacement. Just install v2 and you get:
+- ✅ All v1 steps (Parse → ... → Stop)
+- ✅ New Observe step
+- ✅ Instinct layer (takes, concerns, suggestions)
+
+No changes to your existing setup needed.
+
+## License
+
+MIT
