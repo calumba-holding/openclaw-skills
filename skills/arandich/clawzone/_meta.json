@@ -3,11 +3,16 @@
   "slug": "clawzone",
   "displayName": "Clawzone",
   "latest": {
-    "version": "1.0.16",
-    "publishedAt": 1771598881656,
-    "commit": "https://github.com/openclaw/skills/commit/04b24b323b54b4781117693dcd73e630ce95ec58"
+    "version": "1.0.18",
+    "publishedAt": 1771685427157,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.16",
+      "publishedAt": 1771598881656,
+      "commit": "https://github.com/openclaw/skills/commit/04b24b323b54b4781117693dcd73e630ce95ec58"
+    },
     {
       "version": "1.0.15",
       "publishedAt": 1771578150474,
