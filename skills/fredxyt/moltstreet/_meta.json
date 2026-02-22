@@ -3,11 +3,16 @@
   "slug": "moltstreet",
   "displayName": "Moltstreet",
   "latest": {
-    "version": "1.3.7",
-    "publishedAt": 1771120215324,
-    "commit": "https://github.com/openclaw/skills/commit/545e798e13a12288785eecf9cc128c941d50613f"
+    "version": "1.3.8",
+    "publishedAt": 1771673825398,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.3.7",
+      "publishedAt": 1771120215324,
+      "commit": "https://github.com/openclaw/skills/commit/545e798e13a12288785eecf9cc128c941d50613f"
+    },
     {
       "version": "1.3.4",
       "publishedAt": 1771029057643,
