@@ -3,11 +3,16 @@
   "slug": "fomo-research",
   "displayName": "Fomo Research",
   "latest": {
-    "version": "0.2.1",
-    "publishedAt": 1771465159573,
-    "commit": "https://github.com/openclaw/skills/commit/b31bcb374dc78fd8ec07f417e58af94a0973031c"
+    "version": "0.3.0",
+    "publishedAt": 1771706616866,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.2.1",
+      "publishedAt": 1771465159573,
+      "commit": "https://github.com/openclaw/skills/commit/b31bcb374dc78fd8ec07f417e58af94a0973031c"
+    },
     {
       "version": "0.2.0",
       "publishedAt": 1771076332562,
