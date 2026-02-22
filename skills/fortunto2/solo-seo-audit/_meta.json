@@ -3,9 +3,15 @@
   "slug": "solo-seo-audit",
   "displayName": "Seo Audit",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771620035967,
-    "commit": "https://github.com/openclaw/skills/commit/d5d87c599cb9686df68c2768280fb8662dd2fe1a"
+    "version": "1.1.1",
+    "publishedAt": 1771711642260,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771620035967,
+      "commit": "https://github.com/openclaw/skills/commit/d5d87c599cb9686df68c2768280fb8662dd2fe1a"
+    }
+  ]
 }
