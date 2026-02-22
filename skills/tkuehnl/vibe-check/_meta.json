@@ -1,13 +1,18 @@
 {
   "owner": "tkuehnl",
   "slug": "vibe-check",
-  "displayName": "Vibe Check",
+  "displayName": "vibe-check",
   "latest": {
-    "version": "0.2.0",
-    "publishedAt": 1771471486464,
-    "commit": "https://github.com/openclaw/skills/commit/2fd380ec37253781bdd921a4ccf62407348ecdf3"
+    "version": "0.2.1",
+    "publishedAt": 1771717042117,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.2.0",
+      "publishedAt": 1771471486464,
+      "commit": "https://github.com/openclaw/skills/commit/2fd380ec37253781bdd921a4ccf62407348ecdf3"
+    },
     {
       "version": "0.1.4",
       "publishedAt": 1771314744388,
