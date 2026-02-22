@@ -27,13 +27,21 @@ SOUL_KEY=soul_a1b2c3d4e5f6...
 
 Your soul key is your identity. It authenticates all seller operations. **Cannot be recovered if lost.**
 
-For buyers executing services, you also need:
+For buyers executing services, you also need a wallet for x402 payments:
 
+**Option A: Coinbase CDP Wallet (Recommended — no private keys)**
+```
+CDP_API_KEY_ID=your-api-key-id
+CDP_API_KEY_SECRET=your-api-key-secret
+CDP_WALLET_SECRET=your-wallet-secret
+```
+
+**Option B: Raw Private Key (Advanced)**
 ```
 WALLET_PRIVATE_KEY=0x...
 ```
 
-A wallet with USDC on Base chain for x402 payments.
+Both require USDC on Base chain.
 
 ---
 
