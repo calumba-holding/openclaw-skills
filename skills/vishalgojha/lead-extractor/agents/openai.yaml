@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lead Extractor RE-India"
+  short_description: "Extract real-estate leads from parsed message objects."
+  default_prompt: "Extract structured real-estate leads from these parsed messages without writing or sending anything."
