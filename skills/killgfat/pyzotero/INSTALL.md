@@ -1,68 +1,61 @@
 # Pyzotero CLI Installation Guide
 
-Comprehensive installation instructions for pyzotero CLI, with special considerations for PEP 668-compliant systems.
+使用 Python 脚本方式调用 pyzotero 库的详细安装指南。
 
-## Table of Contents
+## 目录
 
-1. [Prerequisites](#prerequisites)
-2. [Installation Methods](#installation-methods)
-3. [Platform-Specific Instructions](#platform-specific-instructions)
-4. [Post-Installation Setup](#post-installation-setup)
-5. [Troubleshooting](#troubleshooting)
-6. [Uninstallation](#uninstallation)
+1. [前提条件](#前提条件)
+2. [安装方法](#安装方法)
+3. [平台特定说明](#平台特定说明)
+4. [配置访问模式](#配置访问模式)
+5. [故障排除](#故障排除)
+6. [卸载](#卸载)
 
 ---
 
-## Prerequisites
+## 前提条件
 
-### Required Software
+### 必需软件
 
-- **Python 3.7+** - For running pyzotero CLI
-- **pip** or **pipx** - For package installation
-- **Zotero 7+** - For local database access (required for CLI)
+- **Python 3.7+** - 用于运行 pyzotero 脚本
+- **pip** 或 **pipx** - 用于安装包
+- **Zotero 7+** - 用于本地 API 访问 (本地模式需要)
 
-### Check Your System
+### 检查系统
 
-Check if Python 3 is installed:
+检查 Python 3 是否已安装:
 ```bash
 python3 --version
 ```
 
-Check if pip is installed:
+检查 pip 是否已安装:
 ```bash
 pip3 --version
 ```
 
-Check if pipx is installed:
+检查 pipx 是否已安装:
 ```bash
 pipx --version
 ```
 
-Check if Zotero is installed:
-```bash
-zotero --version
-# OR
-ls /Applications/Zotero.app  # macOS
-```
-
 ---
 
-## Installation Methods
+## 安装方法
 
-### Method 1: pipx (Recommended for PEP 668-compliant systems)
+### 方法一：pipx (推荐)
 
-pipx installs Python applications in isolated virtual environments.
+pipx 在隔离的虚拟环境中安装 Python 包。
 
-#### Why pipx?
+#### 为什么推荐 pipx?
 
-- **PEP 668 compliant**: Prevents conflicts with system Python packages
-- **Isolated environments**: Each app gets its own virtual environment
-- **Clean uninstallation**: Easy to remove without side effects
-- **Security**: Reduces risk of system-wide package conflicts
+- **PEP 668 兼容**: 防止与系统 Python 包冲突
+- **隔离环境**: 每个应用有自己的虚拟环境
+- **干净卸载**: 易于移除，无副作用
+- **安全性**: 减少系统级包冲突风险
 
-#### Installation
+#### 安装步骤
 
-**Step 1: Install pipx**
+**1. 安装 pipx**
 
 **Debian/Ubuntu:**
 ```bash
@@ -83,504 +76,351 @@ sudo dnf install pipx
 pipx ensurepath
 ```
 
-**RHEL/CentOS/Rocky Linux:**
-```bash
-sudo yum install pipx
-pipx ensurepath
-```
-
-**Alpine Linux:**
-```bash
-sudo apk add pipx
-pipx ensurepath
-```
-
 **macOS (Homebrew):**
 ```bash
 brew install pipx
 pipx ensurepath
 ```
 
-**Using pip (any system):**
+**2. 安装 pyzotero**
 ```bash
-pip install --user pipx
-export PATH="$HOME/.local/bin:$PATH"
-pipx ensurepath
+pipx install pyzotero
 ```
 
-**Note:** After `pipx ensurepath`, you may need to log out and back in, or run:
+**3. 验证安装**
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
-source ~/.bashrc  # or ~/.zshrc
+python3 -c "from pyzotero import zotero; print('pyzotero 已安装')"
 ```
-
-**Step 2: Install pyzotero CLI**
-
-```bash
-# Install CLI with pipx
-pipx install "pyzotero[cli]"
-```
-
-**Step 3: Verify Installation**
-
-```bash
-pyzotero --help
-```
-
-You should see help information without errors.
 
 ---
 
-### Method 2: pip (Generic installation)
+### 方法二：pip (通用)
 
-For systems without PEP 668 restrictions or when using virtual environments.
-
-#### User Installation (Recommended)
-
+#### 系统级安装 (需要 sudo)
 ```bash
-pip install --user "pyzotero[cli]"
+sudo pip install pyzotero
+```
+
+#### 用户级安装 (推荐)
+```bash
+pip install --user pyzotero
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Make sure to add to PATH permanently:
+将 PATH 导出添加到 `~/.bashrc` 或 `~/.zshrc`:
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-#### Virtual Environment (Best practice)
+---
+
+### 方法三：虚拟环境
+
+适合开发或测试:
 
 ```bash
-# Create virtual environment
-python3 -m venv ~/.venvs/pyzotero
-source ~/.venvs/pyzotero/bin/activate
+# 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate
 
-# Install
-pip install "pyzotero[cli]"
+# 安装 pyzotero
+pip install pyzotero
 
-# To use later, activate first:
-# source ~/.venvs/pyzotero/bin/activate
+# 验证
+python3 -c "from pyzotero import zotero; print('OK')"
 ```
 
 ---
 
-### Method 3: Conda (Anaconda/Miniconda)
+## 平台特定说明
 
+### Debian 11+ / Ubuntu 23.04+ (PEP 668 系统)
+
+这些系统实施了 PEP 668，禁止使用系统 pip 安装包。
+
+**推荐方案:**
 ```bash
-# Using conda-forge channel
-conda install -c conda-forge pyzotero
-
-# Or with pip in conda environment
-conda create -n pyzotero python=3.11
-conda activate pyzotero
-pip install "pyzotero[cli]"
+pipx install pyzotero
 ```
 
----
-
-## Platform-Specific Instructions
-
-### Debian 11+
-**PEP 668 compliant** - Must use pipx or virtual environments.
-
+**备选方案:**
 ```bash
-sudo apt update
-sudo apt install python3 python3-pip pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
-```
-
-### Ubuntu 23.04+
-**PEP 668 compliant** - Must use pipx or virtual environments.
-
-```bash
-sudo apt update
-sudo apt install python3 python3-pip pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
+pip install --user pyzotero
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 ### Arch Linux
+
 ```bash
-sudo pacman -S python python-pip pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
+# 使用 pipx (推荐)
+pipx install pyzotero
+
+# 或使用 pip
+pip install --user pyzotero
 ```
 
 ### Fedora 34+
-**PEP 668 compliant** - Must use pipx or virtual environments.
 
 ```bash
-sudo dnf install python3 python3-pip pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
-```
-
-### RHEL 9+ / CentOS 9+
-**PEP 668 compliant** - May need EPEL for pipx.
-
-```bash
-sudo dnf install python3 python3-pip
-sudo dnf install epel-release
+# 安装 pipx
 sudo dnf install pipx
 pipx ensurepath
-pipx install "pyzotero[cli]"
-```
 
-### Alpine Linux
-```bash
-sudo apk add python3 py3-pip py3-pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
+# 安装 pyzotero
+pipx install pyzotero
 ```
 
 ### macOS
-```bash
-# Using Homebrew
-brew install python@3 pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
 
-# Or use pip
-pip3 install --user "pyzotero[cli]"
+```bash
+# 使用 Homebrew 安装 pipx
+brew install pipx
+pipx ensurepath
+
+# 安装 pyzotero
+pipx install pyzotero
 ```
 
 ### Windows
-**PowerShell:**
-```powershell
-# Install pipx
-pip install pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
-```
 
-**Git Bash / WSL:**
 ```bash
-pip install pipx
-pipx ensurepath
-pipx install "pyzotero[cli]"
+# 使用 pip
+pip install pyzotero
+
+# 或下载 Zotero 桌面版后使用内置 Python
 ```
 
 ---
 
-## Post-Installation Setup
+## 配置访问模式
 
-### 1. Enable Local Zotero Access (Required)
+### 模式一：本地模式 (默认，推荐)
 
-The pyzotero CLI requires access to your **local Zotero database**. You must enable this in Zotero:
+适用于本地有 Zotero 7+ 安装的情况。
 
-**Zotero 7 Setup:**
+**配置步骤:**
 
-1. Open Zotero
-2. Go to **Edit > Preferences** (or **Zotero > Settings** on macOS)
-3. Click on the **Advanced** tab
-4. Check the box: **"Allow other applications on this computer to communicate with Zotero"**
-5. Click **OK** or **Apply**
-6. **Restart Zotero**
+1. **打开 Zotero 7+**
 
-⚠️ **Important:** Zotero must be running for the CLI to work. The CLI connects to your local Zotero database, not the online API.
+2. **启用本地 API:**
+   - Windows/Linux: 编辑 > 首选项 > 高级
+   - macOS: Zotero > 设置 > 高级
 
-### 2. Verify Installation
+3. **勾选:** "允许此计算机上的其他应用程序与 Zotero 通信"
 
-**Check CLI availability:**
-```bash
-pyzotero --help
-```
+4. **重启 Zotero**
 
-**List collections:**
-```bash
-pyzotero listcollections
-```
-
-**If you see connection errors:**
-- Make sure Zotero is running
-- Verify local API is enabled in Zotero preferences
-- Try restarting Zotero
-
-### 3. Test Basic Search
-
-```bash
-# Try a basic search
-pyzotero search -q "test"
-```
-
----
-
-## Troubleshooting
-
-### Problem: Permission Denied on pip Installation
-
-**Symptoms:**
-```
-ERROR: Could not install packages due to an EnvironmentError: [Errno 13] Permission denied
-```
-
-**Cause (PEP 668):**
-You're trying to install to system directories on a PEP 668-compliant system.
-
-**Solutions:**
-
-1. **Use pipx (recommended):**
-```bash
-pipx install "pyzotero[cli]"
-```
-
-2. **Use user installation:**
-```bash
-pip install --user "pyzotero[cli]"
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-3. **Use virtual environment:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install "pyzotero[cli]"
-```
-
-4. **Force system installation (⚠️ dangerous):**
-```bash
-sudo python3 -m pip install --break-system-packages "pyzotero[cli]"
-```
-⚠️ **Warning:** This can break your system Python installation!
-
----
-
-### Problem: Command Not Found
-
-**Symptoms:**
-```
-pyzotero: command not found
-```
-
-**Solutions:**
-
-1. **Verify installation:**
-```bash
-pipx list
-# OR
-pip show pyzotero
-```
-
-2. **Ensure PATH is set:**
-```bash
-pipx ensurepath
-source ~/.bashrc  # or ~/.zshrc
-```
-
-3. **Add to PATH manually:**
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-4. **If using virtual environment:**
-```bash
-source ~/.venvs/pyzotero/bin/activate
-pyzotero --help
-```
-
----
-
-### Problem: Connection Error / Zotero Not Responding
-
-**Symptoms:**
-```
-ConnectionRefusedError: [Errno 111] Connection refused
-# OR
-Error: Unable to connect to Zotero
-```
-
-**Solutions:**
-
-1. **Ensure Zotero is running:**
-```bash
-# Check if Zotero is running
-ps aux | grep zotero
-
-# If not running, start Zotero
-zotero &
-```
-
-2. **Enable local API in Zotero:**
-   - Open Zotero
-   - **Edit > Preferences > Advanced**
-   - Check: **"Allow other applications on this computer to communicate with Zotero"**
-   - **Restart Zotero**
-
-3. **Restart Zotero:**
-```bash
-# Close Zotero, then start it again
-zotero
-```
-
-4. **Check Zotero version:**
-   - Ensure you have Zotero 7 or newer
-   - Older versions may not support the local API
-
----
-
-### Problem: pipx Not Available
-
-**Symptoms:**
-```
-pipx: command not found
-```
-
-**Solutions:**
-
-1. **Install via pip:**
-```bash
-pip install --user pipx
-export PATH="$HOME/.local/bin:$PATH"
-pipx ensurepath
-```
-
-2. **Install via package manager:**
-```bash
-# Debian/Ubuntu
-sudo apt install pipx
-
-# Arch
-sudo pacman -S pipx
-
-# Fedora
-sudo dnf install pipx
-```
-
----
-
-### Problem: No Results Found
-
-**Symptoms:**
-```bash
-pyzotero search -q "anything"
-# Returns no results
-```
-
-**Solutions:**
-
-1. **Verify Zotero has data:**
-   - Open Zotero
-   - Check if you have items in your library
-
-2. **Try a different search:**
-```bash
-# List item types to see what's available
-pyzotero itemtypes
-
-# List collections
-pyzotero listcollections
-
-# Search in a specific collection
-pyzotero listcollections
-pyzotero search --collection <COLLECTION_ID> -q "test"
-```
-
-3. **Check full-text indexing (for --fulltext search):**
-   - In Zotero, ensure PDFs have been indexed
-   - Right-click a PDF > "Retrieve Metadata" if needed
-
----
-
-### Problem: JSON Output is Empty
-
-**Symptoms:**
-```bash
-pyzotero search -q "test" --json
-# Returns: []
-```
-
-**Solutions:**
-
-1. **Verify search term exists:**
-```bash
-# Try without --json first
-pyzotero search -q "test"
-```
-
-2. **Check Zotero is running and has data**
-
-3. **Try full-text search:**
-```bash
-pyzotero search -q "test" --fulltext
-```
-
----
-
-## Uninstallation
-
-### Using pipx
-
-```bash
-pipx uninstall pyzotero
-```
-
-### Using pip
-
-```bash
-pip uninstall pyzotero
-```
-
-### Remove Virtual Environment (if used)
-
-```bash
-# Remove virtual environment
-rm -rf ~/.venvs/pyzotero
-
-# Remove cloned repository (if installed from source)
-rm -rf ~/pyzotero
-```
-
-### Remove PATH Entries
-
-Edit your shell configuration and remove PATH entries:
-
-**For .bashrc:**
-```bash
-nano ~/.bashrc
-# Remove: export PATH="$HOME/.local/bin:$PATH"
-```
-
-**For .zshrc:**
-```bash
-nano ~/.zshrc
-# Remove: export PATH="$HOME/.local/bin:$PATH"
-```
-
----
-
-## Security Best Practices
-
-1. **Don't use `sudo pip install`** - Use pipx or user installation instead
-2. **Don't use `--break-system-packages`** - This bypasses PEP 668 protections
-3. **Use virtual environments** - For development projects
-4. **Keep packages updated** - Run update commands regularly:
+5. **设置环境变量 (可选，默认为 true):**
    ```bash
-   pipx upgrade pyzotero
-   # OR
-   pip install --upgrade "pyzotero[cli]"
+   export ZOTERO_LOCAL="true"
+   ```
+
+6. **测试连接:**
+   ```bash
+   cd /root/.openclaw/workspace/skills/pyzotero-cli
+   python3 scripts/zotero_tool.py listcollections
+   ```
+
+**输出示例:**
+```
+✓ 已连接到本地 Zotero
+共有 5 个集合:
+
+1. 📁 未命名集合
+   密钥：ABC123
+```
+
+---
+
+### 模式二：在线模式
+
+适用于远程访问或无 Zotero 安装的服务器。
+
+**配置步骤:**
+
+1. **获取 API 密钥:**
+   - 访问 https://www.zotero.org/settings/keys
+   - 点击 "Create new private key"
+   - 授予读取权限 (Read access to library and files)
+   - 复制密钥
+
+2. **获取用户 ID:**
+   - 访问 https://www.zotero.org/settings/keys
+   - 在 "Your userID for use in API calls" 处找到
+
+3. **设置环境变量:**
+   ```bash
+   export ZOTERO_LOCAL="false"
+   export ZOTERO_USER_ID="your_user_id"
+   export ZOTERO_API_KEY="your_api_key"
+   ```
+
+4. **永久设置 (可选):**
+   ```bash
+   echo 'export ZOTERO_LOCAL="false"' >> ~/.bashrc
+   echo 'export ZOTERO_USER_ID="your_user_id"' >> ~/.bashrc
+   echo 'export ZOTERO_API_KEY="your_api_key"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+5. **测试连接:**
+   ```bash
+   python3 scripts/zotero_tool.py listcollections
    ```
 
 ---
 
-## Summary of Recommendations
+## 故障排除
 
-| Scenario | Recommended Method |
-|----------|-------------------|
-| **PEP 668 systems** | `pipx install "pyzotero[cli]"` |
-| **Non-PEP 668 systems** | `pip install --user "pyzotero[cli]"` |
-| **Development/Testing** | Editable install with venv |
-| **Conda environments** | `pip install "pyzotero[cli]"` in conda env |
+### 问题 1: 无法连接到本地 Zotero
+
+**错误信息:**
+```
+✗ 无法连接到本地 Zotero: ...
+```
+
+**解决方案:**
+
+1. 确保 Zotero 正在运行
+2. 检查是否启用本地 API:
+   - 设置 > 高级 > "允许此计算机上的其他应用程序与 Zotero 通信"
+3. 重启 Zotero
+4. 确认使用的是 Zotero 7 或更新版本
 
 ---
 
-**Important Reminders:**
+### 问题 2: 模块未找到
 
-1. **Zotero 7+ is required** for local database access
-2. **Enable local API** in Zotero preferences (Advanced tab)
-3. **Zotero must be running** to use the CLI
-4. **Full-text search** requires PDFs to be indexed in Zotero
-5. **Use pipx** on PEP 668-compliant systems to avoid conflicts
+**错误信息:**
+```
+ModuleNotFoundError: No module named 'pyzotero'
+```
 
-**Remember:** Always use pipx or virtual environments on PEP 668-compliant systems to avoid conflicts and maintain system stability.
+**解决方案:**
+
+```bash
+# 使用 pipx 安装
+pipx install pyzotero
+
+# 或使用 pip
+pip install --user pyzotero
+```
+
+---
+
+### 问题 3: 权限错误 (PEP 668)
+
+**错误信息:**
+```
+error: externally-managed-environment
+```
+
+**解决方案:**
+
+使用 pipx 或 --user 标志:
+
+```bash
+# 推荐
+pipx install pyzotero
+
+# 备选
+pip install --user pyzotero
+```
+
+---
+
+### 问题 4: 在线模式认证失败
+
+**错误信息:**
+```
+✗ 无法连接到 Zotero 在线 API: ...
+```
+
+**解决方案:**
+
+1. 检查环境变量是否正确设置:
+   ```bash
+   echo $ZOTERO_LOCAL
+   echo $ZOTERO_USER_ID
+   echo $ZOTERO_API_KEY
+   ```
+
+2. 确认 API 密钥有效:
+   - 访问 https://www.zotero.org/settings/keys
+   - 检查密钥是否已过期或被撤销
+
+3. 确认用户 ID 正确:
+   - 用户 ID 是数字，不是用户名
+
+---
+
+### 问题 5: 命令执行无输出
+
+**可能原因:**
+
+1. Zotero 库为空
+2. 搜索关键词无匹配结果
+
+**解决方案:**
+
+```bash
+# 检查是否有项目
+python3 scripts/zotero_tool.py listcollections
+
+# 使用更宽泛的搜索词
+python3 scripts/zotero_tool.py search -q "test" -l 5
+```
+
+---
+
+## 卸载
+
+### 使用 pipx 安装
+```bash
+pipx uninstall pyzotero
+```
+
+### 使用 pip 安装
+```bash
+pip uninstall pyzotero
+```
+
+### 删除技能 (可选)
+```bash
+rm -rf /root/.openclaw/workspace/skills/pyzotero-cli
+```
+
+---
+
+## 验证安装
+
+运行以下命令验证安装是否成功:
+
+```bash
+# 检查 pyzotero 库
+python3 -c "from pyzotero import zotero; print('✓ pyzotero 库已安装')"
+
+# 检查脚本
+cd /root/.openclaw/workspace/skills/pyzotero-cli
+python3 scripts/zotero_tool.py --help
+
+# 测试连接 (本地模式)
+python3 scripts/zotero_tool.py listcollections
+```
+
+---
+
+## 下一步
+
+安装完成后:
+
+1. 📖 阅读 [QUICKSTART.md](QUICKSTART.md) 快速开始
+2. 💡 查看 [EXAMPLES.md](EXAMPLES.md) 了解使用示例
+3. 📚 参考 [SKILL.md](SKILL.md) 获取完整命令参考
+4. 🔧 查看 [CHANGELOG_v2.md](CHANGELOG_v2.md) 了解 v2.0.0 更新内容
+
+---
+
+**更新日期:** 2026-02-23  
+**版本:** 2.0.0

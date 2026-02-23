@@ -1,692 +1,456 @@
-# Pyzotero CLI Examples
+# Pyzotero CLI 使用示例
 
-Real-world command-line examples and workflows for common tasks with pyzotero CLI.
+实用的 Python 脚本使用示例和工作流。
 
-## Table of Contents
+## 目录
 
-1. [Basic Search](#basic-search)
-2. [Advanced Search](#advanced-search)
-3. [Collection Management](#collection-management)
-4. [Working with Output](#working-with-output)
-5. [Automation Scripts](#automation-scripts)
-6. [Daily Research Workflow](#daily-research-workflow)
-7. [Literature Review Workflow](#literature-review-workflow)
+1. [基本搜索示例](#基本搜索示例)
+2. [高级搜索技巧](#高级搜索技巧)
+3. [集合管理](#集合管理)
+4. [JSON 输出处理](#json 输出处理)
+5. [日常工作流](#日常工作流)
+6. [自动化脚本](#自动化脚本)
 
 ---
 
-## Basic Search
+## 基本搜索示例
 
-### Simple Text Search
+### 示例 1: 简单关键词搜索
 
 ```bash
-# Search for topic in titles and metadata
-pyzotero search -q "machine learning"
-
-# Phrase search (use quotes)
-pyzotero search -q "\"deep learning\""
-
-# Search for multiple terms
-pyzotero search -q "python data science"
+python3 scripts/zotero_tool.py search -q "machine learning"
 ```
 
-### Full-Text Search
-
-Search within PDFs and attachments (requires Zotero to have indexed PDFs):
-
-```bash
-# Full-text search
-pyzotero search -q "neural networks" --fulltext
-
-# Full-text with quotes
-pyzotero search --fulltext -q "\"attention mechanism\""
+**输出:**
 ```
+✓ 已连接到本地 Zotero
+找到 5 个项目:
 
-### Filter by Item Type
+1. [journalArticle] Machine Learning: A Probabilistic Perspective
+   作者：Kevin P. Murphy
+   年份：2012
+   标签：machine-learning, probabilistic
+   链接：https://www.zotero.org/user/items/ABC123
 
-```bash
-# Journal articles only
-pyzotero search -q "python" --itemtype journalArticle
-
-# Books only
-pyzotero search -q "programming" --itemtype book
-
-# Multiple item types
-pyzotero search -q "data" --itemtype book --itemtype journalArticle
-
-# Conference papers
-pyzotero search -q "AI" --itemtype conferencePaper
+2. [book] Pattern Recognition and Machine Learning
+   作者：Christopher M. Bishop
+   年份：2006
+   标签：pattern-recognition, machine-learning
+   链接：https://www.zotero.org/user/items/DEF456
 ```
 
 ---
 
-## Advanced Search
-
-### Search Within Specific Collection
+### 示例 2: 短语搜索
 
 ```bash
-# First, list collections to get IDs
-pyzotero listcollections
-
-# Search within specific collection
-pyzotero search --collection ABC123 -q "topic"
-
-# Full-text within collection
-pyzotero search --collection DEF456 -q "neural" --fulltext
+python3 scripts/zotero_tool.py search -q "\"deep learning\""
 ```
 
-### Combined Search Criteria
+搜索精确匹配的短语。
+
+---
+
+### 示例 3: 限制结果数量
 
 ```bash
-# Search for topic in journal articles
-pyzotero search -q "machine learning" --itemtype journalArticle
-
-# Search phrase in books
-pyzotero search -q "\"statistical methods\"" --itemtype book
-
-# Full-text search in articles
-pyzotero search --itemtype journalArticle --fulltext -q "transformer"
+python3 scripts/zotero_tool.py search -q "python" -l 10
 ```
 
-### Case-Insensitive Search
+只显示前 10 个结果。
 
-Search is case-insensitive by default:
+---
+
+## 高级搜索技巧
+
+### 示例 4: 全文搜索 (包括 PDF)
 
 ```bash
-# Both work the same
-pyzotero search -q "Machine Learning"
-pyzotero search -q "machine learning"
-pyzotero search -q "MACHINE LEARNING"
+python3 scripts/zotero_tool.py search -q "neural networks" --fulltext
+```
+
+搜索标题、摘要以及 PDF 附件的全文内容。
+
+---
+
+### 示例 5: 按项目类型过滤
+
+```bash
+# 只搜索期刊文章
+python3 scripts/zotero_tool.py search -q "machine learning" --itemtype journalArticle
+
+# 只搜索书籍
+python3 scripts/zotero_tool.py search -q "python" --itemtype book
+
+# 只搜索会议论文
+python3 scripts/zotero_tool.py search -q "deep learning" --itemtype conferencePaper
 ```
 
 ---
 
-## Collection Management
-
-### List All Collections
+### 示例 6: 在特定集合中搜索
 
 ```bash
-pyzotero listcollections
-```
+# 首先获取集合 ID
+python3 scripts/zotero_tool.py listcollections
 
-Output example:
-```
-Collection: My Library (ABC123)
-- Key: ABC123
-- Total items: 150
-
-Collection: Research Papers (DEF456)
-- Key: DEF456
-- Total items: 75
-
-Collection: Books to Read (GHI789)
-- Key: GHI789
-- Total items: 20
-```
-
-### Search Within Collections
-
-```bash
-# Search in "Research Papers" collection
-pyzotero search --collection DEF456 -q "deep learning"
-
-# Full-text search in specific collection
-pyzotero search --collection DEF456 -q "attention mechanism" --fulltext
-```
-
-### List Item Types
-
-```bash
-pyzotero itemtypes
-```
-
-Output example:
-```
-book
-journalArticle
-conferencePaper
-thesis
-report
-webpage
-preprint
-...
+# 然后在特定集合中搜索
+python3 scripts/zotero_tool.py search --collection ABC123 -q "test"
 ```
 
 ---
 
-## Working with Output
-
-### Human-Readable Output (Default)
+### 示例 7: 组合过滤
 
 ```bash
-pyzotero search -q "machine learning"
-```
-
-Output example:
-```
-Title: Deep Learning for Natural Language Processing
-Type: journalArticle
-Key: ABC123
-Authors: Smith, J.; Doe, J.
-Date: 2024
-Publication: Journal of Machine Learning Research
-DOI: 10.1234/jmlr.2024.123
-
-Title: Attention Is All You Need
-Type: conferencePaper
-Key: DEF456
-Authors: Vaswani, A.; et al.
-Date: 2017
-Publication: Advances in Neural Information Processing Systems
-```
-
-### JSON Output
-
-```bash
-# Get JSON output
-pyzotero search -q "machine learning" --json
-```
-
-Parse with jq:
-
-```bash
-# Extract titles
-pyzotero search -q "topic" --json | jq '.[] | .title'
-
-# Extract title and date
-pyzotero search -q "topic" --json | jq '.[] | {title: .title, date: .date}'
-
-# Extract authors
-pyzotero search -q "topic" --json | jq '.[] | .authors'
-
-# Count results
-pyzotero search -q "topic" --json | jq 'length'
-
-# Create a list
-pyzotero search -q "topic" --json | jq -r '.[] | .title' | nl
-```
-
-### Export to File
-
-```bash
-# Export to JSON file
-pyzotero search -q "machine learning" --json > ml_papers.json
-
-# Export titles to text file
-pyzotero search -q "topic" --json | jq -r '.[] | .title' > titles.txt
-
-# Export with metadata
-pyzotero search -q "topic" --json > results.json
+# 在特定集合中搜索特定期刊文章
+python3 scripts/zotero_tool.py search \
+  --collection ABC123 \
+  -q "neural networks" \
+  --itemtype journalArticle \
+  -l 20
 ```
 
 ---
 
-## Automation Scripts
+## 集合管理
 
-### Batch Search Script
+### 示例 8: 列出所有集合
 
-Create file `batch_search.sh`:
+```bash
+python3 scripts/zotero_tool.py listcollections
+```
+
+**输出:**
+```
+✓ 已连接到本地 Zotero
+共有 5 个集合:
+
+1. 📁 机器学习
+   密钥：ABC123
+
+2. 📁 深度学习
+   密钥：DEF456
+
+3. 📁 自然语言处理
+   密钥：GHI789
+```
+
+---
+
+### 示例 9: JSON 格式输出集合
+
+```bash
+python3 scripts/zotero_tool.py listcollections --json
+```
+
+---
+
+## JSON 输出处理
+
+### 示例 10: 基本 JSON 输出
+
+```bash
+python3 scripts/zotero_tool.py search -q "python" --json
+```
+
+---
+
+### 示例 11: 使用 jq 提取标题
+
+```bash
+python3 scripts/zotero_tool.py search -q "machine learning" --json | jq '.[].data.title'
+```
+
+**输出:**
+```
+"Machine Learning: A Probabilistic Perspective"
+"Pattern Recognition and Machine Learning"
+```
+
+---
+
+### 示例 12: 统计结果数量
+
+```bash
+python3 scripts/zotero_tool.py search -q "python" --json | jq 'length'
+```
+
+**输出:**
+```
+15
+```
+
+---
+
+### 示例 13: 提取作者信息
+
+```bash
+python3 scripts/zotero_tool.py search -q "deep learning" --json | \
+  jq '.[].data.creators[] | select(.creatorType == "author") | .lastName'
+```
+
+---
+
+### 示例 14: 导出到文件
+
+```bash
+# 导出为 JSON
+python3 scripts/zotero_tool.py search -q "machine learning" --json > results.json
+
+# 导出为文本
+python3 scripts/zotero_tool.py search -q "machine learning" > results.txt
+```
+
+---
+
+### 示例 15: 生成引用列表
+
+```bash
+python3 scripts/zotero_tool.py search -q "machine learning" --json | jq -r '
+  .[] | 
+  "\(.data.creators[0].lastName // "Unknown") (\(.data.date[:4] // "n.d.")). \(.data.title). \(.data.publicationTitle // "")"
+'
+```
+
+**输出:**
+```
+Murphy (2012). Machine Learning: A Probabilistic Perspective. MIT Press
+Bishop (2006). Pattern Recognition and Machine Learning. Springer
+```
+
+---
+
+## 日常工作流
+
+### 示例 16: 每日文献回顾
 
 ```bash
 #!/bin/bash
+# daily_review.sh
 
-# Batch search script
-TOPICS=("machine learning" "deep learning" "neural networks" "AI")
-
-for topic in "${TOPICS[@]}"; do
-    echo "=== Searching for: $topic ==="
-    pyzotero search -q "$topic"
-    echo ""
-done
-```
-
-Run it:
-```bash
-chmod +x batch_search.sh
-./batch_search.sh
-```
-
-### Create Research Report
-
-```bash
-#!/bin/bash
-
-TOPIC="$1"
-OUTPUT="research_report_${topic// /_}_$(date +%Y%m%d).md"
-
-echo "# Research Report: $topic" > "$OUTPUT"
-echo "Generated: $(date)" >> "$OUTPUT"
-echo "" >> "$OUTPUT"
-
-echo "## Search Results" >> "$OUTPUT"
-pyzotero search -q "$topic" >> "$OUTPUT"
-
-echo "" >> "$OUTPUT"
-echo "## Full-Text Results" >> "$OUTPUT"
-pyzotero search -q "$topic" --fulltext >> "$OUTPUT"
-
-echo "Report saved to: $OUTPUT"
-```
-
-Usage:
-```bash
-./create_report.sh "machine learning"
-```
-
-### Find Missing References
-
-```bash
-#!/bin/bash
-
-# Check if specific papers are in library
-while IFS= read -r title; do
-    result=$(pyzotero search -q "\"$title\"" --json | jq 'length')
-    if [ "$result" -eq 0 ]; then
-        echo "Missing: $title"
-    else
-        echo "Found: $title"
-    fi
-done < papers_to_check.txt
-```
-
-### Count Items by Year
-
-```bash
-#!/bin/bash
-
-# Count items by year
-pyzotero search --json | jq -r '.[] | select(.date != null) | .date' | \
-    grep -oE '^[0-9]{4}' | \
-    sort | uniq -c | \
-    sort -nr
-```
-
----
-
-## Daily Research Workflow
-
-### Morning Scan
-
-```bash
-#!/bin/bash
-# morning_scan.sh
-
-echo "=== Morning Research Scan - $(date) ==="
+echo "=== 每日文献回顾 ==="
+echo "日期：$(date +%Y-%m-%d)"
 echo ""
 
-# Check recent additions
-echo "Search: recent research"
-pyzotero search --fulltext -q "new research" | head -20
+# 搜索最近添加的机器学习文献
+echo "📚 机器学习新文献:"
+python3 scripts/zotero_tool.py search -q "machine learning" -l 5
 
 echo ""
-echo "=== Collections Overview ==="
-pyzotero listcollections
+echo "📚 深度学习新文献:"
+python3 scripts/zotero_tool.py search -q "deep learning" -l 5
 
 echo ""
-echo "=== Quick Stats ==="
-echo "Total items: $(pyzotero search --json | jq 'length')"
+echo "=== 回顾完成 ==="
 ```
 
-### Quick Lookup
-
+使用方法:
 ```bash
-# Function for quick lookup
-zotsearch() {
-    pyzotero search -q "$@"
-}
-
-# Add to ~/.bashrc or ~/.zshrc
-alias zotsearch='pyzotero search'
-alias zotlist='pyzotero listcollections'
-alias zotfull='pyzotero search --fulltext'
-
-# Usage
-zotsearch "neural networks"
-zotfull "attention mechanism"
-```
-
-### Find Citations for Writing
-
-```bash
-#!/bin/bash
-# find_citations.sh
-
-TOPIC="$1"
-
-echo "=== Citations for: $topic ==="
-
-# Find journal articles
-echo "## Journal Articles"
-pyzotero search -q "$topic" --itemtype journalArticle
-
-# Find books
-echo "## Books"
-pyzotero search -q "$topic" --itemtype book
-
-# Find conference papers
-echo "## Conference Papers"
-pyzotero search -q "$topic" --itemtype conferencePaper
-```
-
-Usage:
-```bash
-./find_citations.sh "machine learning"
+chmod +x daily_review.sh
+./daily_review.sh
 ```
 
 ---
 
-## Literature Review Workflow
-
-### Step 1: Topic Exploration
-
-```bash
-# Initial broad search
-pyzotero search -q "machine learning"
-```
-
-### Step 2: Narrow Down
-
-```bash
-# Focus on journal articles
-pyzotero search -q "machine learning" --itemtype journalArticle
-
-# Search specific aspect
-pyzotero search -q "machine learning applications" --fulltext
-```
-
-### Step 3: Organize by Collection
-
-```bash
-# List collections
-pyzotero listcollections
-
-# Search within specific collection
-pyzotero search --collection RESEARCH -q "deep learning"
-```
-
-### Step 4: Extract Results
-
-```bash
-# Export to JSON for further processing
-pyzotero search -q "machine learning" --json > ml_review.json
-
-# Extract titles
-cat ml_review.json | jq -r '.[] | .title' > ml_titles.txt
-
-# Count by year
-cat ml_review.json | jq -r '.[] | .date' | grep -oE '^[0-9]{4}' | sort | uniq -c | sort -nr
-```
-
-### Complete Literature Review Script
+### 示例 17: 按主题整理文献
 
 ```bash
 #!/bin/bash
-# lit_review.sh
-
-if [ -z "$1" ]; then
-    echo "Usage: $0 <topic>"
-    exit 1
-fi
-
-TOPIC="$1"
-DATE=$(date +%Y%m%d)
-DIR="lit_review_${TOPIC// /_}_${DATE}"
-
-mkdir -p "$DIR"
-cd "$DIR"
-
-echo "=== Literature Review: $TOPIC ==="
-echo "Working in: $DIR"
-
-# 1. Broad search
-echo "1. Broad search results..." > broad.txt
-pyzotero search -q "$TOPIC" > broad.txt
-
-# 2. Journal articles
-echo "2. Journal articles..." > articles.txt
-pyzotero search -q "$TOPIC" --itemtype journalArticle > articles.txt
-
-# 3. Full-text search
-echo "3. Full-text results..." > fulltext.txt
-pyzotero search -q "$TOPIC" --fulltext > fulltext.txt
-
-# 4. Export JSON
-echo "4. Exporting JSON..."
-pyzotero search -q "$TOPIC" --json > data.json
-
-# 5. Analysis
-echo "5. Analysis..."
-
-# Total results
-TOTAL=$(pyzotero search -q "$TOPIC" --json | jq 'length')
-echo "Total results: $TOTAL" > analysis.txt
-
-# By year
-echo "By year:" >> analysis.txt
-cat data.json | jq -r '.[] | .date' | grep -oE '^[0-9]{4}' | sort | uniq -c | sort -nr >> analysis.txt
-
-# By type
-echo "By type:" >> analysis.txt
-cat data.json | jq -r '.[] | .itemType' | sort | uniq -c | sort -nr >> analysis.txt
-
-echo "Literature review complete! See files in: $DIR"
-```
-
-Usage:
-```bash
-./lit_review.sh "transformer architecture"
-```
-
----
-
-## Advanced Workflows
-
-### Cross-Reference Search
-
-```bash
-#!/bin/bash
-# cross_reference.sh
-
-# Search for common references between topics
-TOPIC1="$1"
-TOPIC2="$2"
-
-echo "=== Cross-Reference: $topic1 vs $topic2 ==="
-
-# Get results for each topic
-pyzotero search -q "$TOPIC1" --json > topic1.json
-pyzotero search -q "$TOPIC2" --json > topic2.json
-
-# Find common items (same keys)
-echo "Common items:"
-comm -12 <(cat topic1.json | jq -r '.[] | .key' | sort) <(cat topic2.json | jq -r '.[] | .key' | sort) | while read key; do
-    pyzotero search --json | jq ".[] | select(.key == \"$key\") | .title"
-done
-```
-
-### Trend Analysis
-
-```bash
-#!/bin/bash
-# trend_analysis.sh
-
-TOPIC="$1"
-START_YEAR="$2"
-END_YEAR="${3:-$(date +%Y)}"
-
-echo "=== Topic Trend: $TOPIC ($START_YEAR - $END_YEAR) ==="
-
-for year in $(seq $START_YEAR $END_YEAR); do
-    count=$(pyzotero search -q "$TOPIC" --json | jq "[.[] | select(.date | contains(\"$year\"))] | length")
-    echo "$year: $count"
-done
-```
-
-Usage:
-```bash
-./trend_analysis.sh "machine learning" 2010 2024
-```
-
-### Export for Academic Writing
-
-```bash
-#!/bin/bash
-# export_for_paper.sh
-
-TOPIC="$1"
-
-echo "=== Exporting to BibTeX-style format ==="
-
-pyzotero search -q "$TOPIC" --json | while IFS= read -r item; do
-    title=$(echo "$item" | jq -r '.title // empty')
-    date=$(echo "$item" | jq -r '.date // empty' | grep -oE '^[0-9]{4}')
-    item_type=$(echo "$item" | jq -r '.itemType // empty')
-
-    if [ ! -z "$title" ]; then
-        echo "@$item_type{key,"
-        echo "  title = {$title},"
-        if [ ! -z "$date" ]; then
-            echo "  year = {$date},"
-        fi
-        echo "}"
-        echo ""
-    fi
-done > export.bib
-```
-
----
-
-## Tips and Tricks
-
-### Create Aliases
-
-Add to `~/.bashrc` or `~/.zshrc`:
-
-```bash
-# Basic aliases
-alias zot='pyzotero'
-alias zotsearch='pyzotero search'
-alias zotlist='pyzotero listcollections'
-alias zotfull='pyzotero search --fulltext'
-alias zotjson='pyzotero search --json'
-
-# Topic-specific aliases
-alias zotml='pyzotero search -q "machine learning"'
-alias zotdl='pyzotero search -q "deep learning"'
-alias zotai='pyzotero search -q "artificial intelligence"'
-```
-
-### Use with FZF (Fuzzy Finder)
-
-```bash
-# Interactive search
-zotsearch-fzf() {
-    local topic=$(pyzotero search --json | jq -r '.[] | .title' | fzf --prompt="Search: ")
-    if [ ! -z "$topic" ]; then
-        pyzotero search -q "\"$topic\""
-    fi
-}
-
-# Add to shell and call with: zotsearch-fzf
-```
-
-### Combine with Other Tools
-
-```bash
-# Send results to clipboard
-pyzotero search -q "topic" | xclip -selection clipboard
-
-# Open URLs in browser
-pyzotero search -q "topic" --json | jq -r '.[] | .url' | xargs -I {} xdg-open {}
-
-# Create markdown bibliography
-pyzotero search -q "topic" --json | jq -r '.[] | "* " + .title + " (" + .date + ")"'
-```
-
-### Logging Searches
-
-```bash
-# Log all searches to file
-zotsearch_log() {
-    echo "$(date): pyzotero search -q $@" >> ~/.zotero_search.log
-    pyzotero search -q "$@"
-}
-
-# View search history
-tail -f ~/.zotero_search.log
-```
-
----
-
-## Troubleshooting Examples
-
-### Debug Connection Issues
-
-```bash
-# Check if Zotero is running
-pgrep -f zotero
-
-# Test local API
-curl -X GET http://localhost:23119/zotero/items
-
-# Check collections (basic test)
-pyzotero listcollections
-```
-
-### Verify Search Results
-
-```bash
-# Count results
-pyzotero search -q "topic" --json | jq 'length'
-
-# Check if results are empty
-if [ $(pyzotero search -q "topic" --json | jq 'length') -eq 0 ]; then
-    echo "No results found"
-fi
-```
-
-### Check Available Item Types
-
-```bash
-# List all item types
-pyzotero itemtypes
-
-# Use specific type in search
-pyzotero search -q "topic" --itemtype journalArticle
-```
-
----
-
-## Performance Tips
-
-### For Large Libraries
-
-```bash
-# Search is case-insensitive by default - use exact phrases for precision
-pyzotero search -q "\"Exact Phrase\""
-
-# Use item type filters to reduce results
-pyzotero search -q "topic" --itemtype journalArticle
-
-# Use collection filters when possible
-pyzotero search --collection ABC123 -q "topic"
-```
-
-### Batch Operations
-
-```bash
-# Process multiple searches with delays
-for topic in "topic1" "topic2" "topic3"; do
-    echo "Searching: $topic"
-    pyzotero search -q "$topic" > "${topic// /_}.txt"
-    sleep 1  # Prevent overwhelming Zotero
+# organize_by_topic.sh
+
+topics=("machine learning" "deep learning" "natural language processing" "computer vision")
+
+for topic in "${topics[@]}"; do
+  echo "================================"
+  echo "主题：$topic"
+  echo "================================"
+  
+  python3 scripts/zotero_tool.py search -q "$topic" --itemtype journalArticle -l 10
+  
+  echo ""
 done
 ```
 
 ---
 
-**For more information:**
-- See [SKILL.md](SKILL.md) for command reference
-- Check [QUICKSTART.md](QUICKSTART.md) for quick start guide
-- Read [README.md](README.md) for full documentation
+### 示例 18: 生成阅读清单
 
-**Happy searching! 🚀**
+```bash
+#!/bin/bash
+# reading_list.sh
+
+echo "# 阅读清单"
+echo "生成时间：$(date)"
+echo ""
+
+# 搜索关键主题的文献
+python3 scripts/zotero_tool.py search -q "attention mechanism" --json | jq -r '
+  .[] | 
+  "- [ ] \(.data.title) (\(.data.date[:4] // "n.d."))"
+'
+```
+
+---
+
+## 自动化脚本
+
+### 示例 19: Python 自动化脚本
+
+```python
+#!/usr/bin/env python3
+"""
+自动搜索并导出文献
+"""
+
+import subprocess
+import json
+
+def search_zotero(query, limit=10):
+    """搜索 Zotero 并返回结果"""
+    cmd = [
+        'python3', 'scripts/zotero_tool.py',
+        'search', '-q', query,
+        '--json', '-l', str(limit)
+    ]
+    
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        return json.loads(result.stdout)
+    else:
+        print(f"错误：{result.stderr}")
+        return []
+
+def main():
+    topics = ["machine learning", "deep learning", "neural networks"]
+    
+    for topic in topics:
+        print(f"\n搜索：{topic}")
+        items = search_zotero(topic, limit=5)
+        
+        for i, item in enumerate(items, 1):
+            title = item['data'].get('title', 'N/A')
+            print(f"  {i}. {title}")
+
+if __name__ == '__main__':
+    main()
+```
+
+---
+
+### 示例 20: 定期检查新文献
+
+```python
+#!/usr/bin/env python3
+"""
+定期检查特定主题的新文献
+"""
+
+import subprocess
+import json
+import time
+from datetime import datetime
+
+def check_new_items(topic, last_check):
+    """检查自上次以来的新文献"""
+    cmd = [
+        'python3', 'scripts/zotero_tool.py',
+        'search', '-q', topic,
+        '--json', '-l', '100'
+    ]
+    
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        items = json.loads(result.stdout)
+        # 过滤新文献 (简化示例，实际需要比较日期)
+        return items[:10]
+    return []
+
+def main():
+    topics = ["transformer", "attention mechanism"]
+    
+    while True:
+        for topic in topics:
+            print(f"\n检查新文献：{topic}")
+            items = check_new_items(topic, None)
+            
+            if items:
+                print(f"找到 {len(items)} 篇新文献")
+                for item in items[:3]:
+                    print(f"  - {item['data'].get('title', 'N/A')}")
+            else:
+                print("  暂无新文献")
+        
+        # 每小时检查一次
+        time.sleep(3600)
+
+if __name__ == '__main__':
+    main()
+```
+
+---
+
+## 在线模式示例
+
+### 示例 21: 使用在线 API
+
+```bash
+# 设置环境变量
+export ZOTERO_LOCAL="false"
+export ZOTERO_USER_ID="your_user_id"
+export ZOTERO_API_KEY="your_api_key"
+
+# 搜索
+python3 scripts/zotero_tool.py search -q "machine learning"
+```
+
+---
+
+### 示例 22: 切换模式
+
+```bash
+# 本地模式
+export ZOTERO_LOCAL="true"
+python3 scripts/zotero_tool.py listcollections
+
+# 在线模式
+export ZOTERO_LOCAL="false"
+python3 scripts/zotero_tool.py listcollections
+```
+
+---
+
+## 故障排除示例
+
+### 示例 23: 调试连接问题
+
+```bash
+# 测试本地连接
+export ZOTERO_LOCAL="true"
+python3 scripts/zotero_tool.py listcollections
+
+# 测试在线连接
+export ZOTERO_LOCAL="false"
+export ZOTERO_USER_ID="your_id"
+export ZOTERO_API_KEY="your_key"
+python3 scripts/zotero_tool.py listcollections
+
+# 检查环境变量
+echo "ZOTERO_LOCAL=$ZOTERO_LOCAL"
+echo "ZOTERO_USER_ID=$ZOTERO_USER_ID"
+```
+
+---
+
+## 更多资源
+
+- 📖 [QUICKSTART.md](QUICKSTART.md) - 快速入门
+- 📚 [INSTALL.md](INSTALL.md) - 安装指南
+- 🔧 [SKILL.md](SKILL.md) - 完整命令参考
+- 📝 [CHANGELOG_v2.md](CHANGELOG_v2.md) - v2.0.0 更新说明
+
+---
+
+**提示:** 将这些示例脚本保存到 `~/.bin/` 目录并添加到 PATH，方便日常使用！

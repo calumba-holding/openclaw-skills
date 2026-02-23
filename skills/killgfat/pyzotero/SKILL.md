@@ -1,7 +1,7 @@
 ---
 name: pyzotero-cli
-version: 1.0.0
-description: Command-line interface for Zotero - search your local Zotero library, list collections, and manage items from the terminal.
+version: 2.0.0
+description: Python scripts for Zotero - supports both local API and online Web API, with ZOTERO_LOCAL environment variable for mode switching.
 homepage: https://github.com/urschrei/pyzotero
 metadata:
   {
@@ -12,177 +12,269 @@ metadata:
         "install":
           [
             {
-              "id": "pipx_cli",
+              "id": "pipx_lib",
               "kind": "pipx",
-              "package": "pyzotero[cli]",
-              "label": "Install pyzotero CLI (pipx - recommended for PEP 668-compliant systems)",
+              "package": "pyzotero",
+              "label": "Install pyzotero library (pipx - recommended)",
               "platforms": ["linux-debian", "linux-ubuntu", "linux-arch", "linux-fedora", "linux-rhel"],
             },
             {
-              "id": "pip_cli",
+              "id": "pip_lib",
               "kind": "pip",
-              "package": "pyzotero[cli]",
-              "label": "Install pyzotero CLI (pip)",
+              "package": "pyzotero",
+              "label": "Install pyzotero library (pip)",
             },
           ],
       },
   }
 ---
 
-# Pyzotero CLI
+# Pyzotero CLI - Python Scripts
 
-Command-line interface for Zotero - search your local Zotero library, list collections, and manage items from the terminal.
+使用 Python 脚本调用 pyzotero 库，支持本地 Zotero API 和在线 Web API 两种模式。
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Install (PEP 668 systems)
-pipx install "pyzotero[cli]"
+# 安装 pyzotero 库
+pipx install pyzotero
 
-# Enable local API in Zotero 7
-# Settings > Advanced > "Allow other applications on this computer to communicate with Zotero"
+# 设置环境变量 (可选)
+export ZOTERO_LOCAL="true"  # 使用本地 API (默认)
+# export ZOTERO_LOCAL="false"  # 使用在线 API
 
-# List collections
-pyzotero listcollections
+# 搜索库
+python3 scripts/zotero_tool.py search -q "machine learning"
 
-# Search library
-pyzotero search -q "machine learning"
+# 全文搜索 (包括 PDF)
+python3 scripts/zotero_tool.py search -q "attention mechanisms" --fulltext
 
-# Full-text search (includes PDFs)
-pyzotero search -q "attention mechanisms" --fulltext
+# 列出所有集合
+python3 scripts/zotero_tool.py listcollections
 ```
 
-📖 **Detailed guide:** [QUICKSTART.md](QUICKSTART.md)
+📖 **详细指南:** [QUICKSTART.md](QUICKSTART.md)
 
-## Installation
+## 环境变量配置
 
-### pipx (Recommended for PEP 668 systems)
+### ZOTERO_LOCAL (必需)
+控制使用本地 API 还是在线 API:
+
+| 值 | 模式 | 说明 |
+|---|---|---|
+| `"true"` (默认) | 本地模式 | 使用本地 Zotero 7+ 的本地 API |
+| `"false"` | 在线模式 | 使用 Zotero Web API |
+
+### ZOTERO_USER_ID (在线模式必需)
+您的 Zotero 用户 ID，在在线模式下需要设置。
+
+### ZOTERO_API_KEY (在线模式必需)
+您的 Zotero API Key，在在线模式下需要设置。
+
+### 配置示例
+
+**本地模式 (推荐):**
 ```bash
-pipx install "pyzotero[cli]"
+export ZOTERO_LOCAL="true"
+python3 scripts/zotero_tool.py search -q "python"
 ```
 
-### pip (Generic)
+**在线模式:**
 ```bash
-pip install --user "pyzotero[cli]"
+export ZOTERO_LOCAL="false"
+export ZOTERO_USER_ID="your_user_id"
+export ZOTERO_API_KEY="your_api_key"
+python3 scripts/zotero_tool.py search -q "python"
+```
+
+## 安装
+
+### pipx (推荐)
+```bash
+pipx install pyzotero
+```
+
+### pip (通用)
+```bash
+pip install --user pyzotero
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-📖 **Complete installation guide:** [INSTALL.md](INSTALL.md)
+📖 **完整安装指南:** [INSTALL.md](INSTALL.md)
 
-## Prerequisites
+## 前提条件
 
-### Enable Local Zotero Access
+### 本地模式配置
 
-**Required for CLI usage:**
+**需要在 Zotero 7+ 中启用本地 API:**
 
-1. Open Zotero 7 (or newer)
-2. Go to **Edit > Preferences > Advanced**
-3. Check **"Allow other applications on this computer to communicate with Zotero"**
-4. Restart Zotero
+1. 打开 Zotero 7 (或更新版本)
+2. 进入 **编辑 > 首选项 > 高级** (macOS: **Zotero > 设置 > 高级**)
+3. 勾选 **"允许此计算机上的其他应用程序与 Zotero 通信"**
+4. 重启 Zotero
 
-## Core Commands
+### 在线模式配置
 
-| Command | Description |
-|---------|-------------|
-| `pyzotero search -q "topic"` | Search library |
-| `pyzotero search --fulltext` | Search with full-text (PDFs) |
-| `pyzotero search --collection ID` | Search in specific collection |
-| `pyzotero listcollections` | List all collections |
-| `pyzotero itemtypes` | List item types |
+**需要获取 API 密钥:**
 
-## Search Examples
+1. 访问 https://www.zotero.org/settings/keys
+2. 点击 "Create new private key"
+3. 授予读取权限 (Read access to library and files)
+4. 复制密钥并设置环境变量:
+   ```bash
+   export ZOTERO_USER_ID="your_user_id"
+   export ZOTERO_API_KEY="your_key"
+   ```
 
-### Basic Search
+## 核心命令
+
+| 命令 | 说明 |
+|------|------|
+| `python3 scripts/zotero_tool.py search -q "关键词"` | 搜索库 |
+| `python3 scripts/zotero_tool.py search --fulltext` | 全文搜索 (包括 PDF) |
+| `python3 scripts/zotero_tool.py search --collection ID` | 在特定集合中搜索 |
+| `python3 scripts/zotero_tool.py listcollections` | 列出所有集合 |
+| `python3 scripts/zotero_tool.py itemtypes` | 列出项目类型 |
+| `python3 scripts/zotero_tool.py item KEY` | 获取单个项目详情 |
+
+## 使用示例
+
+### 基本搜索
 ```bash
-# Search titles and metadata
-pyzotero search -q "machine learning"
+# 搜索标题和元数据
+python3 scripts/zotero_tool.py search -q "machine learning"
 
-# Phrase search
-pyzotero search -q "\"deep learning\""
+# 短语搜索
+python3 scripts/zotero_tool.py search -q "\"deep learning\""
 ```
 
-### Full-Text Search
+### 全文搜索
 ```bash
-# Search in PDFs and attachments
-pyzotero search -q "neural networks" --fulltext
+# 在 PDF 和附件中搜索
+python3 scripts/zotero_tool.py search -q "neural networks" --fulltext
 ```
 
-### Advanced Filtering
+### 高级过滤
 ```bash
-# Filter by item type
-pyzotero search -q "methodology" --itemtype book --itemtype journalArticle
+# 按项目类型过滤
+python3 scripts/zotero_tool.py search -q "methodology" --itemtype book
 
-# Search within collection
-pyzotero search --collection ABC123 -q "test"
+# 在特定集合中搜索
+python3 scripts/zotero_tool.py search --collection ABC123 -q "test"
+
+# 限制结果数量
+python3 scripts/zotero_tool.py search -q "python" -l 10
 ```
 
-## Output Formats
-
-### Human-Readable
+### 获取项目详情
 ```bash
-pyzotero search -q "python"
+# 获取单个项目
+python3 scripts/zotero_tool.py item ABC123XYZ
 ```
 
-### JSON Output
+## 输出格式
+
+### 人类可读格式 (默认)
 ```bash
-pyzotero search -q "topic" --json
-
-# Process with jq
-pyzotero search -q "topic" --json | jq '.[] | .title'
+python3 scripts/zotero_tool.py search -q "python"
 ```
 
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [QUICKSTART.md](QUICKSTART.md) | 5-minute quick start guide |
-| [INSTALL.md](INSTALL.md) | Comprehensive installation guide |
-| [EXAMPLES.md](EXAMPLES.md) | Practical usage examples |
-| [README.md](README.md) | Project overview |
-
-## Troubleshooting
-
-**Connection error (local Zotero):**
-```
-Make sure Zotero is running
-Enable local API: Settings > Advanced > "Allow other applications on this computer to communicate with Zotero"
-Restart Zotero
-```
-
-**Command not found:**
+### JSON 输出
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
-pipx ensurepath
+# 输出 JSON 格式
+python3 scripts/zotero_tool.py search -q "topic" --json
+
+# 使用 jq 处理
+python3 scripts/zotero_tool.py search -q "topic" --json | jq '.[].data.title'
+
+# 保存到文件
+python3 scripts/zotero_tool.py search -q "topic" --json > results.json
 ```
 
-**Permission denied (PEP 668 systems):**
-```bash
-pipx install "pyzotero[cli]"
+## 文档
+
+| 文档 | 说明 |
+|------|------|
+| [QUICKSTART.md](QUICKSTART.md) | 5 分钟快速入门 |
+| [INSTALL.md](INSTALL.md) | 详细安装指南 |
+| [EXAMPLES.md](EXAMPLES.md) | 实用使用示例 |
+| [README.md](README.md) | 项目概览 |
+
+## 故障排除
+
+**本地模式连接错误:**
+```
+确保 Zotero 正在运行
+启用本地 API: 设置 > 高级 > "允许此计算机上的其他应用程序与 Zotero 通信"
+重启 Zotero
 ```
 
-📖 **Detailed troubleshooting:** [INSTALL.md](INSTALL.md)
+**在线模式认证错误:**
+```bash
+# 检查环境变量是否正确设置
+echo $ZOTERO_USER_ID
+echo $ZOTERO_API_KEY
 
-## Quick Reference
+# 确认 ZOTERO_LOCAL 设置为 false
+export ZOTERO_LOCAL="false"
+```
+
+**模块未找到错误:**
+```bash
+# 确保已安装 pyzotero
+pipx install pyzotero
+# 或
+pip install --user pyzotero
+```
+
+**权限错误 (PEP 668 系统):**
+```bash
+pipx install pyzotero
+```
+
+📖 **详细故障排除:** [INSTALL.md](INSTALL.md)
+
+## 快速参考
 
 ```bash
-# Search
-pyzotero search -q "topic"
-pyzotero search -q "topic" --fulltext
-pyzotero search -q "topic" --json
+# 设置模式
+export ZOTERO_LOCAL="true"   # 本地模式 (默认)
+export ZOTERO_LOCAL="false"  # 在线模式
 
-# List
-pyzotero listcollections
-pyzotero itemtypes
+# 在线模式需要额外设置
+export ZOTERO_USER_ID="your_id"
+export ZOTERO_API_KEY="your_key"
 
-# Filter
-pyzotero search -q "topic" --itemtype journalArticle
-pyzotero search --collection ABC123 -q "topic"
+# 搜索
+python3 scripts/zotero_tool.py search -q "topic"
+python3 scripts/zotero_tool.py search -q "topic" --fulltext
+python3 scripts/zotero_tool.py search -q "topic" --json
+
+# 列表
+python3 scripts/zotero_tool.py listcollections
+python3 scripts/zotero_tool.py itemtypes
+
+# 获取项目
+python3 scripts/zotero_tool.py item ITEM_KEY
+
+# 过滤
+python3 scripts/zotero_tool.py search -q "topic" --itemtype journalArticle
+python3 scripts/zotero_tool.py search --collection ABC123 -q "topic"
 ```
 
 ---
 
-**For complete documentation:**
-- [QUICKSTART.md](QUICKSTART.md) - Get started
-- [INSTALL.md](INSTALL.md) - Installation details
-- [EXAMPLES.md](EXAMPLES.md) - Usage examples
-- [README.md](README.md) - Full overview
+**完整文档:**
+- [QUICKSTART.md](QUICKSTART.md) - 快速入门
+- [INSTALL.md](INSTALL.md) - 安装详情
+- [EXAMPLES.md](EXAMPLES.md) - 使用示例
+- [README.md](README.md) - 完整概览
+
+## 脚本说明
+
+本技能提供 Python 脚本 `scripts/zotero_tool.py`，通过 pyzotero 库与 Zotero 交互:
+
+- **本地模式** (`ZOTERO_LOCAL="true"`): 直接连接到运行中的 Zotero 7+ 本地实例
+- **在线模式** (`ZOTERO_LOCAL="false"`): 通过 Zotero Web API 访问您的在线库
+
+所有功能与原版 pyzotero-cli 保持一致，但使用 Python 脚本方式调用，更灵活且易于集成到其他 Python 项目中。

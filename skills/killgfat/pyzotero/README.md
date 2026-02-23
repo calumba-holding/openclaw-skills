@@ -1,454 +1,229 @@
 # Pyzotero CLI Skill for OpenClaw
 
-A comprehensive OpenClaw skill for **pyzotero CLI** - the command-line interface for working with your Zotero library. This skill provides complete documentation, installation guides, usage examples, and workflows for searching and managing your Zotero library from the terminal.
+使用 Python 脚本调用 pyzotero 库，支持本地 Zotero API 和在线 Web API 两种模式。
 
-## 📦 What's Included
+## 📦 包含内容
 
-### Core Documentation
-- **[SKILL.md](SKILL.md)** - Complete skill documentation with capabilities, quick start, and command reference
-- **[INSTALL.md](INSTALL.md)** - Comprehensive installation guide with PEP 668/pipx support
-- **[QUICKSTART.md](QUICKSTART.md)** - 5-minute quick start guide
-- **[EXAMPLES.md](EXAMPLES.md)** - Practical command-line examples for common tasks
-- **[README.md](README.md)** - This file - project overview and summary
+### 核心文档
+- **[SKILL.md](SKILL.md)** - 完整技能文档，包含功能、安装和命令参考
+- **[INSTALL.md](INSTALL.md)** - 详细安装指南，支持 PEP 668/pipx
+- **[QUICKSTART.md](QUICKSTART.md)** - 5 分钟快速入门
+- **[EXAMPLES.md](EXAMPLES.md)** - 实用命令行示例和工作流
+- **[CHANGELOG_v2.md](CHANGELOG_v2.md)** - v2.0.0 更新说明
+- **[README.md](README.md)** - 本文件 - 项目概览
 
-### What is Pyzotero CLI?
+### Python 脚本
+- **scripts/zotero_tool.py** - 主脚本，提供完整的 Zotero 库管理功能
+- **scripts/examples.py** - 示例脚本，展示各种使用场景
 
-Pyzotero CLI is a command-line interface that allows you to:
+## 🚀 快速开始
 
-- **Search your Zotero library** - Query items, collections, and references from the terminal
-- **Full-text search** - Search within PDFs and attachments
-- **List collections** - Browse and explore your Zotero collections
-- **Filter by type** - Narrow search by item type (book, article, etc.)
-- **Export data** - Output results in JSON for processing
-- **Local database access** - Query your local Zotero database directly
+### 1. 安装 pyzotero 库
 
-## 🚀 Quick Start
-
-### Installation
-
-**For PEP 668-compliant systems (Debian 11+, Ubuntu 23.04+, Fedora 34+, etc.):**
-
+**使用 pipx (推荐):**
 ```bash
-# Install using pipx (recommended)
-pipx install "pyzotero[cli]"
+pipx install pyzotero
 ```
 
-**For generic systems:**
-
+**使用 pip:**
 ```bash
-# Using pip
-pip install --user "pyzotero[cli]"
+pip install --user pyzotero
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-### Enable Local Zotero Access (Required)
+### 2. 配置访问模式
 
-1. Open Zotero 7 (or newer)
-2. Go to **Edit > Preferences** (or **Zotero > Settings** on macOS)
-3. Click on the **Advanced** tab
-4. Check the box: **"Allow other applications on this computer to communicate with Zotero"**
-5. **Restart Zotero**
-
-### Basic CLI Usage
-
+**本地模式 (默认，推荐):**
 ```bash
-# List all collections
-pyzotero listcollections
-
-# Search library
-pyzotero search -q "machine learning"
-
-# Full-text search (includes PDFs)
-pyzotero search -q "attention mechanisms" --fulltext
-
-# Filter by item type
-pyzotero search -q "python" --itemtype journalArticle
-
-# Output as JSON
-pyzotero search -q "topic" --json
+export ZOTERO_LOCAL="true"
+# 确保 Zotero 7+ 正在运行，并在 设置 > 高级 中启用本地 API
 ```
 
-## 🎯 Key Features
-
-### Core Capabilities
-
-- **Command-Line Access** - Entire Zotero library from the terminal
-- **Full-Text Search** - Search within PDFs and attachments
-- **Collection Browsing** - List and explore collections
-- **Item Type Filtering** - Narrow by book, journal article, conference paper, etc.
-- **JSON Output** - Structured data for automation and scripting
-- **Local Database Access** - Direct connection to your local Zotero
-- **Fast And Lightweight** - Quick searches without web API calls
-
-### PEP 668 Compliance ✨
-
-Designed for modern Linux distributions that follow PEP 668 (Debian 11+, Ubuntu 23.04+, Fedora 34+, etc.):
-
-- **pipx integration** for isolated installations
-- **User installation** alternatives with `--user`
-- **Virtual environment** support
-- **Comprehensive troubleshooting** for permission errors
-- **Platform-specific instructions** for major distributions
-
-### Multiple Installation Methods
-
-| Method | Best For | PEP 668 Compliant |
-|--------|----------|-------------------|
-| `pipx` | Production, PEP 668 systems | ✅ Yes |
-| `pip --user` | Generic systems | ✅ Yes |
-| `pip install` | Virtual environments | ❌ No |
-| `conda` | Anaconda users | ✅ Yes |
-
-## 📚 Documentation Structure
-
-### Main Documentation
-
-- **[SKILL.md](SKILL.md)** - Complete skill documentation:
-  - Overview and features
-  - Installation options
-  - Quick start guide
-  - Core commands reference
-  - Usage examples
-  - Troubleshooting
-  - Quick reference
-
-- **[INSTALL.md](INSTALL.md)** - Comprehensive installation guide:
-  - All installation methods (pipx, pip, conda)
-  - Platform-specific instructions (Debian, Ubuntu, Arch, Fedora, etc.)
-  - PEP 668 compliance details
-  - Local Zotero setup
-  - Configuration steps
-  - Troubleshooting common issues
-  - Security best practices
-  - Uninstallation instructions
-
-- **[QUICKSTART.md](QUICKSTART.md)** - 3-minute setup:
-  - Quick installation steps
-  - Enable local Zotero access
-  - First CLI commands
-  - Common tasks
-  - Command reference
-  - Quick troubleshooting
-
-- **[EXAMPLES.md](EXAMPLES.md)** - Real-world CLI scenarios:
-  - Basic search examples
-  - Advanced search techniques
-  - Collection management
-  - Working with output (JSON, text export)
-  - Automation scripts
-  - Daily research workflows
-  - Literature review workflows
-  - Advanced shell scripting examples
-
-## 🔧 Core Features
-
-### Search Commands
-
+**在线模式:**
 ```bash
-# Basic search
-pyzotero search -q "machine learning"
-
-# Full-text search (includes PDFs)
-pyzotero search -q "neural networks" --fulltext
-
-# Filter by item type
-pyzotero search -q "python" --itemtype journalArticle
-
-# Search within collection
-pyzotero search --collection ABC123 -q "topic"
-
-# JSON output
-pyzotero search -q "topic" --json
+export ZOTERO_LOCAL="false"
+export ZOTERO_USER_ID="your_user_id"
+export ZOTERO_API_KEY="your_api_key"
 ```
 
-### List Commands
+### 3. 基本使用
 
 ```bash
-# List all collections
-pyzotero listcollections
+cd /root/.openclaw/workspace/skills/pyzotero-cli
 
-# List item types
-pyzotero itemtypes
+# 列出所有集合
+python3 scripts/zotero_tool.py listcollections
+
+# 搜索文献
+python3 scripts/zotero_tool.py search -q "machine learning"
+
+# 全文搜索 (包括 PDF)
+python3 scripts/zotero_tool.py search -q "neural networks" --fulltext
+
+# 获取项目详情
+python3 scripts/zotero_tool.py item ABC123XYZ
 ```
 
-### JSON Processing with jq
+## 🎯 核心功能
+
+### 搜索功能
+- ✅ 基本关键词搜索
+- ✅ 全文搜索 (包括 PDF 附件)
+- ✅ 按项目类型过滤 (期刊文章、书籍、会议论文等)
+- ✅ 按集合过滤
+- ✅ 限制结果数量
+- ✅ JSON 输出格式
+
+### 浏览功能
+- ✅ 列出所有集合
+- ✅ 列出项目类型
+- ✅ 获取单个项目详情
+
+### 访问模式
+- ✅ **本地模式**: 直接连接本地 Zotero 7+，快速、离线可用
+- ✅ **在线模式**: 通过 Zotero Web API 远程访问
+
+### 输出格式
+- ✅ 人类可读格式 (默认)
+- ✅ JSON 格式 (用于自动化处理)
+
+## 🌟 v2.0.0 新特性
+
+### 1. Python 脚本调用方式
+
+从 CLI 工具改为 Python 脚本，更灵活且易于集成:
+
+**v1.x (旧版):**
+```bash
+pyzotero search -q "topic"
+```
+
+**v2.x (新版):**
+```bash
+python3 scripts/zotero_tool.py search -q "topic"
+```
+
+### 2. 双模式支持
+
+新增 `ZOTERO_LOCAL` 环境变量，支持本地和在线 API 切换:
 
 ```bash
-# Extract titles
-pyzotero search -q "topic" --json | jq '.[] | .title'
+# 本地模式 (默认)
+export ZOTERO_LOCAL="true"
 
-# Count results
-pyzotero search -q "topic" --json | jq 'length'
-
-# Export to file
-pyzotero search -q "topic" --json > results.json
+# 在线模式
+export ZOTERO_LOCAL="false"
+export ZOTERO_USER_ID="your_user_id"
+export ZOTERO_API_KEY="your_api_key"
 ```
 
-## 🌟 Highlights
+### 3. 完整功能同步
 
-### 1. PEP 668 Compatible
+所有原版 pyzotero-cli 功能都已保留并改进。
 
-Full support for modern Linux distributions with PEP 668 enforcement:
+## 📊 使用场景
 
-- Primary recommendation: `pipx install "pyzotero[cli]"`
-- Alternatives: user installation, virtual environments
-- Platform-specific guides
-- Comprehensive troubleshooting
-
-### 2. Fast and Efficient
-
-- Direct connection to local Zotero database
-- No web API calls required
-- Instant search results
-- Lightweight CLI tool
-
-### 3. Full-Text Search
-
-Search within PDFs and attachments:
-
-- Requires Zotero to have indexed PDFs
-- Find mentions across entire library
-- Perfect for comprehensive research
-
-### 4. JSON Output
-
-Structured data for automation:
-
+### 场景 1: 每日文献回顾
 ```bash
-pyzotero search -q "topic" --json | jq ...
+python3 scripts/zotero_tool.py search -q "machine learning" -l 10
 ```
 
-Perfect for:
-- Data analysis
-- Export processing
-- Scripting and automation
-- Integration with other tools
-
-### 5. Automation Ready
-
-Perfect for shell scripting and automation:
-
-- Literature review workflows
-- Daily research scans
-- Citation management
-- Batch operations
-- Report generation
-
-## 💡 Common Use Cases
-
-### 1. Daily Research
-
-Quick terminal access to your library:
-
+### 场景 2: 按主题整理文献
 ```bash
-# Morning scan
-pyzotero search -q "recent research" --fulltext
-
-# Quick lookup
-pyzotero search -q "\"specific paper\""
-
-# Check collection
-pyzotero listcollections
+python3 scripts/zotero_tool.py search -q "deep learning" --itemtype journalArticle
 ```
 
-### 2. Literature Review
-
-Automated literature search and Organization:
-
+### 场景 3: 导出文献数据
 ```bash
-# Search topic
-pyzotero search -q "machine learning"
-
-# Filter by type
-pyzotero search -q "topic" --itemtype journalArticle
-
-# Full-text search
-pyzotero search -q "topic" --fulltext
-
-# Export for analysis
-pyzotero search -q "topic" --json > results.json
+python3 scripts/zotero_tool.py search -q "python" --json > results.json
 ```
 
-### 3. Citation Lookup
+### 场景 4: 自动化工作流
+```python
+# 在 Python 脚本中调用
+import subprocess
+subprocess.run(['python3', 'scripts/zotero_tool.py', 'search', '-q', 'topic'])
+```
 
-Find papers quickly during writing:
+## 🔧 环境变量
 
+| 变量名 | 必需性 | 默认值 | 说明 |
+|--------|--------|--------|------|
+| `ZOTERO_LOCAL` | 否 | `"true"` | `"true"`=本地模式，`"false"`=在线模式 |
+| `ZOTERO_USER_ID` | 在线模式必需 | - | Zotero 用户 ID |
+| `ZOTERO_API_KEY` | 在线模式必需 | - | Zotero API 密钥 |
+
+## 📚 文档结构
+
+### 入门文档
+- **[QUICKSTART.md](QUICKSTART.md)** - 5 分钟快速开始
+- **[INSTALL.md](INSTALL.md)** - 详细安装和配置指南
+
+### 参考文档
+- **[SKILL.md](SKILL.md)** - 完整技能和命令参考
+- **[EXAMPLES.md](EXAMPLES.md)** - 实用示例和工作流
+
+### 其他
+- **[CHANGELOG_v2.md](CHANGELOG_v2.md)** - v2.0.0 更新说明
+- **[README.md](README.md)** - 项目概览 (本文件)
+
+## 🛠️ 故障排除
+
+### 本地模式连接失败
+```
+解决方案:
+1. 确保 Zotero 正在运行
+2. 启用本地 API: 设置 > 高级 > "允许此计算机上的其他应用程序与 Zotero 通信"
+3. 重启 Zotero
+```
+
+### 模块未找到
 ```bash
-# Specific paper
-pyzotero search -q "\"Paper Title\""
-
-# Get details in JSON
-pyzotero search -q "\"Paper Title\"" --json
-
-# Extract with jq
-pyzotero search -q "topic" --json | jq '.[] | .title'
+pipx install pyzotero
+# 或
+pip install --user pyzotero
 ```
 
-### 4. Data Export
-
-Export citations and metadata:
-
+### 在线模式认证失败
 ```bash
-# JSON export
-pyzotero search -q "topic" --json > export.json
+# 检查环境变量
+echo $ZOTERO_LOCAL
+echo $ZOTERO_USER_ID
+echo $ZOTERO_API_KEY
 
-# Extract titles
-pyzotero search -q "topic" --json | jq -r '.[] | .title' > titles.txt
-
-# Count results
-pyzotero search -q "topic" --json | jq 'length'
+# 确认设置为在线模式
+export ZOTERO_LOCAL="false"
 ```
 
-### 5. Batch Operations
+## 📖 完整文档
 
-Process multiple queries:
+| 文档 | 说明 |
+|------|------|
+| [QUICKSTART.md](QUICKSTART.md) | 5 分钟快速入门 |
+| [INSTALL.md](INSTALL.md) | 详细安装指南 |
+| [SKILL.md](SKILL.md) | 完整技能和命令参考 |
+| [EXAMPLES.md](EXAMPLES.md) | 实用示例和工作流 |
+| [CHANGELOG_v2.md](CHANGELOG_v2.md) | v2.0.0 更新说明 |
 
-```bash
-#!/bin/bash
-for topic in "machine learning" "deep learning" "neural networks"; do
-    echo "=== $topic ==="
-    pyzotero search -q "$topic"
-    echo ""
-done
-```
+## 🎓 学习路径
 
-## 🔗 Integration
+1. **快速开始** → 阅读 [QUICKSTART.md](QUICKSTART.md)
+2. **安装配置** → 参考 [INSTALL.md](INSTALL.md)
+3. **基本使用** → 查看 [SKILL.md](SKILL.md) 的核心命令
+4. **高级用法** → 学习 [EXAMPLES.md](EXAMPLES.md) 的工作流
+5. **深入了解** → 阅读 [CHANGELOG_v2.md](CHANGELOG_v2.md) 了解更新详情
 
-### With Other OpenClaw Skills
+## 💡 提示
 
-- **literature-review** - Multi-source database searches
-- **zotero-cli** - Alternative CLI tool for Zotero
-- **pubmed-edirect** - PubMed database integration
-
-### With External Tools
-
-- **jq** - JSON parsing and processing
-- **Shell scripting** - Automation and batch operations
-- **Text editors** - Export for manuscript preparation
-- **Data analysis tools** - Export JSON for pandas, R, etc.
-
-## 📊 Skill Statistics
-
-| Metric | Count |
-|--------|-------|
-| Documentation files | 5 |
-| Total lines of documentation | ~17,500 |
-| CLI commands covered | 10+ |
-| Shell script examples | 15+ |
-| Installation methods covered | 3 |
-| Platforms supported | 8+ |
-| Workflow examples | 10+ |
-
-## ⚙️ System Requirements
-
-### Minimum Requirements
-
-- **Python**: 3.7+
-- **pipx** (recommended) or pip
-- **Zotero 7+** - Required for local database access
-- **Operating System**: Linux, macOS, Windows
-
-### Optional Requirements
-
-- **jq** - For JSON parsing
-- **curl** - For debugging connection issues
-- **Standard shell tools** - bash, zsh, etc.
-
-## 🛠️ Installation Quick Reference
-
-### PEP 668 Systems (Debian, Ubuntu, Fedora, etc.)
-
-```bash
-# Install pipx
-sudo apt install pipx  # Debian/Ubuntu
-sudo dnf install pipx  # Fedora
-
-# Configure pipx
-pipx ensurepath
-export PATH="$HOME/.local/bin:$PATH"
-
-# Install pyzotero CLI
-pipx install "pyzotero[cli]"
-```
-
-### Generic Systems
-
-```bash
-# User installation
-pip install --user "pyzotero[cli]"
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-### Virtual Environment
-
-```bash
-# Create and activate virtual environment
-python3 -m venv ~/.venvs/pyzotero
-source ~/.venvs/pyzotero/bin/activate
-
-# Install pyzotero CLI
-pip install "pyzotero[cli]"
-```
-
-## 📖 Getting Help
-
-### Documentation
-
-- **Quick Start**: [QUICKSTART.md](QUICKSTART.md)
-- **Installation**: [INSTALL.md](INSTALL.md)
-- **Examples**: [EXAMPLES.md](EXAMPLES.md)
-- **Command Reference**: [SKILL.md](SKILL.md)
-
-### External Resources
-
-- **Pyzotero GitHub**: https://github.com/urschrei/pyzotero
-- **Pyzotero Docs**: https://pyzotero.readthedocs.io/
-- **Zotero Website**: https://www.zotero.org/
-- **PEP 668**: https://peps.python.org/pep-0668/
-- **jq Manual**: https://stedolan.github.io/jq/
-
-## 🤝 Contributing
-
-This skill follows the OpenClaw format and structure. For bug reports, feature requests, or contributions to pyzotero itself, please visit the original repository:
-
-https://github.com/urschrei/pyzotero
-
-## 📄 License
-
-This skill documentation is provided as-is to help users of pyzotero. The underlying software follows the Blue Oak Model License 1.0.0. See the original repository for details.
-
-## 🎯 Version Information
-
-- **Skill Version**: 1.0.0
-- **Pyzotero Version**: Latest from PyPI
-- **OpenClaw Format**: Compliant with skill specification
-- **Python Required**: 3.7+
-- **Zotero Required**: 7+ (for local access)
-
-## ✨ Summary
-
-This is a **production-ready** OpenClaw skill for pyzotero CLI that:
-
-- ✅ Fully supports PEP 668-compliant systems with pipx
-- ✅ Provides comprehensive CLI-specific documentation (17,500+ lines)
-- ✅ Covers 8+ platforms with specific instructions
-- ✅ Includes 15+ shell script examples
-- ✅ Offers secure installation methods (pipx and pip only)
-- ✅ Provides JSON output for automation
-- ✅ Includes full-text search capabilities
-- ✅ Works with local Zotero databases
-- ✅ Perfect for automation and scripting workflows
-
-**Important Notes:**
-
-1. **Zotero 7+ is required** for local database access
-2. **Local API must be enabled** in Zotero preferences
-3. **Zotero must be running** to use the CLI
-4. **Full-text search** requires PDFs to be indexed in Zotero
-5. **Uses pipx** on PEP 668-compliant systems to avoid conflicts
-
-**Ready for immediate use in research and automation environments!** 🎉
+- 将常用命令添加到 `~/.bashrc` 或 `~/.zshrc` 中
+- 使用 JSON 输出配合 `jq` 进行数据处理
+- 本地模式更快且无需 API 密钥 (推荐)
+- 在线模式适合远程访问和服务器部署
 
 ---
 
-**Happy searching from the terminal! 📚💻**
+**版本:** 2.0.0  
+**更新日期:** 2026-02-23  
+**许可:** 同 pyzotero 库许可
+
+**上游项目:** https://github.com/urschrei/pyzotero
