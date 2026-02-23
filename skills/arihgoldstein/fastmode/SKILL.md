@@ -1,13 +1,13 @@
 ---
 name: fastmode
-description: Build, deploy, and host websites for free with full CMS. Create a live website from scratch, deploy it to the cloud with free hosting, free SSL, and custom domains. Manage all site content (blog posts, team members, pages, products, any data) directly from the CLI. Designed for AI agents — go from zero to a live, publicly accessible website in minutes without any manual UI, dashboards, or browser needed. The complete website creation and management toolkit.
-metadata: {"openclaw":{"emoji":"⚡","requires":{"bins":["fastmode"]},"install":[{"id":"npm","kind":"npm","package":"fastmode-cli","bins":["fastmode"]}]}}
+description: Create, deploy, and host a website for free. Build a complete website from scratch and deploy it to the cloud with free hosting, free SSL, and custom domains — all from the terminal. Full CMS included: manage blog posts, team members, pages, products, portfolios, services, testimonials, FAQs, or any structured content. Add and edit CMS content, sync database schemas, validate HTML templates, invite clients to a white-label portal, and push live deployments. Convert any existing HTML site into a CMS-powered site. One-time browser login for OAuth, then every operation runs entirely in the terminal — designed for AI agents to go from zero to a publicly accessible website in minutes.
+metadata: {"openclaw":{"emoji":"⚡","homepage":"https://fastmode.ai","requires":{"bins":["fastmode"]},"install":[{"id":"npm","kind":"npm","package":"fastmode-cli","bins":["fastmode"]}]}}
 user-invokable: true
 ---
 
 # FastMode CLI — Complete Agent Reference
 
-FastMode lets you create a live website, deploy it to the cloud, and manage all its content — entirely from the command line. No local servers, no manual dashboards, no browser required.
+FastMode lets you create a live website, deploy it to the cloud, and manage all its content — entirely from the command line. One-time browser login for OAuth authentication, then every operation runs in the terminal. No local servers, no manual dashboards.
 
 - **Free cloud hosting** — every site gets a live URL at `yoursite.fastmode.ai`
 - **Free SSL** — HTTPS included automatically
@@ -26,13 +26,14 @@ FastMode lets you create a live website, deploy it to the cloud, and manage all 
 5. [Project Resolution](#project-resolution)
 6. [Schema & Field Types](#schema--field-types)
 7. [Content Items](#content-items)
-8. [Package Structure](#package-structure)
-9. [Manifest Format](#manifest-format)
-10. [Template Syntax](#template-syntax) (includes SEO rules, image handling, forms, inline editing)
-11. [Deployment & Build Status](#deployment--build-status)
-12. [Validation](#validation)
-13. [Common Mistakes & How to Fix Them](#common-mistakes--how-to-fix-them)
-14. [Pre-Deployment Checklist](#pre-deployment-checklist)
+8. [Client Portal Management](#client-portal-management)
+9. [Package Structure](#package-structure)
+10. [Manifest Format](#manifest-format)
+11. [Template Syntax](#template-syntax) (includes SEO rules, image handling, forms, inline editing)
+12. [Deployment & Build Status](#deployment--build-status)
+13. [Validation](#validation)
+14. [Common Mistakes & How to Fix Them](#common-mistakes--how-to-fix-them)
+15. [Pre-Deployment Checklist](#pre-deployment-checklist)
 15. [Error Handling & Exit Codes](#error-handling--exit-codes)
 
 ---
@@ -140,10 +141,12 @@ fastmode logout                         # Delete ~/.fastmode/credentials.json
 fastmode whoami                         # Show current user email and name
 ```
 
-- `login` opens a browser window. The user approves access, then credentials are saved automatically.
-- Credentials persist at `~/.fastmode/credentials.json` with restricted permissions (0o600).
-- Tokens auto-refresh. If a token expires, the next command will refresh it silently.
+- `login` uses OAuth 2.0 device authorization flow: opens a browser window where the user approves access on `fastmode.ai`, then credentials are saved automatically. The browser is only needed for this one-time login step.
+- **OAuth scopes:** The token grants access to the user's FastMode projects only (project management, schema editing, content CRUD, deployments). No third-party service access is requested.
+- Credentials persist at `~/.fastmode/credentials.json` with restricted file permissions (`0o600` — owner read/write only). Treat this file as a sensitive secret.
+- Tokens auto-refresh. If a token expires, the next command will refresh it silently using the stored refresh token.
 - If credentials are missing or invalid, most commands will trigger the login flow automatically.
+- `logout` deletes `~/.fastmode/credentials.json` and revokes the stored tokens.
 
 ### Projects
 
@@ -192,6 +195,20 @@ fastmode items relations posts --field author             # Options for specific
 ```
 
 See the [Content Items](#content-items) section below for detailed rules on data formats, relation fields, and drafts.
+
+### Client Portal Management
+
+```bash
+fastmode clients list                              # List portal clients with access
+fastmode clients invite client@example.com         # Invite with default permissions
+fastmode clients invite client@example.com -n "Jane" --permissions cms.read,cms.write
+fastmode clients invitations                       # List pending invitations
+fastmode clients update-permissions <accessId> --permissions cms.read,editor
+fastmode clients revoke <accessId> --confirm       # REQUIRES --confirm
+fastmode clients cancel-invite <invitationId> --confirm  # REQUIRES --confirm
+```
+
+See the [Client Portal Management](#client-portal-management) section below for details on permissions, invite flow, and examples.
 
 ### Deployment & Build Status
 
@@ -428,6 +445,123 @@ The `--confirm` flag is **required**. Without it, the command refuses to run and
 - Draft items have `publishedAt: null` and are not visible on the live site.
 - Published items have a `publishedAt` timestamp and appear on the live site.
 - Without `--draft`, new items are published immediately.
+
+---
+
+## Client Portal Management
+
+The client portal lets you give external clients (your customers, collaborators) limited access to manage content on your FastMode site. Clients get their own login, separate from your admin account, with configurable permissions.
+
+### How It Works
+
+1. **You invite a client** by email — they receive a unique invite link
+2. **Client clicks the link** — creates a password and gets portal access
+3. **Client manages content** — based on the permissions you assigned
+4. **You control access** — update permissions or revoke access at any time
+
+The portal is **auto-enabled** on the project when you send the first invitation. No manual setup needed.
+
+### Available Permissions
+
+| Permission | Description |
+|------------|-------------|
+| `cms.read` | View collection items |
+| `cms.write` | Create, edit, archive, and delete items |
+| `editor` | Access the visual editor |
+| `forms.read` | View form submissions |
+| `dns` | Manage DNS settings |
+| `api` | Access API and integrations |
+| `notifications` | Manage notification rules |
+| `billing` | View plans and manage billing |
+
+**Default permissions** (used when none specified): `cms.read`, `cms.write`, `editor`, `forms.read`
+
+### Inviting Clients
+
+```bash
+# Invite with default permissions
+fastmode clients invite client@example.com
+
+# Invite with a name
+fastmode clients invite client@example.com -n "Jane Smith"
+
+# Invite with specific permissions
+fastmode clients invite client@example.com -n "Jane Smith" --permissions cms.read,forms.read
+
+# Invite with all permissions
+fastmode clients invite client@example.com --permissions cms.read,cms.write,editor,forms.read,dns,api,notifications,billing
+```
+
+The command returns an **invite URL** — share this with the client. The link expires in 7 days.
+
+**Important:**
+- Each email can only be invited once per project
+- If a client already has access, the invite will fail
+- If a pending invitation already exists for the email, the invite will fail
+
+### Listing Clients and Invitations
+
+```bash
+# See who has portal access
+fastmode clients list
+
+# See pending (unaccepted) invitations
+fastmode clients invitations
+```
+
+`clients list` shows the **access ID** for each client — you need this ID to update permissions or revoke access.
+
+### Updating Permissions
+
+```bash
+# First, get the access ID from the list
+fastmode clients list
+
+# Update permissions (replaces ALL existing permissions)
+fastmode clients update-permissions <accessId> --permissions cms.read,cms.write,editor
+```
+
+**Permissions are replaced entirely** — if a client had `cms.read,cms.write,editor,forms.read` and you set `--permissions cms.read`, they will ONLY have `cms.read`.
+
+### Revoking Access
+
+```bash
+# Revoke a client's portal access (requires --confirm)
+fastmode clients revoke <accessId> --confirm
+```
+
+The `--confirm` flag is **required**. Without it, the command refuses to run.
+
+**Always ask the user for confirmation before revoking access.**
+
+Revoking access is a soft delete — the client's account still exists but they cannot access this project's portal. Their active sessions are terminated immediately.
+
+### Canceling Invitations
+
+```bash
+# Cancel a pending invitation (requires --confirm)
+fastmode clients cancel-invite <invitationId> --confirm
+```
+
+The invitation link will no longer work. Use `fastmode clients invitations` to get the invitation ID.
+
+### Typical Workflow
+
+```bash
+# 1. Invite your client
+fastmode clients invite designer@agency.com -n "Design Agency" --permissions cms.read,cms.write,editor
+
+# 2. Share the invite URL from the output with the client
+
+# 3. Later, check who has access
+fastmode clients list
+
+# 4. Restrict a client to read-only
+fastmode clients update-permissions abc12345 --permissions cms.read
+
+# 5. Remove a client who no longer needs access
+fastmode clients revoke abc12345 --confirm
+```
 
 ---
 
@@ -1325,3 +1459,13 @@ Both files have restricted permissions (0o600 — owner read/write only).
 - Every site gets free hosting, free SSL, and a `.fastmode.ai` subdomain. Custom domains can be configured.
 - After deploying or making content changes, always run `fastmode status` to verify the build succeeded.
 - Use `fastmode examples <type>` and `fastmode guide [section]` for built-in documentation and code snippets.
+
+---
+
+## Package Provenance
+
+- **npm package:** [fastmode-cli](https://www.npmjs.com/package/fastmode-cli)
+- **Source code:** [github.com/arihgoldstein/fastmode-mcp](https://github.com/arihgoldstein/fastmode-mcp)
+- **Website:** [fastmode.ai](https://fastmode.ai)
+- **Author:** Arih Goldstein
+- **License:** MIT
