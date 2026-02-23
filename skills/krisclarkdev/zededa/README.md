@@ -70,21 +70,21 @@ ZEDEDA_API_TOKEN=test python3 -m unittest discover -s tests
 │                  argparse routing                            │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │   Node   │  │   App    │  │   User   │  │ Storage  │    │
-│  │ Service  │  │ Service  │  │ Service  │  │ Service  │    │
-│  │  (91)    │  │  (123)   │  │  (67)    │  │  (33)    │    │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │  Orch.   │  │   K8s    │  │   Diag   │  │App Prof. │    │
-│  │ Service  │  │ Service  │  │ Service  │  │ Service  │    │
-│  │  (37)    │  │  (36)    │  │  (21)    │  │  (19)    │    │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
-│  │ Network  │  │   Job    │  │ Cluster  │                  │
-│  │ Service  │  │ Service  │  │ Service  │                  │
-│  │  (16)    │  │  (17)    │  │  (13)    │                  │
-│  └──────────┘  └──────────┘  └──────────┘                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
+│  │   Node   │  │   App    │  │   User   │  │ Storage  │      │
+│  │ Service  │  │ Service  │  │ Service  │  │ Service  │      │
+│  │  (91)    │  │  (123)   │  │  (67)    │  │  (33)    │      │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
+│  │  Orch.   │  │   K8s    │  │   Diag   │  │App Prof. │      │
+│  │ Service  │  │ Service  │  │ Service  │  │ Service  │      │
+│  │  (37)    │  │  (36)    │  │  (21)    │  │  (19)    │      │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                    │
+│  │ Network  │  │   Job    │  │ Cluster  │                    │
+│  │ Service  │  │ Service  │  │ Service  │                    │
+│  │  (16)    │  │  (17)    │  │  (13)    │                    │
+│  └──────────┘  └──────────┘  └──────────┘                    │
 │                                                              │
 ├──────────────────────────────────────────────────────────────┤
 │              Shared HTTP Client (client.py)                  │
@@ -351,6 +351,21 @@ Every error includes:
 - The bearer token is redacted in all log output
 - No local files are read unless `--body-file` is explicitly used
 - No telemetry, analytics, or data collection of any kind
+
+## Author Verification
+
+This skill is authored by Kristopher Clark. Identity verified via [Keybase](https://keybase.io/krisclarkdev).
+
+<details>
+<summary>Signed Proof (Keybase Saltpack)</summary>
+
+```
+BEGIN KEYBASE SALTPACK SIGNED MESSAGE. kXR7VktZdyH7rvq v5weRa0zkEnlTg9 7yljWmR5TurQlor ZjIVwF7oYGpzraX 38PX2G5XcuQ22d6 ja45ksU1WM3A9Bv UKMgb92s3JRaWg5 d6TsXlHuiZ5ALHT w0K8psUX0w9L63Z zQJMoNyTNwZDvXh Kz0a39QK3NslDMf Tr0kSja6eH0ydSq OHsUMC1ikOHG7Jo RaeFSBz5AnKZPaP DhT0VR85z64bQsk qA4R3n2sQwUmIxZ 4tHmaSRJ1KjBFAi KIeOkpHLzCtG8au 7esD10Mlhxt0xH9 xSq6jXUCDjtwYLi 8QfFjYvRv0DLNpm vgjAuWlnPRedo9i yVWeeQRl0bZfDYO 2g1liT1mUlWymvK YjV4fmOPjnFzt0Y Hj6ldtNcr3Ls1PV xop8sB9nO3Qnb53 pnGCWx1wghTuDAg QMx4. END KEYBASE SALTPACK SIGNED MESSAGE.
+```
+
+Verify with `keybase verify` or at [keybase.io/verify](https://keybase.io/verify).
+
+</details>
 
 ## License
 

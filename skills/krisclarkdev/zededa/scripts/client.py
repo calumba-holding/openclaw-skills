@@ -47,12 +47,14 @@ _LOG_LEVELS = {
 _log_level_name = os.environ.get("ZEDEDA_LOG_LEVEL", "INFO").upper()
 _log_level = _LOG_LEVELS.get(_log_level_name, logging.INFO)
 
-logging.basicConfig(
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    level=_log_level,
-    stream=sys.stderr,
-)
+# Scope logging to the "zededa" namespace only — avoids polluting global config.
 logger = logging.getLogger("zededa.client")
+if not logger.handlers:
+    _handler = logging.StreamHandler(sys.stderr)
+    _handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+    logger.addHandler(_handler)
+logger.setLevel(_log_level)
+logger.propagate = False
 
 DEFAULT_BASE_URL = "https://zedcontrol.zededa.net/api"
 MAX_RETRIES = 2

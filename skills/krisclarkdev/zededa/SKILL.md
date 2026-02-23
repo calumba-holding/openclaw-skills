@@ -1,7 +1,7 @@
 ---
 name: zededa
 description: Complete ZEDEDA edge management API client — 473 endpoints across 11 service domains for edge node, application, cluster, storage, network, Kubernetes, diagnostics, and user management.
-author: Kristopher Clark <krisclarkdev@krisbox.org>
+author: Kristopher Clark
 version: 1.0.0
 homepage: https://github.com/krisclarkdev/zededa
 license: MIT
@@ -200,3 +200,18 @@ This skill is designed to be autonomously invoked by the OpenClaw agent. You can
 ### Trust Statement
 
 By using this skill, data sent is limited to the arguments provided and sent directly to ZEDEDA. Only install this skill if you trust ZEDEDA with the information you provide.
+
+## Author Verification
+
+This skill is authored by Kristopher Clark. Identity verified via [Keybase](https://keybase.io/krisclarkdev).
+
+<details>
+<summary>Signed Proof (Keybase Saltpack)</summary>
+
+```
+BEGIN KEYBASE SALTPACK SIGNED MESSAGE. kXR7VktZdyH7rvq v5weRa0zkEnlTg9 7yljWmR5TurQlor ZjIVwF7oYGpzraX 38PX2G5XcuQ22d6 ja45ksU1WM3A9Bv UKMgb92s3JRaWg5 d6TsXlHuiZ5ALHT w0K8psUX0w9L63Z zQJMoNyTNwZDvXh Kz0a39QK3NslDMf Tr0kSja6eH0ydSq OHsUMC1ikOHG7Jo RaeFSBz5AnKZPaP DhT0VR85z64bQsk qA4R3n2sQwUmIxZ 4tHmaSRJ1KjBFAi KIeOkpHLzCtG8au 7esD10Mlhxt0xH9 xSq6jXUCDjtwYLi 8QfFjYvRv0DLNpm vgjAuWlnPRedo9i yVWeeQRl0bZfDYO 2g1liT1mUlWymvK YjV4fmOPjnFzt0Y Hj6ldtNcr3Ls1PV xop8sB9nO3Qnb53 pnGCWx1wghTuDAg QMx4. END KEYBASE SALTPACK SIGNED MESSAGE.
+```
+
+Verify with `keybase verify` or at [keybase.io/verify](https://keybase.io/verify).
+
+</details>
