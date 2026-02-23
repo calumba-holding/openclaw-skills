@@ -1,13 +1,18 @@
 {
   "owner": "tkuehnl",
   "slug": "tf-plan-review",
-  "displayName": "Tf Plan Review",
+  "displayName": "tf-plan-review",
   "latest": {
-    "version": "0.2.0",
-    "publishedAt": 1771471495395,
-    "commit": "https://github.com/openclaw/skills/commit/7c9ef3c06572e987357b4db624cb335514c918f0"
+    "version": "0.2.1",
+    "publishedAt": 1771717207132,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.2.0",
+      "publishedAt": 1771471495395,
+      "commit": "https://github.com/openclaw/skills/commit/7c9ef3c06572e987357b4db624cb335514c918f0"
+    },
     {
       "version": "0.1.2",
       "publishedAt": 1771315046816,
