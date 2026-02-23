@@ -101,6 +101,13 @@ if [[ -n "$DOI" ]]; then
   fi
 fi
 
+# Strategy 5: Sci-Hub
+# Legal note: Sci-Hub may violate publisher terms or laws in some jurisdictions.
+# Use only if you understand and accept the legal implications.
+if [[ -n "$DOI" ]]; then
+  try_download "https://sci-hub.box/${DOI}" "Sci-Hub" && exit 0
+fi
+
 echo "❌ Could not download: $INPUT"
 echo "   Manual download needed. DOI: ${DOI:-N/A}"
 exit 1

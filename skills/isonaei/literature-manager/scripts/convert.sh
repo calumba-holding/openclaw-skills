@@ -28,11 +28,12 @@ if command -v pdftotext &>/dev/null; then
   fi
 fi
 
-# Fallback: uvx markitdown
+# Fallback: uvx markitdown[pdf]
+# Note: must use "markitdown[pdf]" extra — plain "uvx markitdown" does NOT handle PDFs.
 if command -v uvx &>/dev/null; then
-  uvx markitdown "$INPUT" > "$OUTPUT" 2>/dev/null
+  uvx markitdown[pdf] "$INPUT" > "$OUTPUT" 2>/dev/null
   if [[ -s "$OUTPUT" ]]; then
-    echo "✅ Converted with markitdown: $OUTPUT ($(wc -c < "$OUTPUT") bytes)"
+    echo "✅ Converted with markitdown[pdf]: $OUTPUT ($(wc -c < "$OUTPUT") bytes)"
     exit 0
   fi
 fi

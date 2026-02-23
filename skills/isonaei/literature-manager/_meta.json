@@ -3,9 +3,15 @@
   "slug": "literature-manager",
   "displayName": "Literature Manager",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771267789883,
-    "commit": "https://github.com/openclaw/skills/commit/a11a936945ac4a36141e546415d7e74a8a31afd8"
+    "version": "1.1.1",
+    "publishedAt": 1771579928261,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771267789883,
+      "commit": "https://github.com/openclaw/skills/commit/a11a936945ac4a36141e546415d7e74a8a31afd8"
+    }
+  ]
 }
