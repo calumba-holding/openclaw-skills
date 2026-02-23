@@ -9,8 +9,50 @@ import os
 import json
 import fitz  # PyMuPDF
 
+# Allowed output directory (current working directory only for security)
+ALLOWED_OUTPUT_DIR = os.getcwd()
+
+
+def is_safe_input_path(path):
+    """Validate that the input path is safe (no path traversal, must be .pdf)"""
+    # Resolve the absolute path
+    abs_path = os.path.abspath(path)
+    abs_allowed = os.path.abspath(ALLOWED_OUTPUT_DIR)
+    
+    # Must be within allowed directory
+    if not (abs_path.startswith(abs_allowed + os.sep) or abs_path == abs_allowed):
+        return False
+    
+    # Must be a .pdf file
+    if not abs_path.lower().endswith('.pdf'):
+        return False
+    
+    return True
+
+
+def is_safe_output_path(path):
+    """Validate that the output path is safe (no path traversal, must be .json)"""
+    # Resolve the absolute path
+    abs_path = os.path.abspath(path)
+    abs_allowed = os.path.abspath(ALLOWED_OUTPUT_DIR)
+    
+    # Must be within allowed directory
+    if not (abs_path.startswith(abs_allowed + os.sep) or abs_path == abs_allowed):
+        return False
+    
+    # Must be a .json file
+    if not abs_path.lower().endswith('.json'):
+        return False
+    
+    return True
+
+
 def extract_text_from_pdf(pdf_path, max_pages=None):
     """Extract text from a PDF file"""
+    
+    # Validate input path for security
+    if not is_safe_input_path(pdf_path):
+        return {"error": f"Invalid path or not a PDF file: {pdf_path}"}
     
     if not os.path.exists(pdf_path):
         return {"error": f"File not found: {pdf_path}"}
@@ -61,6 +103,11 @@ def main():
     for arg in sys.argv:
         if arg.startswith("--output="):
             output_file = arg.split("=")[1]
+    
+    # Validate output path for security
+    if output_file and not is_safe_output_path(output_file):
+        print(f"Error: Output must be a .json file within {ALLOWED_OUTPUT_DIR}", file=sys.stderr)
+        sys.exit(1)
     
     result = extract_text_from_pdf(pdf_path, max_pages)
     

@@ -29,6 +29,14 @@ python pdf_reader.py "path/to/file.pdf" 5
 - Handles encoding issues
 - Shows metadata (title, author, etc.)
 
+## Security Restrictions
+
+For safety, the script enforces:
+- **Input files:** Must be `.pdf` files within the current working directory
+- **Output files:** Must be `.json` files within the current working directory
+- No path traversal (`../`) allowed
+- Files can only be read/written in the directory where the script runs
+
 ## Files
 
 - `pdf_reader.py` - Main Python script
