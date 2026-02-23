@@ -121,6 +121,26 @@ This is the first step for all operations below.
    
    **Important**: Always clean up tabs after all operations to prevent resource accumulation. The blank tab keeps the browser service running for faster next use.
 
+## Quick Check (for cron / automated checks)
+
+Complete flow: login → list chats → report. Follow these steps exactly.
+
+1. Read config: `read file_path:"skills/line-oa/config.json"` → get `chatUrl`
+2. Open browser: `browser action:"open" profile:"openclaw" targetUrl:<chatUrl>` → get `targetId`
+3. Wait: `browser action:"act" profile:"openclaw" targetId:<targetId> request:{"kind":"wait","timeMs":3000}`
+4. Check URL: `browser action:"act" profile:"openclaw" targetId:<targetId> request:{"kind":"evaluate","fn":"function(){return window.location.href;}"}`
+   - If URL contains `account.line.biz` → go to **Troubleshooting** section below to login, then come back
+   - If URL contains `chat.line.biz` → continue
+5. Run this one-liner script **as-is, do not modify**:
+   ```
+   browser action:"act" profile:"openclaw" targetId:<targetId> request:{"kind":"evaluate","fn":"(function(){var r=document.querySelectorAll('.list-group-item-chat');return Array.from(r).map(function(e){var h=e.querySelector('h6');var p=e.querySelector('.text-muted.small');var pt=p?p.textContent.trim():'';var ms=e.querySelectorAll('.text-muted');var t='';for(var i=0;i<ms.length;i++){var v=ms[i].textContent.trim();if(v&&v.length<20&&v!==pt)t=v;}var d=e.querySelector('span.badge.badge-pin');var u=!!d&&getComputedStyle(d).display!=='none';return{name:h?h.textContent.trim():'',time:t,lastMsg:pt.substring(0,100),unread:u};}).filter(function(i){return i.name;});})()"}
+   ```
+   ⚠️ **CHECKPOINT**: Did you actually call the browser tool above? If you only thought about it but didn't call it, STOP and call it NOW. You MUST see a tool result before continuing.
+6. Report: take the first 5 items, format each as: `<name> (<time>) <lastMsg> [未讀]` or `[已讀]` based on `unread` field. If empty array, say "目前沒有聊天記錄".
+7. Clean up: open `about:blank`, list all tabs, close everything except `about:blank`.
+
+---
+
 ## Check LINE Messages
 
 Extracts all chats from the left-side chat list with unread status. Does NOT require clicking into each chat.
@@ -168,7 +188,7 @@ Extracts all chats from the left-side chat list with unread status. Does NOT req
    
    Wait 1 second before processing next unread chat.
    
-   **Result**: Store the chat URL (e.g., `https://chat.line.biz/Uebba4fb369276676ecc288d8b7181e49/chat/U803dc04f...`) alongside the chat info for faster access later.
+   **Result**: Store the chat URL (e.g., `https://chat.line.biz/U1234567890abcdef1234567890abcdef/chat/U803dc04f...`) alongside the chat info for faster access later.
 
 ### How to Report Results
 
@@ -242,7 +262,7 @@ Opens any chat (read or unread) and displays its messages. Works for viewing mes
 
 **Common issues:**
 - If messages don't load: increase wait time to 3000ms
-- If customer name has special characters: use partial match (e.g., "Ray" instead of "Ray👋fn.soci.vip")
+- If customer name has special characters: use partial match (e.g., "John" instead of "John ⭐️")
 - If click fails: the chat might not be visible in the current scroll position of the left panel
 
 ### Handling Images
@@ -322,38 +342,39 @@ Wait 2 seconds, then proceed to step 3.
 
 ## Manage Notes
 
-Notes panel is on the right side. Notes are internal-only (not visible to customers). Max 300 characters per note.
+Each chat has a Notes panel on the right side. Notes are internal-only (not visible to customers). Max 300 characters per note.
 
 ### Add a note
-1. Open the chat
-2. Click the **+** button next to Notes heading
-3. Type content in textarea
-4. Click **Save**
+1. Open the conversation.
+2. Click the **+** button next to the Notes heading in the right panel.
+3. Type content in the textarea.
+4. Click **Save**.
 
 ### Edit a note
-1. Click the pencil icon at note's bottom-right
-2. Modify textarea content
-3. Click **Save**
+1. Find the note in the right panel.
+2. Click the pencil icon at the note's bottom-right corner.
+3. Modify the textarea content.
+4. Click **Save**.
 
 ### Delete a note
-1. Click trash icon at note's bottom-right
-2. Confirm by clicking **Delete**
+1. Click the trash icon at the note's bottom-right corner.
+2. A confirmation dialog appears — click **Delete** to confirm.
 
 ## Manage Tags
 
 Tags are shown in the right panel below the user's name. They are predefined labels for categorizing chats.
 
 ### Add a tag
-1. Open the chat
-2. Click **Add tags** link (or pencil icon next to existing tags)
-3. Edit tags modal opens
-4. Click a tag from "All tags" list to select
-5. Click **Save**
+1. Open the conversation.
+2. Click the **Add tags** link (or the pencil icon next to existing tags) in the right panel.
+3. The Edit tags modal opens, showing an input field and all available tags.
+4. Click a tag from the "All tags" list to select it (it moves to the input field).
+5. Click **Save**.
 
 ### Remove a tag
-1. Open Edit tags modal
-2. Click **×** next to the tag in input field
-3. Click **Save**
+1. Open the Edit tags modal (same as above).
+2. Click the **×** next to the tag in the input field to deselect it.
+3. Click **Save**.
 
 ## Switch Account
 
@@ -383,6 +404,7 @@ LINE OA Manager can manage multiple official accounts. Switch between them using
 6. Wait for the page to load the new account's chat list:
    ```
    browser action:"act" profile:"openclaw" targetId:"<your_targetId>" request:{"kind":"wait","timeMs":2000}
+   ```
 
 ## Notes
 
