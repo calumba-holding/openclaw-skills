@@ -14,8 +14,10 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const SKILLS_DIR = 'C:\\Users\\sdysa\\.openclaw\\workspace\\skills\\openclaw-reflect\\scripts';
-const REFLECT_DIR = 'C:\\Users\\sdysa\\.openclaw\\.reflect';
+// Derive paths from script location: scripts/ → openclaw-reflect/ → skills/ → workspace/
+const WORKSPACE_DIR = path.join(__dirname, '..', '..', '..');
+const SKILLS_DIR = __dirname;
+const REFLECT_DIR = path.join(WORKSPACE_DIR, '.reflect');
 const OUTCOMES_FILE = path.join(REFLECT_DIR, 'outcomes.jsonl');
 const LOG_FILE = path.join(REFLECT_DIR, 'pipeline.log');
 const NODE = process.execPath;
@@ -30,7 +32,7 @@ function run(script, args = []) {
   const scriptPath = path.join(SKILLS_DIR, script);
   try {
     const out = execFileSync(NODE, [scriptPath, ...args], {
-      cwd: 'C:\\Users\\sdysa\\.openclaw',
+      cwd: WORKSPACE_DIR,
       timeout: 30000,
       encoding: 'utf8',
     });

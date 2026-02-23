@@ -1,6 +1,6 @@
 ---
 name: openclaw-reflect
-version: 1.0.0
+version: 1.0.2
 description: >
   Self-improvement layer with evaluation separation, rollback, and tiered operator gates.
   Observes outcomes across sessions, detects recurring patterns, proposes improvements,
@@ -21,6 +21,14 @@ permissions:
   - write: MEMORY.md
   - write: CLAUDE.md
   - propose: SOUL.md
+env:
+  optional:
+    - ANTHROPIC_API_KEY     # Enables Anthropic evaluator backend (claude-haiku-4-5-20251001)
+    - OPENAI_API_KEY        # Enables OpenAI evaluator backend (gpt-4o-mini)
+    - OLLAMA_HOST           # Ollama server hostname (default: localhost)
+    - OLLAMA_PORT           # Ollama server port (default: 11434)
+    - REFLECT_EVAL_MODEL    # Force a specific Ollama model name
+    - REFLECT_EVALUATOR     # Force evaluator backend: anthropic|openai|ollama|rules
 ---
 
 # openclaw-reflect

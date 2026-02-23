@@ -1,6 +1,6 @@
 {
   "name": "openclaw-reflect",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Self-improvement layer with evaluation separation, rollback, and tiered operator gates. Observes outcomes, detects patterns, proposes improvements, validates through a separate evaluator, and applies changes safely.",
   "author": "AtlasPA",
   "tags": ["self-improvement", "reflection", "memory", "safety", "hooks", "evaluation"],

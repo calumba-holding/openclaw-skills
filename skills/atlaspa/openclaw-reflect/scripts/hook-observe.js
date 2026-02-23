@@ -22,8 +22,9 @@
 const fs = require('fs');
 const path = require('path');
 
-// Fixed path — independent of cwd
-const REFLECT_DIR = path.join('C:\\Users\\sdysa\\.openclaw', '.reflect');
+// Derive workspace from script location: scripts/ → openclaw-reflect/ → skills/ → workspace/
+const WORKSPACE_DIR = path.join(__dirname, '..', '..', '..');
+const REFLECT_DIR = path.join(WORKSPACE_DIR, '.reflect');
 const OUTCOMES_FILE = path.join(REFLECT_DIR, 'outcomes.jsonl');
 
 function extractText(response) {
