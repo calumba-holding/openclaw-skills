@@ -10,16 +10,16 @@
   Retention: Keep the 4 most recent version sections. Drop older ones to control file size.
   The "Foundational Gotchas" section is permanent and must be manually maintained.
 
-  Last updated: 2026-02-21
-  Source: CHANGELOG.md versions 2026.2.20 (Unreleased) through 2026.2.17
+  Last updated: 2026-02-22
+  Source: CHANGELOG.md versions 2026.2.22 (Unreleased) through 2026.2.21
 -->
 
 ---
 
 ## Active Version
 
-- Current: 2026.2.20 (Unreleased)
-- Previous stable: 2026.2.19
+- Current: 2026.2.22 (Unreleased)
+- Previous stable: 2026.2.21
 
 ---
 
@@ -45,15 +45,55 @@ These are architectural traps that have no CHANGELOG entry. They exist since ear
 
 ---
 
-## Recent Behavioral Changes (v2026.2.19 - v2026.2.20)
+## Recent Behavioral Changes (v2026.2.21 - v2026.2.22)
 
-### From v2026.2.20 (Unreleased) -- 65 entries
+### From v2026.2.22 (Unreleased) -- Major security wave + new Synology Chat extension
 
-- Agents: Preserve pi-ai default OAuth beta headers when `context1m` injects `anthropic-beta`.
-- Telegram: Fix draft stream cleanup ordering -- `finally` block must run after fallback delivery logic, not before (#19001).
-- Telegram: Fix `disableBlockStreaming` evaluation order -- ternary producing `undefined` instead of `true` when `streamMode === "off"`.
+**⚠️ BREAKING CHANGES:**
 
-### From v2026.2.19 -- 80 entries
+- **Device-auth `v1` signature REMOVED** -- Clients must now sign `v2` payloads with `connect.challenge` nonce and send `device.nonce`. Nonce-less connects are rejected.
+- **Channel preview-streaming config unified** -- `channels.<channel>.streaming` with enum values `off | partial | block | progress`. Slack native stream toggle moved to `channels.slack.nativeStreaming`. Legacy `streamMode` keys still read+migrated by `openclaw doctor --fix`.
+- **Channels/Delivery: hardcoded WhatsApp delivery fallbacks removed** -- Must provide explicit/session channel context or auto-pick the sole configured channel (#23357).
+- **Security/Exec env: `HOME` and `ZDOTDIR` blocked in host exec env** -- Prevents shell startup-file execution. Next npm release.
+- **Security/Exec approvals: `allow-always` for shell-wrapper commands** -- Now persists inner executable allowlist patterns instead of the wrapper shell, preventing broad shell allowlisting (#23276).
+- **Security/Exec: sandbox host fails closed** -- `tools.exec.host=sandbox` with no sandbox runtime = hard fail, not fallback to gateway (#23398).
+- **Security/Hooks transforms: symlink-safe containment enforced** -- `hooks.transformsDir` and `hooks.mappings[].transform.module` must resolve within root via realpath. Next npm release.
+- **Security/Agents: owner-ID hashing now uses dedicated `ownerDisplaySecret`** -- Gateway token fallback removed. Next npm release.
+- **Security/Exec approvals: env/shell-dispatch wrappers now transparent** -- Policy checks match effective executable, not wrapper binary. Next npm release.
+- **Security/SSRF: IPv4 fetch guard expanded** -- Now blocks RFC special-use ranges: benchmarking, TEST-NET, multicast, reserved/broadcast.
+- **ACP/Gateway: gateway hello required before ACP requests** -- Fast-fail on pre-hello connect failures.
+- **Config/Channels: `channels.modelByChannel` now whitelisted** -- Previously triggered `unknown channel id` validation errors (#23412).
+- **Gateway/Pairing: `operator.admin` satisfies `operator.*` checks** -- Fixes pairing loops for CLI/TUI sessions (#22062, #22193, #21191).
+- **Security/Config: prototype-key traversal blocked** -- `__proto__`, `constructor`, `prototype` blocked during config merge/patch (#22968).
+
+**New features:**
+- Synology Chat extension added (`extensions/synology-chat/`)
+- Fish shell completion added (`src/cli/completion-fish.ts`)
+- Logger log-level validation added (`src/logging/env-log-level.ts`)
+- `openclaw security audit` now detects: open groups with runtime/FS tools, dangerous `allowCommands` overrides, real-IP fallback severity conditional on loopback
+
+### From v2026.2.21 -- Large feature release
+
+**⚠️ Notable behavioral changes:**
+
+- **Telegram streaming simplified** -- `channels.telegram.streaming` (boolean). Legacy `streamMode` values auto-mapped. Block-vs-partial branching removed.
+- **Subagent spawn depth default changed** -- `maxSpawnDepth=2` now shared. Depth-1 orchestrator spawning enabled by default.
+- **`tools.exec.host` exec path routing** -- `gateway` is now the default when no sandbox runtime exists (previously could produce unexpected fallback behavior).
+- **Discord lifecycle reactions** -- Configurable emoji for queued/thinking/tool/done/error phases. Shared controller with Telegram reactions.
+- **`alsoAllow`/`allow` in subagent tool config now respected** -- Previously blocked by built-in deny defaults (#23359).
+- **Cron `maxConcurrentRuns` now honored** -- Previously always ran serially (#11595).
+- **Plugin enable flow updated** -- `openclaw plugins enable` now updates allowlists via policy, preventing allowlist mismatch (#23190).
+- **Config arrays now structurally compared** -- `memory.qmd.paths` and `memory.qmd.scope.rules` no longer trigger false restart-required reloads (#23185).
+- **Cron expression validation added** -- Malformed persisted jobs report clear error instead of crashing (#23223).
+- **Memory/QMD: legacy unscoped collections migrated** -- `memory-root` → `memory-root-main` at startup (#23228).
+- **`✅ Done.` default reply added** -- Tool-only completions that return no final text now get a default acknowledgement (#22834).
+- **Agents/Transcripts: tool-call name validation added** -- Malformed tool names rejected before persistence (#23324).
+
+---
+
+## Recent Gotchas (v2026.2.19 - v2026.2.20)
+
+### From v2026.2.20
 
 - **Gateway auth defaults to token mode.** `gateway.auth.mode` is no longer implicitly open. Auto-generated `gateway.auth.token` persisted on first start.
 - **`hooks.token` must differ from `gateway.auth.token`** -- startup validation rejects identical values.
@@ -70,48 +110,29 @@ These are architectural traps that have no CHANGELOG entry. They exist since ear
 - **Cron/heartbeat Telegram topic delivery fixed** -- explicit `<chatId>:topic:<threadId>` targets work correctly.
 - **macOS LaunchAgent SQLite fix** -- `TMPDIR` forwarded into installed service environments.
 
----
+### From v2026.2.19
 
-## Recent Gotchas (v2026.2.17 - v2026.2.18)
-
-### From v2026.2.18
-
-- **Pass API tokens explicitly in every call** -- missing token causes silent auth failure.
-- **Use logging abstraction, not `console.*`** -- raw console bypasses user-controlled verbosity.
-- **Identity checks must compare exact values** -- `(a && b)` is not `(a === b)`.
-- **Don't mix ID namespaces for message provenance** -- file IDs are not message timestamps.
-- **Classify shell builtins by token list** -- `resolveExecutablePath()` finds PATH-shadowed binaries.
-- **Close resource pools on every call** -- unclosed `ProxyAgent` pools leak.
-- **Validate URLs before constructing connection objects** -- invalid proxy URL crashes execution.
-- **Duplicate inverse conditions = dead code** -- Block A skips non-gateway, Block B skips gateway = nothing runs.
-- **After protocol schema changes, user should run `pnpm protocol:gen:swift`.**
-
-### From v2026.2.17
-
-- **Config include confinement is strict** -- `$include` confined to top-level config directory.
-- **Cron top-of-hour defaults are staggered** -- `schedule.staggerMs` persisted. Use `--exact` for clock boundaries.
-- **`sessions_spawn` is push-first** -- polling can trip loop protections.
-- **Tool-loop detection hard-blocks no-progress loops** -- use progress checks/backoff/exit criteria.
-- **Read truncation markers are actionable** -- recover with smaller targeted reads, not full-file retries.
-- **Z.AI tool streaming defaults ON** -- explicitly set `params.tool_stream: false` if needed.
-- **Anthropic 1M context is explicit opt-in** -- `params.context1m: true` controls the beta header.
-- **`read` tool auto-pages using model contextWindow** -- behavior change from bounded single-call read.
-- **exec preflight guard for env var injection** -- scripts with shell env vars blocked.
+- **Agents**: Preserve pi-ai default OAuth beta headers when `context1m` injects `anthropic-beta`.
+- **Telegram**: Fix draft stream cleanup ordering -- `finally` block must run after fallback delivery logic.
+- **Telegram**: Fix `disableBlockStreaming` evaluation order -- ternary producing `undefined` instead of `true` when `streamMode === "off"`.
 
 ---
 
 ## Recently Active High-Risk Areas
 
-Modules appearing frequently in v2026.2.19 and v2026.2.20:
+Modules appearing frequently in v2026.2.21 and v2026.2.22:
 
 | Module | Recent Activity | Risk |
 | --- | --- | --- |
-| Security | SSRF hardening, gateway auth, exec guards, browser relay auth | CRITICAL |
-| Gateway | Auth mode defaults, token validation, rate limiting, startup validation | HIGH |
-| Agents | Read auto-paging, exec preflight, tool loop detection, subagent depth | CRITICAL |
-| Telegram | Draft stream cleanup, block streaming evaluation, topic delivery | MEDIUM |
-| Cron | Webhook SSRF guard, heartbeat skip logic, stagger persistence | LOW (module) / HIGH (impact) |
-| Config | Include confinement, YAML 1.2 parsing, patch nesting | CRITICAL |
+| Security | MASSIVE wave: SSRF, exec guards, symlink traversal, prototype pollution, device-auth v1 removal | CRITICAL |
+| Gateway | Pairing loops fixed, operator.admin scope compat, ACP hello ordering | HIGH |
+| Channels | Preview streaming unified, WhatsApp fallback removed, modelByChannel added | HIGH |
+| Agents | Subagent tool allowlist, transcript validation, compaction usage fix, default reply | HIGH |
+| Memory/QMD | Collection migration, BM25 Han-script normalization, mcporter routing | MEDIUM |
+| Discord | Voice commands, streaming preview, lifecycle reactions, subagent threads | MEDIUM |
+| Telegram | WSL2 autoSelectFamily, streaming lanes, update-offset persistence | MEDIUM |
+| Cron | maxConcurrentRuns, expression validation, delivered state persistence | MEDIUM |
+| Config | modelByChannel whitelist, array structural comparison, prototype pollution block | CRITICAL |
 
 ---
 
@@ -121,6 +142,7 @@ These supplement the stable checklist in STABLE-PRINCIPLES.md:
 
 ```
 [] If touching gateway auth: verify gateway.auth.mode explicitly. Ensure hooks.token != gateway.auth.token.
+[] If touching device-auth: use v2 signature (connect.challenge nonce + device.nonce). v1 is REMOVED.
 [] If touching security: run `openclaw security audit` and triage all findings first.
 [] If using YAML frontmatter: use explicit true/false, not on/off/yes/no.
 [] If touching cron webhooks: verify targets are publicly reachable HTTPS.
@@ -129,4 +151,9 @@ These supplement the stable checklist in STABLE-PRINCIPLES.md:
 [] If touching protocol schemas: recommend user runs pnpm protocol:gen:swift && pnpm protocol:check.
 [] If touching config loading: test negative path for out-of-root $include and symlink escape.
 [] If touching cron schedules: verify both expression and persisted schedule.staggerMs.
+[] If touching channel streaming config: use channels.<channel>.streaming enum (off/partial/block/progress), NOT legacy streamMode.
+[] If touching exec approvals/safeBins: test wrapper transparency -- policy must match effective executable.
+[] If touching hooks transforms: verify module path resolves within root via realpath (symlink-safe containment).
+[] If touching subagent tools: check alsoAllow/allow entries are not blocked by built-in deny defaults.
+[] If touching config merge/patch: ensure no __proto__/constructor/prototype key traversal.
 ```
