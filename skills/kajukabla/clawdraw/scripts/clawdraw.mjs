@@ -29,26 +29,29 @@
  *                                        Draw an SVG template shape
  *   clawdraw template --list [--category <cat>]  List available templates
  *   clawdraw template --info <name>     Show template details
+ *   clawdraw undo [--count N]             Undo last N drawing sessions
+ *   clawdraw rename --name <name>        Set display name (session only)
  *   clawdraw erase --ids <id1,id2,...>    Erase strokes by ID (own strokes only)
  *   clawdraw waypoint-delete --id <id>  Delete a waypoint (own waypoints only)
  *   clawdraw marker drop --x N --y N --type TYPE [--message "..."] [--decay N]
  *                                        Drop a stigmergic marker
  *   clawdraw marker scan --x N --y N --radius N [--type TYPE] [--json]
  *                                        Scan for nearby markers
+ *   clawdraw plan-swarm [--agents N] [--pattern name]  Plan multi-agent swarm drawing
  *   clawdraw <behavior> [--args]         Run a collaborator behavior (extend, branch, contour, etc.)
  */
 
 // @security-manifest
-// env: CLAWDRAW_API_KEY
+// env: CLAWDRAW_API_KEY, CLAWDRAW_DISPLAY_NAME, CLAWDRAW_NO_HISTORY, CLAWDRAW_SWARM_ID
 // endpoints: api.clawdraw.ai (HTTPS), relay.clawdraw.ai (WSS)
-// files: ~/.clawdraw/token.json, ~/.clawdraw/state.json, ~/.clawdraw/apikey.json
+// files: ~/.clawdraw/token.json, ~/.clawdraw/state.json, ~/.clawdraw/apikey.json, ~/.clawdraw/stroke-history.json
 // exec: none
 
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { getToken, createAgent, getAgentInfo, writeApiKey, readApiKey } from './auth.mjs';
-import { connect, drawAndTrack, addWaypoint, getWaypointUrl, deleteStroke, deleteWaypoint, disconnect } from './connection.mjs';
+import { connect, drawAndTrack, addWaypoint, getWaypointUrl, deleteStroke, deleteWaypoint, setUsername, disconnect } from './connection.mjs';
 import { parseSymmetryMode, applySymmetry } from './symmetry.mjs';
 import { getPrimitive, listPrimitives, getPrimitiveInfo, executePrimitive } from '../primitives/index.mjs';
 import { setNearbyCache } from '../primitives/collaborator.mjs';
@@ -64,6 +67,9 @@ const RELAY_HTTP_URL = 'https://relay.clawdraw.ai';
 const LOGIC_HTTP_URL = 'https://api.clawdraw.ai';
 
 const CLAWDRAW_API_KEY = process.env.CLAWDRAW_API_KEY;
+const CLAWDRAW_DISPLAY_NAME = process.env.CLAWDRAW_DISPLAY_NAME || undefined;
+const CLAWDRAW_NO_HISTORY = process.env.CLAWDRAW_NO_HISTORY === '1';
+const CLAWDRAW_SWARM_ID = process.env.CLAWDRAW_SWARM_ID || null;
 const STATE_DIR = path.join(os.homedir(), '.clawdraw');
 const STATE_FILE = path.join(STATE_DIR, 'state.json');
 
@@ -113,6 +119,95 @@ function checkAlgorithmGate(force) {
     return false;
   }
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// Stroke history tracking (~/.clawdraw/stroke-history.json)
+// ---------------------------------------------------------------------------
+
+const HISTORY_FILE = path.join(STATE_DIR, 'stroke-history.json');
+const HISTORY_MAX_SESSIONS = 20;
+const BULK_DELETE_BATCH_SIZE = 10000;
+
+/**
+ * Compute chunk key from a stroke's first point.
+ * Matches the relay's chunk grid (1024 canvas units per chunk).
+ */
+function getChunkKey(stroke) {
+  if (!stroke.points || stroke.points.length === 0) return null;
+  const pt = stroke.points[0];
+  const cx = Math.floor(pt.x / 1024);
+  const cy = Math.floor(pt.y / 1024);
+  return `${cx},${cy}`;
+}
+
+/** Load stroke history sessions from disk. */
+function loadStrokeHistory() {
+  try {
+    const data = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8'));
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Atomically write stroke history sessions to disk (tmp → rename). */
+function writeStrokeHistory(sessions) {
+  try {
+    fs.mkdirSync(STATE_DIR, { recursive: true });
+    const tmp = HISTORY_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(sessions, null, 2), 'utf-8');
+    fs.renameSync(tmp, HISTORY_FILE);
+  } catch {
+    // Non-critical — history is a convenience feature
+  }
+}
+
+/** Acquire a file lock around a history read-modify-write cycle. */
+function withHistoryLock(fn) {
+  const lockFile = HISTORY_FILE + '.lock';
+  const maxRetries = 10;
+  const retryMs = 50;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      fs.writeFileSync(lockFile, String(process.pid), { flag: 'wx' }); // atomic O_EXCL
+      try { return fn(); } finally { try { fs.unlinkSync(lockFile); } catch {} }
+    } catch (e) {
+      if (e.code === 'EEXIST' && i < maxRetries - 1) {
+        const end = Date.now() + retryMs;
+        while (Date.now() < end) {} // brief spin wait
+        continue;
+      }
+      return; // fail open — history is non-critical
+    }
+  }
+}
+
+/**
+ * Save a new drawing session to stroke history.
+ * Each session records stroke IDs and chunk keys for undo.
+ *
+ * @param {Array} strokes - Array of stroke objects that were sent
+ */
+function saveStrokeHistory(strokes) {
+  if (CLAWDRAW_NO_HISTORY) return;
+  withHistoryLock(() => {
+    const sessions = loadStrokeHistory();
+    const session = {
+      timestamp: new Date().toISOString(),
+      ...(CLAWDRAW_SWARM_ID ? { swarmId: CLAWDRAW_SWARM_ID } : {}),
+      strokes: strokes.map(s => ({
+        id: s.id,
+        chunkKey: getChunkKey(s),
+      })).filter(s => s.id),
+    };
+    if (session.strokes.length === 0) return;
+    sessions.push(session);
+    while (sessions.length > HISTORY_MAX_SESSIONS) {
+      sessions.shift();
+    }
+    writeStrokeHistory(sessions);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -221,10 +316,23 @@ async function cmdSetup(providedName) {
   }
 
   // Check for existing saved key file
-  if (readApiKey()) {
-    console.log('Already set up! API key found in ~/.clawdraw/');
-    console.log('Run `clawdraw status` to check your agent info.');
-    process.exit(0);
+  const savedKey = readApiKey();
+  if (savedKey) {
+    try {
+      const token = await getToken(savedKey);
+      const info = await getAgentInfo(token);
+      console.log('Already set up! Agent is ready.');
+      console.log('');
+      console.log(`  Name:  ${info.name}`);
+      console.log(`  INQ:   ${info.inqBalance !== undefined ? info.inqBalance : 'unknown'}`);
+      console.log('');
+      console.log('Ready to draw! Try: clawdraw find-space --mode empty');
+      process.exit(0);
+    } catch {
+      // Key exists but is invalid/revoked — fall through to create a fresh agent
+      console.log('Stored API key is no longer valid. Creating a new agent...');
+      console.log('');
+    }
   }
 
   // Generate or validate name
@@ -369,10 +477,11 @@ async function cmdStroke(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     const zoom = args.zoom !== undefined ? Number(args.zoom) : undefined;
     const result = await drawAndTrack(ws, strokes, { zoom, name: 'Custom strokes', skipWaypoint: !!args['no-waypoint'] });
     markCustomAlgorithmUsed();
+    if (result.strokesAcked > 0 && !args['no-history']) saveStrokeHistory(strokes);
     console.log(`Sent ${result.strokesAcked}/${result.strokesSent} stroke(s) accepted.`);
     if (result.rejected > 0) {
       console.log(`  ${result.rejected} batch(es) rejected: ${result.errors.join(', ')}`);
@@ -423,11 +532,12 @@ async function cmdDraw(primitiveName, args) {
   }
 
   try {
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     const cx = args.cx !== undefined ? Number(args.cx) : undefined;
     const cy = args.cy !== undefined ? Number(args.cy) : undefined;
     const zoom = args.zoom !== undefined ? Number(args.zoom) : undefined;
     const result = await drawAndTrack(ws, strokes, { cx, cy, zoom, name: primitiveName, skipWaypoint: !!args['no-waypoint'] });
+    if (result.strokesAcked > 0 && !args['no-history']) saveStrokeHistory(strokes);
     console.log(`Drew ${primitiveName}: ${result.strokesAcked}/${result.strokesSent} stroke(s) accepted.`);
     if (result.rejected > 0) {
       console.log(`  ${result.rejected} batch(es) rejected: ${result.errors.join(', ')}`);
@@ -547,7 +657,7 @@ async function cmdCompose(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     const cx = origin.x !== 0 ? origin.x : undefined;
     const cy = origin.y !== 0 ? origin.y : undefined;
     const zoom = args.zoom !== undefined ? Number(args.zoom) : undefined;
@@ -557,6 +667,7 @@ async function cmdCompose(args) {
     if (primitives.some(p => p.type === 'custom')) {
       markCustomAlgorithmUsed();
     }
+    if (result.strokesAcked > 0 && !args['no-history']) saveStrokeHistory(allStrokes);
 
     const sym = mode !== 'none' ? `, ${mode} symmetry` : '';
     console.log(`Composed: ${result.strokesAcked}/${result.strokesSent} stroke(s) accepted${sym}.`);
@@ -717,6 +828,7 @@ async function cmdScan(args) {
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
     const ws = await connect(token, {
+      username: CLAWDRAW_DISPLAY_NAME,
       center: { x: cx, y: cy },
       zoom: 0.2,
     });
@@ -830,6 +942,14 @@ async function cmdLink(code) {
     process.exit(0);
   }
 
+  // Strip whitespace and non-alphanumeric chars (handles trailing letters, spaces, punctuation)
+  const cleanCode = code.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (cleanCode.length !== 6) {
+    console.error(`Error: Link code must be exactly 6 characters (got ${cleanCode.length}: "${cleanCode}")`);
+    console.error('Get a fresh code at https://clawdraw.ai/?openclaw');
+    process.exit(1);
+  }
+
   // Uses LOGIC_HTTP_URL from top-level constant
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
@@ -839,7 +959,7 @@ async function cmdLink(code) {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: code.toUpperCase().trim() }),
+      body: JSON.stringify({ code: cleanCode }),
     });
 
     if (!res.ok) {
@@ -949,7 +1069,7 @@ async function cmdWaypoint(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
 
     const wp = await addWaypoint(ws, { name, x, y, zoom, description });
     disconnect(ws);
@@ -978,7 +1098,7 @@ async function cmdErase(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     let deleted = 0;
     let failed = 0;
     for (const id of ids) {
@@ -1009,7 +1129,7 @@ async function cmdWaypointDelete(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     await deleteWaypoint(ws, String(id));
     disconnect(ws);
     console.log(`Waypoint ${id} deleted.`);
@@ -1032,7 +1152,7 @@ async function cmdChat(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
 
     // Wait briefly for sync.error (rate limit or invalid content)
     const result = await new Promise((resolve) => {
@@ -1343,9 +1463,10 @@ async function cmdTemplate(args) {
 
   try {
     const token = await getToken(CLAWDRAW_API_KEY);
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     const zoom = args.zoom !== undefined ? Number(args.zoom) : undefined;
     const result = await drawAndTrack(ws, strokes, { cx, cy, zoom, name: name, skipWaypoint: !!args['no-waypoint'] });
+    if (result.strokesAcked > 0 && !args['no-history']) saveStrokeHistory(strokes);
     console.log(`Drew template "${name}": ${result.strokesAcked}/${result.strokesSent} stroke(s) accepted.`);
     if (result.rejected > 0) {
       console.log(`  ${result.rejected} batch(es) rejected: ${result.errors.join(', ')}`);
@@ -1422,9 +1543,10 @@ async function cmdCollaborate(behaviorName, args) {
 
   // Send via WebSocket
   try {
-    const ws = await connect(token);
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME });
     const zoom = args.zoom !== undefined ? Number(args.zoom) : undefined;
     const result = await drawAndTrack(ws, strokes, { cx: x, cy: y, zoom, name: behaviorName, skipWaypoint: !!args['no-waypoint'] });
+    if (result.strokesAcked > 0 && !args['no-history']) saveStrokeHistory(strokes);
     console.log(`  ${behaviorName}: ${result.strokesAcked}/${result.strokesSent} stroke(s) accepted.`);
     if (result.rejected > 0) {
       console.log(`  ${result.rejected} batch(es) rejected: ${result.errors.join(', ')}`);
@@ -1881,13 +2003,14 @@ async function cmdPaint(url, args) {
   // Connect and draw
   try {
     const zoom = args.zoom !== undefined ? Number(args.zoom) : undefined;
-    const ws = await connect(token, { center: { x: cx, y: cy }, zoom: zoom || 0.3 });
+    const ws = await connect(token, { username: CLAWDRAW_DISPLAY_NAME, center: { x: cx, y: cy }, zoom: zoom || 0.3 });
     const result = await drawAndTrack(ws, strokes, {
       cx, cy, zoom,
       name: `Paint: ${mode}`,
       description: `${mode} rendering — ${strokes.length} strokes`,
       skipWaypoint: !!args['no-waypoint'],
     });
+    if (result.strokesAcked > 0 && !args['no-history']) saveStrokeHistory(strokes);
     console.log(`Painted ${mode}: ${result.strokesAcked}/${result.strokesSent} stroke(s) accepted.`);
     if (result.rejected > 0) {
       console.log(`  ${result.rejected} batch(es) rejected: ${result.errors.join(', ')}`);
@@ -1901,6 +2024,359 @@ async function cmdPaint(url, args) {
   } catch (err) {
     console.error('Error:', err.message);
     process.exit(1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Undo — bulk-delete last N drawing sessions via HTTP
+// ---------------------------------------------------------------------------
+
+/**
+ * Build undo units from sessions.
+ * A swarm (all sessions sharing a swarmId) counts as one unit.
+ * Returns units newest-first.
+ */
+function buildUndoUnits(sessions) {
+  const units = [];
+  const seenSwarms = new Set();
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const s = sessions[i];
+    if (s.swarmId) {
+      if (!seenSwarms.has(s.swarmId)) {
+        seenSwarms.add(s.swarmId);
+        const swarmSessions = sessions.filter(x => x.swarmId === s.swarmId);
+        units.push({ type: 'swarm', swarmId: s.swarmId, sessions: swarmSessions });
+      }
+    } else {
+      units.push({ type: 'single', sessions: [s] });
+    }
+  }
+  return units; // newest first
+}
+
+async function cmdUndo(args) {
+  const count = Math.max(1, Number(args.count) || 1);
+  const sessions = loadStrokeHistory();
+
+  if (sessions.length === 0) {
+    console.log('No drawing sessions in history to undo.');
+    console.log('(History is stored at ~/.clawdraw/stroke-history.json)');
+    process.exit(0);
+  }
+
+  const units = buildUndoUnits(sessions);
+  if (units.length === 0) {
+    console.log('No undo units found.');
+    process.exit(0);
+  }
+
+  const toUndo = units.slice(0, count);
+  const sessionsToRemove = toUndo.flatMap(u => u.sessions);
+  const strokeEntries = sessionsToRemove.flatMap(s => s.strokes);
+
+  if (strokeEntries.length === 0) {
+    console.log('Selected sessions contain no stroke IDs.');
+    process.exit(0);
+  }
+
+  // Log what's being undone
+  console.log(`Undoing ${toUndo.length} unit(s) — ${strokeEntries.length} stroke(s)...`);
+  for (const unit of toUndo) {
+    if (unit.type === 'swarm') {
+      console.log(`  Swarm "${unit.swarmId}": ${unit.sessions.length} worker session(s)`);
+    } else {
+      console.log(`  Session: ${new Date(unit.sessions[0].timestamp).toLocaleString()}`);
+    }
+  }
+
+  try {
+    const token = await getToken(CLAWDRAW_API_KEY);
+    let totalDeleted = 0;
+    let totalForbidden = 0;
+    let totalNotFound = 0;
+
+    // Batch in groups of BULK_DELETE_BATCH_SIZE
+    for (let i = 0; i < strokeEntries.length; i += BULK_DELETE_BATCH_SIZE) {
+      const batch = strokeEntries.slice(i, i + BULK_DELETE_BATCH_SIZE);
+      const res = await fetch(`${RELAY_HTTP_URL}/api/strokes/bulk-delete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ strokes: batch }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error(`Bulk delete failed: ${err.error || `HTTP ${res.status}`}`);
+        continue;
+      }
+
+      const result = await res.json();
+      totalDeleted += result.deleted || 0;
+      totalForbidden += result.forbidden || 0;
+      totalNotFound += result.notFound || 0;
+    }
+
+    // Remove undone sessions from history
+    const removeTimestamps = new Set(sessionsToRemove.map(s => s.timestamp));
+    const remaining = sessions.filter(s => !removeTimestamps.has(s.timestamp));
+    writeStrokeHistory(remaining);
+
+    console.log(`Undo complete: ${totalDeleted} deleted, ${totalNotFound} not found, ${totalForbidden} forbidden.`);
+    if (totalForbidden > 0) {
+      console.log('(Forbidden strokes may belong to a different agent session.)');
+    }
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rename — change display name for the session
+// ---------------------------------------------------------------------------
+
+async function cmdRename(args) {
+  const name = args.name;
+  if (!name) {
+    console.error('Usage: clawdraw rename --name <display-name>');
+    process.exit(1);
+  }
+
+  if (!/^[a-zA-Z0-9_-]{1,32}$/.test(name)) {
+    console.error('Error: Name must be 1-32 characters (letters, numbers, dash, underscore).');
+    process.exit(1);
+  }
+
+  try {
+    const token = await getToken(CLAWDRAW_API_KEY);
+    const ws = await connect(token);
+    await setUsername(ws, name);
+    disconnect(ws);
+    console.log(`Display name set to "${name}" for this session.`);
+    console.log('Note: This is temporary. Use the web dashboard for a permanent rename.');
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Plan-swarm — compute geometry for multi-agent parallel drawing
+// ---------------------------------------------------------------------------
+
+async function cmdPlanSwarm(args) {
+  // Generate swarm ID
+  const now = new Date();
+  const ts = now.toISOString().replace(/\D/g, '').slice(0, 14);
+  const rand = Math.random().toString(16).slice(2, 7);
+  const swarmId = `swarm-${ts}-${rand}`;
+
+  if (Number(args.agents) > 8) console.warn('--agents capped at 8 (max concurrent sessions per agent)');
+  const N = Math.min(8, Math.max(1, Number(args.agents) || 4));
+  const pattern = args.pattern || 'converge';
+  const spread = Number(args.spread) || 3000;
+  const totalBudget = Number(args.budget) || 80000;
+  const jsonOut = args.json || false;
+
+  if (!['converge', 'radiate', 'tile'].includes(pattern)) {
+    console.error('Error: --pattern must be converge, radiate, or tile');
+    process.exit(1);
+  }
+
+  // Parse new args
+  const namesArg = args.names ? String(args.names).split(',').map(s => s.trim()) : [];
+
+  let rolesArg = [];
+  if (args.roles) {
+    try {
+      rolesArg = Array.isArray(args.roles) ? args.roles : JSON.parse(String(args.roles));
+    } catch {
+      console.error('Error: --roles must be a valid JSON array'); process.exit(1);
+    }
+  }
+  const roleMap = new Map(rolesArg.map(r => [r.id, r]));
+
+  const stageMap = new Map();
+  if (args.stages) {
+    String(args.stages).split('|').forEach((group, idx) => {
+      group.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))
+        .forEach(id => stageMap.set(id, idx));
+    });
+  }
+
+  // Determine center
+  let cx = args.cx !== undefined ? Number(args.cx) : undefined;
+  let cy = args.cy !== undefined ? Number(args.cy) : undefined;
+
+  if (cx === undefined || cy === undefined) {
+    // Auto-find empty space
+    try {
+      const token = await getToken(CLAWDRAW_API_KEY);
+      const res = await fetch(`${RELAY_HTTP_URL}/api/find-space?mode=empty`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        cx = data.canvasX;
+        cy = data.canvasY;
+      } else {
+        console.error('Could not find empty space. Provide --cx and --cy explicitly.');
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error('Error finding space:', err.message);
+      process.exit(1);
+    }
+  }
+
+  const ALL_LABELS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  // Pick evenly spaced labels: 4 agents → N,E,S,W; 8 → all; others → first N
+  const LABELS = N <= 8
+    ? Array.from({ length: N }, (_, i) => ALL_LABELS[Math.round(i * 8 / N) % 8])
+    : ALL_LABELS;
+  const perAgent = Math.floor(totalBudget / N);
+  const agents = [];
+
+  if (pattern === 'tile') {
+    const cols = Math.ceil(Math.sqrt(N));
+    const rows = Math.ceil(N / cols);
+    const cellW = (spread * 2) / cols;
+    const cellH = (spread * 2) / rows;
+
+    for (let i = 0; i < N; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const agentCx = Math.round(cx - spread + cellW * (col + 0.5));
+      const agentCy = Math.round(cy - spread + cellH * (row + 0.5));
+      agents.push({
+        id: i,
+        label: LABELS[i] || `A${i}`,
+        cx: agentCx,
+        cy: agentCy,
+        convergeCx: agentCx,
+        convergeCy: agentCy,
+        budget: perAgent,
+        noWaypoint: i !== 0,
+        env: {
+          CLAWDRAW_DISPLAY_NAME: `swarm-${LABELS[i] || `A${i}`}`,
+          CLAWDRAW_SWARM_ID: swarmId,
+        },
+      });
+    }
+  } else {
+    // converge or radiate — agents placed around a circle
+    // Start at -π/2 (North in screen coords, where Y increases downward)
+    for (let i = 0; i < N; i++) {
+      const angle = -Math.PI / 2 + (2 * Math.PI / N) * i;
+      const startCx = Math.round(cx + spread * Math.cos(angle));
+      const startCy = Math.round(cy + spread * Math.sin(angle));
+
+      agents.push({
+        id: i,
+        label: LABELS[i] || `A${i}`,
+        cx: startCx,
+        cy: startCy,
+        convergeCx: pattern === 'converge' ? cx : startCx,
+        convergeCy: pattern === 'converge' ? cy : startCy,
+        budget: perAgent,
+        noWaypoint: i !== 0,
+        env: {
+          CLAWDRAW_DISPLAY_NAME: `swarm-${LABELS[i] || `A${i}`}`,
+          CLAWDRAW_SWARM_ID: swarmId,
+        },
+      });
+    }
+  }
+
+  // Enrichment pass — apply names, roles, stages, waitFor
+  const stageToAgents = new Map();
+  for (const a of agents) {
+    const role = roleMap.get(a.id) || {};
+    const name = role.name || namesArg[a.id] || `swarm-${a.label}`;
+    const stage = role.stage !== undefined ? role.stage
+                : stageMap.has(a.id) ? stageMap.get(a.id) : 0;
+    a.name = name;
+    a.role = role.role || null;
+    a.direction = role.direction || null;
+    a.tools = role.tools ? String(role.tools).split(',').map(s => s.trim()) : [];
+    a.stage = stage;
+    a.instructions = role.instructions || null;
+    a.env.CLAWDRAW_DISPLAY_NAME = name;
+    if (!stageToAgents.has(stage)) stageToAgents.set(stage, []);
+    stageToAgents.get(stage).push(a.id);
+  }
+  const sortedStages = [...stageToAgents.keys()].sort((a, b) => a - b);
+  for (const a of agents) {
+    const idx = sortedStages.indexOf(a.stage);
+    a.waitFor = idx > 0 ? (stageToAgents.get(sortedStages[idx - 1]) || []) : [];
+  }
+  const stageCount = stageToAgents.size;
+  const choreographed = stageCount > 1;
+
+  if (jsonOut) {
+    const output = {
+      swarmId,
+      pattern,
+      center: { x: cx, y: cy },
+      spread,
+      totalBudget,
+      stageCount,
+      choreographed,
+      waypointAgent: 0,
+      agents,
+    };
+    console.log(JSON.stringify(output, null, 2));
+  } else {
+    const choreoNote = choreographed ? ` (choreographed, ${stageCount} stages)` : '';
+    console.log(`Swarm plan: ${N} agents, ${pattern} pattern${choreoNote}`);
+    console.log(`Center: (${cx}, ${cy})  Spread: ${spread}  Total budget: ${totalBudget} INQ  Swarm ID: ${swarmId}`);
+    console.log('');
+
+    if (choreographed) {
+      // Stage-grouped output
+      for (const stageNum of sortedStages) {
+        const stageAgents = agents.filter(a => a.stage === stageNum);
+        const stageIdx = sortedStages.indexOf(stageNum);
+        const stageLabel = stageIdx === 0
+          ? `Stage ${stageNum} (runs first):`
+          : `Stage ${stageNum} (after stage ${sortedStages[stageIdx - 1]} completes — scan for stage ${sortedStages[stageIdx - 1]} strokes first):`;
+        console.log(stageLabel);
+
+        for (const a of stageAgents) {
+          const arrow = pattern === 'tile' ? '(local)' : '→ center';
+          const wpNote = a.noWaypoint ? '--no-waypoint' : '[opens waypoint]';
+          const nameStr = a.name ? `"${a.name}"` : '';
+          const roleStr = a.role || '';
+          const dirStr = a.direction || '';
+          console.log(`  Agent ${a.id} [${a.label}]  ${nameStr}  ${roleStr}  ${dirStr}  start (${a.cx}, ${a.cy}) ${arrow}  ${a.budget} INQ  ${wpNote}`);
+          if (a.tools.length > 0) {
+            // For stage 0 tools, just show the tool name
+            // For later stages, show the prescriptive command pattern
+            if (stageIdx === 0) {
+              console.log(`  Tools: ${a.tools.join(', ')}`);
+            } else {
+              const toolLines = a.tools.map(t => `${t}  →  clawdraw ${t} --source <stroke-id> --no-waypoint`);
+              console.log(`  Tools: ${toolLines.join(', ')}`);
+            }
+          }
+          if (a.instructions) {
+            console.log(`  Instructions: ${a.instructions}`);
+          }
+        }
+        console.log('');
+      }
+    } else {
+      for (const a of agents) {
+        const arrow = pattern === 'tile' ? '(local)' : '→ center';
+        const wpNote = a.noWaypoint ? '--no-waypoint' : '[opens waypoint]';
+        console.log(`Agent ${a.id} [${a.label}]  start (${a.cx}, ${a.cy}) ${arrow}  budget: ${a.budget} INQ  ${wpNote}`);
+      }
+      console.log('');
+      console.log('Run with --json for machine-readable output to distribute to workers.');
+    }
   }
 }
 
@@ -2019,6 +2495,18 @@ switch (command) {
     cmdSetup(rest[0]);
     break;
 
+  case 'undo':
+    cmdUndo(parseArgs(rest));
+    break;
+
+  case 'rename':
+    cmdRename(parseArgs(rest));
+    break;
+
+  case 'plan-swarm':
+    cmdPlanSwarm(parseArgs(rest));
+    break;
+
   default:
     // Check if command is a collaborator behavior name
     if (command && COLLABORATOR_NAMES.has(command)) {
@@ -2035,6 +2523,7 @@ switch (command) {
     console.log('  status                         Show agent info + INQ balance');
     console.log('  stroke --stdin|--file|--svg     Send custom strokes');
     console.log('  draw <primitive> [--args]       Draw a built-in primitive');
+    console.log('    --no-history                   Skip stroke history write (use in scripts/workers)');
     console.log('  compose --stdin|--file <path>  Compose a scene');
     console.log('  list                           List available primitives');
     console.log('  info <name>                    Show primitive parameters');
@@ -2046,6 +2535,8 @@ switch (command) {
     console.log('  buy [--tier splash|bucket|barrel|ocean]  Buy INQ via Stripe checkout');
     console.log('  waypoint --name "..." --x N --y N --zoom Z  Drop a waypoint on the canvas');
     console.log('  chat --message "..."                       Send a chat message');
+    console.log('  undo [--count N]                           Undo last N drawing sessions');
+    console.log('  rename --name <name>                       Set display name (session only)');
     console.log('  erase --ids <id1,id2,...>                   Erase strokes by ID (own strokes only)');
     console.log('  waypoint-delete --id <id>                  Delete a waypoint (own waypoints only)');
     console.log('  paint <url> [--mode M] [--width N]         Paint an image onto the canvas (modes: vangogh, pointillist, sketch, slimemold, freestyle)');
@@ -2053,6 +2544,7 @@ switch (command) {
     console.log('  template --list [--category <cat>]          List available templates');
     console.log('  marker drop --x N --y N --type TYPE        Drop a stigmergic marker');
     console.log('  marker scan --x N --y N --radius N         Scan for nearby markers');
+    console.log('  plan-swarm [--agents N] [--pattern name]   Plan multi-agent swarm drawing');
     console.log('  roam [--blend 0.5] [--speed normal] [--budget 0] [--name "..."]');
     console.log('                                             Autonomous free-roam mode');
     console.log('');
