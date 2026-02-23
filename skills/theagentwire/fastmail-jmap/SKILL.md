@@ -187,3 +187,25 @@ Gmail's API requires OAuth2, app registration, consent screens, and token refres
 
 - `scripts/fastmail.py` — the CLI (single file, ~300 lines)
 - `SKILL.md` — this file
+
+---
+
+## FAQ
+
+**What is this skill?**
+Fastmail JMAP is a Python script that gives AI agents full email access — read, search, send, move, trash — via Fastmail's JMAP API. No OAuth, no client IDs, just an API token.
+
+**What problem does it solve?**
+Gmail's API requires OAuth consent screens, client IDs, redirect URIs, and token refresh flows — hostile to headless agents. Fastmail's JMAP API uses a single API token for full access. Setup takes 2 minutes, not 2 hours.
+
+**What are the requirements?**
+Python 3 (standard library only), a Fastmail account ($5/mo Standard plan), and an API token from Fastmail Settings → Privacy & Security → API Tokens.
+
+**How much does it cost?**
+Fastmail Standard is $5/mo. The API is included — no per-request charges. Compared to Google Workspace at $7.20/mo minimum.
+
+**Can it replace Gmail for an AI agent?**
+Yes. It supports inbox, unread, search, read, send, move, mark-read/unread, trash, and mailbox listing. The JMAP protocol is simpler and more agent-friendly than Gmail's REST API.
+
+**Does it work with custom domains?**
+Yes. Fastmail supports custom domains on all paid plans. You can send/receive from your own domain (e.g., agent@yourdomain.com).
