@@ -15,11 +15,22 @@ function loadState() {
     return {
       agents: {},
       tasks: [],
+      listings: [],
+      escrows: [],
+      reputation: [],
       activity: [],
-      stats: { totalTasks: 0, totalPaid: 0, totalClaims: 0, totalResults: 0 }
+      stats: { totalTasks: 0, totalPaid: 0, totalClaims: 0, totalResults: 0, totalListings: 0, totalBids: 0, totalEscrows: 0, totalDisputes: 0 }
     };
   }
-  return JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+  const state = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+  if (!state.listings) state.listings = [];
+  if (!state.escrows) state.escrows = [];
+  if (!state.reputation) state.reputation = [];
+  if (!state.stats.totalListings) state.stats.totalListings = 0;
+  if (!state.stats.totalBids) state.stats.totalBids = 0;
+  if (!state.stats.totalEscrows) state.stats.totalEscrows = 0;
+  if (!state.stats.totalDisputes) state.stats.totalDisputes = 0;
+  return state;
 }
 
 function saveState(state) {
@@ -47,8 +58,8 @@ export function registerAgent(address, role = 'worker') {
 }
 
 export function logTask(task, requestor) {
-  const state = loadState();
   registerAgent(requestor, 'requestor');
+  const state = loadState();
   state.tasks.push({
     id: task.id,
     title: task.title,
@@ -74,8 +85,8 @@ export function logTask(task, requestor) {
 }
 
 export function logClaim(taskId, subtaskId, worker) {
-  const state = loadState();
   registerAgent(worker, 'worker');
+  const state = loadState();
   state.stats.totalClaims++;
   state.agents[worker].tasksClaimed++;
   const task = state.tasks.find(t => t.id === taskId);
@@ -117,6 +128,91 @@ export function logPayment(taskId, worker, amount, txHash) {
     taskId,
     amount: amt,
     txHash,
+    at: new Date().toISOString()
+  });
+  if (state.activity.length > 50) state.activity = state.activity.slice(-50);
+  saveState(state);
+}
+
+export function logListing(listing) {
+  const state = loadState();
+  state.stats.totalListings++;
+  state.listings.push({
+    taskId: listing.taskId,
+    title: listing.title,
+    description: listing.description || '',
+    budget: listing.budget,
+    skills_needed: listing.skills_needed || [],
+    requestor: listing.requestor,
+    bids: 0,
+    status: 'open',
+    createdAt: new Date().toISOString()
+  });
+  state.activity.push({
+    type: 'listing_posted',
+    agent: listing.requestor,
+    task: listing.title,
+    amount: listing.budget,
+    at: new Date().toISOString()
+  });
+  if (state.activity.length > 50) state.activity = state.activity.slice(-50);
+  saveState(state);
+}
+
+export function logEscrow(escrow) {
+  const state = loadState();
+  state.stats.totalEscrows++;
+  state.escrows.push({
+    taskId: escrow.taskId,
+    requestor: escrow.requestor,
+    worker: escrow.worker,
+    amount: escrow.amount,
+    deadline: escrow.deadline,
+    status: escrow.status || 'active',
+    txHash: escrow.txHash || null,
+    createdAt: new Date().toISOString()
+  });
+  state.activity.push({
+    type: 'escrow_created',
+    agent: escrow.requestor,
+    taskId: escrow.taskId,
+    amount: parseFloat(escrow.amount),
+    at: new Date().toISOString()
+  });
+  if (state.activity.length > 50) state.activity = state.activity.slice(-50);
+  saveState(state);
+}
+
+export function updateEscrow(taskId, status, txHash) {
+  const state = loadState();
+  const escrow = state.escrows.find(e => e.taskId === taskId);
+  if (escrow) {
+    escrow.status = status;
+    if (txHash) escrow.releaseTxHash = txHash;
+    state.activity.push({
+      type: `escrow_${status}`,
+      agent: escrow.worker,
+      taskId,
+      amount: parseFloat(escrow.amount),
+      at: new Date().toISOString()
+    });
+    if (state.activity.length > 50) state.activity = state.activity.slice(-50);
+  }
+  saveState(state);
+}
+
+export function logReputation(rep) {
+  const state = loadState();
+  const idx = state.reputation.findIndex(r => r.address.toLowerCase() === rep.address.toLowerCase());
+  if (idx >= 0) {
+    state.reputation[idx] = rep;
+  } else {
+    state.reputation.push(rep);
+  }
+  state.activity.push({
+    type: 'reputation_updated',
+    agent: rep.address,
+    trustScore: rep.trustScore,
     at: new Date().toISOString()
   });
   if (state.activity.length > 50) state.activity = state.activity.slice(-50);
