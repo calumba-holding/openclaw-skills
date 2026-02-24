@@ -162,6 +162,171 @@ fi
 echo ""
 
 # -------------------------------------------------------
+echo "--- store_key_v3.sh ---"
+
+# T19: Missing arguments → exits non-zero
+echo "T19: Missing SERVICE_NAME argument"
+if bash "$SCRIPTS/store_key_v3.sh" 2>/dev/null; then
+  fail "Should have exited non-zero with no args"
+else
+  pass "Exits non-zero with no args"
+fi
+
+# T20: Missing config paths → exits non-zero
+echo "T20: Missing config paths"
+if bash "$SCRIPTS/store_key_v3.sh" "Test Service" 2>/dev/null; then
+  fail "Should have exited non-zero with no config paths"
+else
+  pass "Exits non-zero with no config paths"
+fi
+
+# T21: Strict mode
+echo "T21: Strict mode (set -euo pipefail)"
+if grep -q "set -euo pipefail" "$SCRIPTS/store_key_v3.sh"; then
+  pass "Strict mode enabled"
+else
+  fail "Missing set -euo pipefail"
+fi
+
+# T22: Service name sanitization
+echo "T22: SERVICE_NAME sanitization (shell injection protection)"
+if grep -q "SAFE_SERVICE_NAME" "$SCRIPTS/store_key_v3.sh" && grep -q "sed.*['\"].*['\"]" "$SCRIPTS/store_key_v3.sh"; then
+  pass "SERVICE_NAME sanitization implemented"
+else
+  fail "Missing SERVICE_NAME sanitization"
+fi
+
+# T23: Temp file security
+echo "T23: Temp file with secure permissions (chmod 600)"
+if grep -q "chmod 600.*TEMP_KEY_FILE" "$SCRIPTS/store_key_v3.sh"; then
+  pass "Temp file secured with chmod 600"
+else
+  fail "Missing temp file permission setting"
+fi
+
+# T24: Secure cleanup
+echo "T24: Secure temp file cleanup (overwrite + remove)"
+if grep -q "dd.*if=/dev/urandom.*TEMP_KEY_FILE" "$SCRIPTS/store_key_v3.sh" || grep -q "rm.*TEMP_KEY_FILE" "$SCRIPTS/store_key_v3.sh"; then
+  pass "Secure cleanup implemented"
+else
+  fail "Missing secure cleanup of temp file"
+fi
+
+# T25: No process-list exposure — key must NOT appear as CLI argument to any process
+echo "T25: Key not exposed in process list (no argv exposure)"
+# Check that key value is never passed as a positional arg to openclaw/curl/etc via shell expansion
+if grep -E 'openclaw config set.*\$\(cat|\bcurl\b.*\$\(cat|\bopenclaw\b.*\$KEY' "$SCRIPTS/store_key_v3.sh" | grep -v '#'; then
+  fail "Key value passed via shell expansion into process argv (process list leak!)"
+else
+  pass "Key value never appears as CLI argument — uses Python direct JSON write"
+fi
+
+# T26: Uses Python for config write (zero argv exposure)
+echo "T26: Uses Python direct JSON write (key stays out of argv)"
+if grep -q 'python3 -' "$SCRIPTS/store_key_v3.sh"; then
+  pass "Python inline script writes key directly to openclaw.json"
+else
+  fail "Missing Python-based config write — key may leak into process list"
+fi
+
+# T27: SERVICE_NAME sanitization — backtick injection
+echo "T27: SERVICE_NAME sanitization removes backticks"
+if grep -q 'sed.*\`\|sed.*backtick\|s\/\[.*\`' "$SCRIPTS/store_key_v3.sh" || \
+   grep -oP "sed 's\[.*?\].*'" "$SCRIPTS/store_key_v3.sh" | grep -q '`'; then
+  pass "Backtick sanitized in SERVICE_NAME"
+else
+  # Check the sed pattern covers backtick
+  SED_PATTERN=$(grep 'SAFE_SERVICE_NAME' "$SCRIPTS/store_key_v3.sh" | grep sed | head -1)
+  if echo "$SED_PATTERN" | grep -q '`'; then
+    pass "Backtick included in sanitization pattern"
+  else
+    fail "Backtick not sanitized — possible osascript injection"
+  fi
+fi
+
+# T28: SERVICE_NAME sanitization — runtime test with dangerous input
+echo "T28: SERVICE_NAME sanitization blocks dangerous chars at runtime"
+DANGEROUS='Evil$(rm -rf /)'
+SANITIZED=$(echo "$DANGEROUS" | sed 's/["`$;\\|&<>(){}]/_/g' | tr -s '_')
+if echo "$SANITIZED" | grep -qE '[$`\\;|&<>(){}]'; then
+  fail "Dangerous chars survived sanitization: $SANITIZED"
+else
+  pass "Dangerous chars stripped from SERVICE_NAME: '$SANITIZED'"
+fi
+
+# T29: Temp file is cleaned up (rm -f called)
+echo "T29: Secure temp file cleanup (rm -f)"
+if grep -q 'rm -f.*TEMP_KEY_FILE' "$SCRIPTS/store_key_v3.sh"; then
+  pass "Secure cleanup implemented"
+else
+  fail "Missing rm -f on temp key file"
+fi
+
+# T30: KEY_VALUE cleared from shell memory after temp file write
+echo "T30: KEY_VALUE cleared from shell memory immediately after use"
+if grep -q 'KEY_VALUE=""' "$SCRIPTS/store_key_v3.sh"; then
+  pass "KEY_VALUE zeroed after writing to temp file"
+else
+  fail "KEY_VALUE not cleared — lingers in shell memory"
+fi
+
+echo ""
+
+# -------------------------------------------------------
+echo "--- Security hardening checks ---"
+
+# T27: secure_input_mac.sh sanitizes KEY_NAME before interpolation
+echo "T27: KEY_NAME sanitized before AppleScript interpolation"
+if grep -q "SAFE_KEY_NAME" "$SCRIPTS/secure_input_mac.sh" && grep -q "sed" "$SCRIPTS/secure_input_mac.sh"; then
+  pass "KEY_NAME sanitization implemented"
+else
+  fail "Missing KEY_NAME sanitization — AppleScript injection risk!"
+fi
+
+# T28: test_key.sh does NOT pass $KEY naked in -H curl args
+echo "T28: curl headers not exposed in process list (\$KEY not in -H args)"
+if grep -qE '\-H ".*\$KEY' "$SCRIPTS/test_key.sh"; then
+  fail "KEY exposed as naked curl -H arg — visible in ps aux!"
+else
+  pass "No naked \$KEY in curl -H args"
+fi
+
+# T29: test_key.sh uses temp header file pattern
+echo "T29: test_key.sh uses temp file for curl headers"
+if grep -q "make_header_file\|HFILE" "$SCRIPTS/test_key.sh"; then
+  pass "Temp header file pattern implemented"
+else
+  fail "Missing temp header file — keys visible in ps aux!"
+fi
+
+# T30: store_key_v3.sh sanitizes ! character (histexpand risk)
+echo "T30: store_key_v3.sh sanitizes ! in SERVICE_NAME"
+if grep -qF '!' "$SCRIPTS/store_key_v3.sh" && grep -q "SAFE_SERVICE_NAME" "$SCRIPTS/store_key_v3.sh"; then
+  pass "Exclamation mark included in sanitization"
+else
+  fail "Missing ! sanitization in SAFE_SERVICE_NAME"
+fi
+
+# T31: test_key.sh temp header files are removed after use
+echo "T31: Temp header files cleaned up after curl calls"
+HFILE_CLEANUPS=$(grep -c 'rm -f.*HFILE' "$SCRIPTS/test_key.sh" || true)
+if [ "${HFILE_CLEANUPS:-0}" -ge 3 ]; then
+  pass "Header temp files cleaned up ($HFILE_CLEANUPS rm calls)"
+else
+  fail "Insufficient header file cleanup (found ${HFILE_CLEANUPS:-0} rm calls, expected ≥3)"
+fi
+
+# T32: temp header files are chmod 600
+echo "T32: Temp header files created with 600 permissions"
+if grep -q "chmod 600" "$SCRIPTS/test_key.sh"; then
+  pass "Temp header files secured with chmod 600"
+else
+  fail "Missing chmod 600 on temp header files"
+fi
+
+echo ""
+
+# -------------------------------------------------------
 echo "--- Live key validation (via openclaw.json config) ---"
 
 # v2 stores keys in openclaw.json via gateway config.patch

@@ -54,7 +54,7 @@ Reads key from **stdin only**. Output always uses masked values (first 4 chars +
 
 ## Storage Model
 
-ipeaky v2 stores keys in **OpenClaw's native config** (`openclaw.json`) via `gateway config.patch`:
+ipeaky v3 stores keys in **OpenClaw's native config** (`openclaw.json`) via `gateway config.patch`:
 
 - Keys are injected into skills automatically via OpenClaw's `primaryEnv` system
 - One key can serve multiple skills (e.g., OpenAI key → whisper, image-gen, etc.)
@@ -75,7 +75,7 @@ ipeaky v2 stores keys in **OpenClaw's native config** (`openclaw.json`) via `gat
 
 ## Testing
 
-Run the full test suite (20 tests — static analysis, security audit, live key validation):
+Run the full test suite (32 tests — static analysis, security audit, live key validation):
 
 ```bash
 bash tests/run_tests.sh

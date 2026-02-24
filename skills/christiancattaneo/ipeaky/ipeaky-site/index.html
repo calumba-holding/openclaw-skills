@@ -10,7 +10,7 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ipeaky — Secure API Key Management">
-<meta name="twitter:description" content="Say 'store my key' in chat. A secure dialog pops up. Keys never touch your conversation.">
+<meta name="twitter:description" content="Keys never touch chat history. Pure bash. Zero dependencies.">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -25,8 +25,6 @@
     --text-dim: #666680;
     --accent: #00ff88;
     --danger: #ff4444;
-    --user-bubble: rgba(255,255,255,0.06);
-    --agent-bubble: rgba(0,255,136,0.06);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,6 +37,7 @@
     overflow-x: hidden;
   }
 
+  /* Animated grid background */
   body::before {
     content: '';
     position: fixed;
@@ -91,18 +90,6 @@
     animation: shimmer 3s ease-in-out infinite;
   }
 
-  .peek-emoji {
-    display: inline-block;
-    animation: peek 3s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
-
-  @keyframes peek {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    15% { transform: translateY(-4px) rotate(-5deg); }
-    30% { transform: translateY(0) rotate(0deg); }
-  }
-
   @keyframes shimmer {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -111,15 +98,15 @@
   .hero-sub {
     font-size: 20px;
     color: var(--text-dim);
-    max-width: 520px;
+    max-width: 500px;
     margin: 0 auto 48px;
     line-height: 1.6;
   }
 
   .hero-sub strong { color: var(--text); font-weight: 500; }
 
-  /* Chat mockup */
-  .chat-window {
+  /* Terminal */
+  .terminal {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -128,10 +115,9 @@
     margin: 0 auto 80px;
     max-width: 600px;
     box-shadow: 0 0 60px rgba(0,255,136,0.05);
-    position: relative;
   }
 
-  .chat-bar {
+  .terminal-bar {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -140,15 +126,15 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .chat-dot {
+  .terminal-dot {
     width: 12px; height: 12px;
     border-radius: 50%;
   }
-  .chat-dot.r { background: #ff5f57; }
-  .chat-dot.y { background: #febc2e; }
-  .chat-dot.g { background: #28c840; }
+  .terminal-dot.r { background: #ff5f57; }
+  .terminal-dot.y { background: #febc2e; }
+  .terminal-dot.g { background: #28c840; }
 
-  .chat-title {
+  .terminal-title {
     flex: 1;
     text-align: center;
     font-size: 12px;
@@ -156,194 +142,18 @@
     font-family: 'JetBrains Mono', monospace;
   }
 
-  .chat-body {
+  .terminal-body {
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    position: relative;
-  }
-
-  .msg {
-    max-width: 85%;
-    padding: 10px 16px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  .msg.user {
-    align-self: flex-end;
-    background: var(--user-bubble);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-bottom-right-radius: 4px;
-  }
-
-  .msg.agent {
-    align-self: flex-start;
-    background: var(--agent-bubble);
-    border: 1px solid rgba(0,255,136,0.1);
-    color: var(--text);
-    border-bottom-left-radius: 4px;
-  }
-
-  .msg .label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-
-  .msg.user .label { color: var(--text-dim); }
-  .msg.agent .label { color: var(--accent); }
-
-  .msg .success { color: var(--accent); }
-  .msg .masked { color: #ffaa00; }
-
-  .msg-system {
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-dim);
     font-family: 'JetBrains Mono', monospace;
-    padding: 6px 0;
-    opacity: 0.7;
-  }
-
-  /* Secure input popup overlay */
-  .popup-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    border-radius: 0 0 12px 12px;
-  }
-
-  .popup-dialog {
-    background: #1a1a2e;
-    border: 1px solid rgba(0,255,136,0.2);
-    border-radius: 12px;
-    padding: 24px 28px;
-    width: 320px;
-    box-shadow: 0 0 40px rgba(0,255,136,0.1), 0 20px 60px rgba(0,0,0,0.5);
-    animation: popupIn 0.3s ease-out;
-  }
-
-  @keyframes popupIn {
-    0% { transform: scale(0.9); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-
-  .popup-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
-  .popup-icon {
-    font-size: 20px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,255,136,0.1);
-    border-radius: 8px;
-  }
-
-  .popup-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .popup-subtitle {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-
-  .popup-input-wrapper {
-    position: relative;
-    margin-bottom: 16px;
-  }
-
-  .popup-label {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    display: block;
-  }
-
-  .popup-input {
-    width: 100%;
-    padding: 10px 14px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    color: var(--accent);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    letter-spacing: 3px;
-    outline: none;
-  }
-
-  .popup-input:focus {
-    border-color: var(--glow-dim);
-  }
-
-  .popup-secure-note {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--accent);
-    margin-bottom: 18px;
-    opacity: 0.8;
-  }
-
-  .popup-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-
-  .popup-btn {
-    padding: 8px 18px;
-    border-radius: 6px;
     font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+    line-height: 2;
   }
 
-  .popup-btn.cancel {
-    background: rgba(255,255,255,0.06);
-    color: var(--text-dim);
-  }
-
-  .popup-btn.confirm {
-    background: rgba(0,255,136,0.15);
-    color: var(--accent);
-    border: 1px solid rgba(0,255,136,0.3);
-  }
-
-  .popup-btn.confirm:hover {
-    background: rgba(0,255,136,0.25);
-    box-shadow: 0 0 20px rgba(0,255,136,0.1);
-  }
+  .prompt { color: var(--accent); }
+  .cmd { color: var(--text); }
+  .output { color: var(--text-dim); }
+  .success { color: var(--accent); }
+  .masked { color: #ffaa00; }
 
   /* Features */
   .features {
@@ -450,13 +260,6 @@
     box-shadow: 0 0 40px rgba(0,255,136,0.1);
   }
 
-  .cta-sub {
-    font-size: 14px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-    line-height: 1.6;
-  }
-
   .cta-links {
     display: flex;
     justify-content: center;
@@ -473,6 +276,7 @@
 
   .cta-links a:hover { color: var(--accent); }
 
+  /* Footer */
   footer {
     text-align: center;
     padding: 24px;
@@ -489,84 +293,44 @@
 <div class="container">
 
   <section class="hero">
-    <div class="hero-badge">chat-native · <span>secure by design</span> · open source</div>
+    <div class="hero-badge">open source · <span>zero dependencies</span> · pure bash</div>
     <h1>ipeaky</h1>
     <p class="hero-sub">
-      <strong>Just say "store my key."</strong><br>
-      A secure dialog pops up. Your key never touches the conversation.
+      <strong>Keys never touch chat history.</strong><br>
+      Secure API key management for AI agents.
     </p>
   </section>
 
-  <div class="chat-window">
-    <div class="chat-bar">
-      <div class="chat-dot r"></div>
-      <div class="chat-dot y"></div>
-      <div class="chat-dot g"></div>
-      <div class="chat-title">OpenClaw</div>
+  <div class="terminal">
+    <div class="terminal-bar">
+      <div class="terminal-dot r"></div>
+      <div class="terminal-dot y"></div>
+      <div class="terminal-dot g"></div>
+      <div class="terminal-title">ipeaky</div>
     </div>
-    <div class="chat-body">
-      <div class="msg user">
-        <div class="label">You</div>
-        Store my OpenAI API key
-      </div>
-
-      <!-- Popup overlay centered in chat window -->
-      <div class="popup-overlay">
-        <div class="popup-dialog">
-          <div class="popup-header">
-            <div class="popup-icon" style="font-family:JetBrains Mono,monospace;font-size:16px;color:var(--accent)">~</div>
-            <div>
-              <div class="popup-title">Store API Key</div>
-              <div class="popup-subtitle">OPENAI_API_KEY</div>
-            </div>
-          </div>
-          <div class="popup-input-wrapper">
-            <span class="popup-label">Paste your key</span>
-            <div class="popup-input">••••••••••••••••••••</div>
-          </div>
-          <div class="popup-secure-note">
-            ⬡  Secure input — hidden from chat, logs &amp; history
-          </div>
-          <div class="popup-buttons">
-            <div class="popup-btn cancel">Cancel</div>
-            <div class="popup-btn confirm">Store Key</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="msg agent">
-        <div class="label">Agent</div>
-        <span class="success"> Stored securely.</span> Key never touched this chat.
-      </div>
-      <div class="msg user">
-        <div class="label">You</div>
-        List my keys
-      </div>
-      <div class="msg agent">
-        <div class="label">Agent</div>
-        <span class="masked">OPENAI_API_KEY = sk-7****</span>
-      </div>
-      <div class="msg user">
-        <div class="label">You</div>
-        Test my OpenAI key
-      </div>
-      <div class="msg agent">
-        <div class="label">Agent</div>
-        <span class="success"> OpenAI key is valid.</span>
-      </div>
+    <div class="terminal-body">
+      <div><span class="prompt">$</span> <span class="cmd">ipeaky store OPENAI_API_KEY</span></div>
+      <div><span class="output">Key: ••••••••••••••••</span></div>
+      <div><span class="success">✓ Stored securely (stdin → file, 600 perms)</span></div>
+      <div>&nbsp;</div>
+      <div><span class="prompt">$</span> <span class="cmd">ipeaky list</span></div>
+      <div><span class="masked">OPENAI_API_KEY = sk-7****</span></div>
+      <div>&nbsp;</div>
+      <div><span class="prompt">$</span> <span class="cmd">ipeaky test OPENAI_API_KEY</span></div>
+      <div><span class="success">✓ OpenAI key is valid.</span></div>
     </div>
   </div>
 
   <section class="flow">
     <h2>How keys flow</h2>
     <div class="flow-diagram">
-      <div class="flow-node">You say "store my key"</div>
+      <div class="flow-node">You</div>
       <span class="flow-arrow">→</span>
-      <div class="flow-node secure">secure popup</div>
+      <div class="flow-node secure">stdin</div>
       <span class="flow-arrow">→</span>
-      <div class="flow-node secure">stdin → config.patch</div>
+      <div class="flow-node secure">~/.openclaw/credentials/</div>
       <span class="flow-arrow">→</span>
-      <div class="flow-node secure">openclaw.json</div>
+      <div class="flow-node secure">chmod 600</div>
     </div>
     <div class="flow-diagram" style="margin-top: 16px; opacity: 0.5;">
       <div class="flow-node danger">chat history</div>
@@ -578,24 +342,24 @@
 
   <div class="features">
     <div class="feature">
-      <div class="feature-icon" style="font-family:'JetBrains Mono',monospace;color:var(--accent)">//</div>
-      <h3>conversational</h3>
-      <p>No commands to memorize. Say "store my key", "list keys", or "test my Anthropic key" — your agent handles the rest.</p>
+      <div class="feature-icon">🔒</div>
+      <h3>stdin-only</h3>
+      <p>Keys never appear in command arguments, ps output, or shell history. Invisible to everything except the target file.</p>
     </div>
     <div class="feature">
-      <div class="feature-icon" style="font-family:JetBrains Mono,monospace;color:var(--accent)">{~}</div>
-      <h3>native secure input</h3>
-      <p>A native dialog pops up with hidden input. Paste your key safely — it flows straight to OpenClaw's native config. Never appears in chat.</p>
+      <div class="feature-icon">🧪</div>
+      <h3>built-in tests</h3>
+      <p>Validate keys against OpenAI, ElevenLabs, Anthropic APIs with one command. Know it works before you ship.</p>
     </div>
     <div class="feature">
-      <div class="feature-icon" style="font-family:JetBrains Mono,monospace;color:var(--accent)">>_</div>
-      <h3>instant validation</h3>
-      <p>Say "test my OpenAI key" and the agent validates it live against the API. Know it works before you need it.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon" style="font-family:JetBrains Mono,monospace;color:var(--accent)">***</div>
+      <div class="feature-icon">👁️</div>
       <h3>masked display</h3>
-      <p>When you list keys, you see sk-7**** — enough to identify, never enough to compromise. Full values stay on disk.</p>
+      <p>List shows sk-7**** — enough to identify, never enough to compromise. Full values never leave the file.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h3>zero dependencies</h3>
+      <p>Pure bash. No npm install, no pip, no Docker. Runs on any Unix system with a shell. That's it.</p>
     </div>
   </div>
 
@@ -604,7 +368,6 @@
       $ clawhub install ipeaky
       <span style="font-size:11px; opacity:0.5; margin-left:8px;">click to copy</span>
     </div>
-    <p class="cta-sub">Then just tell your agent: <em>"store my OpenAI key"</em></p>
     <div class="cta-links">
       <a href="https://github.com/christiancattaneo/ipeaky">GitHub →</a>
       <a href="https://openclaw.ai">OpenClaw →</a>

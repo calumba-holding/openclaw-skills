@@ -1,12 +1,14 @@
 ---
 name: ipeaky
+version: "3.0.0"
 description: Secure API key management for OpenClaw. Store, list, test, and delete API keys without exposing them in chat history. Keys are stored directly in openclaw.json via gateway config.patch — fully native integration. Use when a user needs to provide, manage, or test API keys (e.g., OpenAI, ElevenLabs, Anthropic, Brave, or any service). Triggers on phrases like "add API key", "store my key", "manage keys", "test my key", "set up API key", or when a skill requires an API key that isn't configured.
 metadata:
   openclaw:
+    version: "3.0.0"
     platforms: [macos]
     requires:
-      bins: [osascript]
-    notes: "Secure input popup requires macOS (osascript). Linux/Windows users can pipe keys via stdin directly."
+      bins: [osascript, python3]
+    notes: "Secure input popup requires macOS (osascript). python3 required for zero-exposure config write."
 ---
 
 # ipeaky — Secure API Key Management
@@ -32,7 +34,33 @@ This means every skill that declares `primaryEnv` automatically picks up the key
 `openai-image-gen`, etc. ElevenLabs key is used by `sag` and `talk`. When storing, set ALL
 relevant config paths for that key.
 
-## Storing a Key
+## Storing a Key (v3 — Zero Exposure)
+
+**Use the v3 script.** The agent NEVER sees the key. The script handles popup + storage directly.
+
+```bash
+bash {baseDir}/scripts/store_key_v3.sh "<SERVICE_NAME>" "<config_path1>" ["<config_path2>" ...]
+```
+
+### Examples:
+```bash
+# Brave Search
+bash {baseDir}/scripts/store_key_v3.sh "Brave Search" "tools.web.search.apiKey"
+
+# OpenAI (multiple paths)
+bash {baseDir}/scripts/store_key_v3.sh "OpenAI" "skills.entries.openai-whisper-api.apiKey"
+
+# ElevenLabs (sag + talk)
+bash {baseDir}/scripts/store_key_v3.sh "ElevenLabs" "skills.entries.sag.apiKey" "talk.apiKey"
+```
+
+The script:
+1. Shows macOS popup (hidden input)
+2. Writes key directly to `openclaw.json` via Python (never in process argv — no `ps aux` exposure)
+3. Restarts gateway
+4. Returns ONLY "OK" or "ERROR" — key never appears in agent output or chat history
+
+### Legacy Method (v2 — agent sees key, NOT recommended)
 
 **Step 1:** Launch the secure input popup. On macOS:
 ```bash
