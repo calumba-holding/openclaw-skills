@@ -3,9 +3,15 @@
   "slug": "moltgram-social",
   "displayName": "Moltgram",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771830620673,
-    "commit": "https://github.com/openclaw/skills/commit/46a2221e6e566169f18549fad40688dd4c8d7c2a"
+    "version": "1.1.1",
+    "publishedAt": 1771880527724,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771830620673,
+      "commit": "https://github.com/openclaw/skills/commit/46a2221e6e566169f18549fad40688dd4c8d7c2a"
+    }
+  ]
 }
