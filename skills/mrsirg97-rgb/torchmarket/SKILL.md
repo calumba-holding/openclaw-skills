@@ -1,6 +1,6 @@
 ---
 name: torch-market
-version: "4.7.8"
+version: "4.7.10"
 description: Torch Vault is a full-custody on-chain escrow for AI agents on Solana. The vault holds all assets -- SOL and tokens. The agent wallet is a disposable controller that signs transactions but holds nothing of value. No private key with funds required. The vault can be created and funded entirely by the human principal -- the agent only needs an RPC endpoint to read state and build unsigned transactions. Authority separation means instant revocation, permissionless deposits, and authority-only withdrawals. Built on Torch Market -- a programmable economic substrate where every token is its own self-sustaining economy with bonding curves, community treasuries, lending markets, and governance.
 license: MIT
 disable-model-invocation: true
@@ -32,11 +32,11 @@ metadata:
     install:
       - id: npm-torchsdk
         kind: npm
-        package: torchsdk@^3.7.14
+        package: torchsdk@^3.7.17
         flags: []
         label: "Install Torch SDK (npm, optional -- SDK is bundled in lib/torchsdk/ on clawhub)"
   author: torch-market
-  version: "4.7.8"
+  version: "4.7.10"
   clawhub: https://clawhub.ai/mrsirg97-rgb/torchmarket
   sdk-source: https://github.com/mrsirg97-rgb/torchsdk
   examples-source: https://github.com/mrsirg97-rgb/torchsdk-examples
@@ -193,7 +193,7 @@ This skill requires only `SOLANA_RPC_URL`. `SOLANA_PRIVATE_KEY` is optional.
 
 ## Getting Started
 
-**Everything goes through the Torch SDK (v3.7.14), bundled in `lib/torchsdk/`.** The SDK source is included in this skill package for full auditability -- no blind npm dependency for the core transaction logic. It builds transactions locally using the Anchor IDL and reads all state directly from Solana RPC. No API server in the path. No middleman. No trust assumptions beyond the on-chain program itself.
+**Everything goes through the Torch SDK (v3.7.17), bundled in `lib/torchsdk/`.** The SDK source is included in this skill package for full auditability -- no blind npm dependency for the core transaction logic. It builds transactions locally using the Anchor IDL and reads all state directly from Solana RPC. No API server in the path. No middleman. No trust assumptions beyond the on-chain program itself.
 
 **NOTE - the torchsdk version matches the program idl version for clarity**
 
@@ -288,7 +288,7 @@ const result = await confirmTransaction(connection, signature, controller.public
 
 ### SDK Functions
 
-- **Token data** -- `getTokens`, `getToken`, `getTokenMetadata`, `getHolders`, `getMessages`, `getLendingInfo`, `getLoanPosition`
+- **Token data** -- `getTokens`, `getToken`, `getTokenMetadata`, `getHolders`, `getMessages`, `getLendingInfo`, `getLoanPosition`, `getAllLoanPositions`
 - **Quotes** -- `getBuyQuote`, `getSellQuote` (simulate trades before committing)
 - **Vault queries** -- `getVault`, `getVaultForWallet`, `getVaultWalletLink`
 - **Vault management** -- `buildCreateVaultTransaction`, `buildDepositVaultTransaction`, `buildWithdrawVaultTransaction`, `buildWithdrawTokensTransaction`, `buildLinkWalletTransaction`, `buildUnlinkWalletTransaction`, `buildTransferAuthorityTransaction`
@@ -406,7 +406,7 @@ As an agent with vault access, you can perform operations at four privilege leve
 2. **Browse tokens** -- discover what's being built, what's trending, what's graduating
 3. **Get quotes** -- calculate exact output before trading (no surprises)
 4. **Read messages** -- see what agents and humans are saying, verify their trades
-5. **Check loan positions** -- monitor LTV, health, and collateral value
+5. **Check loan positions** -- monitor LTV, health, and collateral value. Scan all positions for a token with `getAllLoanPositions` (sorted by liquidation risk)
 
 ### Controller (linked disposable wallet signs -- vault routes all value)
 
@@ -482,11 +482,10 @@ The agent is now authorized. All vault SOL and future token acquisitions are con
 ### Run a Liquidation Keeper (Agent)
 
 1. List migrated tokens: `getTokens(connection, { status: "migrated" })`
-2. For each token, check active loans: `getLendingInfo(connection, mint)`
-3. Find positions above 65% LTV
-4. Liquidate: `buildLiquidateTransaction(connection, { mint, liquidator, borrower })`
-5. Sign and submit -- receive collateral at 10% discount
-6. Collateral tokens go to vault ATA
+2. For each token, scan all loan positions: `getAllLoanPositions(connection, mint)` -- returns all positions sorted by liquidation risk (liquidatable first), with health status and pool price
+3. Liquidate any position with health `"liquidatable"`: `buildLiquidateTransaction(connection, { mint, liquidator, borrower: position.borrower })`
+4. Sign and submit -- receive collateral at 10% discount
+5. Collateral tokens go to vault ATA
 
 ### Harvest Protocol Rewards (Agent)
 
