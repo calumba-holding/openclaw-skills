@@ -1,24 +1,25 @@
-// 钉钉用户搜索脚本
-// 用法: ts-node scripts/search-user.ts <搜索关键词>
+// 机器人发送单聊消息脚本
+// 用法: ts-node scripts/send-user-message.ts <userId> <robotCode> <消息内容> [--debug]
 // 需要设置环境变量 DINGTALK_APP_KEY 和 DINGTALK_APP_SECRET
 export {};
 
-const { default: dingtalkContact, SearchUserHeaders, SearchUserRequest } = require('@alicloud/dingtalk/contact_1_0');
+const { default: dingtalkRobot, BatchSendOTOHeaders, BatchSendOTORequest } = require('@alicloud/dingtalk/robot_1_0');
 const { default: dingtalkOauth2_1_0, GetAccessTokenRequest } = require('@alicloud/dingtalk/oauth2_1_0');
 const { Config } = require('@alicloud/openapi-client');
 const { RuntimeOptions } = require('@alicloud/tea-util');
 
-interface SearchResult {
+interface SendMessageResult {
   success: boolean;
-  keyword: string;
-  totalCount: number;
-  hasMore: boolean;
-  userIds: string[];
+  userId: string;
+  robotCode: string;
+  processQueryKey: string;
+  flowControlledStaffIdList: string[];
+  invalidStaffIdList: string[];
+  message: string;
 }
 
 interface ErrorResult {
   success: false;
-  keyword: string;
   error: {
     code: string;
     message: string;
@@ -56,11 +57,11 @@ async function getAccessToken(appKey: string, appSecret: string): Promise<string
   try {
     const response = await client.getAccessToken(request);
     const accessToken = response.body?.accessToken;
-    
+
     if (!accessToken) {
       throw new Error('获取 access_token 失败：响应中未包含 token');
     }
-    
+
     return accessToken;
   } catch (err: any) {
     throw new Error(`获取 access_token 失败: ${err.message || err}`);
@@ -68,44 +69,72 @@ async function getAccessToken(appKey: string, appSecret: string): Promise<string
 }
 
 /**
- * 搜索用户
+ * 发送单聊消息
  * @param accessToken Access Token
- * @param keyword 搜索关键词（姓名）
+ * @param userId 用户 ID
+ * @param robotCode 机器人 Code
+ * @param message 消息内容
+ * @param debug 是否开启调试模式
  */
-async function searchUser(accessToken: string, keyword: string): Promise<void> {
-  const client = new dingtalkContact(createConfig());
+async function sendUserMessage(
+  accessToken: string,
+  userId: string,
+  robotCode: string,
+  message: string,
+  debug: boolean = false
+): Promise<void> {
+  const client = new dingtalkRobot(createConfig());
 
-  const headers = new SearchUserHeaders({});
+  const headers = new BatchSendOTOHeaders({});
   headers.xAcsDingtalkAccessToken = accessToken;
 
-  const request = new SearchUserRequest({
-    queryWord: keyword,
-    offset: 0,
-    size: 20,
+  // 构建消息参数
+  const msgParam = JSON.stringify({ content: message });
+
+  const request = new BatchSendOTORequest({
+    robotCode: robotCode,
+    userIds: [userId],
+    msgKey: 'sampleText',  // 文本消息类型
+    msgParam: msgParam,
   });
 
   try {
-    const response = await client.searchUserWithOptions(
+    const response = await client.batchSendOTOWithOptions(
       request,
       headers,
       new RuntimeOptions({})
     );
 
+    // 调试模式：输出完整响应
+    if (debug) {
+      console.error('\n=== 调试信息 ===');
+      console.error('完整响应:', JSON.stringify(response, null, 2));
+      console.error('响应 body:', JSON.stringify(response.body, null, 2));
+      console.error('==============\n');
+    }
+
     // 格式化输出结果
-    const userIds = response.body?.list || [];
-    const result: SearchResult = {
+    const processQueryKey = response.body?.processQueryKey;
+
+    if (!processQueryKey) {
+      throw new Error('发送消息失败：响应中未包含 processQueryKey');
+    }
+
+    const result: SendMessageResult = {
       success: true,
-      keyword: keyword,
-      totalCount: response.body?.totalCount || 0,
-      hasMore: response.body?.hasMore || false,
-      userIds: userIds,
+      userId: userId,
+      robotCode: robotCode,
+      processQueryKey: processQueryKey,
+      flowControlledStaffIdList: response.body?.flowControlledStaffIdList || [],
+      invalidStaffIdList: response.body?.invalidStaffIdList || [],
+      message: message,
     };
 
     console.log(JSON.stringify(result, null, 2));
+    console.error(`✅ 消息发送成功！processQueryKey: ${processQueryKey}`);
   } catch (err: any) {
     const errorResult: ErrorResult = {
       success: false,
-      keyword: keyword,
       error: {
         code: err.code || 'UNKNOWN_ERROR',
         message: err.message || '未知错误',
@@ -122,6 +151,10 @@ async function searchUser(accessToken: string, keyword: string): Promise<void> {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
+  // 检查是否有调试参数
+  const debug = args.includes('--debug');
+  const filteredArgs = args.filter(arg => arg !== '--debug');
+
   // 从环境变量读取配置
   const appKey = process.env.DINGTALK_APP_KEY;
   const appSecret = process.env.DINGTALK_APP_SECRET;
@@ -132,40 +165,42 @@ async function main(): Promise<void> {
       error: {
         code: 'MISSING_CREDENTIALS',
         message: '缺少钉钉应用凭证，请设置环境变量 DINGTALK_APP_KEY 和 DINGTALK_APP_SECRET',
-        usage: 'export DINGTALK_APP_KEY=your-app-key && export DINGTALK_APP_SECRET=your-app-secret && ts-node scripts/search-user.ts "<搜索关键词>"'
+        usage: 'export DINGTALK_APP_KEY=your-app-key && export DINGTALK_APP_SECRET=your-app-secret && ts-node scripts/send-user-message.ts "<userId>" "<robotCode>" "<消息内容>" [--debug]'
       }
     }, null, 2));
     process.exit(1);
   }
 
-  if (args.length < 1) {
+  if (filteredArgs.length < 3) {
     console.error(JSON.stringify({
       success: false,
       error: {
         code: 'INVALID_ARGUMENTS',
-        message: '参数错误：需要提供搜索关键词',
-        usage: 'ts-node scripts/search-user.ts "<搜索关键词>"'
+        message: '参数错误：需要提供 userId、robotCode 和消息内容',
+        usage: 'ts-node scripts/send-user-message.ts "<userId>" "<robotCode>" "<消息内容>" [--debug]'
       }
     }, null, 2));
     process.exit(1);
   }
 
-  const keyword = args[0];
+  const userId = filteredArgs[0];
+  const robotCode = filteredArgs[1];
+  const message = filteredArgs[2];
 
   try {
     // 自动获取 access_token
     console.error('正在获取 access_token...');
     const accessToken = await getAccessToken(appKey, appSecret);
-    console.error('access_token 获取成功，正在搜索用户...');
-    
-    // 使用获取到的 token 搜索用户
-    await searchUser(accessToken, keyword);
+    console.error('access_token 获取成功，正在发送单聊消息...');
+
+    // 使用获取到的 token 发送消息
+    await sendUserMessage(accessToken, userId, robotCode, message, debug);
   } catch (err: any) {
     console.error(JSON.stringify({
       success: false,
       error: {
-        code: 'AUTH_FAILED',
-        message: err.message || '认证失败',
+        code: 'SEND_FAILED',
+        message: err.message || '发送失败',
       }
     }, null, 2));
     process.exit(1);
