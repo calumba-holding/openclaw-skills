@@ -3,9 +3,15 @@
   "slug": "council-brief",
   "displayName": "Council Brief",
   "latest": {
-    "version": "1.0.5",
-    "publishedAt": 1771765700810,
-    "commit": "https://github.com/openclaw/skills/commit/995568c626598205df48e61a8151ac1ad37c022a"
+    "version": "2.0.0",
+    "publishedAt": 1771797483405,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.5",
+      "publishedAt": 1771765700810,
+      "commit": "https://github.com/openclaw/skills/commit/995568c626598205df48e61a8151ac1ad37c022a"
+    }
+  ]
 }

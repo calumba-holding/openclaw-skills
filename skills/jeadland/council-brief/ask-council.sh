@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ask-council — Quick headless access to LLM Council
-# Usage: bash ask-council.sh "Your question here"
+# ask-council.sh — Quick headless access to LLM Council
+# Usage: ask-council.sh "Your question here"
 #
 # Returns: Chairman's synthesized answer (or error message)
 
@@ -11,9 +11,9 @@ TIMEOUT_SEC=120
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-error() { echo -e "${RED}[ask-council]${NC} $*" >&2; exit 1; }
-info()  { echo -e "${GREEN}[ask-council]${NC} $*"; }
-warn()  { echo -e "${YELLOW}[ask-council]${NC} $*"; }
+error() { echo -e "${RED}[council-brief]${NC} $*" >&2; exit 1; }
+info()  { echo -e "${GREEN}[council-brief]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[council-brief]${NC} $*"; }
 
 # ── Check input ───────────────────────────────────────────────────────────────
 QUESTION="${1:-}"
@@ -23,7 +23,7 @@ fi
 
 # ── Check if backend is running ───────────────────────────────────────────────
 if ! curl -s "$API_BASE/" > /dev/null 2>&1; then
-  error "LLM Council backend not running. Start it first:\n  /install-llm-council"
+  error "LLM Council backend not running. Start it first:\n  /council-brief install"
 fi
 
 # ── Create conversation ───────────────────────────────────────────────────────
@@ -84,8 +84,7 @@ if stage3.get('status') == 'complete':
     result = stage3.get('data', {})
     print(result.get('response', 'No answer found'))
 else:
-    print('Chairman did not complete synthesis')
-")
+    print('Chairman did not complete synthesis')")
 
 # ── Output ────────────────────────────────────────────────────────────────────
 LOCAL_IP="$(hostname -I | awk '{print $1}')"
