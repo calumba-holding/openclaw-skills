@@ -1,0 +1,11 @@
+{
+  "owner": "sentinel199",
+  "slug": "open-sentinel",
+  "displayName": "Open Sentinel - Agent Reliability Layer",
+  "latest": {
+    "version": "1.0.4",
+    "publishedAt": 1771815976614,
+    "commit": null
+  },
+  "history": []
+}
