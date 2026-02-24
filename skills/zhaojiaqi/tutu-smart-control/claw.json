@@ -1,0 +1,201 @@
+{
+  "name": "tutu-smart-control",
+  "version": "1.2.0",
+  "description": "图图智控（TUTU）— USB 即插即用 AI 硬件，远程控制 Android 手机，执行 GUI 自动化、截图分析、通讯管理、文件操作、系统管理等 30+ 种操作",
+  "author": "zivzhao",
+  "homepage": "https://tutuai.me",
+  "license": "MIT",
+  "main": "SKILL.md",
+  "tags": [
+    "android",
+    "phone",
+    "remote-control",
+    "gui-automation",
+    "mobile",
+    "iot",
+    "smart-device",
+    "tutu",
+    "tutu-smart-control",
+    "sms",
+    "screenshot",
+    "file-management",
+    "tts",
+    "location",
+    "notification"
+  ],
+  "category": "integrations",
+  "permissions": [
+    "network:tutuai.me"
+  ],
+  "config": {
+    "TUTU_API_TOKEN": {
+      "type": "string",
+      "required": true,
+      "description": "图图智控加密 Token。由 TUTU 硬件自动生成，可在设备管理页面或扫描设备二维码获取。Token 已加密包含设备身份信息，无需额外提供设备序列号。Get from https://tutuai.me after purchasing TUTU hardware."
+    }
+  },
+  "tools": [
+    {
+      "name": "screenshot",
+      "description": "Capture current phone screen"
+    },
+    {
+      "name": "click",
+      "description": "Click at specified screen coordinates",
+      "parameters": {
+        "x": { "type": "integer", "description": "X coordinate (0-1080)", "required": true },
+        "y": { "type": "integer", "description": "Y coordinate (0-2400)", "required": true }
+      }
+    },
+    {
+      "name": "long_press",
+      "description": "Long press at specified coordinates",
+      "parameters": {
+        "x": { "type": "integer", "required": true },
+        "y": { "type": "integer", "required": true }
+      }
+    },
+    {
+      "name": "type",
+      "description": "Input text (auto clipboard paste for CJK)",
+      "parameters": {
+        "text": { "type": "string", "required": true },
+        "x": { "type": "integer" },
+        "y": { "type": "integer" }
+      }
+    },
+    {
+      "name": "scroll",
+      "description": "Scroll screen in a direction",
+      "parameters": {
+        "direction": { "type": "string", "enum": ["up", "down", "left", "right"], "required": true },
+        "x": { "type": "integer" },
+        "y": { "type": "integer" }
+      }
+    },
+    {
+      "name": "drag",
+      "description": "Drag from point A to point B"
+    },
+    {
+      "name": "open_app",
+      "description": "Open an app by Chinese name or package name",
+      "parameters": {
+        "app_name": { "type": "string", "required": true }
+      }
+    },
+    {
+      "name": "press_home",
+      "description": "Press the Home button"
+    },
+    {
+      "name": "press_back",
+      "description": "Press the Back button"
+    },
+    {
+      "name": "press_enter",
+      "description": "Press the Enter key"
+    },
+    {
+      "name": "get_ui_nodes",
+      "description": "Get UI element tree of current screen"
+    },
+    {
+      "name": "click_by_text",
+      "description": "Find and click a UI element by text (fuzzy match)",
+      "parameters": {
+        "text": { "type": "string", "required": true }
+      }
+    },
+    {
+      "name": "click_by_id",
+      "description": "Find and click a UI element by Android resource ID"
+    },
+    {
+      "name": "find_element",
+      "description": "Search for UI elements by text, id, or className"
+    },
+    {
+      "name": "get_device_info",
+      "description": "Get battery, network, memory, display, and foreground app info"
+    },
+    {
+      "name": "status",
+      "description": "Check if device is online"
+    },
+    {
+      "name": "get_server_info",
+      "description": "Get server version and supported extensions"
+    },
+    {
+      "name": "send_sms",
+      "description": "Send an SMS message",
+      "parameters": {
+        "destination": { "type": "string", "required": true },
+        "text": { "type": "string", "required": true }
+      }
+    },
+    {
+      "name": "read_sms",
+      "description": "Read SMS messages from inbox or sent box"
+    },
+    {
+      "name": "make_call",
+      "description": "Make a phone call",
+      "parameters": {
+        "number": { "type": "string", "required": true }
+      }
+    },
+    {
+      "name": "get_location",
+      "description": "Get GPS location (latitude, longitude)"
+    },
+    {
+      "name": "read_notifications",
+      "description": "Read system notification bar"
+    },
+    {
+      "name": "vibrate",
+      "description": "Vibrate the phone"
+    },
+    {
+      "name": "speak_tts",
+      "description": "Text-to-speech: read text aloud on phone",
+      "parameters": {
+        "text": { "type": "string", "required": true }
+      }
+    },
+    {
+      "name": "list_files",
+      "description": "List files in a directory"
+    },
+    {
+      "name": "read_file",
+      "description": "Read file content from phone"
+    },
+    {
+      "name": "write_file",
+      "description": "Write content to a file on phone"
+    },
+    {
+      "name": "delete_file",
+      "description": "Delete a file on phone"
+    },
+    {
+      "name": "analyze_storage",
+      "description": "Analyze phone storage usage"
+    },
+    {
+      "name": "find_large_files",
+      "description": "Find large files consuming storage"
+    },
+    {
+      "name": "search_media",
+      "description": "Search images, videos, or audio on phone"
+    },
+    {
+      "name": "execute_shell",
+      "description": "Execute arbitrary shell command on phone (35s timeout)"
+    }
+  ]
+}
