@@ -1,83 +1,103 @@
 ---
-name: Next.js
+name: NextJS
 slug: nextjs
-version: 1.0.2
-description: Build Next.js applications with App Router, server components, caching strategies, and deployment patterns.
+version: 1.1.0
+homepage: https://clawic.com/skills/nextjs
+description: Build Next.js 15 apps with App Router, server components, caching, auth, and production patterns.
+metadata: {"clawdbot":{"emoji":"⚡","requires":{"bins":[]},"os":["linux","darwin","win32"]}}
 ---
+
+## Setup
+
+On first use, read `setup.md` for project integration.
 
 ## When to Use
 
-User needs Next.js expertise — from routing to production deployment. Agent handles App Router patterns, server/client boundaries, caching, and data fetching.
+User needs Next.js expertise — routing, data fetching, caching, authentication, or deployment. Agent handles App Router patterns, server/client boundaries, and production optimization.
+
+## Architecture
+
+Project patterns stored in `~/nextjs/`. See `memory-template.md` for setup.
+
+```
+~/nextjs/
+├── memory.md          # Project conventions, patterns
+└── projects/          # Per-project learnings
+```
 
 ## Quick Reference
 
 | Topic | File |
 |-------|------|
-| Routing patterns | `routing.md` |
-| Data fetching | `data-fetching.md` |
-| Caching strategies | `caching.md` |
+| Setup | `setup.md` |
+| Memory template | `memory-template.md` |
+| Routing (parallel, intercepting) | `routing.md` |
+| Data fetching & streaming | `data-fetching.md` |
+| Caching & revalidation | `caching.md` |
+| Authentication | `auth.md` |
 | Deployment | `deployment.md` |
 
-## Server vs Client Components
+## Core Rules
 
-- Default is Server Component in App Router — no useState, useEffect, browser APIs
-- `'use client'` at top of file for client — marks component and descendants as client
-- Can't import Server Component into Client — only pass as children or props
-- Client components can't be async — only Server Components can await directly
+### 1. Server Components by Default
+Everything is Server Component in App Router. Add `'use client'` only for useState, useEffect, event handlers, or browser APIs. Server Components can't be imported into Client — pass as children.
 
-## Caching Traps
+### 2. Fetch Data on Server
+Fetch in Server Components, not useEffect. Use `Promise.all` for parallel requests. See `data-fetching.md` for patterns.
 
-- `fetch` cached by default in Server Components — add `cache: 'no-store'` for dynamic
-- `revalidate` in seconds — `next: { revalidate: 60 }` for ISR
-- Route Handlers not cached by default — except `GET` with no dynamic data
-- `revalidatePath('/path')` or `revalidateTag('tag')` for on-demand — in Server Actions
+### 3. Cache Intentionally
+`fetch` is cached by default — use `cache: 'no-store'` for dynamic data. Set `revalidate` for ISR. See `caching.md` for strategies.
 
-## Data Fetching
+### 4. Server Actions for Mutations
+Use `'use server'` functions for form submissions and data mutations. Progressive enhancement — works without JS. See `data-fetching.md`.
 
-- Fetch in Server Components, not useEffect — no waterfalls, better performance
-- Parallel fetches with `Promise.all` — not sequential awaits
-- `loading.tsx` for Suspense boundary — automatic streaming
-- Error boundaries with `error.tsx` — catches errors in segment
+### 5. Environment Security
+`NEXT_PUBLIC_` exposes to client bundle. Server Components access all env vars. Use `.env.local` for secrets.
 
-## Environment Variables
+### 6. Streaming for Large Data
+Use `<Suspense>` boundaries to stream content progressively. Wrap slow components individually. See `data-fetching.md`.
 
-- `NEXT_PUBLIC_` prefix for client-side — otherwise only available on server
-- Server Components access all env vars — no prefix needed
-- `.env.local` for secrets — `.env` checked into repo, `.env.local` gitignored
-- Runtime env with `process.env` — build-time with `env` in next.config.js
+### 7. Auth at Middleware Level
+Protect routes in middleware, not in pages. Middleware runs on Edge — lightweight auth checks only. See `auth.md`.
 
-## Route Handlers (API Routes)
+## Server vs Client
 
-- `route.ts` in App Router — `pages/api` is Pages Router
-- Export named functions: `GET`, `POST`, etc. — not default export
-- `NextRequest` and `NextResponse` — typed request/response
-- Dynamic by default — `export const dynamic = 'force-static'` to cache
+| Server Component | Client Component |
+|------------------|------------------|
+| Default in App Router | Requires `'use client'` |
+| Can be async | Cannot be async |
+| Access backend, env vars | Access hooks, browser APIs |
+| Zero JS shipped | JS shipped to browser |
 
-## Server Actions
+**Decision:** Start Server. Add `'use client'` only for: useState, useEffect, onClick, browser APIs.
 
-- `'use server'` at top of function or file — marks as server action
-- Can be called from Client Components — automatic RPC
-- Form `action={serverAction}` — progressive enhancement, works without JS
-- Revalidate cache after mutation — `revalidatePath` or `revalidateTag`
+## Common Traps
 
-## Middleware
+| Trap | Fix |
+|------|-----|
+| `router.push` in Server | Use `redirect()` |
+| `<Link>` prefetches all | `prefetch={false}` |
+| `next/image` no size | Add `width`/`height` or `fill` |
+| Metadata in Client | Move to Server or `generateMetadata` |
+| useEffect for data | Fetch in Server Component |
+| Import Server→Client | Pass as children/props |
+| Middleware DB call | Call API route instead |
+| Missing `await params` (v15) | Params are async in Next.js 15 |
 
-- Runs on Edge, not Node — limited APIs, no fs, limited npm packages
-- `matcher` config to limit routes — don't run on static assets
-- Can't throw errors — return redirect or next()
-- Cookies and headers access — but can't call database directly
+## Next.js 15 Changes
 
-## Dynamic Routes
+- `params` and `searchParams` are now `Promise` — must await
+- `fetch` not cached by default — opt-in with `cache: 'force-cache'`
+- Use React 19 hooks: `useActionState`, `useFormStatus`
 
-- `[slug]` folder name for params — `page.tsx` receives `params.slug`
-- `[...slug]` for catch-all — array of segments
-- `generateStaticParams` for SSG — return array of param objects
-- `dynamicParams = false` to 404 unknown — otherwise renders on demand
+## Related Skills
+Install with `clawhub install <slug>` if user confirms:
+- `react` — React fundamentals and patterns
+- `typescript` — Type safety for better DX
+- `prisma` — Database ORM for Next.js apps
+- `tailwindcss` — Styling with utility classes
+- `nodejs` — Server runtime knowledge
 
-## Common Mistakes
-
-- Using `router.push` in Server Component — only works in Client, use `redirect()`
-- `<Link>` prefetches in viewport — can cause excessive requests, `prefetch={false}` to disable
-- `next/image` without width/height — required unless `fill` prop with positioned parent
-- Metadata in Client Component — `generateMetadata` only in Server Components
-- `cookies()` makes route dynamic — can't be statically generated
+## Feedback
+- If useful: `clawhub star nextjs`
+- Stay updated: `clawhub sync`
