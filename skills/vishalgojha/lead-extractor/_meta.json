@@ -1,11 +1,17 @@
 {
   "owner": "vishalgojha",
   "slug": "lead-extractor",
-  "displayName": "Lead Extractor RE-India",
+  "displayName": "Lead Extractor",
   "latest": {
-    "version": "1.0.5",
-    "publishedAt": 1771809498725,
-    "commit": "https://github.com/openclaw/skills/commit/7348f3542406560fb54cb79f43901d1cc031eb94"
+    "version": "1.0.6",
+    "publishedAt": 1771814814650,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.5",
+      "publishedAt": 1771809498725,
+      "commit": "https://github.com/openclaw/skills/commit/7348f3542406560fb54cb79f43901d1cc031eb94"
+    }
+  ]
 }

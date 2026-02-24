@@ -9,6 +9,14 @@
         "type": "string",
         "minLength": 1
       },
+      "dataset_mode": {
+        "type": "string",
+        "enum": [
+          "broker_group",
+          "buyer_inquiry",
+          "mixed"
+        ]
+      },
       "name": {
         "type": "string",
         "minLength": 1
@@ -16,6 +24,13 @@
       "phone": {
         "type": "string",
         "minLength": 1
+      },
+      "record_type": {
+        "type": "string",
+        "enum": [
+          "inventory_listing",
+          "buyer_requirement"
+        ]
       },
       "property_type": {
         "type": "string"
@@ -68,12 +83,23 @@
       },
       "location_hint": {
         "type": "string"
+      },
+      "raw_text": {
+        "type": "string"
+      },
+      "source": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
       }
     },
     "required": [
       "lead_id",
       "name",
-      "phone"
+      "phone",
+      "record_type"
     ],
     "additionalProperties": false
   }
