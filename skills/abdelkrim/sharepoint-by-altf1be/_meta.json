@@ -1,11 +1,17 @@
 {
   "owner": "abdelkrim",
   "slug": "sharepoint-by-altf1be",
-  "displayName": "SharePoint by @altf1be",
+  "displayName": "Openclaw Skill Sharepoint",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771892669520,
-    "commit": "https://github.com/openclaw/skills/commit/d711a1aef9c70ba321b1d579ffd66ddeceb97ae2"
+    "version": "1.0.2",
+    "publishedAt": 1771921894545,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771892669520,
+      "commit": "https://github.com/openclaw/skills/commit/d711a1aef9c70ba321b1d579ffd66ddeceb97ae2"
+    }
+  ]
 }

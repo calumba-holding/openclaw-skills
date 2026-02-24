@@ -88,7 +88,7 @@ Output is plain text suitable for AI processing (summarization, reformatting, ac
 ## Full setup guide
 
 For complete setup from scratch (Entra app, certificate, Sites.Selected, Key Vault):
-See the [setup guide](https://github.com/ALT-F1-OpenClaw/openclaw-skill-sharepoint)
+See the [GitHub repository](https://github.com/ALT-F1-OpenClaw/openclaw-skill-sharepoint) README.
 
 ## Author
 

@@ -2,6 +2,15 @@
 
 OpenClaw skill for Microsoft SharePoint — secure file operations and Office document intelligence via Microsoft Graph API with certificate-based authentication (`Sites.Selected`).
 
+[![ClawHub](https://img.shields.io/badge/ClawHub-sharepoint--by--altf1be-orange)](https://clawhub.ai/skills/sharepoint-by-altf1be)
+[![Security](https://img.shields.io/badge/Security_Scan-Benign-green)](https://clawhub.ai/skills/sharepoint-by-altf1be)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Install via ClawHub:**
+```bash
+clawhub install sharepoint-by-altf1be
+```
+
 ## Features
 
 ### SharePoint file operations
