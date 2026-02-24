@@ -1,0 +1,11 @@
+{
+  "owner": "kai-tw",
+  "slug": "pi-workflow",
+  "displayName": "Pi Workflow Orchestration",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771844016236,
+    "commit": null
+  },
+  "history": []
+}
