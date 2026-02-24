@@ -3,11 +3,16 @@
   "slug": "moltline",
   "displayName": "Moltline",
   "latest": {
-    "version": "1.0.8",
-    "publishedAt": 1770020959222,
-    "commit": "https://github.com/clawdbot/skills/commit/85315c64d93bfd50810d0f0147af720d7b1413c9"
+    "version": "1.0.10",
+    "publishedAt": 1771818482103,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.8",
+      "publishedAt": 1770020959222,
+      "commit": "https://github.com/clawdbot/skills/commit/85315c64d93bfd50810d0f0147af720d7b1413c9"
+    },
     {
       "version": "1.0.7",
       "publishedAt": 1769937617195,
