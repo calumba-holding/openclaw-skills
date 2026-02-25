@@ -1,0 +1,11 @@
+{
+  "owner": "frannunpal",
+  "slug": "radarr-fixed",
+  "displayName": "Radarr Fixed",
+  "latest": {
+    "version": "1.0.4",
+    "publishedAt": 1771933436836,
+    "commit": null
+  },
+  "history": []
+}
