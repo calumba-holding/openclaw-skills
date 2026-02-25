@@ -1,0 +1,11 @@
+{
+  "owner": "clarityprotocol",
+  "slug": "clarity-analyze",
+  "displayName": "Clarity Analyze",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772051497260,
+    "commit": null
+  },
+  "history": []
+}
