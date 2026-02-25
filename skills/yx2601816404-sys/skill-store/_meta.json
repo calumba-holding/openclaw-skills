@@ -3,11 +3,16 @@
   "slug": "skill-store",
   "displayName": "Skill",
   "latest": {
-    "version": "1.7.0",
-    "publishedAt": 1771901610008,
-    "commit": "https://github.com/openclaw/skills/commit/c553a781f98a0c1ca216bb8c139daea4d8f08b5f"
+    "version": "2.0.0",
+    "publishedAt": 1771987994694,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.7.0",
+      "publishedAt": 1771901610008,
+      "commit": "https://github.com/openclaw/skills/commit/c553a781f98a0c1ca216bb8c139daea4d8f08b5f"
+    },
     {
       "version": "1.6.0",
       "publishedAt": 1771880161430,

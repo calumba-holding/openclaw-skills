@@ -484,6 +484,17 @@
     "permissions_found": 0
   },
   {
+    "name": "baidu-search",
+    "security_rating": "C",
+    "compliance_rating": "B",
+    "recommendation": "review_required",
+    "total_findings": 1,
+    "high_findings": 1,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 2
+  },
+  {
     "name": "blogwatcher",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -514,6 +525,28 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
+    "name": "brave-search",
+    "security_rating": "A",
+    "compliance_rating": "C",
+    "recommendation": "install_with_review",
+    "total_findings": 6,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 1,
+    "permissions_found": 2
+  },
+  {
+    "name": "browser-automation",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
     "permissions_found": 0
   },
   {
@@ -550,6 +583,17 @@
     "permissions_found": 0
   },
   {
+    "name": "byterover",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
     "name": "calendar",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -581,6 +625,28 @@
     "is_doc_only": true,
     "permissions_declared": 3,
     "permissions_found": 0
+  },
+  {
+    "name": "camsnap",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
+    "name": "capability-evolver",
+    "security_rating": "D",
+    "compliance_rating": "D",
+    "recommendation": "do_not_install",
+    "total_findings": 505,
+    "high_findings": 54,
+    "is_doc_only": false,
+    "permissions_declared": 4,
+    "permissions_found": 9
   },
   {
     "name": "cart-management",
@@ -627,6 +693,28 @@
     "permissions_found": 0
   },
   {
+    "name": "claude-code-usage",
+    "security_rating": "D",
+    "compliance_rating": "B",
+    "recommendation": "do_not_install",
+    "total_findings": 89,
+    "high_findings": 3,
+    "is_doc_only": false,
+    "permissions_declared": 2,
+    "permissions_found": 3
+  },
+  {
+    "name": "claude-connect",
+    "security_rating": "D",
+    "compliance_rating": "C",
+    "recommendation": "do_not_install",
+    "total_findings": 171,
+    "high_findings": 30,
+    "is_doc_only": false,
+    "permissions_declared": 4,
+    "permissions_found": 5
+  },
+  {
     "name": "claude-optimised",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -635,6 +723,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
+    "name": "claude-team",
+    "security_rating": "F",
+    "compliance_rating": "N/A",
+    "recommendation": "do_not_install",
+    "total_findings": 12,
+    "high_findings": 5,
+    "is_doc_only": false,
+    "permissions_declared": 3,
     "permissions_found": 0
   },
   {
@@ -647,6 +746,17 @@
     "is_doc_only": false,
     "permissions_declared": 0,
     "permissions_found": 4
+  },
+  {
+    "name": "claw-shell",
+    "security_rating": "A",
+    "compliance_rating": "B",
+    "recommendation": "install",
+    "total_findings": 5,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 1,
+    "permissions_found": 1
   },
   {
     "name": "claw1-skill-auditor",
@@ -691,6 +801,28 @@
     "is_doc_only": true,
     "permissions_declared": 6,
     "permissions_found": 0
+  },
+  {
+    "name": "clawddocs",
+    "security_rating": "A",
+    "compliance_rating": "A",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 6,
+    "permissions_found": 2
+  },
+  {
+    "name": "clawdefender",
+    "security_rating": "F",
+    "compliance_rating": "B",
+    "recommendation": "do_not_install",
+    "total_findings": 74,
+    "high_findings": 18,
+    "is_doc_only": false,
+    "permissions_declared": 2,
+    "permissions_found": 3
   },
   {
     "name": "clawdocs-improved",
@@ -781,6 +913,17 @@
     "permissions_found": 0
   },
   {
+    "name": "command-center",
+    "security_rating": "D",
+    "compliance_rating": "D",
+    "recommendation": "do_not_install",
+    "total_findings": 312,
+    "high_findings": 16,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 11
+  },
+  {
     "name": "computer-use",
     "security_rating": "F",
     "compliance_rating": "B",
@@ -836,6 +979,17 @@
     "permissions_found": 3
   },
   {
+    "name": "cron-mastery",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
+  },
+  {
     "name": "data-analysis",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -843,6 +997,17 @@
     "total_findings": 0,
     "high_findings": 0,
     "is_doc_only": true,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
+    "name": "data-analyst",
+    "security_rating": "A",
+    "compliance_rating": "N/A",
+    "recommendation": "install",
+    "total_findings": 12,
+    "high_findings": 0,
+    "is_doc_only": false,
     "permissions_declared": 0,
     "permissions_found": 0
   },
@@ -859,6 +1024,17 @@
   },
   {
     "name": "debug-pro",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 2,
+    "permissions_found": 0
+  },
+  {
+    "name": "deep-research-pro",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
     "recommendation": "documentation_only",
@@ -932,6 +1108,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 3,
+    "permissions_found": 0
+  },
+  {
+    "name": "diagram-generator",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 5,
     "permissions_found": 0
   },
   {
@@ -1031,6 +1218,28 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 2,
+    "permissions_found": 0
+  },
+  {
+    "name": "edge-tts",
+    "security_rating": "B",
+    "compliance_rating": "B",
+    "recommendation": "install",
+    "total_findings": 32,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 3,
+    "permissions_found": 3
+  },
+  {
+    "name": "elevenlabs-tts",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
     "permissions_found": 0
   },
   {
@@ -1144,6 +1353,17 @@
     "permissions_found": 0
   },
   {
+    "name": "feishu-bridge",
+    "security_rating": "A",
+    "compliance_rating": "D",
+    "recommendation": "install_with_review",
+    "total_findings": 31,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 2,
+    "permissions_found": 5
+  },
+  {
     "name": "feishu-doc-manager",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -1153,6 +1373,17 @@
     "is_doc_only": true,
     "permissions_declared": 2,
     "permissions_found": 0
+  },
+  {
+    "name": "feishu-evolver-wrapper",
+    "security_rating": "D",
+    "compliance_rating": "D",
+    "recommendation": "do_not_install",
+    "total_findings": 332,
+    "high_findings": 10,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 9
   },
   {
     "name": "feishu-user",
@@ -1194,6 +1425,17 @@
     "recommendation": "do_not_install",
     "total_findings": 8,
     "high_findings": 3,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
+    "name": "finance",
+    "security_rating": "B",
+    "compliance_rating": "N/A",
+    "recommendation": "install",
+    "total_findings": 1,
+    "high_findings": 0,
     "is_doc_only": false,
     "permissions_declared": 0,
     "permissions_found": 0
@@ -1397,11 +1639,33 @@
     "permissions_found": 0
   },
   {
+    "name": "google-analytics",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 22,
+    "high_findings": 5,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
+  },
+  {
     "name": "google-drive",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
     "recommendation": "documentation_only",
     "total_findings": 14,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
+    "permissions_found": 0
+  },
+  {
+    "name": "google-play",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 11,
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 4,
@@ -1419,6 +1683,28 @@
     "permissions_found": 0
   },
   {
+    "name": "google-slides",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 15,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
+  },
+  {
+    "name": "google-web-search",
+    "security_rating": "B",
+    "compliance_rating": "N/A",
+    "recommendation": "install",
+    "total_findings": 4,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
     "name": "gui-control",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -1426,6 +1712,17 @@
     "total_findings": 0,
     "high_findings": 0,
     "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
+    "name": "guicountrol",
+    "security_rating": "A",
+    "compliance_rating": "N/A",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
     "permissions_declared": 1,
     "permissions_found": 0
   },
@@ -1482,6 +1779,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
+    "name": "humanizer",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
     "permissions_found": 0
   },
   {
@@ -1595,6 +1903,17 @@
     "permissions_found": 0
   },
   {
+    "name": "linear",
+    "security_rating": "C",
+    "compliance_rating": "C",
+    "recommendation": "review_required",
+    "total_findings": 42,
+    "high_findings": 1,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 2
+  },
+  {
     "name": "linkedin",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -1672,6 +1991,17 @@
     "permissions_found": 4
   },
   {
+    "name": "markdown-converter",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
     "name": "markdown-formatter",
     "security_rating": "A",
     "compliance_rating": "B",
@@ -1713,6 +2043,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
+    "name": "marketing-skills",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
     "permissions_found": 0
   },
   {
@@ -1760,6 +2101,17 @@
     "permissions_found": 0
   },
   {
+    "name": "memory-hygiene",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 1,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
+  },
+  {
     "name": "memory-manager",
     "security_rating": "A",
     "compliance_rating": "C",
@@ -1769,6 +2121,17 @@
     "is_doc_only": false,
     "permissions_declared": 1,
     "permissions_found": 4
+  },
+  {
+    "name": "memory-setup",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
   },
   {
     "name": "memos",
@@ -1824,6 +2187,28 @@
     "is_doc_only": true,
     "permissions_declared": 4,
     "permissions_found": 0
+  },
+  {
+    "name": "multi-search-engine",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
+    "name": "n8n",
+    "security_rating": "B",
+    "compliance_rating": "B",
+    "recommendation": "install",
+    "total_findings": 1,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 1,
+    "permissions_found": 3
   },
   {
     "name": "n8n-workflow-automation",
@@ -1914,6 +2299,17 @@
     "permissions_found": 0
   },
   {
+    "name": "news-aggregator-skill",
+    "security_rating": "A",
+    "compliance_rating": "B",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 1
+  },
+  {
     "name": "news-aggregator-skill-2",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -1991,6 +2387,28 @@
     "permissions_found": 0
   },
   {
+    "name": "obsidian-daily",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
+    "name": "one-drive",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 14,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 7,
+    "permissions_found": 0
+  },
+  {
     "name": "onebot-adapter",
     "security_rating": "C",
     "compliance_rating": "A",
@@ -2022,6 +2440,17 @@
     "is_doc_only": false,
     "permissions_declared": 0,
     "permissions_found": 2
+  },
+  {
+    "name": "openai-whisper",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 0,
+    "permissions_found": 0
   },
   {
     "name": "openapi-deep-audit",
@@ -2101,6 +2530,28 @@
     "permissions_found": 3
   },
   {
+    "name": "openclaw-mem",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
+    "permissions_found": 0
+  },
+  {
+    "name": "opencode-controller",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
     "name": "opencortex",
     "security_rating": "D",
     "compliance_rating": "B",
@@ -2110,6 +2561,17 @@
     "is_doc_only": false,
     "permissions_declared": 4,
     "permissions_found": 6
+  },
+  {
+    "name": "outlook-api",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 10,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
+    "permissions_found": 0
   },
   {
     "name": "outsmart-devving-coins",
@@ -2176,6 +2638,17 @@
     "is_doc_only": false,
     "permissions_declared": 2,
     "permissions_found": 0
+  },
+  {
+    "name": "parallel-agents",
+    "security_rating": "A",
+    "compliance_rating": "A",
+    "recommendation": "install",
+    "total_findings": 13,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 7,
+    "permissions_found": 4
   },
   {
     "name": "pdf",
@@ -2343,6 +2816,17 @@
     "permissions_found": 0
   },
   {
+    "name": "qmd",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
     "name": "quest-board",
     "security_rating": "A",
     "compliance_rating": "A",
@@ -2431,6 +2915,17 @@
     "permissions_found": 0
   },
   {
+    "name": "sag",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
     "name": "scrape",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -2472,6 +2967,39 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
+    "name": "searxng",
+    "security_rating": "A",
+    "compliance_rating": "B",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 1
+  },
+  {
+    "name": "security-audit-toolkit",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 17,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
+  },
+  {
+    "name": "security-auditor",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 11,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 2,
     "permissions_found": 0
   },
   {
@@ -2541,6 +3069,17 @@
     "permissions_found": 0
   },
   {
+    "name": "seo-competitor-analysis",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
+    "permissions_found": 0
+  },
+  {
     "name": "seo-content-engine",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -2563,6 +3102,17 @@
     "permissions_found": 0
   },
   {
+    "name": "seoul-subway",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
     "name": "sergei-mikhailov-stt",
     "security_rating": "B",
     "compliance_rating": "C",
@@ -2572,6 +3122,28 @@
     "is_doc_only": false,
     "permissions_declared": 3,
     "permissions_found": 3
+  },
+  {
+    "name": "serpapi",
+    "security_rating": "A",
+    "compliance_rating": "A",
+    "recommendation": "install",
+    "total_findings": 2,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 1
+  },
+  {
+    "name": "serper",
+    "security_rating": "B",
+    "compliance_rating": "A",
+    "recommendation": "install",
+    "total_findings": 16,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 3,
+    "permissions_found": 1
   },
   {
     "name": "session-history",
@@ -2739,6 +3311,17 @@
     "permissions_found": 21
   },
   {
+    "name": "skill-vetter",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 3,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
+    "permissions_found": 0
+  },
+  {
     "name": "skill-vetting",
     "security_rating": "D",
     "compliance_rating": "A",
@@ -2780,6 +3363,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 2,
+    "permissions_found": 0
+  },
+  {
+    "name": "smart-model-switching",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
     "permissions_found": 0
   },
   {
@@ -2849,6 +3443,17 @@
     "permissions_found": 3
   },
   {
+    "name": "stock-analysis",
+    "security_rating": "B",
+    "compliance_rating": "C",
+    "recommendation": "install_with_review",
+    "total_findings": 40,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 3
+  },
+  {
     "name": "stock-info-explorer",
     "security_rating": "A",
     "compliance_rating": "N/A",
@@ -2880,6 +3485,17 @@
     "is_doc_only": true,
     "permissions_declared": 0,
     "permissions_found": 0
+  },
+  {
+    "name": "stock-watcher",
+    "security_rating": "D",
+    "compliance_rating": "B",
+    "recommendation": "do_not_install",
+    "total_findings": 1,
+    "high_findings": 1,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 1
   },
   {
     "name": "summarize",
@@ -2923,6 +3539,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
+    "name": "sysadmin-toolbox",
+    "security_rating": "D",
+    "compliance_rating": "N/A",
+    "recommendation": "do_not_install",
+    "total_findings": 7,
+    "high_findings": 1,
+    "is_doc_only": false,
+    "permissions_declared": 1,
     "permissions_found": 0
   },
   {
@@ -2981,6 +3608,17 @@
     "permissions_found": 0
   },
   {
+    "name": "tavily",
+    "security_rating": "A",
+    "compliance_rating": "N/A",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
     "name": "tavily-search",
     "security_rating": "A",
     "compliance_rating": "B",
@@ -3003,6 +3641,17 @@
     "permissions_found": 1
   },
   {
+    "name": "telegram-api",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 12,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 4,
+    "permissions_found": 0
+  },
+  {
     "name": "test-runner",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -3012,6 +3661,28 @@
     "is_doc_only": true,
     "permissions_declared": 1,
     "permissions_found": 0
+  },
+  {
+    "name": "tmux",
+    "security_rating": "A",
+    "compliance_rating": "A",
+    "recommendation": "install",
+    "total_findings": 15,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 1
+  },
+  {
+    "name": "todo-tracker",
+    "security_rating": "A",
+    "compliance_rating": "A",
+    "recommendation": "install",
+    "total_findings": 22,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 1
   },
   {
     "name": "todoist",
@@ -3124,6 +3795,17 @@
     "permissions_found": 0
   },
   {
+    "name": "upload-post",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 5,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 0,
+    "permissions_found": 0
+  },
+  {
     "name": "uptime-kuma",
     "security_rating": "B",
     "compliance_rating": "N/A",
@@ -3168,6 +3850,17 @@
     "permissions_found": 0
   },
   {
+    "name": "web-search",
+    "security_rating": "A",
+    "compliance_rating": "N/A",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 1,
+    "permissions_found": 0
+  },
+  {
     "name": "webcli",
     "security_rating": "N/A",
     "compliance_rating": "N/A",
@@ -3188,6 +3881,17 @@
     "is_doc_only": true,
     "permissions_declared": 5,
     "permissions_found": 0
+  },
+  {
+    "name": "windows-control",
+    "security_rating": "A",
+    "compliance_rating": "B",
+    "recommendation": "install",
+    "total_findings": 0,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 3,
+    "permissions_found": 4
   },
   {
     "name": "windows-ui-automation",
@@ -3254,6 +3958,17 @@
     "is_doc_only": false,
     "permissions_declared": 3,
     "permissions_found": 3
+  },
+  {
+    "name": "xero",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 10,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 3,
+    "permissions_found": 0
   },
   {
     "name": "xhs-auto",
@@ -3344,6 +4059,17 @@
     "permissions_found": 1
   },
   {
+    "name": "youtube-full",
+    "security_rating": "B",
+    "compliance_rating": "C",
+    "recommendation": "install_with_review",
+    "total_findings": 44,
+    "high_findings": 0,
+    "is_doc_only": false,
+    "permissions_declared": 0,
+    "permissions_found": 2
+  },
+  {
     "name": "youtube-transcript",
     "security_rating": "B",
     "compliance_rating": "N/A",
@@ -3374,6 +4100,17 @@
     "high_findings": 0,
     "is_doc_only": true,
     "permissions_declared": 2,
+    "permissions_found": 0
+  },
+  {
+    "name": "zoho-bigin",
+    "security_rating": "N/A",
+    "compliance_rating": "N/A",
+    "recommendation": "documentation_only",
+    "total_findings": 21,
+    "high_findings": 0,
+    "is_doc_only": true,
+    "permissions_declared": 5,
     "permissions_found": 0
   }
 ]
