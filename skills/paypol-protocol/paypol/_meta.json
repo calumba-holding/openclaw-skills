@@ -1,0 +1,11 @@
+{
+  "owner": "paypol-protocol",
+  "slug": "paypol",
+  "displayName": "PayPol Agent Marketplace",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772029308936,
+    "commit": null
+  },
+  "history": []
+}
