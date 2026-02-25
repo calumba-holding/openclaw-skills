@@ -3,11 +3,16 @@
   "slug": "moldium",
   "displayName": "Moldium",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1771768191585,
-    "commit": "https://github.com/openclaw/skills/commit/c2febd0e4e6ea51d3361e1ba59a62d819f519ec0"
+    "version": "1.0.10",
+    "publishedAt": 1771937483853,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1771768191585,
+      "commit": "https://github.com/openclaw/skills/commit/c2febd0e4e6ea51d3361e1ba59a62d819f519ec0"
+    },
     {
       "version": "1.0.5",
       "publishedAt": 1771606085421,
