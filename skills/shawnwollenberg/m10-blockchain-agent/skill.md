@@ -6,23 +6,10 @@ description: >-
   NFTs), live chain state (balances, gas prices, transaction lookups), and
   smart contract bytecode analysis (function selectors, ABIs for unverified
   contracts). Powered by a multi-agent pipeline over 5.8B+ indexed records.
-compatibility: Requires network access and an x402-compatible wallet on Base Mainnet
+compatibility: Requires network access. Paid endpoint (HTTP 402 / x402 protocol).
 metadata:
   openclaw:
-    requires:
-      env:
-        - X402_WALLET_PRIVATE_KEY
-      bins:
-        - node
-    primaryEnv: X402_WALLET_PRIVATE_KEY
     homepage: https://onesource.io
-    install:
-      - kind: node
-        package: "@x402/fetch"
-      - kind: node
-        package: "@x402/evm"
-      - kind: node
-        package: viem
 ---
 
 # M10 Blockchain Agent
@@ -33,77 +20,22 @@ blockchain data — no query language, no SDKs, no index knowledge required.
 |              |                                           |
 | ------------ | ----------------------------------------- |
 | **Base URL** | `https://agent.onesource.io`              |
-| **Auth**     | x402 (pay-per-request, no API keys)       |
+| **Auth**     | HTTP 402 (x402 protocol, no API keys)     |
 | **Price**    | $0.04 USDC per query                      |
-| **Payment**  | On-chain USDC on Base mainnet via x402    |
 | **Networks** | Ethereum mainnet · Sepolia · Avalanche    |
 
 ---
 
-## Setup & Payment
+## Payment
 
-### How x402 Payment Works
+This is a paid endpoint. Requests without payment receive **HTTP 402** with a
+`payment-required` header describing the price, network, and recipient. Paid
+requests include a `payment-signature` header and are processed normally.
 
-Every request to this skill costs **$0.04 USDC** paid on-chain via the
-[x402 protocol](https://github.com/coinbase/x402). No API keys or accounts
-are needed — payment is cryptographic and per-request.
-
-1. Your agent sends a `POST` to `https://agent.onesource.io/`
-2. The gateway returns **HTTP 402** with payment instructions in the `payment-required` header
-3. The x402 client library automatically signs a USDC Permit2 authorization with your wallet
-4. The signed payment is sent in the `payment-signature` header on a retry
-5. The gateway verifies the payment, proxies the request, and settles on-chain
-6. Your agent receives the response
-
-The x402 client libraries handle steps 2–4 transparently.
-
-### Required Environment Variable
-
-| Variable | Description |
-| --- | --- |
-| `X402_WALLET_PRIVATE_KEY` | Private key (hex, `0x`-prefixed) for a Base mainnet wallet holding USDC. Used to sign x402 payment authorizations. **Never hardcode this — always use an env var.** |
-
-### Wallet Prerequisites
-
-Your wallet (the address derived from `X402_WALLET_PRIVATE_KEY`) must have:
-
-1. **USDC on Base mainnet** — at least a few dollars to cover queries at $0.01 each
-2. **A one-time ERC-20 approval** of USDC to the Permit2 contract:
-   `0x000000000022D473030F116dDEE9F6B43aC78BA3`
-3. **A small amount of ETH on Base** — for the initial approval transaction gas
-
-### Install Dependencies
-
-```sh
-npm install @x402/fetch @x402/evm viem
-```
-
-### Example: Making a Paid Request
-
-```js
-import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
-import { registerExactEvmScheme } from "@x402/evm/exact/client";
-import { privateKeyToAccount } from "viem/accounts";
-
-// Load wallet from environment — never hardcode private keys
-const account = privateKeyToAccount(process.env.X402_WALLET_PRIVATE_KEY);
-const client = new x402Client();
-registerExactEvmScheme(client, { signer: account });
-
-const fetchWithPayment = wrapFetchWithPayment(fetch, client);
-
-const res = await fetchWithPayment("https://agent.onesource.io/", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    query: "What is the ETH balance of vitalik.eth?"
-  }),
-});
-
-const data = await res.json();
-console.log(data.summary);
-console.log(data.response);
-```
+Payment uses the [x402 protocol](https://github.com/coinbase/x402) — an open
+standard for HTTP-native payments. The skill itself does not manage wallets
+or signing; it only returns standard HTTP 402 responses. Payment handling is
+the responsibility of the calling client or platform.
 
 ---
 
@@ -115,8 +47,7 @@ console.log(data.response);
 - **`query_traces`** in the response contains an audit trail of internal data
   lookups. This may echo parts of your query. Omit it from user-facing output
   if not needed.
-- **No data is stored** beyond what is needed to process the request. Payments
-  are settled on-chain and are publicly visible as standard USDC transfers.
+- **No data is stored** beyond what is needed to process the request.
 
 ---
 
@@ -188,7 +119,7 @@ to extract its interface without needing source code.
 ## Pricing
 
 Requests are priced per-query at **$0.04 USDC** via the x402 payment protocol
-(see [Setup & Payment](#setup--payment) above for wallet configuration).
+(see [Payment](#payment) above).
 
 | Network | Asset | Scheme  | Endpoint |
 | ------- | ----- | ------- | -------- |
@@ -245,7 +176,7 @@ Content-Type: application/json
 
 | Code | Meaning                | Fix                                   |
 | ---- | ---------------------- | ------------------------------------- |
-| 402  | Payment required       | Send x402 payment (auto with SDK)     |
+| 402  | Payment required       | Include `payment-signature` header    |
 | 409  | Session already exists | Omit `session_id` or use a new one    |
 | 422  | Malformed request      | Check `query` field is present        |
 | 500  | Pipeline error         | Try rephrasing the query              |
