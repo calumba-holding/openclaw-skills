@@ -1,0 +1,233 @@
+---
+name: mkts-market-data
+description: Query real-time market data for stocks, crypto, ETFs, and commodities from mkts
+metadata: {"openclaw":{"requires":{"env":["MKTS_API_KEY"],"bins":["curl"]},"primaryEnv":"MKTS_API_KEY","emoji":"📊"}}
+---
+
+# mkts Market Data Skill
+
+You can query real-time and cached market data for stocks, crypto, ETFs, and commodities using the mkts API. All requests require the `MKTS_API_KEY` environment variable.
+
+**Base URL**: `https://mkts.io/api/v1`
+
+**Auth**: Pass the key via header: `-H "X-API-Key: $MKTS_API_KEY"`
+
+## Endpoints
+
+### Market Overview
+Get global market stats (total market cap, BTC dominance, etc.):
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/market
+```
+
+### List Assets
+Get a filtered, paginated list of assets:
+```bash
+# All assets (default: top 50 by market cap)
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets"
+
+# Filter by type
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets?type=stock&limit=20"
+
+# Filter by sector
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets?type=stock&sector=technology"
+
+# Search by name or symbol
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets?search=apple"
+
+# Pagination and sorting
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets?sort=change24h&dir=desc&limit=10&offset=0"
+```
+
+Query params: `type` (crypto|stock|etf|commodity), `sector`, `platform`, `marketType`, `search`, `limit` (1-500), `offset`, `sort` (price|change24h|volume24h|marketCap), `dir` (asc|desc)
+
+### Single Asset
+Get details for a specific asset by symbol:
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/asset/AAPL
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/asset/BTC
+```
+
+### Live Quote (Real-time)
+Get a fresh quote directly from Yahoo Finance or CoinGecko (60s cache, stricter rate limits):
+```bash
+# Auto-detect source
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/asset/AAPL/live
+
+# Force crypto source
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/asset/bitcoin/live?type=crypto"
+```
+
+### Top Movers
+Get top gainers and losers:
+```bash
+# Both gainers and losers
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/movers
+
+# Just gainers, limited to crypto
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/movers?direction=gainers&type=crypto&limit=5"
+```
+
+### Screener
+Filter assets with range conditions:
+```bash
+# Stocks down more than 3%, market cap > $10B
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/screen?type=stock&maxChange=-3&minMarketCap=10000000000"
+
+# Crypto under $1 with high volume
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/screen?type=crypto&maxPrice=1&minVolume=1000000"
+```
+
+Query params: `type`, `sector`, `minPrice`, `maxPrice`, `minChange`, `maxChange`, `minVolume`, `maxVolume`, `minMarketCap`, `maxMarketCap`, `limit`, `offset`, `sort`, `dir`
+
+### Sector Performance
+Get aggregate performance by sector:
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/sectors
+```
+
+### Compare Assets
+Compare multiple assets side-by-side:
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/compare?symbols=AAPL,MSFT,GOOGL"
+```
+
+### Market Brief
+Get a curated summary ideal for morning briefings or agent digests:
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/brief
+```
+
+Returns: global market stats, top 5 gainers/losers, sector summary, and natural-language highlights.
+
+### News
+Get latest financial news from RSS feeds (free, no extra API cost):
+```bash
+# All news
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/news
+
+# Filter by category
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/news?category=crypto&limit=10"
+```
+
+Query params: `category` (crypto|markets|commodities), `limit` (1-50, default 20).
+
+Returns `{ count, news, sources }`. Each news item has `title`, `link`, `pubDate`, `source`, and `category`. Sources include CoinDesk, Cointelegraph, Decrypt, MarketWatch, CNBC, Investing.com, OilPrice, and FXStreet.
+
+### Portfolio (Read)
+Get the authenticated user's portfolio holdings with current prices, P&L, and allocation:
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/portfolio
+```
+
+Returns `totalValue`, `totalCost`, `totalGainLoss`, `totalGainLossPercent`, `dayChange`, `dayChangePercent`, and a `holdings` array. Each holding includes `symbol`, `name`, `type`, `quantity`, `avgCostBasis`, `currentPrice`, `currentValue`, `costBasis`, `gainLoss`, `gainLossPercent`, `dayChange`, `dayChangePercent`, and `allocation` (percentage of portfolio). An empty portfolio returns zero totals and an empty holdings array.
+
+### Portfolio (Write)
+Add, remove, or clear holdings:
+```bash
+# Add a holding
+curl -s -X POST -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"symbol":"AAPL","name":"Apple Inc.","assetType":"stock","quantity":10,"avgCostBasis":150.00}' \
+  https://mkts.io/api/v1/portfolio
+
+# Delete a single holding by ID
+curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
+  https://mkts.io/api/v1/portfolio/HOLDING_ID
+
+# Clear all holdings
+curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
+  https://mkts.io/api/v1/portfolio
+```
+
+POST body fields: `symbol` (required, uppercase), `name` (required), `assetType` (crypto|stock|etf|commodity), `quantity` (> 0), `avgCostBasis` (>= 0). Optional: `purchaseDate` (ISO string), `notes`.
+Returns the created holding with a server-generated `id`.
+
+### Portfolio Performance with Benchmarks
+Compare your portfolio's historical performance against market benchmarks:
+```bash
+# YTD performance vs S&P 500
+curl -s -H "X-API-Key: $MKTS_API_KEY" \
+  "https://mkts.io/api/v1/portfolio/performance?range=YTD&benchmarks=SPY"
+
+# 3-month performance vs S&P 500 and Bitcoin
+curl -s -H "X-API-Key: $MKTS_API_KEY" \
+  "https://mkts.io/api/v1/portfolio/performance?range=3M&benchmarks=SPY,BTC-USD"
+```
+
+Query params: `range` (1M|3M|6M|YTD|1Y|ALL), `benchmarks` (comma-separated, max 4 from: SPY, QQQ, DIA, IWM, BTC-USD, GLD, AGG).
+
+Returns `portfolio.percentChange`, `portfolio.startValue`, `portfolio.endValue`, per-benchmark `percentChange`, and a unified `chartData` array with daily percentage changes. Empty portfolio returns zero values.
+
+### Journal
+Log trade rationale, notes, and observations:
+```bash
+# List all journal entries
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/journal
+
+# Create a journal entry
+curl -s -X POST -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"title":"AAPL thesis","content":"Strong services growth...","symbol":"AAPL","tags":["thesis","buy"]}' \
+  https://mkts.io/api/v1/journal
+
+# Delete a journal entry
+curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
+  https://mkts.io/api/v1/journal/ENTRY_ID
+```
+
+POST body fields: `title` (required, max 200), `content` (required, max 10000). Optional: `symbol`, `tags` (array from: thesis, lesson, mistake, observation, buy, sell, watchlist).
+GET returns `{ count, entries }` sorted by most recent first.
+
+## Response Format
+
+All responses follow this structure:
+```json
+{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "lastUpdated": 1708721400000,
+    "requestsRemaining": 94,
+    "resetTime": 1708725000000
+  }
+}
+```
+
+Errors:
+```json
+{
+  "success": false,
+  "error": "Rate limit exceeded",
+  "meta": { "requestsRemaining": 0, "resetTime": 1708725000000 }
+}
+```
+
+## Rate Limits
+
+| Tier | Snapshot endpoints | Live endpoints |
+|------|-------------------|----------------|
+| Free | 100 req/hour | 10 req/hour |
+| Premium | 1,000 req/hour | 100 req/hour |
+
+When rate limited, you'll receive a 429 response with a `Retry-After` header (in seconds).
+
+## Error Handling
+
+- **401**: Invalid or missing API key
+- **404**: Asset not found
+- **429**: Rate limit exceeded — wait and retry after `Retry-After` seconds
+- **500/502/503**: Server error — retry with backoff
+
+## Tips for Agents
+
+- Use `/v1/brief` for morning market summaries — it combines everything in one call
+- Use `/v1/screen` for building watchlists or alert conditions
+- Use `/v1/compare` when the user asks to compare specific tickers
+- Use `/v1/asset/{symbol}/live` only when the user needs a fresh quote — it has stricter rate limits
+- Parse the `meta.requestsRemaining` field to manage your rate limit budget
+- The `highlights` array in `/v1/brief` contains pre-formatted natural-language summaries
+- Use `/v1/portfolio` when the user asks about their holdings, P&L, allocation, or portfolio performance
+- Use `POST /v1/portfolio` to add holdings — the `id` is generated server-side, use it for subsequent deletes
+- Use `/v1/portfolio/performance?range=YTD&benchmarks=SPY` to answer "how am I doing vs the S&P?"
+- Use `/v1/journal` to log trade rationale — attach a `symbol` and `tags` for better organization
+- Portfolio and journal endpoints return `Cache-Control: private, no-store` — do not cache these
+- Use `/v1/news?category=crypto` to get relevant headlines before making trade decisions
