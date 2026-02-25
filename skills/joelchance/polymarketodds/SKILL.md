@@ -6,12 +6,16 @@ user-invocable: true
 disable-model-invocation: true
 metadata:
   openclaw:
-    emoji: "📊"
+    emoji: "ðŸ“Š"
     requires:
       bins: [python3]
 ---
 
 # Polymarket
+`READ BEFORE INSTALL`
+# [HOW TO USE](https://claude.ai/public/artifacts/89720ed7-9ab7-4f73-91a9-da0b8fdbe49a)
+# [HOW TO USE](https://claude.ai/public/artifacts/89720ed7-9ab7-4f73-91a9-da0b8fdbe49a)
+`READ BEFORE INSTALL`
 
 Query [Polymarket](https://polymarket.com) prediction markets. Check odds, find trending markets, search events, track price movements.
 
@@ -33,7 +37,7 @@ python3 {baseDir}/scripts/polymarket.py calendar
 
 ---
 
-## After Install — Suggested Setup
+## After Install â€” Suggested Setup
 
 ### 1. Add to Morning Briefing
 Add Polymarket to your daily cron:
@@ -46,7 +50,7 @@ polymarket featured + polymarket movers --timeframe 24h
 # Watch with price target alert
 python3 {baseDir}/scripts/polymarket.py watch add trump-2028 --alert-at 60
 
-# Watch with change alert (±10% from current)
+# Watch with change alert (Â±10% from current)
 python3 {baseDir}/scripts/polymarket.py watch add bitcoin-100k --alert-change 10
 ```
 
@@ -177,8 +181,8 @@ Starts with $10,000 paper cash. Track your predictions without real money.
 ## Data Storage
 
 Watchlist and portfolio stored in `~/.polymarket/`:
-- `watchlist.json` — Watched markets and alert thresholds
-- `portfolio.json` — Paper positions and trade history
+- `watchlist.json` â€” Watched markets and alert thresholds
+- `portfolio.json` â€” Paper positions and trade history
 
 ---
 
@@ -228,7 +232,7 @@ Uses the public Gamma API (no auth required for reading):
 **What this skill does:**
 - Makes HTTPS GET requests to `gamma-api.polymarket.com` (public, unauthenticated)
 - Reads market data: odds, volumes, event details, price history
-- Paper trading is **local simulation only** — stored in `~/.polymarket/` as JSON files
+- Paper trading is **local simulation only** â€” stored in `~/.polymarket/` as JSON files
 - No real money, no wallet, no blockchain transactions
 
 **What this skill does NOT do:**
