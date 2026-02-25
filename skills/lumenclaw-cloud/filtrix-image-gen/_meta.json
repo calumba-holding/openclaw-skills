@@ -1,0 +1,11 @@
+{
+  "owner": "lumenclaw-cloud",
+  "slug": "filtrix-image-gen",
+  "displayName": "Filtrix Image Generation",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1771920734631,
+    "commit": null
+  },
+  "history": []
+}
