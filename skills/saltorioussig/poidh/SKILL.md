@@ -6,7 +6,7 @@ metadata:
     env:
       - PRIVATE_KEY
       - RPC_URL
-      - POIDH_CONTRACT_ADDRESS
+      - POIDH_CHAIN
     bin:
       - cast
       - python3
@@ -28,11 +28,53 @@ This skill interacts with the PoidhV3 contract on Base to:
 
 ## Required Environment Variables
 
-| Variable                 | Description                                                                  |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `PRIVATE_KEY`            | Private key of the EOA signing transactions (hex, with or without 0x prefix) |
-| `RPC_URL`                | Base mainnet RPC URL (e.g. from Alchemy or Infura)                           |
-| `POIDH_CONTRACT_ADDRESS` | Deployed PoidhV3 contract address on Base                                    |
+| Variable      | Description                                                                  |
+| ------------- | ---------------------------------------------------------------------------- |
+| `PRIVATE_KEY` | Private key of the EOA signing transactions (hex, with or without 0x prefix) |
+| `RPC_URL`     | RPC URL for the target chain                                                 |
+| `POIDH_CHAIN` | Target chain: `arbitrum`, `base`, or `degen`                                 |
+
+`POIDH_CONTRACT_ADDRESS` is resolved automatically from `POIDH_CHAIN` — do not set it manually.
+
+---
+
+## Supported Chains
+
+| Chain       | Contract Address                             | Explorer            |
+| ----------- | -------------------------------------------- | ------------------- |
+| Arbitrum    | `0x5555Fa783936C260f77385b4E153B9725feF1719` | arbiscan.io         |
+| Base        | `0x5555Fa783936C260f77385b4E153B9725feF1719` | basescan.org        |
+| Degen Chain | `0x18E5585ca7cE31b90Bc8BB7aAf84152857cE243f` | explorer.degen.tips |
+
+> ⚠️ Minimum amounts differ by chain. On **Arbitrum and Base**: `0.001 ETH` minimum bounty, `0.00001 ETH` minimum contribution. On **Degen Chain**: `1000 DEGEN` minimum bounty, `10 DEGEN` minimum contribution. Always verify on-chain before posting:
+>
+> ```bash
+> cast call $POIDH_CONTRACT_ADDRESS "MIN_BOUNTY_AMOUNT()(uint256)" --rpc-url $RPC_URL
+> cast call $POIDH_CONTRACT_ADDRESS "MIN_CONTRIBUTION()(uint256)" --rpc-url $RPC_URL
+> ```
+
+Resolve the contract address at the start of every session:
+
+```bash
+if [ "$POIDH_CHAIN" = "degen" ]; then
+  POIDH_CONTRACT_ADDRESS="0x18E5585ca7cE31b90Bc8BB7aAf84152857cE243f"
+else
+  # arbitrum and base share the same address
+  POIDH_CONTRACT_ADDRESS="0x5555Fa783936C260f77385b4E153B9725feF1719"
+fi
+```
+
+The poidh.xyz URL also changes per chain:
+
+```bash
+if [ "$POIDH_CHAIN" = "arbitrum" ]; then
+  POIDH_BASE_URL="https://poidh.xyz/arbitrum"
+elif [ "$POIDH_CHAIN" = "degen" ]; then
+  POIDH_BASE_URL="https://poidh.xyz/degen"
+else
+  POIDH_BASE_URL="https://poidh.xyz/base"
+fi
+```
 
 ---
 
@@ -95,7 +137,7 @@ for log in receipt['logs']:
     if log['address'].lower() == '$POIDH_CONTRACT_ADDRESS'.lower() and len(log['topics']) >= 2:
         bounty_id = int(log['topics'][1], 16)
         print(f'Bounty ID: {bounty_id}')
-        print(f'View at: https://poidh.xyz/base/{bounty_id}')
+        print(f'View at: $POIDH_BASE_URL/{bounty_id}')
         break
 "
 ```
@@ -259,7 +301,7 @@ cast send $POIDH_CONTRACT_ADDRESS \
 
 ## Part 5: Submitting a Claim on Someone Else's Bounty
 
-Any EOA (except the bounty issuer) can submit a claim on an active open or solo bounty. This is how the agent acts as a **claimant** rather than an issuer. No ETH is required.
+Any EOA (except the bounty issuer) can submit a claim on an active open or solo bounty. This is how the agent acts as a **claimant** rather than an issuer. No native token is required to submit a claim — only gas.
 
 The `uri` is the proof of completion — it can be anything: an IPFS image hash, a direct image URL, a tweet, a GitHub link, a webpage, a video, etc. It gets minted into a claim NFT at submission time.
 
@@ -340,14 +382,50 @@ for log in receipt['logs']:
 
 ---
 
+## Part 6: Withdrawing Funds
+
+After winning a bounty as claimant, funds are credited to `pendingWithdrawals` and must be explicitly collected. The bounty payout minus the 2.5% protocol fee is available immediately after `acceptClaim` or `resolveVote` finalizes.
+
+### Check Pending Balance
+
+```bash
+cast call $POIDH_CONTRACT_ADDRESS \
+  "pendingWithdrawals(address)(uint256)" \
+  <YOUR_ADDRESS> \
+  --rpc-url $RPC_URL
+```
+
+### Withdraw to Your Own Address
+
+```bash
+cast send $POIDH_CONTRACT_ADDRESS \
+  "withdraw()" \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL
+```
+
+### Withdraw to a Different Address
+
+```bash
+cast send $POIDH_CONTRACT_ADDRESS \
+  "withdrawTo(address)" \
+  <RECIPIENT_ADDRESS> \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL
+```
+
+> `withdraw()` sends the entire pending balance in one call. Check balance first to confirm funds are available before sending the transaction.
+
+---
+
 ## Agent Decision Flow
 
 ### Posting a Bounty
 
-1. Ask for: **name**, **description**, **ETH amount**, **type** (solo or open — default solo)
-2. Confirm with user before sending — this spends real ETH
+1. Ask for: **name**, **description**, **amount** (ETH on Arbitrum/Base, DEGEN on Degen Chain), **type** (solo or open — default solo)
+2. Confirm with user before sending — this spends real ETH (or DEGEN on Degen Chain)
 3. Run `createSoloBounty` or `createOpenBounty`
-4. Return tx hash and `https://poidh.xyz/base/<bountyId>`
+4. Return tx hash and `$POIDH_BASE_URL/<bountyId>`
 
 ### Submitting a Claim
 
@@ -370,33 +448,45 @@ for log in receipt['logs']:
 
 ---
 
-## ETH Amount Reference
+## Native Token Amount Reference
 
 | Human amount | Cast value   |
 | ------------ | ------------ |
 | 0.001 ETH    | `0.001ether` |
 | 0.01 ETH     | `0.01ether`  |
 | 1 ETH        | `1ether`     |
+| 1000 DEGEN   | `1000ether`  |
+| 10 DEGEN     | `10ether`    |
+
+> `cast` uses `ether` as a unit label for any 18-decimal token. On Degen Chain, this means DEGEN, not ETH.
 
 ---
 
 ## Fee Note
 
-PoidhV3 takes a **2.5% fee** on accepted claim payouts, deducted only at acceptance. The full `msg.value` is held in escrow until then.
+PoidhV3 takes a **2.5% fee** on accepted claim payouts, deducted only at acceptance. The full `msg.value` is held in escrow until then. The fee is paid in the chain's native token — ETH on Arbitrum and Base, DEGEN on Degen Chain.
 
 ---
 
 ## Error Reference
 
-| Error                           | Cause                                              | Fix                                   |
-| ------------------------------- | -------------------------------------------------- | ------------------------------------- |
-| `ContractsCannotCreateBounties` | Wallet is a smart contract                         | Use an EOA private key                |
-| `MinimumBountyNotMet`           | ETH below `MIN_BOUNTY_AMOUNT`                      | Increase `--value`                    |
-| `NoEther`                       | `--value` was 0 or omitted                         | Add `--value`                         |
-| `WrongCaller`                   | Not the bounty issuer                              | Use the issuer's private key          |
-| `VotingOngoing`                 | Active vote in progress                            | Wait for deadline, then `resolveVote` |
-| `VotingEnded`                   | Deadline passed without resolution                 | Call `resolveVote`                    |
-| `NotSoloBounty`                 | Open bounty with contributors tried direct accept  | Use `submitClaimForVote` instead      |
-| `ClaimAlreadyAccepted`          | Claim was already accepted                         | Nothing to do                         |
-| `BountyClaimed`                 | Bounty already finalized                           | Nothing to do                         |
-| `IssuerCannotClaim`             | Issuer tried to submit a claim on their own bounty | Different wallet must claim           |
+| Error                             | Cause                                              | Fix                                                                  |
+| --------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------- |
+| `ContractsCannotCreateBounties()` | Wallet is a smart contract                         | Use an EOA private key                                               |
+| `MinimumBountyNotMet()`           | Amount below `MIN_BOUNTY_AMOUNT`                   | Increase `--value` (0.001 ETH on Arbitrum/Base, 1000 DEGEN on Degen) |
+| `MinimumContributionNotMet()`     | Contribution below `MIN_CONTRIBUTION`              | Increase `--value` when joining open bounty                          |
+| `NoEther()`                       | `--value` was 0 or omitted                         | Add `--value`                                                        |
+| `WrongCaller()`                   | Not the bounty issuer                              | Use the issuer's private key                                         |
+| `VotingOngoing()`                 | Active vote in progress                            | Wait for deadline, then `resolveVote`                                |
+| `VotingEnded()`                   | Deadline passed without resolution                 | Call `resolveVote`                                                   |
+| `NotSoloBounty()`                 | Open bounty with contributors tried direct accept  | Use `submitClaimForVote` instead                                     |
+| `ClaimAlreadyAccepted()`          | Claim was already accepted                         | Nothing to do                                                        |
+| `BountyClaimed()`                 | Bounty already finalized                           | Nothing to do                                                        |
+| `BountyClosed()`                  | Bounty was cancelled                               | Nothing to do                                                        |
+| `BountyNotFound()`                | Invalid bounty ID                                  | Check bounty ID                                                      |
+| `ClaimNotFound()`                 | Invalid claim ID                                   | Check claim ID                                                       |
+| `IssuerCannotClaim()`             | Issuer tried to submit a claim on their own bounty | Different wallet must claim                                          |
+| `NotActiveParticipant()`          | Caller is not a participant or has withdrawn       | Must be an active contributor                                        |
+| `MaxParticipantsReached()`        | Open bounty has 150 contributors                   | Wait for a slot to free up                                           |
+| `NothingToWithdraw()`             | No pending balance                                 | Check `pendingWithdrawals(address)` first                            |
+| `VoteWouldPass()`                 | Tried to reset a vote that would pass              | Cannot override a winning vote                                       |
