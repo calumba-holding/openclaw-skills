@@ -1,0 +1,11 @@
+{
+  "owner": "error403agent",
+  "slug": "claude-max-proxy-setup",
+  "displayName": "Claude Max Proxy Setup",
+  "latest": {
+    "version": "1.1.0",
+    "publishedAt": 1772041222201,
+    "commit": null
+  },
+  "history": []
+}
