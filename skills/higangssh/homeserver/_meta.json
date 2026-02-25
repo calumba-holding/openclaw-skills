@@ -3,9 +3,15 @@
   "slug": "homeserver",
   "displayName": "Homeserver",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771859643209,
-    "commit": "https://github.com/openclaw/skills/commit/7ddc7a3beaa6c32553bcba6634b9e18cde18c2f4"
+    "version": "1.4.0",
+    "publishedAt": 1771947121472,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771859643209,
+      "commit": "https://github.com/openclaw/skills/commit/7ddc7a3beaa6c32553bcba6634b9e18cde18c2f4"
+    }
+  ]
 }
