@@ -1,6 +1,20 @@
 ---
 name: payspawn
-description: "Give any AI agent on-chain spending limits without sharing a private key. Use when: (1) agent needs to pay for x402 APIs (web scraping, search, AI services), (2) setting daily/per-tx USDC caps on an agent wallet, (3) whitelisting which contracts an agent can pay, (4) pausing a rogue agent's spending instantly, (5) provisioning credentials for agent fleets. Works on Base mainnet with USDC. NOT for: fiat payments, non-Base chains (yet), or custody of funds."
+description: "Add spending controls to any AI agent that makes API payments. Supports x402 auto-pay, daily limits, per-transaction limits, address allowlists, and fleet provisioning. Use when your agent calls paid APIs or sends payments autonomously. Works on Base with USDC."
+requires:
+  env:
+    - name: PAYSPAWN_CREDENTIAL
+      description: "Scoped spending credential issued from payspawn.ai/dashboard. This is NOT a private key — it is a base64-encoded spend permission authorizing the PaySpawn V5 contract to transfer USDC up to the limits you set. The credential encodes: daily cap, per-transaction limit, optional address whitelist, and expiry. Revocable on-chain at any time via dashboard or ps.agent.pause(). Set the lowest limits sufficient for your use case."
+      secret: true
+      required: false
+      lifetime: "Up to 1 year from creation (set at credential creation time). Revocable immediately on-chain — revocation takes effect on the next transaction attempt."
+      minPrivilege: "Set daily cap to the minimum USDC needed per day. Use allowedTo address whitelist to restrict payment destinations. Use per-tx cap to limit single-payment exposure."
+  install:
+    - package: "@payspawn/sdk"
+      registry: "npm"
+      version: ">=5.3.0"
+      source: "https://www.npmjs.com/package/@payspawn/sdk"
+      audit: "https://github.com/adambrainai/payspawn"
 metadata:
   {
     "openclaw": {
@@ -10,108 +24,82 @@ metadata:
   }
 ---
 
-# PaySpawn — On-Chain Spending Limits for AI Agents
+# PaySpawn — Agent Payment Controls
 
-**PaySpawn** gives OpenClaw agents a credential instead of a raw private key. Spending limits, whitelists, and a kill switch — all enforced by a smart contract on Base. Math, not code.
+Set spending limits for AI agents that make payments autonomously. Limits are enforced at the smart contract level on Base — not in software, not on a server. The contract cannot be overridden.
 
-## Quick Start
-
-Install the SDK:
+## Install
 
 ```bash
 npm install @payspawn/sdk
 ```
 
-Set your credential as an environment variable:
+## Credential Setup (One Human Step)
 
-```
-PAYSPAWN_CREDENTIAL=your_credential_from_dashboard
-```
+Before the agent can make payments, the wallet owner must create a credential:
 
-Get your credential at [payspawn.ai/dashboard](https://payspawn.ai/dashboard) — connect wallet, set limits, copy the credential string. No private key needed.
+1. Go to [payspawn.ai/dashboard](https://payspawn.ai/dashboard)
+2. Connect your wallet (MetaMask, Coinbase Wallet, or any USDC wallet on Base)
+3. Approve a USDC spending ceiling (one on-chain transaction, ~$0.005 gas)
+4. Set limits: daily cap, per-transaction cap, optional address whitelist
+5. Sign the credential (EIP-712 signature — no gas, no transaction)
+6. Copy the credential string and set it as `PAYSPAWN_CREDENTIAL` in your environment
 
----
+The credential is not a private key. Your wallet key never leaves your control. The agent can only spend within the limits you set — the contract enforces this and cannot be bypassed.
 
-## Basic Usage
+## Usage
 
 ```typescript
 import { PaySpawn } from "@payspawn/sdk";
-
 const ps = new PaySpawn(process.env.PAYSPAWN_CREDENTIAL);
 
-// Pay an x402 API automatically
-const res = await ps.fetch("https://api.example.com/data");
-const data = await res.json();
+// Auto-pay x402 APIs within your set limits
+const res = await ps.fetch("https://api.example.com/endpoint");
 
-// Direct USDC payment
-await ps.pay("recipient-wallet-address", 1.00);
+// Send a payment
+await ps.pay("0xRecipientAddress", 1.00);
 
-// Check remaining balance
+// Check balance and remaining daily allowance
 const { balance, remaining } = await ps.check();
 
-// Kill switch — stops all spending instantly
+// Pause all payments instantly (on-chain, immediate effect)
 await ps.agent.pause();
+
+// Resume payments
+await ps.agent.unpause();
 ```
 
----
+## Fleet Mode
 
-## What You Get
-
-**Daily cap** — max USDC the agent can spend per day
-
-**Per-tx limit** — max per single payment
-
-**Address whitelist** — only allowed counterparties can receive payments
-
-**Velocity limit** — max transactions per hour
-
-**Kill switch** — pause all spending with one call
-
----
-
-## x402 Auto-Pay
-
-`ps.fetch()` handles HTTP 402 payment flows automatically. Agent calls a paid API, PaySpawn pays within the credential limits, returns the result:
+Provision multiple agent credentials from one shared pool. One wallet funds the pool; each agent gets its own credential with its own daily limit.
 
 ```typescript
-// Works with any x402-compatible API
-const result = await ps.fetch("https://paid-api.example.com/endpoint", {
-  method: "POST",
-  body: JSON.stringify({ task: "do something" })
-});
-```
-
----
-
-## Agent Fleets
-
-Provision multiple agents from one shared budget pool:
-
-```typescript
-// Create a pool for multiple agents
+// Create a shared budget pool
 const pool = await ps.pool.create({ totalBudget: 100, agentDailyLimit: 10 });
 
-// Provision 10 agent credentials in one call
+// Fund the pool: send USDC to pool.address from your wallet
+
+// Provision credentials for each agent
 const fleet = await ps.fleet.provision({ poolAddress: pool.address, count: 10 });
+// fleet[0], fleet[1], ... → credential strings, one per agent
 ```
 
-One pool. One API call. Each agent gets its own credential with its own daily limit. All draw from the shared pool budget.
+## Contract Enforcement
 
----
+Every payment is checked by the PaySpawn V5 contract on Base before any USDC moves:
 
-## Why Use This
+- Daily allowance exceeded → transaction reverts
+- Amount exceeds per-tx cap → transaction reverts  
+- Recipient not on whitelist → transaction reverts
 
-Agents with raw wallet keys have unlimited access. One bad prompt or leaked env file and the wallet is drained. PaySpawn credentials are scoped and revocable:
+No API override. No config flag. Math runs first, every time.
 
-- Credential limits are enforced by the smart contract, not software
-- Leaked credential still cannot exceed the daily cap
-- Prompt injection tries to pay an unknown address — whitelist blocks it
-- One call stops spending instantly
-
----
+**Contract address (Base Mainnet):** `0xaa8e6815b0E8a3006DEe0c3171Cf9CA165fd862e`  
+**USDC (Base):** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
 
 ## Links
 
-- Dashboard: [payspawn.ai/dashboard](https://payspawn.ai/dashboard)
-- Docs: [payspawn.ai](https://payspawn.ai)
-- X: [@payspawn](https://x.com/payspawn)
+- [payspawn.ai](https://payspawn.ai)
+- [payspawn.ai/dashboard](https://payspawn.ai/dashboard)
+- [@payspawn](https://x.com/payspawn)
+- [npm: @payspawn/sdk](https://www.npmjs.com/package/@payspawn/sdk)

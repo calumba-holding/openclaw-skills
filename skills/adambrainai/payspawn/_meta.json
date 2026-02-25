@@ -3,9 +3,15 @@
   "slug": "payspawn",
   "displayName": "PaySpawn — On-Chain Spending Limits for AI Agents",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1771902022532,
-    "commit": "https://github.com/openclaw/skills/commit/ad93b1e72459dc104f1c6e8a2f5b0259469642c9"
+    "version": "1.0.3",
+    "publishedAt": 1771905009109,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1771902022532,
+      "commit": "https://github.com/openclaw/skills/commit/ad93b1e72459dc104f1c6e8a2f5b0259469642c9"
+    }
+  ]
 }
