@@ -1,0 +1,11 @@
+{
+  "owner": "frannunpal",
+  "slug": "sonarr-fixed",
+  "displayName": "Sonarr Fixed",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1771933701406,
+    "commit": null
+  },
+  "history": []
+}
