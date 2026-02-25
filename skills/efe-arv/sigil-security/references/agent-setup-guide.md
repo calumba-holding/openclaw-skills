@@ -6,9 +6,9 @@
 |---------|-----------|----------|
 | **Owner Wallet** | Your personal wallet (MetaMask etc.) that controls the Sigil account | ❌ Only for gas to manage settings |
 | **Sigil Smart Account** | On-chain contract that holds funds and executes transactions | ✅ **FUND THIS ONE** |
-| **Agent Key** | A signing keypair for API authentication — NOT a wallet | ❌ **NEVER FUND THIS** |
+| **Agent Key** | A dedicated signing EOA for UserOp signatures | ⚡ Small gas amount only (for UserOp submission) |
 
-> 💡 The agent key is like a login credential. You don't deposit money into a password.
+> 💡 The agent key signs UserOps locally. It needs a small amount of native token (POL/ETH/AVAX) for gas when submitting to the EntryPoint. Fund it with minimal gas only — never store significant value here.
 
 ---
 
@@ -16,10 +16,10 @@
 
 ```
 1. Deploy   → sigil.codes/onboarding (connect owner wallet, pick chain & strategy)
-2. Fund     → Send tokens to your SIGIL ACCOUNT address (0xYourSigilAccount)
+2. Fund     → Send tokens to your SIGIL ACCOUNT (holds value). Send small gas to AGENT KEY (for tx submission).
 3. API Key  → sigil.codes/dashboard/agent-access → generate key (starts with sgil_)
-4. Config   → Give your agent: SIGIL_API_KEY + SIGIL_ACCOUNT_ADDRESS
-5. Go       → Agent submits transactions via API. Guardian evaluates. Sigil account pays.
+4. Config   → Give your agent: SIGIL_API_KEY + SIGIL_ACCOUNT_ADDRESS + SIGIL_AGENT_PRIVATE_KEY
+5. Go       → Agent signs UserOps locally, submits via API. Guardian evaluates + co-signs.
 ```
 
 ---
@@ -83,11 +83,9 @@ curl -X POST https://api.sigil.codes/v1/evaluate \
       "sender": "0xYourSigilAccount",
       "nonce": "0x0",
       "callData": "0x...",
-      "callGasLimit": "200000",
-      "verificationGasLimit": "200000",
+      "accountGasLimits": "0x00000000000000000000000000030d4000000000000000000000000000030d40",
       "preVerificationGas": "50000",
-      "maxFeePerGas": "25000000000",
-      "maxPriorityFeePerGas": "1500000000",
+      "gasFees": "0x00000000000000000000000059682f000000000000000000000005d21dba00",
       "signature": "0x"
     }
   }'

@@ -3,11 +3,16 @@
   "slug": "sigil-security",
   "displayName": "Skill",
   "latest": {
-    "version": "1.4.0",
-    "publishedAt": 1771270186726,
-    "commit": "https://github.com/openclaw/skills/commit/d528bef3ba4d6c6ca4cfa278c1858df723454ae6"
+    "version": "2.1.1",
+    "publishedAt": 1772026989655,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.4.0",
+      "publishedAt": 1771270186726,
+      "commit": "https://github.com/openclaw/skills/commit/d528bef3ba4d6c6ca4cfa278c1858df723454ae6"
+    },
     {
       "version": "1.0.9",
       "publishedAt": 1771169612060,
