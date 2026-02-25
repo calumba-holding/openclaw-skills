@@ -1,0 +1,11 @@
+{
+  "owner": "rollhub-dev",
+  "slug": "rollhub-auditor",
+  "displayName": "Fairness Auditor",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772020416742,
+    "commit": null
+  },
+  "history": []
+}
