@@ -1,0 +1,11 @@
+{
+  "owner": "jame-mei-ltp",
+  "slug": "aiops-agent",
+  "displayName": "AIOps Agent",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771990595458,
+    "commit": null
+  },
+  "history": []
+}
