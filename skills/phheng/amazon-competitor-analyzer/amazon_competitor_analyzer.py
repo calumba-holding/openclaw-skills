@@ -1,6 +1,6 @@
 """
 Amazon Competitor Analyzer Skill
-================================
+===============================
 Scrapes Amazon product data from ASINs using BrowserAct API
 and performs surgical competitive analysis.
 
@@ -16,6 +16,27 @@ import csv
 import requests
 from datetime import datetime
 from typing import Dict, List, Optional, Any
+from pathlib import Path
+
+# Try to load .env file if python-dotenv is available
+try:
+    from dotenv import load_dotenv
+    # Load .env from same directory as script
+    script_dir = Path(__file__).parent
+    env_file = script_dir / ".env"
+    if env_file.exists():
+        load_dotenv(env_file)
+except ImportError:
+    # If python-dotenv not available, check .env manually
+    script_dir = Path(__file__).parent
+    env_file = script_dir / ".env"
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ.setdefault(key, value.strip())
 
 
 # Configuration
