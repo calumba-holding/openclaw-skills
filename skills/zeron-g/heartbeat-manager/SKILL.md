@@ -1,6 +1,35 @@
+---
+name: heartbeat-manager
+description: Agent 心跳管理系统：自动检查任务状态、智能超时分析、日报/周报、健康度评分。与 OpenClaw 心跳同步运行。
+---
+
 # Heartbeat Manager
 
-> EVA Agent 心跳管理系统 — 自动化任务监控、智能超时分析、健康度评分与邮件告警
+> 自动化任务监控 · 智能超时分析 · 日报/周报 · 健康度评分
+
+---
+
+## ⚠️ 安装前须知
+
+### 凭证声明
+本 Skill **不内置、不存储任何邮件凭证**。邮件功能（告警、日报、周报）需要你在安装后自行配置：
+- 提供一个 Gmail 账号及其 App Password
+- 填入 `config/.env`（该文件永远不会被上传或共享）
+
+> 若不配置邮件，Skill 仍可正常运行心跳检查（任务监控、健康度评分），仅邮件通知功能不可用。
+
+### 副作用声明
+本 Skill 会在运行时产生以下副作用：
+
+| 操作 | 说明 | 可关闭 |
+|------|------|--------|
+| 写入本地文件 | 更新 `workspace/` 下的 MASTER.md、state.json 等 | ❌ 核心功能 |
+| 写入日志 | 追加 `logs/heartbeat.log` | ✅ `settings.yaml` |
+| IMAP 读取邮件 | 检查指定邮箱未读邮件 | ✅ `email.enabled: false` |
+| SMTP 发送邮件 | 发送告警、日报、周报 | ✅ `email.enabled: false` |
+| Git commit + push | 自动提交工作区变更至远程 | ✅ `git.auto_push: false` |
+
+---
 
 ## Quick Start
 
@@ -8,165 +37,145 @@
 
 ```bash
 pip install pyyaml jinja2 python-dotenv
+# 或使用 uv（推荐）
+uv venv .venv && uv pip install --python .venv/bin/python pyyaml jinja2 python-dotenv
 ```
 
-### 2. 配置邮件
+### 2. 配置邮件（可选，但强烈推荐）
 
 ```bash
 cp config/.env.example config/.env
-# 编辑 config/.env，填入 Gmail App Password
 ```
 
-### 3. 运行心跳
+编辑 `config/.env`：
+
+```env
+# Gmail 发件账号
+EMAIL_SENDER=your-agent@gmail.com
+# Gmail 应用专用密码（非登录密码）
+# 获取方式：Google 账号 → 安全性 → 两步验证 → 应用专用密码
+EMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+# 收件人列表（逗号分隔）
+EMAIL_RECIPIENTS=you@example.com
+```
+
+> 如何获取 Gmail App Password：
+> 1. 开启 Google 账号两步验证
+> 2. 访问 myaccount.google.com/apppasswords
+> 3. 生成一个应用专用密码并粘贴到上方
+
+### 3. 调整配置（可选）
+
+编辑 `config/settings.yaml`：
+
+```yaml
+email:
+  enabled: true          # 改为 false 可完全禁用邮件功能
+
+git:
+  auto_push: true        # 改为 false 可禁用自动推送
+```
+
+### 4. 验证配置
 
 ```bash
-# 执行一次心跳
-python tools/heartbeat_run.py beat
-
-# 查看状态
 python tools/heartbeat_run.py status
 ```
 
-### 4. 配置定时任务（可选）
+### 5. 首次心跳
 
 ```bash
-# 编辑 crontab
-crontab -e
-
-# 添加以下内容：
-# 每30分钟心跳
-*/30 * * * * cd /path/to/heartbeat-manager && python tools/heartbeat_run.py beat >> logs/cron.log 2>&1
-# 每天0点重置+日报
-0 0 * * * cd /path/to/heartbeat-manager && python tools/heartbeat_run.py reset >> logs/cron.log 2>&1
-# 每周日23:59周报
-59 23 * * 0 cd /path/to/heartbeat-manager && python tools/heartbeat_run.py weekly >> logs/cron.log 2>&1
+python tools/heartbeat_run.py beat
 ```
+
+---
 
 ## 功能概览
 
-### 心跳检查 (`beat`)
+### `beat` — 心跳检查（每30分钟）
 
-每次心跳执行以下步骤：
+1. 检查 `daily.md` 例行任务完成情况
+2. 检查 `todo.md` 待办 + `@due:HH:MM` 超期检测
+3. 检查 `ongoing.json` 任务状态机
+4. 智能超时分析（正常推进 vs 完全卡死）
+5. 检查邮件（需配置凭证）
+6. 计算健康度评分（0-100）
+7. 更新 `MASTER.md` 主控表
+8. Git 同步（可选）
 
-1. **检查 daily.md** — 例行任务完成情况
-2. **检查 todo.md** — 待办事项 + `@due:HH:MM` 超期检测
-3. **检查 ongoing.json** — 任务状态机 + 智能超时分析
-4. **检查邮件** — IMAP 未读/标记/高优先级
-5. **计算健康度** — 0-100 分综合评分
-6. **更新 MASTER.md** — token 极简主控表
-7. **Git 同步** — 自动 commit + push
-8. **结果判定** — 全绿 → `HEARTBEAT_OK`；有问题 → 邮件告警
+### `reset` — 每日重置（00:00）
 
-### 智能超时分析
-
-基于 `ongoing.json` 中的 `history` 字段：
-
-- **正常推进但慢**（progress 在增加）→ 仅记录，不告警
-- **完全卡死**（N 个心跳无 progress/context 变化）→ 标记 BLOCK + 邮件告警
-
-### 每日重置 (`reset`)
-
-每天 00:00 执行：
-- 发送昨日完成回顾邮件（日报）
-- 重置 daily.md
+- 发送昨日完成任务日报邮件（需配置凭证）
+- 重置 `daily.md` 为新一天
 - 清理已完成的 ongoing 任务
 
-### 周报 (`weekly`)
+### `weekly` — 周报（每周日 23:59）
 
-每周日 23:59：
-- 汇总本周健康度趋势
-- 任务完成/阻塞统计
-- 亮点与关注点
+- 汇总本周健康度趋势与任务统计（需配置凭证）
 
-### 健康度评分
+### `status` — 查看状态
 
-| 维度 | 分值 | 说明 |
-|------|------|------|
-| Daily 完成率 | 25分 | 例行任务完成比例 |
-| Todo 完成率 | 20分 | 待办完成比例，超期扣分 |
-| Ongoing 状态 | 25分 | BLOCK/超期扣分，完成加分 |
-| 邮件状态 | 15分 | 未读过多扣分 |
-| Git 同步 | 15分 | push 成功满分 |
+- 无需凭证，打印当前 MASTER 快照
 
-连续 3 次低于 60 分触发告警。
+---
 
 ## OpenClaw 集成
 
-在 `HEARTBEAT.md` 中调用：
+在 `HEARTBEAT.md` 中添加：
 
-```
-heartbeat_run.py beat
-```
-
-OpenClaw 内置心跳会自动同步调用此 skill。
-
-## 文件结构
-
-```
-heartbeat-manager/
-├── SKILL.md              # 本文件
-├── _meta.json            # skill 元数据
-├── config/
-│   ├── settings.yaml     # 配置项
-│   └── .env              # 邮件密码（不纳入版本控制）
-├── workspace/
-│   ├── MASTER.md         # 主控表（自动更新）
-│   ├── daily.md          # 例行任务（每日重置）
-│   ├── todo.md           # 待办事项（完成即删）
-│   ├── ongoing.json      # 任务状态机
-│   └── state.json        # 持久化状态
-├── templates/
-│   ├── daily_template.md # daily.md 重置模板
-│   └── email_review.j2   # 日报邮件模板
-├── tools/
-│   ├── heartbeat_run.py  # 主入口
-│   ├── checker.py        # 检查逻辑
-│   ├── mail.py           # 邮件收发
-│   ├── task_analyzer.py  # 智能超时分析
-│   ├── git_ops.py        # Git 同步
-│   ├── daily_reset.py    # 每日重置
-│   ├── weekly_report.py  # 周报生成
-│   ├── health_score.py   # 健康度评分
-│   └── renderer.py       # MASTER.md 渲染
-└── logs/                 # 日志（按日轮转，保留7天）
+```bash
+cd /path/to/heartbeat-manager && python tools/heartbeat_run.py beat
 ```
 
-## 状态机
+OpenClaw 内置心跳触发时将自动执行本 Skill。
 
+---
+
+## 任务文件格式
+
+**`daily.md`** — 每日例行任务
+```markdown
+# DAILY | 2026-02-25
+- [ ] 晨间邮件检查
+- [ ] 更新记忆库
+- [x] 系统状态确认 @done:14:30
 ```
-ongoing.json 任务状态流转：
 
-IDLE → WIP → DONE
-       WIP → WAIT → WIP
-       WIP → BLOCK（智能检测卡死）
-       ANY → DROP
+**`todo.md`** — 动态待办
+```markdown
+- [ ] 修复登录 bug @due:18:00
+- [ ] 写周报
 ```
 
-## 配置说明
+**`ongoing.json`** — 任务状态机
+```json
+{
+  "tasks": [{
+    "id": "01", "title": "毕业论文",
+    "status": "WIP", "priority": "P0",
+    "eta": "2026-03-01", "progress": 65,
+    "context": "第三章进行中"
+  }]
+}
+```
 
-编辑 `config/settings.yaml` 可调整：
+状态流转：`IDLE → WIP → DONE`，`WIP → WAIT → WIP`，`WIP → BLOCK`（智能检测卡死）
 
-- 心跳间隔、邮件配置、高优先级发件人
-- 超时分析参数（宽限时间、卡死心跳数、进度阈值）
-- 健康度告警阈值和连续次数
-- Git 自动提交/推送开关
-- 日志级别和保留天数
+---
 
-## 邮件配置
+## 健康度评分
 
-使用 Gmail SMTP/IMAP，需要开启"应用专用密码"：
+| 维度 | 权重 | 说明 |
+|------|------|------|
+| Daily 完成率 | 25% | 例行任务完成比例 |
+| Todo 完成率 | 20% | 超期扣分 |
+| Ongoing 状态 | 25% | BLOCK/超期扣分 |
+| 邮件处理 | 15% | 未读过多扣分 |
+| Git 同步 | 15% | push 成功满分 |
 
-1. 访问 Google Account → Security → 2-Step Verification → App passwords
-2. 生成一个 App Password
-3. 填入 `config/.env` 的 `EMAIL_APP_PASSWORD`
+连续 3 次低于 60 分 → 邮件告警
 
-## 异常处理
-
-- **单步失败不阻断**：任何一步检查失败会降级继续，不会中断整个心跳
-- **网络不通**：告警加入 pending 队列，下次心跳重试
-- **原子写入**：所有文件更新使用 tmp + rename，防止写入中断导致数据损坏
-- **文件锁**：防止并发执行冲突
-- **日志轮转**：按日轮转，保留最近 7 天
+---
 
 ## 许可
 
