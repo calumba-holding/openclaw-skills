@@ -1,0 +1,11 @@
+{
+  "owner": "thinkoffapp",
+  "slug": "ide-agent-kit",
+  "displayName": "IDE Agent Kit - Local-first agent coordination bus",
+  "latest": {
+    "version": "0.2.2",
+    "publishedAt": 1771959769222,
+    "commit": null
+  },
+  "history": []
+}
