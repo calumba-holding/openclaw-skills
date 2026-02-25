@@ -1,6 +1,6 @@
 ---
 name: spotify-claw
-description: "Full Spotify Premium control + music analysis. Playback: play/pause/next/prev/volume/shuffle/queue. Analysis: top tracks, top artists, liked songs, genre profile, taste breakdown. Discovery: find similar artists & music without Recommendations API. Playlist builder: make-playlist, liked-by-artist, discover. Auto-launches Spotify if closed. Credentials via macOS Keychain. Triggers: включи, поставь, пауза, следующий, что играет, топ треки, плейлист, жанры, похожая музыка, открой спотифай."
+description: "Full Spotify Premium control + music analysis. Playback: play/pause/next/prev/volume/shuffle/queue. Analysis: top tracks, top artists, liked songs, genre profile, taste breakdown. Discovery: find similar artists & music without Recommendations API. Playlist builder: make-playlist, liked-by-artist, discover. Auto-launches Spotify if closed. Credentials via macOS Keychain. Triggers: play music, pause, next track, what's playing, top tracks, playlist, genres, similar music, open spotify."
 homepage: https://github.com/mixx85/spotify-claw
 metadata:
   {

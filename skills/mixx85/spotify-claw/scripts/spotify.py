@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Spotify CLI helper для OpenClaw агента.
-Избегает проблем с кавычками в bash — всё через Python.
-Читает CLIENT_ID/SECRET из Keychain автоматически.
+Spotify CLI helper for OpenClaw agents.
+Avoids quoting issues in bash — everything via Python.
+Reads CLIENT_ID/SECRET from macOS Keychain automatically.
 
-Использование:
+Usage:
   python3 ~/.openclaw/scripts/spotify.py top-tracks [short|medium|long] [limit]
   python3 ~/.openclaw/scripts/spotify.py top-artists [short|medium|long] [limit]
   python3 ~/.openclaw/scripts/spotify.py recent [limit]
   python3 ~/.openclaw/scripts/spotify.py liked [limit]
   python3 ~/.openclaw/scripts/spotify.py playlists
-  python3 ~/.openclaw/scripts/spotify.py create-playlist "Название" ["Описание"]
+  python3 ~/.openclaw/scripts/spotify.py create-playlist "Name" ["Description"]
   python3 ~/.openclaw/scripts/spotify.py add-to-playlist PLAYLIST_ID TRACK_URI [TRACK_URI ...]
   python3 ~/.openclaw/scripts/spotify.py search "query" [track|artist|album] [limit]
   python3 ~/.openclaw/scripts/spotify.py genres [short|medium|long]
@@ -18,14 +18,14 @@ Spotify CLI helper для OpenClaw агента.
   python3 ~/.openclaw/scripts/spotify.py track-info TRACK_URI [TRACK_URI ...]
   python3 ~/.openclaw/scripts/spotify.py related-artists ARTIST_NAME_OR_ID [limit]
   python3 ~/.openclaw/scripts/spotify.py artist-top-tracks ARTIST_NAME_OR_ID [limit]
-  python3 ~/.openclaw/scripts/spotify.py make-playlist "Название" [short|medium|long] [limit]
+  python3 ~/.openclaw/scripts/spotify.py make-playlist "Name" [short|medium|long] [limit]
   python3 ~/.openclaw/scripts/spotify.py discover ARTIST_NAME [depth] [tracks_per_artist]
   python3 ~/.openclaw/scripts/spotify.py liked-all
   python3 ~/.openclaw/scripts/spotify.py liked-by-artist "Artist Name"
 
 Playback (Spotify Premium):
   python3 ~/.openclaw/scripts/spotify.py play
-  python3 ~/.openclaw/scripts/spotify.py play "название трека"
+  python3 ~/.openclaw/scripts/spotify.py play "track name"
   python3 ~/.openclaw/scripts/spotify.py play spotify:track:URI
   python3 ~/.openclaw/scripts/spotify.py play playlist PLAYLIST_ID
   python3 ~/.openclaw/scripts/spotify.py pause
@@ -34,7 +34,7 @@ Playback (Spotify Premium):
   python3 ~/.openclaw/scripts/spotify.py volume 70
   python3 ~/.openclaw/scripts/spotify.py volume up/down
   python3 ~/.openclaw/scripts/spotify.py devices
-  python3 ~/.openclaw/scripts/spotify.py queue "название трека"
+  python3 ~/.openclaw/scripts/spotify.py queue "track name"
   python3 ~/.openclaw/scripts/spotify.py shuffle on/off
 """
 
@@ -51,14 +51,14 @@ _ME_CACHE = {}  # lazy cache for user id
 
 
 def get_my_user_id(sp):
-    """Получает user ID текущего пользователя через API (с кэшированием)."""
+    """Returns the current user's ID via API (with in-process caching)."""
     if "id" not in _ME_CACHE:
         _ME_CACHE["id"] = sp.me()["id"]
     return _ME_CACHE["id"]
 
 
 def _keychain_get(service):
-    """Читает значение из macOS Keychain."""
+    """Reads a value from macOS Keychain."""
     result = subprocess.run(
         ["security", "find-generic-password", "-a", "openclaw", "-s", service, "-w"],
         capture_output=True, text=True
@@ -69,7 +69,7 @@ def _keychain_get(service):
 
 
 def _setup_env():
-    """Устанавливает SPOTIPY_* переменные из Keychain если не заданы."""
+    """Sets SPOTIPY_* env vars from Keychain if not already set."""
     if not os.environ.get("SPOTIPY_CLIENT_ID"):
         val = _keychain_get("openclaw.spotify.client_id")
         if val:
@@ -133,8 +133,8 @@ def normalize_uri(uri):
 
 
 def find_artist_id(sp, name_or_id):
-    """По имени артиста или ID получает artist_id."""
-    # Если выглядит как ID (22 символа base62) — используем напрямую
+    """Returns artist_id from artist name or direct ID."""
+    # If it looks like an ID (22-char base62) — use directly
     if len(name_or_id) == 22 and name_or_id.replace("_", "").replace("-", "").isalnum():
         return name_or_id
     results = sp.search(q=f"artist:{name_or_id}", type="artist", limit=1)
@@ -144,14 +144,14 @@ def find_artist_id(sp, name_or_id):
     return items[0]["id"]
 
 
-# ─── команды ────────────────────────────────────────────────────────────────
+# ─── commands ───────────────────────────────────────────────────────────────
 
 def cmd_top_tracks(args):
     period = normalize_period(args[0] if args else "medium")
     limit = int(args[1]) if len(args) > 1 else 10
     sp = get_sp()
     tracks = sp.current_user_top_tracks(limit=limit, time_range=period)["items"]
-    print(f"Топ {limit} треков ({period}):")
+    print(f"Top {limit} tracks ({period}):")
     for i, t in enumerate(tracks, 1):
         artists = ", ".join(a["name"] for a in t["artists"])
         print(f"  {i}. {t['name']} — {artists}")
@@ -163,7 +163,7 @@ def cmd_top_artists(args):
     limit = int(args[1]) if len(args) > 1 else 10
     sp = get_sp()
     artists = sp.current_user_top_artists(limit=limit, time_range=period)["items"]
-    print(f"Топ {limit} артистов ({period}):")
+    print(f"Top {limit} artists ({period}):")
     for i, a in enumerate(artists, 1):
         genres = ", ".join(a["genres"][:3]) if a["genres"] else "—"
         print(f"  {i}. {a['name']} | {a['id']} | {genres}")
@@ -173,7 +173,7 @@ def cmd_recent(args):
     limit = int(args[0]) if args else 20
     sp = get_sp()
     items = sp.current_user_recently_played(limit=limit)["items"]
-    print(f"Последние {len(items)} треков:")
+    print(f"Recently played ({len(items)} tracks):")
     for r in items:
         t = r["track"]
         artists = ", ".join(a["name"] for a in t["artists"])
@@ -186,7 +186,7 @@ def cmd_liked(args):
     limit = int(args[0]) if args else 50
     sp = get_sp()
     items = sp.current_user_saved_tracks(limit=min(limit, 50))["items"]
-    print(f"Сохранённые треки (первые {len(items)}):")
+    print(f"Liked songs (first {len(items)}):")
     for item in items:
         t = item["track"]
         artists = ", ".join(a["name"] for a in t["artists"])
@@ -195,7 +195,7 @@ def cmd_liked(args):
 
 
 def cmd_liked_all(args):
-    """Все лайкнутые треки с пагинацией."""
+    """All liked songs with pagination."""
     sp = get_sp()
     liked = []
     offset = 0
@@ -207,7 +207,7 @@ def cmd_liked_all(args):
         offset += 50
         if len(batch) < 50:
             break
-    print(f"Всего лайкнутых треков: {len(liked)}")
+    print(f"Total liked songs: {len(liked)}")
     for item in liked:
         t = item["track"]
         artists = ", ".join(a["name"] for a in t["artists"])
@@ -215,9 +215,9 @@ def cmd_liked_all(args):
 
 
 def cmd_liked_by_artist(args):
-    """Все лайкнутые треки конкретного артиста."""
+    """All liked songs by a specific artist."""
     if not args:
-        print("ERROR: укажи имя артиста")
+        print("ERROR: specify artist name")
         sys.exit(1)
     target = args[0].lower()
     sp = get_sp()
@@ -238,7 +238,7 @@ def cmd_liked_by_artist(args):
             if target in a["name"].lower():
                 found.append(t)
                 break
-    print(f"Лайкнутые треки '{args[0]}' ({len(found)}):")
+    print(f"Liked tracks by '{args[0]}' ({len(found)}):")
     for t in found:
         artists = ", ".join(a["name"] for a in t["artists"])
         print(f"  {t['name']} — {artists} | URI: {t['uri']}")
@@ -247,14 +247,14 @@ def cmd_liked_by_artist(args):
 def cmd_playlists(args):
     sp = get_sp()
     items = sp.current_user_playlists(limit=50)["items"]
-    print(f"Плейлисты ({len(items)}):")
+    print(f"Playlists ({len(items)}):")
     for p in items:
-        print(f"  [{p['id']}] {p['name']} — {p['tracks']['total']} треков")
+        print(f"  [{p['id']}] {p['name']} — {p['tracks']['total']} tracks")
 
 
 def cmd_create_playlist(args):
     if not args:
-        print("ERROR: укажи название плейлиста")
+        print("ERROR: specify playlist name")
         sys.exit(1)
     name = args[0]
     description = args[1] if len(args) > 1 else ""
@@ -265,7 +265,7 @@ def cmd_create_playlist(args):
         public=False,
         description=description
     )
-    print(f"Создан плейлист: {pl['name']}")
+    print(f"Playlist created: {pl['name']}")
     print(f"ID: {pl['id']}")
     print(f"URI: {pl['uri']}")
     print(f"URL: {pl['external_urls']['spotify']}")
@@ -273,20 +273,20 @@ def cmd_create_playlist(args):
 
 def cmd_add_to_playlist(args):
     if len(args) < 2:
-        print("ERROR: укажи PLAYLIST_ID и TRACK_URI")
+        print("ERROR: specify PLAYLIST_ID and TRACK_URI")
         sys.exit(1)
     playlist_id = args[0]
     track_uris = [normalize_uri(u) for u in args[1:]]
     sp = get_sp()
-    # Добавляем по 100 (лимит API)
+    # Add in batches of 100 (API limit)
     for i in range(0, len(track_uris), 100):
         sp.playlist_add_items(playlist_id=playlist_id, items=track_uris[i:i+100])
-    print(f"Добавлено {len(track_uris)} треков в плейлист {playlist_id}")
+    print(f"Added {len(track_uris)} tracks to playlist {playlist_id}")
 
 
 def cmd_search(args):
     if not args:
-        print("ERROR: укажи поисковый запрос")
+        print("ERROR: specify search query")
         sys.exit(1)
     query = args[0]
     search_type = args[1] if len(args) > 1 else "track"
@@ -295,20 +295,20 @@ def cmd_search(args):
     results = sp.search(q=query, type=search_type, limit=limit)
     if search_type == "track":
         items = results["tracks"]["items"]
-        print(f"Треки по запросу '{query}' ({len(items)}):")
+        print(f"Tracks for '{query}' ({len(items)}):")
         for t in items:
             artists = ", ".join(a["name"] for a in t["artists"])
             print(f"  {t['name']} — {artists} | pop:{t['popularity']}")
             print(f"     URI: {t['uri']}")
     elif search_type == "artist":
         items = results["artists"]["items"]
-        print(f"Артисты по запросу '{query}':")
+        print(f"Artists for '{query}':")
         for a in items:
             genres = ", ".join(a["genres"][:3]) if a["genres"] else "—"
             print(f"  {a['name']} | ID: {a['id']} | {genres}")
     elif search_type == "album":
         items = results["albums"]["items"]
-        print(f"Альбомы по запросу '{query}':")
+        print(f"Albums for '{query}':")
         for al in items:
             artists = ", ".join(a["name"] for a in al["artists"])
             print(f"  {al['name']} — {artists} ({al['release_date'][:4]})")
@@ -322,7 +322,7 @@ def cmd_genres(args):
     for a in artists:
         genres.extend(a["genres"])
     top = Counter(genres).most_common(15)
-    print(f"Топ жанры ({period}):")
+    print(f"Top genres ({period}):")
     for genre, count in top:
         bar = "█" * count
         print(f"  {genre:<30} {bar} ({count})")
@@ -332,21 +332,21 @@ def cmd_now(args):
     sp = get_sp()
     current = sp.current_playback()
     if not current or not current.get("is_playing"):
-        print("Сейчас ничего не играет")
+        print("Nothing is playing")
         return
     t = current["item"]
     artists = ", ".join(a["name"] for a in t["artists"])
     progress = current["progress_ms"] // 1000
     duration = t["duration_ms"] // 1000
-    print(f"Сейчас играет: {t['name']} — {artists}")
-    print(f"  Прогресс: {progress//60}:{progress%60:02d} / {duration//60}:{duration%60:02d}")
+    print(f"Now playing: {t['name']} — {artists}")
+    print(f"  Progress: {progress//60}:{progress%60:02d} / {duration//60}:{duration%60:02d}")
     print(f"  URI: {t['uri']}")
-    print(f"  Устройство: {current.get('device', {}).get('name', '—')}")
+    print(f"  Device: {current.get('device', {}).get('name', '—')}")
 
 
 def cmd_track_info(args):
     if not args:
-        print("ERROR: укажи TRACK_URI или TRACK_ID")
+        print("ERROR: specify TRACK_URI or TRACK_ID")
         sys.exit(1)
     sp = get_sp()
     for uri in args:
@@ -359,32 +359,32 @@ def cmd_track_info(args):
         t = sp.track(track_id)
         artists = ", ".join(a["name"] for a in t["artists"])
         print(f"{t['name']} — {artists}")
-        print(f"  Альбом: {t['album']['name']} ({t['album']['release_date'][:4]})")
-        print(f"  Популярность: {t['popularity']}/100")
+        print(f"  Album: {t['album']['name']} ({t['album']['release_date'][:4]})")
+        print(f"  Popularity: {t['popularity']}/100")
         duration = t["duration_ms"] // 1000
-        print(f"  Длительность: {duration//60}:{duration%60:02d}")
+        print(f"  Duration: {duration//60}:{duration%60:02d}")
         print(f"  URI: {t['uri']}")
 
 
 def cmd_related_artists(args):
-    """Похожие артисты через поиск по жанрам (related-artists API недоступен для новых приложений)."""
+    """Similar artists via genre search (related-artists API is unavailable for new apps)."""
     if not args:
-        print("ERROR: укажи имя артиста или ID")
+        print("ERROR: specify artist name or ID")
         sys.exit(1)
     sp = get_sp()
     limit = int(args[1]) if len(args) > 1 else 10
     artist_id = find_artist_id(sp, args[0])
     if not artist_id:
-        print(f"ERROR: артист '{args[0]}' не найден")
+        print(f"ERROR: artist '{args[0]}' not found")
         sys.exit(1)
     artist = sp.artist(artist_id)
     genres = artist.get("genres", [])
     if not genres:
-        print(f"У {artist['name']} нет жанров в Spotify — ищем по имени")
+        print(f"No genres for {artist['name']} in Spotify — searching by name")
         results = sp.search(q=f"artist:{artist['name']}", type="artist", limit=limit+1)
         found = [a for a in results["artists"]["items"] if a["id"] != artist_id][:limit]
     else:
-        # Ищем по главному жанру (без genre: — работает лучше)
+        # Search by primary genre (without 'genre:' prefix — works better)
         found = []
         seen = {artist_id}
         for genre in genres[:3]:
@@ -396,26 +396,26 @@ def cmd_related_artists(args):
             if len(found) >= limit:
                 break
         found = found[:limit]
-    print(f"Похожие на {artist['name']} (по жанрам: {', '.join(genres[:2]) or '—'}):")
+    print(f"Similar to {artist['name']} (genres: {', '.join(genres[:2]) or '—'}):")
     for a in found:
         a_genres = ", ".join(a["genres"][:3]) if a["genres"] else "—"
         print(f"  {a['name']} | ID: {a['id']} | pop:{a['popularity']} | {a_genres}")
 
 
 def cmd_artist_top_tracks(args):
-    """Топ треки артиста."""
+    """Top tracks of any artist."""
     if not args:
-        print("ERROR: укажи имя артиста или ID")
+        print("ERROR: specify artist name or ID")
         sys.exit(1)
     sp = get_sp()
     limit = int(args[1]) if len(args) > 1 else 10
     artist_id = find_artist_id(sp, args[0])
     if not artist_id:
-        print(f"ERROR: артист '{args[0]}' не найден")
+        print(f"ERROR: artist '{args[0]}' not found")
         sys.exit(1)
     artist = sp.artist(artist_id)
     tracks = sp.artist_top_tracks(artist_id)["tracks"][:limit]
-    print(f"Топ треки {artist['name']} ({len(tracks)}):")
+    print(f"Top tracks of {artist['name']} ({len(tracks)}):")
     for i, t in enumerate(tracks, 1):
         duration = t["duration_ms"] // 1000
         print(f"  {i}. {t['name']} | pop:{t['popularity']} | {duration//60}:{duration%60:02d}")
@@ -423,58 +423,58 @@ def cmd_artist_top_tracks(args):
 
 
 def cmd_make_playlist(args):
-    """Создаёт плейлист из топ-треков пользователя.
+    """Creates a playlist from the user's top tracks.
 
-    Использование: make-playlist "Название" [short|medium|long] [limit]
+    Usage: make-playlist "Name" [short|medium|long] [limit]
     """
     if not args:
-        print("ERROR: укажи название плейлиста")
+        print("ERROR: specify playlist name")
         sys.exit(1)
     name = args[0]
     period = normalize_period(args[1] if len(args) > 1 else "short")
     limit = int(args[2]) if len(args) > 2 else 20
     sp = get_sp()
 
-    # Собираем топ треки
+    # Collect top tracks
     tracks = sp.current_user_top_tracks(limit=limit, time_range=period)["items"]
     uris = [t["uri"] for t in tracks]
 
-    # Создаём плейлист
+    # Create playlist
     from datetime import datetime
     month = datetime.now().strftime("%B %Y")
     pl = sp.user_playlist_create(
         user=get_my_user_id(sp),
         name=name,
         public=False,
-        description=f"Создан TupacAI | {month} | {period}"
+        description=f"Created by spotify-claw | {month} | {period}"
     )
     sp.playlist_add_items(playlist_id=pl["id"], items=uris)
-    print(f"Плейлист создан: {pl['name']}")
+    print(f"Playlist created: {pl['name']}")
     print(f"ID: {pl['id']}")
     print(f"URL: {pl['external_urls']['spotify']}")
-    print(f"Добавлено треков: {len(uris)}")
+    print(f"Tracks added: {len(uris)}")
     for i, t in enumerate(tracks, 1):
         artists = ", ".join(a["name"] for a in t["artists"])
         print(f"  {i}. {t['name']} — {artists}")
 
 
 def cmd_discover(args):
-    """Находит новую музыку по жанрам профиля пользователя.
+    """Discovers new music by user's genre profile.
 
-    related-artists API недоступен — используем жанровый поиск.
-    Берёт топ-жанры пользователя → ищет артистов по каждому жанру
-    → берёт их топ треки → фильтрует уже известных артистов.
+    related-artists API is unavailable — uses genre-based search.
+    Takes user's top genres → searches artists per genre
+    → pulls their top tracks → filters out already-known artists.
 
-    Использование:
-      discover                     — по топ-жанрам пользователя
-      discover ARTIST_NAME         — по жанрам конкретного артиста
-      discover ARTIST_NAME 5 3     — глубина=5, треков=3
+    Usage:
+      discover                     — by user's top genres
+      discover ARTIST_NAME         — by a specific artist's genres
+      discover ARTIST_NAME 5 3     — depth=5, tracks=3
     """
     sp = get_sp()
     tracks_per = 3
     limit_artists = 5
 
-    # Собираем уже известных артистов (из топа пользователя)
+    # Build set of already-known artists (from user's top)
     known_artists = set()
     known_names = set()
     for period in ["short_term", "medium_term", "long_term"]:
@@ -483,22 +483,22 @@ def cmd_discover(args):
             known_names.add(a["name"].lower())
 
     if args and not args[0].isdigit():
-        # Режим: конкретный артист — берём его жанры
+        # Mode: specific artist — use their genres
         seed_name = args[0]
         limit_artists = int(args[1]) if len(args) > 1 else 5
         tracks_per = int(args[2]) if len(args) > 2 else 3
         artist_id = find_artist_id(sp, seed_name)
         if not artist_id:
-            print(f"ERROR: артист '{seed_name}' не найден")
+            print(f"ERROR: artist '{seed_name}' not found")
             sys.exit(1)
         seed_artist = sp.artist(artist_id)
         seed_genres = seed_artist.get("genres", [])
         if not seed_genres:
-            print(f"У {seed_artist['name']} нет жанров. Пробуем поиск по имени...")
+            print(f"No genres for {seed_artist['name']}. Trying name search...")
             seed_genres = [seed_artist["name"]]
-        print(f"Ищем похожих на {seed_artist['name']} по жанрам: {', '.join(seed_genres[:3])}")
+        print(f"Searching similar to {seed_artist['name']} by genres: {', '.join(seed_genres[:3])}")
     else:
-        # Режим: жанры из профиля пользователя
+        # Mode: user's genre profile
         limit_artists = int(args[0]) if args else 5
         tracks_per = int(args[1]) if len(args) > 1 else 3
         top_artists = sp.current_user_top_artists(limit=50, time_range="medium_term")["items"]
@@ -506,20 +506,20 @@ def cmd_discover(args):
         for a in top_artists:
             genre_counter.update(a["genres"])
         seed_genres = [g for g, _ in genre_counter.most_common(5)]
-        print(f"Твои топ-жанры: {', '.join(seed_genres)}")
+        print(f"Your top genres: {', '.join(seed_genres)}")
 
     discoveries = []
     seen_track_ids = set()
     seen_artist_ids = set(known_artists)
 
     for genre in seed_genres[:5]:
-        print(f"\n  Жанр: {genre}")
+        print(f"\n  Genre: {genre}")
         try:
-            # Ищем без 'genre:' — работает лучше для нишевых жанров
+            # Search without 'genre:' prefix — works better for niche genres
             results = sp.search(q=genre, type="artist", limit=20)
             artists = results["artists"]["items"]
         except Exception as e:
-            print(f"    Ошибка поиска: {e}")
+            print(f"    Search error: {e}")
             continue
 
         new_artists = [a for a in artists if a["id"] not in seen_artist_ids][:limit_artists]
@@ -544,68 +544,68 @@ def cmd_discover(args):
                     })
 
     print(f"\n{'═'*55}")
-    print(f"Открытия — {len(discoveries)} треков от {len(seen_artist_ids - known_artists)} новых артистов:")
+    print(f"Discoveries — {len(discoveries)} tracks from {len(seen_artist_ids - known_artists)} new artists:")
     discoveries.sort(key=lambda x: -x["artist"]["popularity"])
     for d in discoveries:
         t = d["track"]
         artists = ", ".join(a["name"] for a in t["artists"])
         print(f"  {t['name']} — {artists}")
-        print(f"     жанр: {d['genre']} | pop:{t['popularity']} | URI: {t['uri']}")
+        print(f"     genre: {d['genre']} | pop:{t['popularity']} | URI: {t['uri']}")
 
 
 def ensure_active_device(sp, retries=3, wait=2.5):
-    """Проверяет устройство. Если нет — запускает Spotify. Возвращает device_id или None."""
+    """Checks for an active device. If none — launches Spotify. Returns device_id or None."""
     devices = sp.devices().get("devices", [])
     if devices:
-        # Вернуть активное, иначе первое доступное
+        # Return active device, otherwise first available
         for d in devices:
             if d.get("is_active"):
                 return d["id"]
         return devices[0]["id"]
-    # Нет устройства — запускаем Spotify
-    print("⚡ Spotify не запущен — открываю...")
+    # No device — launch Spotify
+    print("⚡ Spotify is not running — launching...")
     os.system("open -a Spotify")
     for i in range(retries):
         time.sleep(wait)
         devices = sp.devices().get("devices", [])
         if devices:
-            print(f"✅ Spotify запущен ({devices[0]['name']})")
-            time.sleep(2)  # доп. пауза — ждём полной инициализации
+            print(f"✅ Spotify launched ({devices[0]['name']})")
+            time.sleep(2)  # extra wait for full initialization
             for d in devices:
                 if d.get("is_active"):
                     return d["id"]
             return devices[0]["id"]
-    print("⚠️  Не удалось запустить Spotify — открой вручную")
+    print("⚠️  Failed to launch Spotify — please open it manually")
     return None
 
 
 def cmd_play(args):
-    """Воспроизведение.
-    play                        — продолжить/возобновить
-    play TRACK_URI              — включить конкретный трек
-    play "название трека"       — найти и включить трек
-    play playlist PLAYLIST_ID   — включить плейлист
+    """Playback.
+    play                        — resume
+    play TRACK_URI              — play specific track
+    play "track name"           — search and play
+    play playlist PLAYLIST_ID   — play a playlist
     """
     sp = get_sp()
     device_id = ensure_active_device(sp)
 
     if not args:
-        # Просто resume
+        # Just resume
         try:
             sp.start_playback(device_id=device_id)
-            print("▶ Воспроизведение возобновлено")
+            print("▶ Playback resumed")
         except Exception as e:
             print(f"ERROR: {e}")
-            print("  Убедись что Spotify открыт на этом ноуте")
+            print("  Make sure Spotify is open on this machine")
         return
 
     query = args[0]
 
-    # play spotify:playlist:xxx или playlist PLAYLIST_ID
+    # play spotify:playlist:xxx or playlist PLAYLIST_ID
     if query.startswith("spotify:playlist:"):
         try:
             sp.start_playback(context_uri=query, device_id=device_id)
-            print(f"▶ Играет плейлист")
+            print(f"▶ Playing playlist")
         except Exception as e:
             print(f"ERROR: {e}")
         return
@@ -616,7 +616,7 @@ def cmd_play(args):
             playlist_id = "spotify:playlist:" + playlist_id
         try:
             sp.start_playback(context_uri=playlist_id, device_id=device_id)
-            print(f"▶ Играет плейлист {playlist_id}")
+            print(f"▶ Playing playlist {playlist_id}")
         except Exception as e:
             print(f"ERROR: {e}")
         return
@@ -633,12 +633,12 @@ def cmd_play(args):
             print(f"ERROR: {e}")
         return
 
-    # play "название" — ищем трек
+    # play "track name" — search and play
     search_q = " ".join(args)
     results = sp.search(q=search_q, type="track", limit=1)
     items = results["tracks"]["items"]
     if not items:
-        print(f"ERROR: трек '{search_q}' не найден")
+        print(f"ERROR: track '{search_q}' not found")
         return
     track = items[0]
     artists = ", ".join(a["name"] for a in track["artists"])
@@ -648,22 +648,22 @@ def cmd_play(args):
         print(f"  URI: {track['uri']}")
     except Exception as e:
         print(f"ERROR: {e}")
-        print("  Убедись что Spotify открыт на этом ноуте")
+        print("  Make sure Spotify is open on this machine")
 
 
 def cmd_pause(args):
-    """Пауза."""
+    """Pause playback."""
     sp = get_sp()
     device_id = ensure_active_device(sp)
     try:
         sp.pause_playback(device_id=device_id)
-        print("⏸ Пауза")
+        print("⏸ Paused")
     except Exception as e:
         print(f"ERROR: {e}")
 
 
 def cmd_next(args):
-    """Следующий трек."""
+    """Skip to next track."""
     sp = get_sp()
     device_id = ensure_active_device(sp)
     try:
@@ -675,13 +675,13 @@ def cmd_next(args):
             artists = ", ".join(a["name"] for a in t["artists"])
             print(f"⏭ {t['name']} — {artists}")
         else:
-            print("⏭ Следующий трек")
+            print("⏭ Next track")
     except Exception as e:
         print(f"ERROR: {e}")
 
 
 def cmd_prev(args):
-    """Предыдущий трек."""
+    """Go to previous track."""
     sp = get_sp()
     device_id = ensure_active_device(sp)
     try:
@@ -693,14 +693,14 @@ def cmd_prev(args):
             artists = ", ".join(a["name"] for a in t["artists"])
             print(f"⏮ {t['name']} — {artists}")
         else:
-            print("⏮ Предыдущий трек")
+            print("⏮ Previous track")
     except Exception as e:
         print(f"ERROR: {e}")
 
 
 def cmd_volume(args):
-    """Громкость.
-    volume 70      — установить 70%
+    """Volume control.
+    volume 70      — set to 70%
     volume up      — +10%
     volume down    — -10%
     """
@@ -709,9 +709,9 @@ def cmd_volume(args):
     if not args:
         cur = sp.current_playback()
         if cur and cur.get("device"):
-            print(f"🔊 Громкость: {cur['device']['volume_percent']}%")
+            print(f"🔊 Volume: {cur['device']['volume_percent']}%")
         else:
-            print("ERROR: нет активного устройства")
+            print("ERROR: no active device")
         return
 
     query = args[0].lower()
@@ -723,37 +723,37 @@ def cmd_volume(args):
         try:
             vol = int(query)
         except ValueError:
-            print(f"ERROR: непонятное значение '{query}'. Используй: volume 70 / volume up / volume down")
+            print(f"ERROR: invalid value '{query}'. Use: volume 70 / volume up / volume down")
             return
 
     try:
         sp.volume(vol, device_id=device_id)
-        print(f"🔊 Громкость: {vol}%")
+        print(f"🔊 Volume: {vol}%")
     except Exception as e:
         print(f"ERROR: {e}")
 
 
 def cmd_devices(args):
-    """Список активных Spotify устройств."""
+    """List active Spotify devices."""
     sp = get_sp()
     devices = sp.devices().get("devices", [])
     if not devices:
-        print("Нет активных устройств. Открой Spotify на ноуте.")
+        print("No active devices. Open Spotify on this machine.")
         return
-    print(f"Устройства ({len(devices)}):")
+    print(f"Devices ({len(devices)}):")
     for d in devices:
-        active = "← активное" if d["is_active"] else ""
+        active = "← active" if d["is_active"] else ""
         print(f"  {d['name']} ({d['type']}) | {d['id']} {active}")
         print(f"  vol:{d['volume_percent']}%")
 
 
 def cmd_queue(args):
-    """Добавить трек в очередь воспроизведения.
+    """Add a track to the playback queue.
     queue TRACK_URI
-    queue "название трека"
+    queue "track name"
     """
     if not args:
-        print("ERROR: укажи трек URI или название")
+        print("ERROR: specify track URI or name")
         sys.exit(1)
     sp = get_sp()
     device_id = ensure_active_device(sp)
@@ -765,23 +765,23 @@ def cmd_queue(args):
         results = sp.search(q=query, type="track", limit=1)
         items = results["tracks"]["items"]
         if not items:
-            print(f"ERROR: трек '{query}' не найден")
+            print(f"ERROR: track '{query}' not found")
             return
         track = items[0]
         uri = track["uri"]
         artists = ", ".join(a["name"] for a in track["artists"])
-        print(f"Найден: {track['name']} — {artists}")
+        print(f"Found: {track['name']} — {artists}")
 
     try:
         sp.add_to_queue(uri, device_id=device_id)
-        print(f"✅ Добавлен в очередь: {uri}")
+        print(f"✅ Added to queue: {uri}")
     except Exception as e:
         print(f"ERROR: {e}")
 
 
 def cmd_shuffle(args):
-    """Перемешать / выключить перемешивание.
-    shuffle on / shuffle off / shuffle (переключить)
+    """Toggle shuffle on/off.
+    shuffle on / shuffle off / shuffle (toggle)
     """
     sp = get_sp()
     device_id = ensure_active_device(sp)
@@ -790,11 +790,11 @@ def cmd_shuffle(args):
         state = cur.get("shuffle_state", False) if cur else False
         new_state = not state
     else:
-        new_state = args[0].lower() in ("on", "true", "1", "вкл")
+        new_state = args[0].lower() in ("on", "true", "1")
 
     try:
         sp.shuffle(new_state, device_id=device_id)
-        print(f"🔀 Shuffle: {'вкл' if new_state else 'выкл'}")
+        print(f"🔀 Shuffle: {'on' if new_state else 'off'}")
     except Exception as e:
         print(f"ERROR: {e}")
 
@@ -830,7 +830,7 @@ COMMANDS = {
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
-        print("Доступные команды:")
+        print("Available commands:")
         for cmd in sorted(COMMANDS):
             print(f"  python3 ~/.openclaw/scripts/spotify.py {cmd}")
         sys.exit(1)
