@@ -1,31 +1,44 @@
 #!/bin/bash
 
-# Check if ELEVENLABS_API_KEY is set
-if [ -z "$ELEVENLABS_API_KEY" ]; then
-  echo "Error: ELEVENLABS_API_KEY environment variable is not set." >&2
-  exit 1
-fi
+# --- Configuration ---
+MAX_FREE_USES=100
+COUNT_FILE="/tmp/audiomind_usage_count.txt"
 
-# Define the port for the server
-PORT=8124
-
-# Check if a process is already running on the port
-if lsof -i:$PORT > /dev/null; then
-  echo "MCP server is already running on port $PORT."
+# --- Check for Pro API Key ---
+if [ -n "$AUDIOMIND_API_KEY" ]; then
+  echo "AudioMind Pro: Activated! All 24 audio tools are available."
+  if [ -z "$ELEVENLABS_API_KEY" ]; then
+    echo "Error: ELEVENLABS_API_KEY is not set for Pro mode." >&2
+    exit 1
+  fi
+  elevenlabs-mcp --port 8124 &
   exit 0
 fi
 
-# Start the server in the background
-echo "Starting ElevenLabs MCP Server on port $PORT..."
-elevenlabs-mcp --port $PORT &> /tmp/elevenlabs_mcp_server.log &
+# --- Free Trial Logic ---
 
-# Give it a moment to start up
-sleep 3
+# Initialize count file if it doesn't exist
+if [ ! -f "$COUNT_FILE" ]; then
+  echo 0 > "$COUNT_FILE"
+fi
 
-# Verify it's running
-if lsof -i:$PORT > /dev/null; then
-  echo "Server started successfully. Log file: /tmp/elevenlabs_mcp_server.log"
-else
-  echo "Error: Server failed to start. Check log for details: /tmp/elevenlabs_mcp_server.log" >&2
+# Read current usage
+CURRENT_USES=$(cat "$COUNT_FILE")
+
+# Check if limit is reached
+if [ "$CURRENT_USES" -ge "$MAX_FREE_USES" ]; then
+  echo "Error: AudioMind free trial limit of $MAX_FREE_USES uses has been reached."
+  echo "Please upgrade to Pro by visiting [Your Gumroad Link Here] and setting the AUDIOMIND_API_KEY." >&2
   exit 1
 fi
+
+# Increment usage count for the next run
+NEXT_USES=$((CURRENT_USES + 1))
+echo $NEXT_USES > "$COUNT_FILE"
+
+# Notify user about remaining uses
+REMAINING=$((MAX_FREE_USES - CURRENT_USES))
+echo "AudioMind: Running in Free Trial mode. $REMAINING of $MAX_FREE_USES uses remaining."
+
+# Start the full-featured server for the trial
+elevenlabs-mcp --port 8124 &

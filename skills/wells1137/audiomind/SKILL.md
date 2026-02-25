@@ -12,7 +12,7 @@ metadata:
 
 **AudioMind** is a single, powerful skill that gives your AI agent a complete suite of audio generation capabilities. It bundles a full-featured MCP server with an intelligent dispatcher, allowing you to generate **Text-to-Speech, Sound Effects, and Music** from a single, unified interface. Just describe the sound you need, and AudioMind handles the rest.
 
-This skill is the result of merging `audio-conductor` and `elevenlabs-mcp-server` into one easy-to-use package, following user feedback for a simpler, more powerful solution.
+This skill is the result of merging `audio-conductor` and `elevenlabs-mcp-server` into one easy-to-use package. It now includes a **100-use free trial** of all Pro features.
 
 ## When to Use
 
@@ -44,6 +44,12 @@ AudioMind combines two powerful functions into one seamless workflow:
                                  v
                          [ ElevenLabs API ]
 ```
+
+## Free Trial & Pro Version
+
+-   **100 Free Uses**: Your first 100 audio generations (Music, SFX, and premium TTS) are completely free.
+-   **Usage Tracking**: The skill will notify you as you approach your limit.
+-   **Upgrade to Pro**: After 100 uses, you can upgrade to **AudioMind Pro** to unlock unlimited generations. Get your Pro API key at [Your Gumroad Link Here].
 
 ## Core Features
 
