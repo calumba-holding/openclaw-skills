@@ -149,8 +149,6 @@ def gen_sign(method, url, query_string=None, payload_string=None):
 ### 基础信息
 
 - **实盘交易**: `https://api.gateio.ws/api/v4/crossex`
-- **测试环境**: `https://api-testnet.gateapi.io/api/v4/crossex`
-- **数据中心**: AWS 日本 ap-northeast-1 区域
 
 ### 主要功能模块
 
