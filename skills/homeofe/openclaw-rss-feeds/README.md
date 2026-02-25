@@ -65,7 +65,7 @@ Example with all supported options:
         "adminKey": "<ghost-admin-key-id>:<ghost-admin-key-secret-hex>"
       },
       "notify": [
-        "whatsapp:+491234567890",
+        "whatsapp:<phone>",
         "telegram:123456789"
       ],
       "nvdApiKey": "<nvd-api-key-optional>"
@@ -128,7 +128,7 @@ If `notify` contains targets (format `channel:target`), a summary notification i
 
 Example targets:
 
-- `whatsapp:+491234567890`
+- `whatsapp:<phone>`
 - `telegram:123456789`
 - `discord:#security`
 
