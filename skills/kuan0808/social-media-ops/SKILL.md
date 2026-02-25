@@ -32,17 +32,15 @@ Before installing, ensure:
 
 1. OpenClaw is installed and `openclaw onboard` has been completed
 2. At least one auth profile exists (e.g., Anthropic API key)
-3. A Telegram bot is configured (or will be configured during setup)
-4. The `~/.openclaw/` directory exists
+3. The `~/.openclaw/` directory exists
 
 ## Quick Start
 
 ```
 1. Install the skill (if not already in workspace/skills/)
 2. Trigger setup: "Set up my social media operations team"
-3. Follow the interactive onboarding (5 steps, ~10 minutes)
-4. Add your first brand: "Add a new brand"
-5. Start creating content!
+3. Follow the interactive onboarding (6 steps, ~10 minutes)
+4. Start creating content!
 ```
 
 ## Onboarding Flow
@@ -56,46 +54,126 @@ Verify the environment is ready:
 - [ ] OpenClaw installed and `openclaw onboard` completed
 - [ ] `~/.openclaw/` directory exists
 - [ ] At least one auth profile configured
-- [ ] Telegram bot token available (or will configure)
 
 If any prerequisite is missing, guide the user to resolve it before continuing.
 
-### Step 2: Team Configuration
+### Step 2: Team Setup
 
-**Agent selection** — Ask the user which team configuration they want:
+**All 7 agents are installed automatically.** Do not ask the user to choose a team size.
 
-| Configuration | Agents | Best For |
-|---------------|--------|----------|
-| **Full Team** (recommended) | All 7 | Multi-brand operations, high content volume |
-| **Lean Team** | Leader + Content + Designer + Engineer | Single brand, lower volume |
-| **Custom** | User selects | Specific needs |
+The full team:
 
-**Model assignment** — For each agent, recommend:
+| Agent | Role |
+|-------|------|
+| Leader | Orchestration, routing, quality gates |
+| Researcher | Market research, competitor analysis |
+| Content | Content strategy, copywriting |
+| Designer | Visual briefs, image generation |
+| Operator | Platform operations, scheduling |
+| Engineer | Technical integrations, automation |
+| Reviewer | Independent quality review |
 
-| Agent | Recommended Model | Rationale |
-|-------|-------------------|-----------|
-| Leader | Opus (or best available) | Complex orchestration requires high reasoning |
-| Researcher | Opus (or best available) | Deep analysis benefits from stronger models |
-| Content | Sonnet (or mid-tier) | Fast, capable text generation |
-| Designer | Sonnet (or mid-tier) | Fast visual brief writing + image gen |
-| Operator | Sonnet (or mid-tier) | Browser automation needs speed |
-| Engineer | Sonnet (or mid-tier) | Code generation is well-served by mid-tier |
-| Reviewer | Different provider | Independent perspective (e.g., GLM-5, Gemini) |
+**Model assignment** — Use the model already configured in the user's auth profile (`agents.defaults.model.primary`). All agents default to the same model. This keeps setup simple.
 
-The user can accept defaults or customize per agent.
+After auto-configuring, optionally ask:
 
-### Step 3: Platform Setup
+> "All 7 agents will use your configured model. Would you like to add a different model provider for the Reviewer agent to get an independent perspective? (You can always change this later.)"
 
-Collect platform configuration:
+If the user says yes, collect the alternative provider. If no, move on.
 
-1. **Telegram bot token** — If not already configured in openclaw.json
-2. **Channel mode** — Recommend Group+Topics for multi-brand:
-   - **Group+Topics** (recommended) — Supergroup with per-brand forum topics
-   - **DM+Topics** — Private chat with forum mode
-   - **Group-simple** — Group without topics (context-based routing)
-   - **DM-simple** — Private chat (context-based routing)
-3. **Group/chat ID** — For Group modes, the Telegram supergroup ID
-4. **Operations topic** — Thread ID for system notifications
+> **Advanced note:** If you later want to run a leaner team, re-run `scaffold.sh --agents leader,content,designer,engineer` to scaffold a subset.
+
+### Step 3: Telegram Setup
+
+This step uses a **guided flow** — do not ask the user for raw chat IDs or thread IDs.
+
+#### Phase A: Confirm Bot Token
+
+1. Check `openclaw.json` for `channels.telegram.botToken`
+2. If present → skip to Phase B
+3. If missing → guide the user:
+   - "Open Telegram, search for **@BotFather**"
+   - "Send `/newbot` and follow the prompts to create a bot"
+   - "Copy the bot token and paste it here"
+   - Write the token into `openclaw.json` at `channels.telegram.botToken`
+
+#### Phase B: Choose Channel Mode
+
+Present the options in this order (DM+Topics first):
+
+1. **DM+Topics (recommended)** — Simplest setup, no group needed
+   - Each brand gets its own topic thread inside the bot's DM
+   - Best for solo operators managing multiple brands
+   - Requires enabling Thread Mode on the bot (guided below)
+
+2. **Group+Topics** — For multi-person teams
+   - Brands are topic threads inside a Telegram supergroup
+   - Multiple team members can participate
+   - Requires a supergroup with Topics enabled
+
+3. **DM-simple** — Minimal, no brand isolation
+   - Single DM conversation with the bot
+   - Context-based brand routing (no topics)
+
+4. **Group-simple** — Group without brand isolation
+   - Single group conversation
+   - Context-based brand routing (no topics)
+
+#### Phase C: Mode-Specific Setup
+
+**If DM+Topics:**
+
+1. Guide the user to enable Thread Mode on their bot:
+   - "Open Telegram, find **@BotFather**"
+   - "Tap the **Open** button (bottom-left) to open the BotFather MiniApp"
+   - "Select your bot in the MiniApp"
+   - "Go to **Bot Settings**"
+   - "Find **Thread Mode** and enable it"
+   - "Come back and tell me when it's done"
+2. Once confirmed, use the bot token to get the user's chat ID:
+   - "Send any message to your bot in Telegram"
+   - Agent reads the incoming message context to extract the user's chat ID from `{{From}}`
+   - Agent writes the chat ID into the channel config
+3. Create the **Operations** topic automatically:
+   ```bash
+   node scripts/telegram-topics.js \
+     --config ~/.openclaw/openclaw.json \
+     --chat <USER_CHAT_ID> \
+     --name "Operations"
+   ```
+4. Write the resulting thread ID into `shared/operations/channel-map.md`
+
+**If Group+Topics:**
+
+1. Check if the user already has a supergroup:
+   - If not: guide them to create one (Create Group → toggle "Topics" on)
+2. Guide the user to add the bot to the group:
+   - "Add your bot to the supergroup"
+   - "Make the bot an **admin** with the **Manage Topics** permission"
+   - "Send a message in the group"
+3. Agent reads the incoming message context to extract:
+   - Group chat ID from `{{To}}`
+   - Agent writes the chat ID into the channel config
+4. Create the **Operations** topic automatically:
+   ```bash
+   node scripts/telegram-topics.js \
+     --config ~/.openclaw/openclaw.json \
+     --chat <GROUP_CHAT_ID> \
+     --name "Operations"
+   ```
+5. Write the resulting thread ID into `shared/operations/channel-map.md`
+
+**If DM-simple:**
+
+1. "Send any message to your bot in Telegram"
+2. Agent reads the chat ID from the incoming message context
+3. Write chat ID into channel config — done
+
+**If Group-simple:**
+
+1. Guide: "Add the bot to your group and send a message"
+2. Agent reads the group chat ID from the incoming message context
+3. Write chat ID into channel config — done
 
 ### Step 4: Run Scaffold
 
@@ -104,13 +182,11 @@ Execute the setup scripts:
 ```bash
 # 1. Create directories, copy templates, set up symlinks
 bash scripts/scaffold.sh \
-  --skill-dir "$(pwd)" \
-  --agents "leader,researcher,content,designer,operator,engineer,reviewer"
+  --skill-dir "$(pwd)"
 
 # 2. Merge agent configuration into openclaw.json
 node scripts/patch-config.js \
-  --config ~/.openclaw/openclaw.json \
-  --agents "leader,researcher,content,designer,operator,engineer,reviewer"
+  --config ~/.openclaw/openclaw.json
 ```
 
 The scaffold creates:
@@ -140,27 +216,30 @@ After scaffolding, run the sub-skills:
 2. **First Brand** (`brand-manager add`)
    - Brand ID, display name, domain
    - Target market and content language
-   - Channel/topic thread ID
+   - **Topic creation** (for Topics modes):
+     - Agent calls `scripts/telegram-topics.js` to create a topic named after the brand
+     - The script returns the thread ID
+     - Agent writes the thread ID into `shared/operations/channel-map.md` and the brand config
+   - For simple modes: no topic needed, skip thread ID
    - Creates: brand profile, content guidelines, domain knowledge file, asset directories
 
-3. **Restart Gateway**
+### Step 6: Verification + Gateway Restart
+
+1. **Restart gateway:**
    ```
    openclaw gateway restart
    ```
 
-### Step 6: Verification
-
-After setup, verify the installation:
-
-- [ ] All agent workspaces created with SOUL.md and SECURITY.md
-- [ ] shared/ directory populated with templates
-- [ ] Symlinks from each workspace to shared/ are valid
-- [ ] openclaw.json contains all agent definitions
-- [ ] A2A configuration is set (tools.agentToAgent.enabled: true)
-- [ ] Cron jobs are configured
-- [ ] Gateway restarts successfully
-- [ ] Leader responds to messages
-- [ ] `sessions_send` to at least one agent succeeds
+2. **Verify the installation:**
+   - [ ] All agent workspaces created with SOUL.md and SECURITY.md
+   - [ ] shared/ directory populated with templates
+   - [ ] Symlinks from each workspace to shared/ are valid
+   - [ ] openclaw.json contains all agent definitions
+   - [ ] A2A configuration is set (tools.agentToAgent.enabled: true)
+   - [ ] Cron jobs are configured
+   - [ ] Gateway restarts successfully
+   - [ ] Leader responds to messages
+   - [ ] `sessions_send` to at least one agent succeeds
 
 **Suggested first tasks after setup:**
 1. Fill in your brand profile: `shared/brands/{brand_id}/profile.md`
@@ -173,7 +252,7 @@ After setup, verify the installation:
 ### Adding More Brands
 
 Use the `brand-manager` sub-skill:
-- "Add a new brand" — interactive brand creation
+- "Add a new brand" — interactive brand creation (auto-creates topic for Topics modes)
 - "List brands" — show all active brands
 - "Archive {brand}" — deactivate a brand
 
@@ -253,6 +332,7 @@ After installation, the following structure is created:
 |--------|---------|-------------|
 | `scripts/scaffold.sh` | Create directories, copy templates, set up symlinks | During initial setup |
 | `scripts/patch-config.js` | Merge agent config into openclaw.json | During initial setup |
+| `scripts/telegram-topics.js` | Create forum topics in Telegram DM or supergroup | During setup and when adding brands |
 
 ## Sub-Skills
 
