@@ -51,6 +51,12 @@ Always output confidence with:
 - Section 4: Narrative shift vs previous period.
 - Section 5: Risks and validation checklist before investment action.
 
+## Watchlist mode (optional)
+If the user provides an `ACTIVE_WATCHLIST` (tickers), add an extra section:
+- `Watchlist Impact Map`: for each ticker, list relevant headlines (with links), label `Fact` vs `Inference`, and provide 1–2 monitoring triggers.
+
+Do **not** issue buy/sell commands; this skill is for signal monitoring only.
+
 ## Trigger examples
 - "What are the hottest Vietnam market narratives today?"
 - "Which sectors and tickers are mentioned most in Vietnamese financial media?"
