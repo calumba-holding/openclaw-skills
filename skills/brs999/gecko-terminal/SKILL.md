@@ -153,7 +153,7 @@ Default output is JSON for easy piping and automation.
 
 Uses GeckoTerminal public API v2 (read-only):
 - Base URL: `https://api.geckoterminal.com/api/v2`
-- CLI supports override via `GECKOTERMINAL_BASE_URL`
+- `api_get --path` accepts API-relative paths only (absolute URLs are blocked)
 
 ---
 

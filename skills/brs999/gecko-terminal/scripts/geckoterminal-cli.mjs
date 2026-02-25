@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
-const BASE_URL = process.env.GECKOTERMINAL_BASE_URL || "https://api.geckoterminal.com/api/v2";
+const BASE_URL = new URL("https://api.geckoterminal.com/api/v2/");
+const BASE_ORIGIN = BASE_URL.origin;
+const BASE_PATH_PREFIX = BASE_URL.pathname.endsWith("/")
+  ? BASE_URL.pathname
+  : `${BASE_URL.pathname}/`;
 const TIMEOUT_MS = Number(process.env.GECKOTERMINAL_TIMEOUT_MS || 15000);
 
 function usage() {
@@ -74,10 +78,31 @@ function cleanObj(obj) {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== ""));
 }
 
+function normalizeApiPath(path) {
+  const raw = String(path ?? "").trim();
+  if (!raw) throw new Error("Path is required");
+  if (raw.includes("?") || raw.includes("#")) {
+    throw new Error("Path must not include querystring or fragment; use --query-json");
+  }
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw) || raw.startsWith("//")) {
+    throw new Error("Absolute URLs are not allowed");
+  }
+  const normalized = raw.replace(/^\/+/, "");
+  if (!normalized) throw new Error("Path must point to an API resource");
+  if (normalized.split("/").some((part) => part === "." || part === "..")) {
+    throw new Error("Path traversal segments are not allowed");
+  }
+  return normalized;
+}
+
 async function get(path, query) {
-  const base = BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`;
-  const normalizedPath = String(path).replace(/^\/+/, "");
-  const url = new URL(normalizedPath, base);
+  const normalizedPath = normalizeApiPath(path);
+  const url = new URL(normalizedPath, BASE_URL);
+
+  if (url.origin !== BASE_ORIGIN || !url.pathname.startsWith(BASE_PATH_PREFIX)) {
+    throw new Error("Refusing outbound request outside GeckoTerminal API v2");
+  }
+
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined) url.searchParams.set(k, String(v));

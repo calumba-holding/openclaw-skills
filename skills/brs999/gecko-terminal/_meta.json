@@ -3,9 +3,15 @@
   "slug": "gecko-terminal",
   "displayName": "Gecko Terminal API",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771869194611,
-    "commit": "https://github.com/openclaw/skills/commit/96c03ca7c9e19f29c3999cb13622572eff468d77"
+    "version": "1.0.1",
+    "publishedAt": 1771951166681,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771869194611,
+      "commit": "https://github.com/openclaw/skills/commit/96c03ca7c9e19f29c3999cb13622572eff468d77"
+    }
+  ]
 }
