@@ -9,6 +9,7 @@ description: |
   (5) Managing comments on Facebook or Instagram
   (6) Uploading photos or videos to Facebook Pages
   (7) Deleting posts from Facebook or Instagram
+homepage: https://developers.facebook.com/docs/graph-api
 metadata:
   {
     "openclaw":
@@ -71,9 +72,6 @@ import json, os
 d = json.load(open(os.path.expanduser('~/.meta_tokens_cache.json')))
 print(list(d['instagram'].keys())[0])
 ")
-
-APP_ID=$(python3 -c "import json, os; print(json.load(open(os.path.expanduser('~/.meta_tokens_cache.json')))['app']['app_id'])")
-APP_SECRET=$(python3 -c "import json, os; print(json.load(open(os.path.expanduser('~/.meta_tokens_cache.json')))['app']['app_secret'])")
 ```
 
 ### API Version
@@ -303,29 +301,20 @@ curl -X POST "https://graph.facebook.com/v25.0/COMMENT_ID/replies" \
 - Data access expires ~60 days — renew before
 
 ### Renew tokens
-1. Go to Graph API Explorer (URL in cache under app settings)
+1. Go to [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
 2. Select app → Add permissions → Generate Access Token
-3. Exchange for long-lived token:
-```bash
-curl -s "https://graph.facebook.com/v25.0/oauth/access_token?grant_type=fb_exchange_token&client_id=$APP_ID&client_secret=$APP_SECRET&fb_exchange_token=SHORT_TOKEN"
-```
+3. Exchange for long-lived token via Graph API Explorer or the App Dashboard
 4. Get new page token:
 ```bash
 curl -s "https://graph.facebook.com/v25.0/me/accounts?access_token=LONG_LIVED_TOKEN"
 ```
 5. Update `~/.meta_tokens_cache.json` with new tokens
 
-### Debug a token
-
-```bash
-curl -s "https://graph.facebook.com/v25.0/debug_token?input_token=$PAGE_TOKEN&access_token=$APP_ID|$APP_SECRET"
-```
-
 ---
 
 ## Tips
 
-- **Never hardcode tokens or IDs** — always read from `~/.meta_tokens_cache.json`
+- **Never hardcode tokens or IDs** — always use environment variables or read from `~/.meta_tokens_cache.json`
 - Instagram requires images/videos as **public URLs** (not local files)
 - For local files on Instagram, upload to hosting first or use Facebook's photo upload
 - Reels may take time to process — poll status before publishing
