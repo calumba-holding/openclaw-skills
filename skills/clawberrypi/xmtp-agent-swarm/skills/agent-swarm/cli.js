@@ -14,6 +14,47 @@ const TASK_LOG_PATH = join(__dirname, 'tasks.json');
 // ─── Dashboard State ───
 import * as dashState from './src/state.js';
 
+// ─── Sounds ───
+import { playSound, playSoundSync, setSoundsEnabled } from './src/sounds.js';
+
+// ─── Guard Check (gates all on-chain transactions) ───
+
+async function checkGuard(config, { to, usdcAmount, action }) {
+  const workdir = dirname(CONFIG_PATH);
+  const guardPath = join(workdir, '.wallet-guard.json');
+  if (!existsSync(guardPath)) return; // no guard = no check
+  const { guardWallet } = await import('./src/wallet-guard.js');
+  const { appendFileSync: appendLog } = await import('fs');
+  const wallet = await getWalletLazy(config);
+  const guarded = guardWallet(wallet, { workdir });
+  const result = guarded.checkGuardrails({ to, usdcAmount, action });
+
+  // Audit log every check
+  const logLine = JSON.stringify({
+    timestamp: new Date().toISOString(),
+    action, to, usdcAmount,
+    allowed: result.allowed,
+    reason: result.reason,
+  }) + '\n';
+  try { appendLog(join(workdir, '.wallet-audit.log'), logLine); } catch {}
+
+  if (!result.allowed) {
+    playSound('blocked');
+    console.error(`🛡️  BLOCKED by wallet guard: ${result.reason}`);
+    process.exit(1);
+  }
+  // No sound on approval — the command itself plays its contextual sound
+}
+
+// Lazy wallet loader (avoids circular with getWallet which may not be defined yet)
+let _walletCache = null;
+async function getWalletLazy(config) {
+  if (_walletCache) return _walletCache;
+  const { loadWallet } = await import('./src/wallet.js');
+  _walletCache = loadWallet(config.wallet.privateKey);
+  return _walletCache;
+}
+
 // ─── Config ───
 
 function loadConfig() {
@@ -148,6 +189,18 @@ const commands = {
           address: '0xE2b1D96dfbd4E363888c4c4f314A473E7cA24D2f',
           defaultDeadlineHours: 24,
         },
+        milestoneEscrow: {
+          address: '0x7334DfF91ddE131e587d22Cb85F4184833340F6f',
+        },
+        staking: {
+          address: '0x91618100EE71652Bb0A153c5C9Cc2aaE2B63E488',
+        },
+        verification: {
+          registry: '0x22536E4C3A221dA3C42F02469DB3183E28fF7A74',
+        },
+        swarmEscrow: {
+          address: '0xCd8e54f26a81843Ed0fC53c283f34b53444cdb59',
+        },
         xmtp: { env: 'production' },
         network: {
           chainId: 8453,
@@ -263,6 +316,7 @@ const commands = {
         console.log(`   (Only needed if you want to post tasks with escrow)`);
       }
 
+      playSound('ready');
       console.log('\n✅ Setup complete. Next steps:');
       if (config.board.id) {
         console.log('  Post a listing: node cli.js listing post --title "..." --budget 1.00');
@@ -710,7 +764,7 @@ const commands = {
         amount,
         deadline,
       });
-      console.log(`Escrow created: ${txHash}`);
+      console.log(`Escrow created: ${txHash}`); playSound('escrow-sealed');
 
       // 2. Create private XMTP group with worker
       const { createSwarmGroup, sendProtocolMessage } = await import('./src/agent.js');
@@ -763,6 +817,7 @@ const commands = {
           const criteriaContent = flags.criteria || task.criteria;
           const { txHash: critTx, criteriaHash } = await setCriteria(wallet, registryAddr, taskId, criteriaContent);
           console.log(`Acceptance criteria on-chain: ${criteriaHash.slice(0, 18)}...`);
+          playSound('criteria-set');
         } catch (err) {
           console.log(`Criteria recording skipped: ${err.message?.slice(0, 60)}`);
         }
@@ -886,7 +941,7 @@ const commands = {
       const escrowAddr = config.escrow?.address || '0xE2b1D96dfbd4E363888c4c4f314A473E7cA24D2f';
       console.log('Releasing escrow...');
       const { txHash } = await releaseEscrow(wallet, escrowAddr, flags['task-id']);
-      console.log(`Released: ${txHash}`);
+      console.log(`Released: ${txHash}`); playSound('payment-released');
 
       // Update dashboard + local log
       dashState.updateEscrow(flags['task-id'], 'released', txHash);
@@ -986,7 +1041,10 @@ const commands = {
         process.exit(1);
       }
 
-      console.log(`Creating milestone escrow: ${milestones.length} milestones, total $${milestones.reduce((s, m) => s + m.amount, 0).toFixed(2)} USDC`);
+      const totalUSDC = milestones.reduce((s, m) => s + m.amount, 0).toFixed(2);
+      await checkGuard(config, { to: contractAddr, usdcAmount: totalUSDC, action: 'createMilestoneEscrow' });
+      console.log(`Creating milestone escrow: ${milestones.length} milestones, total $${totalUSDC} USDC`);
+      playSound('escrow-sealed');
       const { txHash, totalAmount } = await createMilestoneEscrow(wallet, contractAddr, {
         taskId: flags['task-id'],
         worker: flags.worker,
@@ -1005,9 +1063,10 @@ const commands = {
       const contractAddr = config.milestoneEscrow?.address;
       if (!contractAddr) { console.error('TaskEscrowV3 not configured.'); process.exit(1); }
 
+      await checkGuard(config, { to: contractAddr, action: 'releaseMilestone' });
       console.log(`Releasing milestone ${flags.index}...`);
       const { txHash } = await releaseMilestone(wallet, contractAddr, flags['task-id'], parseInt(flags.index));
-      console.log(`Released: ${txHash}`);
+      console.log(`Released: ${txHash}`); playSound('payment-released');
     },
 
     async 'milestone-status'(config, flags) {
@@ -1028,6 +1087,171 @@ const commands = {
       console.log(`  Released: ${status.releasedCount}/${status.milestoneCount}\n`);
       for (const m of status.milestones) {
         console.log(`  [${m.index}] $${m.amount} — ${m.status} — deadline: ${new Date(m.deadline * 1000).toISOString()}`);
+      }
+    },
+  },
+
+  // ─── Swarm Commands (Multi-Worker Escrow) ───
+  swarm: {
+    async 'create-task'(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+      if (!flags.budget) { console.error('--budget required'); process.exit(1); }
+      if (!flags.milestones) { console.error('--milestones <count> required'); process.exit(1); }
+
+      const { createSwarmTask } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      await checkGuard(config, { to: contractAddr, action: 'createSwarmTask' });
+      const { txHash, taskIdHash } = await createSwarmTask(wallet, contractAddr, {
+        taskId: flags['task-id'],
+        totalBudget: flags.budget,
+        milestoneCount: parseInt(flags.milestones),
+        bidDeadlineHours: parseInt(flags['bid-deadline'] || '24'),
+        bondAmount: flags.bond || '0',
+      });
+      console.log(`Task created (bidding open): ${txHash}`);
+      console.log(`Task hash: ${taskIdHash}`);
+      playSound('escrow-sealed');
+    },
+
+    async bid(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+      if (!flags.price) { console.error('--price required'); process.exit(1); }
+
+      const { placeBid } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      await checkGuard(config, { to: contractAddr, usdcAmount: flags.bond || '0', action: 'placeBid' });
+      const { txHash } = await placeBid(wallet, contractAddr, {
+        taskId: flags['task-id'],
+        price: flags.price,
+      });
+      console.log(`Bid placed: ${txHash}`);
+      playSound('stake-locked');
+    },
+
+    async 'accept-bid'(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+      if (!flags.worker) { console.error('--worker required'); process.exit(1); }
+
+      const { acceptBid } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      const { txHash } = await acceptBid(wallet, contractAddr, {
+        taskId: flags['task-id'],
+        worker: flags.worker,
+      });
+      console.log(`Bid accepted: ${txHash}`);
+      playSound('approved');
+    },
+
+    async 'fund-and-assign'(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+      if (!flags.assignments) { console.error('--assignments "worker:amount:hours,..." required'); process.exit(1); }
+
+      const assignments = flags.assignments.split(',').map(a => {
+        const [worker, amount, hours] = a.trim().split(':');
+        return { worker, amount: parseFloat(amount), deadlineHours: parseInt(hours || '24') };
+      });
+
+      const { fundAndAssign } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      const totalUSDC = assignments.reduce((s, a) => s + a.amount, 0).toFixed(2);
+      await checkGuard(config, { to: contractAddr, usdcAmount: totalUSDC, action: 'fundAndAssign' });
+      console.log(`Funding task with ${assignments.length} milestone assignments, total $${totalUSDC} USDC...`);
+      const { txHash, totalAmount } = await fundAndAssign(wallet, contractAddr, {
+        taskId: flags['task-id'],
+        assignments,
+      });
+      console.log(`Funded and assigned: ${txHash}`);
+      console.log(`Total locked: $${totalAmount} USDC`);
+      playSound('escrow-sealed');
+    },
+
+    async 'set-coordinator'(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+      if (!flags.coordinator) { console.error('--coordinator required'); process.exit(1); }
+
+      const { setCoordinator } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      const { txHash } = await setCoordinator(wallet, contractAddr, {
+        taskId: flags['task-id'],
+        coordinator: flags.coordinator,
+      });
+      console.log(`Coordinator set: ${txHash}`);
+    },
+
+    async 'release-milestone'(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+      if (flags.index === undefined) { console.error('--index required'); process.exit(1); }
+
+      const { releaseSwarmMilestone } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      await checkGuard(config, { to: contractAddr, action: 'releaseSwarmMilestone' });
+      console.log(`Releasing swarm milestone ${flags.index}...`);
+      const { txHash } = await releaseSwarmMilestone(wallet, contractAddr, flags['task-id'], parseInt(flags.index));
+      console.log(`Released: ${txHash}`); playSound('payment-released');
+    },
+
+    async 'cancel-task'(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+
+      const { cancelSwarmTask } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      const { txHash } = await cancelSwarmTask(wallet, contractAddr, flags['task-id']);
+      console.log(`Task cancelled, bonds refunded: ${txHash}`);
+    },
+
+    async status(config, flags) {
+      if (!flags['task-id']) { console.error('--task-id required'); process.exit(1); }
+
+      const { getSwarmTaskStatus } = await import('./src/swarm-escrow.js');
+      const wallet = await getWallet(config);
+      const contractAddr = config.swarmEscrow?.address;
+      if (!contractAddr) { console.error('SwarmEscrow not configured.'); process.exit(1); }
+
+      const s = await getSwarmTaskStatus(wallet, contractAddr, flags['task-id']);
+      if (!s) { console.log('No swarm task found.'); return; }
+
+      console.log(`Swarm task: ${flags['task-id']}`);
+      console.log(`  Status: ${s.status}`);
+      console.log(`  Requestor: ${s.requestor}`);
+      console.log(`  Budget: $${s.totalBudget} USDC`);
+      console.log(`  Bond: $${s.bondAmount} USDC`);
+      console.log(`  Bid deadline: ${new Date(s.bidDeadline * 1000).toISOString()}`);
+      if (s.coordinator) console.log(`  Coordinator: ${s.coordinator}`);
+      console.log(`  Milestones: ${s.releasedCount}/${s.milestoneCount} released\n`);
+
+      if (s.bids.length) {
+        console.log('  Bids:');
+        for (const b of s.bids) {
+          const status = b.accepted ? '✅ accepted' : b.refunded ? '↩ refunded' : '⏳ pending';
+          console.log(`    ${b.worker.slice(0, 10)}... $${b.price} [${status}]`);
+        }
+        console.log();
+      }
+
+      for (const m of s.milestones) {
+        const workerStr = m.worker === '0x0000000000000000000000000000000000000000' ? 'unassigned' : m.worker.slice(0, 10) + '...';
+        console.log(`  [${m.index}] $${m.amount} → ${workerStr} — ${m.status}`);
       }
     },
   },
@@ -1317,9 +1541,10 @@ const commands = {
         process.exit(1);
       }
 
+      await checkGuard(config, { to: contractAddr, usdcAmount: flags.amount, action: 'stake' });
       console.log(`Depositing $${flags.amount} USDC stake...`);
       const { txHash } = await depositStake(wallet, contractAddr, flags.amount);
-      console.log(`Staked: ${txHash}`);
+      console.log(`Staked: ${txHash}`); playSound('stake-locked');
       console.log('Your stake signals quality commitment to requestors.');
     },
 
@@ -1330,9 +1555,10 @@ const commands = {
       const contractAddr = config.staking?.address;
       if (!contractAddr) { console.error('WorkerStake not configured.'); process.exit(1); }
 
+      await checkGuard(config, { to: contractAddr, usdcAmount: flags.amount, action: 'unstake' });
       console.log(`Withdrawing $${flags.amount} USDC stake...`);
       const { txHash } = await withdrawStake(wallet, contractAddr, flags.amount);
-      console.log(`Withdrawn: ${txHash}`);
+      console.log(`Withdrawn: ${txHash}`); playSound('unstaked');
     },
 
     async 'stake-status'(config, flags) {
@@ -1377,6 +1603,7 @@ const commands = {
       console.log(`  Daily limit: ${guard.maxDailySpend} USDC`);
       console.log(`  Hourly tx limit: ${guard.maxTransactionsPerHour}`);
       console.log(`  Config saved to: ${join(workdir, '.wallet-guard.json')}`);
+      playSound('guard-active');
     },
 
     async 'guard-allow'(config, flags) {
@@ -1455,6 +1682,11 @@ const args = process.argv.slice(2);
 const { positional, flags } = parseArgs(args);
 const [command, subcommand] = positional;
 
+// --silent disables sound bites
+if (flags.silent || flags.quiet || process.env.SWARM_SILENT) {
+  setSoundsEnabled(false);
+}
+
 if (!command || !subcommand) {
   console.log(`
 Agent Swarm CLI
@@ -1513,6 +1745,21 @@ Commands:
   wallet guard-set --max-tx <usdc> [--max-daily <usdc>] [--max-hourly <n>] [--mode <mode>]
                                   Update wallet guard settings
   wallet audit-log [--limit <n>]  Show recent transaction audit log
+
+  swarm create-task --task-id <id> --budget <usdc> --milestones <count> [--bid-deadline <hours>] [--bond <usdc>]
+                                  Create multi-worker task (opens for bidding)
+  swarm bid --task-id <id> --price <usdc>
+                                  Place a bid on a task (deposits bond if required)
+  swarm accept-bid --task-id <id> --worker <addr>
+                                  Accept a worker's bid
+  swarm fund-and-assign --task-id <id> --assignments "worker:amount:hours,..."
+                                  Fund escrow and assign milestones to accepted workers
+  swarm set-coordinator --task-id <id> --coordinator <addr>
+                                  Designate a coordinator for the task
+  swarm release-milestone --task-id <id> --index <n>
+                                  Release a milestone to its assigned worker
+  swarm cancel-task --task-id <id>  Cancel task during bidding (refunds all bonds)
+  swarm status --task-id <id>     Full task status (bids, milestones, workers)
   `);
   process.exit(0);
 }
@@ -1527,6 +1774,7 @@ const config = (command === 'setup' && subcommand === 'init') ? {} : loadConfig(
 // Ensure CONFIG_PATH is set for setup init to write to
 
 commands[command][subcommand](config, flags).catch(err => {
+  playSoundSync('error');
   console.error(`Error: ${err.message}`);
   process.exit(1);
 });
