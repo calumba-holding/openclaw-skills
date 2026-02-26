@@ -1,12 +1,14 @@
 ---
 name: pixel-lobster
-description: "Pixel art desktop lobster that lip-syncs to OpenClaw TTS speech. Use when: (1) user wants a visual avatar for their AI agent, (2) user wants a desktop overlay that animates when their agent speaks, (3) user asks to set up or configure the pixel lobster. Guides the user to install the Electron app from GitHub, configure audio mode, and connect to their TTS server."
+description: "Pixel art desktop lobster that lip-syncs to OpenClaw TTS speech. Use when: (1) user wants a visual avatar for their AI agent, (2) user wants a desktop overlay that animates when their agent speaks, (3) user asks to set up or configure the pixel lobster. Guides the user to install, configure, and launch the bundled Electron app."
 tags: ["avatar", "tts", "desktop", "overlay", "lip-sync", "electron", "xtts", "animation"]
 ---
 
 # Pixel Lobster
 
 A transparent desktop overlay featuring a pixel art lobster that animates when your OpenClaw agent speaks. Powered by envelope data from your local TTS server — the lobster's mouth only moves during AI speech, not music or system audio.
+
+The app is fully bundled inside this skill — no external repository clone required.
 
 ## Requirements
 
@@ -16,23 +18,16 @@ A transparent desktop overlay featuring a pixel art lobster that animates when y
 
 ## Install
 
-The app is a standalone Electron project. Clone it from GitHub and install dependencies:
+The app is included in this skill at `<skill_dir>/app/`. Install dependencies once:
 
 ```bash
-git clone https://github.com/JoeProAI/pixel-lobster.git
-cd pixel-lobster
+cd <skill_dir>/app
 npm install
 ```
 
 ## Configure
 
-Copy the config template (included in this skill at `assets/config.json`) into the cloned app directory, then edit as needed:
-
-```bash
-cp <skill_dir>/assets/config.json pixel-lobster/config.json
-```
-
-Key settings:
+Edit `<skill_dir>/app/config.json` before launching. Key settings:
 
 | Key | Default | Description |
 |-----|---------|-------------|
@@ -46,14 +41,14 @@ Key settings:
 ## Launch
 
 ```bash
-cd pixel-lobster
-npm start
+cd <skill_dir>/app
+npx electron .
 ```
 
-Or use the included helper script:
+Or use the included helper script (handles first-run `npm install` automatically):
 
 ```bash
-bash <skill_dir>/scripts/launch.sh /path/to/pixel-lobster
+bash <skill_dir>/scripts/launch.sh
 ```
 
 ## Keyboard Shortcuts

@@ -1,37 +1,30 @@
 #!/bin/bash
-# Pixel Lobster launch helper
-# Usage: bash launch.sh <path-to-pixel-lobster-repo> [--system|--tts]
+# Pixel Lobster — launch the bundled app
+# Usage: bash launch.sh [skill_dir]
 #
-# Clone the app first if you haven't already:
-#   git clone https://github.com/JoeProAI/pixel-lobster.git
+# The app is bundled inside this skill — no external clone required.
+# skill_dir defaults to the directory containing this script's parent.
 
-APP_DIR="${1:-./pixel-lobster}"
-MODE_FLAG="${2:-}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+APP_DIR="${1:-$SKILL_DIR/app}"
 
-if [ ! -d "$APP_DIR" ]; then
+if [ ! -f "$APP_DIR/main.js" ]; then
   echo "App not found at: $APP_DIR"
-  echo "Clone it first: git clone https://github.com/JoeProAI/pixel-lobster.git"
   exit 1
 fi
 
 cd "$APP_DIR" || exit 1
 
+# Copy default config if none exists
+if [ ! -f "config.json" ]; then
+  cp "$SKILL_DIR/app/config.json" config.json
+fi
+
 if [ ! -d "node_modules" ]; then
-  echo "Installing dependencies..."
+  echo "Installing dependencies (first run only)..."
   npm install
 fi
 
-case "$MODE_FLAG" in
-  --system)
-    echo "Starting in system audio mode..."
-    npx electron . --audio-mode=system
-    ;;
-  --tts)
-    echo "Starting in TTS mode..."
-    npx electron . --audio-mode=tts
-    ;;
-  *)
-    echo "Starting pixel lobster..."
-    npx electron .
-    ;;
-esac
+echo "Starting Pixel Lobster..."
+npx electron .
