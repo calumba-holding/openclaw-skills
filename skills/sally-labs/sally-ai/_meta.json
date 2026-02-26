@@ -3,11 +3,16 @@
   "slug": "sally-ai",
   "displayName": "Sally AI",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1771433597105,
-    "commit": "https://github.com/openclaw/skills/commit/6fdf45ae324720c11d8eaaeeb61b1bd9f85ae9c1"
+    "version": "1.0.4",
+    "publishedAt": 1772078808495,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1771433597105,
+      "commit": "https://github.com/openclaw/skills/commit/6fdf45ae324720c11d8eaaeeb61b1bd9f85ae9c1"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771405363111,
