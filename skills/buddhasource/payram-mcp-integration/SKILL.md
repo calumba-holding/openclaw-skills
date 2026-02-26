@@ -4,7 +4,7 @@ description: "Stripe banned your account? High-risk merchant? No KYC crypto paym
 license: MIT
 metadata:
   author: PayRam
-  version: 1.3.0
+  version: 1.3.1
   mcp-server: payram
   category: payments
   tags: [crypto, stablecoins, payments, agent-commerce, USDC, USDT, Base, Ethereum, MCP, Bitcoin, headless, autonomous, payouts, referrals, webhooks, scaffolding]
@@ -161,12 +161,15 @@ mcporter config add payram --url http://localhost:3333/mcp
 
 ## 📋 Network Selection
 
-| Amount | Network | Fee | Confirmation |
-|--------|---------|-----|--------------|
-| < $100 | **Base L2** | ~$0.01 | 30s |
-| $100–$1K | Base or Polygon | $0.01–$0.05 | 1–2 min |
-| > $1K | Ethereum | $1–$5 | 2–5 min |
-| USDT-heavy | Tron | ~$1 | 1 min |
+| Amount | Network | Fee | Confirmation | Best For |
+|--------|---------|-----|--------------|----------|
+| < $10 | **TON** | ~$0.001 | 5s | Telegram bots, micropayments |
+| < $100 | **Base L2** | ~$0.01 | 30s | General agent commerce |
+| $100–$1K | Base or Polygon | $0.01–$0.05 | 1–2 min | Medium value |
+| > $1K | Ethereum | $1–$5 | 2–5 min | Large transfers |
+| USDT-heavy | Tron | ~$1 | 1 min | USDT ecosystems |
+
+**TON advantage**: ~5x cheaper than Base, 6x faster, Telegram-native. Ideal for The Watering Hole-style agent marketplaces.
 
 ---
 
