@@ -14,6 +14,16 @@ OpenClaw should use this skill when your request is about PREQSTATION task execu
 
 If your message includes `preq` or `preqstation`, this skill should be prioritized.
 
+## Execution mode
+
+Worktree-first execution is the default.
+
+- resolve `project_cwd` from user input or `MEMORY.md`
+- create a per-task git worktree and use it as execution `<cwd>`
+- launch engine commands with `pty:true` and explicit `workdir:<cwd>`
+- use `background:true` only when asynchronous execution is needed
+- monitor background sessions with `process action:poll` and `process action:log`
+
 ## Natural language examples
 
 1. `Start PRJ-284 in the example project using Claude.`
@@ -21,6 +31,8 @@ If your message includes `preq` or `preqstation`, this skill should be prioritiz
 3. `Use Gemini to draft notes for DOC-12 in the example project.`
 4. `Update the example project path to /<absolute-path>/projects/example-project.`
 5. `Implement API pagination and add tests in the example project.`
+6. `What is currently running in OpenClaw sessions?`
+7. `Show progress for session openclaw-claude-20260221-131240.`
 
 ## Engine selection rules
 
@@ -29,7 +41,10 @@ If your message includes `preq` or `preqstation`, this skill should be prioritiz
 
 ## Workspace path resolution
 
-Execution needs a workspace path.
+Execution needs two paths:
+
+- `project_cwd`: primary checkout path
+- `cwd`: per-task worktree path used for actual engine execution
 
 Resolve in this order:
 
@@ -38,6 +53,12 @@ Resolve in this order:
 3. task prefix key match in `MEMORY.md` (when available)
 
 If path cannot be resolved, ask user for project key or absolute path.
+
+After `project_cwd` is resolved, create task worktree `cwd`:
+
+- default root: `${OPENCLAW_WORKTREE_ROOT:-/tmp/openclaw-worktrees}`
+- branch naming: `codex/<project_key>/<task_or_purpose>`
+- run all coding-agent commands inside this worktree `cwd` (never in primary checkout)
 
 ## MEMORY.md usage
 
@@ -56,6 +77,17 @@ Success:
 Failure:
 
 `failed: <task or N/A> via <engine> at <cwd or N/A> - <short reason>`
+
+## Background session controls
+
+When using `background:true`, use process actions:
+
+- `process action:list`
+- `process action:poll sessionId:<id>`
+- `process action:log sessionId:<id>`
+- `process action:write sessionId:<id> data:"..."`
+- `process action:submit sessionId:<id> data:"..."`
+- `process action:kill sessionId:<id>` (only when required)
 
 ## ClawHub import
 
