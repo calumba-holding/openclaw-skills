@@ -1,7 +1,7 @@
 ---
 name: Instagram API
 description: Post to Instagram (Feed, Story, Reels, Carousel) and Threads using the official Meta Graph API. Requires Imgur for media hosting.
-version: 1.1.0
+version: 1.1.1
 author: raon
 requires_env:
   - INSTAGRAM_ACCESS_TOKEN

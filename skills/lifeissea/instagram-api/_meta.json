@@ -3,11 +3,16 @@
   "slug": "instagram-api",
   "displayName": "Instagram Api",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771719309776,
-    "commit": "https://github.com/openclaw/skills/commit/dc2a816351a17dd97f450694d877eea5d1d1dcfb"
+    "version": "1.1.1",
+    "publishedAt": 1771978902904,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771719309776,
+      "commit": "https://github.com/openclaw/skills/commit/dc2a816351a17dd97f450694d877eea5d1d1dcfb"
+    },
     {
       "version": "1.0.6",
       "publishedAt": 1771510359971,
