@@ -1,13 +1,18 @@
 {
   "owner": "buddhasource",
   "slug": "agent-to-agent-payments",
-  "displayName": "Agent To Agent Payments",
+  "displayName": "Agent-to-Agent Payments",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771435344222,
-    "commit": "https://github.com/openclaw/skills/commit/978bf5f82745740f46948f040b915fb61e8a774b"
+    "version": "1.1.1",
+    "publishedAt": 1772060295393,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771435344222,
+      "commit": "https://github.com/openclaw/skills/commit/978bf5f82745740f46948f040b915fb61e8a774b"
+    },
     {
       "version": "1.0.2",
       "publishedAt": 1771369127348,

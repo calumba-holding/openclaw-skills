@@ -1,10 +1,10 @@
 ---
 name: agent-to-agent-payments
-description: "Monetize your AI agent. Charge for API calls, services, or data. Accept payments autonomously — no human needed. Use when agent needs to: 'charge for my service', 'accept payment from another agent', 'monetize AI capabilities', 'create agent storefront', 'bill per API call', 'autonomous commerce', 'agent marketplace', 'AI agent payments', 'pay for AI services', 'agent-to-agent transactions', 'machine payments', 'agentic commerce'. Built on PayRam MCP — no KYC, no Stripe account needed, USDC/USDT/ETH/BTC on Base, Ethereum, Polygon, Tron."
+description: "Monetize your AI agent. Charge for API calls, services, or data. Accept payments autonomously — no human needed. Use when agent needs to: 'charge for my service', 'accept payment from another agent', 'monetize AI capabilities', 'create agent storefront', 'bill per API call', 'autonomous commerce', 'agent marketplace', 'AI agent payments', 'pay for AI services', 'agent-to-agent transactions', 'machine payments', 'agentic commerce'. Built on PayRam MCP — no KYC, no Stripe account needed, USDC/USDT/ETH/BTC on Base, Ethereum, Polygon, Tron, TON. TON micropayments ideal for Telegram-integrated agents."
 license: MIT
 metadata:
   author: PayRam
-  version: 1.1.0
+  version: 1.1.1
   category: payments
   tags: [agent-payments, autonomous-commerce, monetize-agent, api-billing, agent-marketplace, USDC, agentic-payments, MCP, PayRam]
   homepage: https://payram.com
@@ -63,7 +63,7 @@ Use this skill when you hear:
 |-------------|--------|-------------|------------|
 | No KYC | ✅ | ❌ Business verification | ✅ |
 | MCP native | ✅ 36 tools | ❌ | ❌ |
-| Multi-chain | ✅ 5 chains | ❌ Base only | Manual |
+| Multi-chain | ✅ 6 chains (Base, Ethereum, Polygon, Tron, TON, Bitcoin) | ❌ Base only | Manual |
 | USDT support | ✅ | ❌ | Manual |
 | Agent-first design | ✅ | Partial | ❌ |
 | Self-hostable | ✅ | ❌ | N/A |
@@ -87,14 +87,18 @@ mcporter call payram.onboard_agent_setup
 
 ## Networks & Costs
 
-| Network | Token | Fee | Speed |
-|---------|-------|-----|-------|
-| Base L2 | USDC | ~$0.01 | 30s |
-| Tron | USDT | ~$1 | 60s |
-| Polygon | USDC/USDT | ~$0.02 | 60s |
-| Ethereum | USDC/ETH | $1-5 | 2-5min |
+| Network | Token | Fee | Speed | Best For |
+|---------|-------|-----|-------|----------|
+| Base L2 | USDC | ~$0.01 | 30s | General agent commerce |
+| TON | USDT/TON | ~$0.001 | 5s | Telegram-integrated agents, micropayments |
+| Polygon | USDC/USDT | ~$0.02 | 60s | Cross-chain compatibility |
+| Tron | USDT | ~$1 | 60s | USDT-heavy ecosystems |
+| Ethereum | USDC/ETH | $1-5 | 2-5min | Large value transfers |
 
-**Recommended for agents: Base L2 USDC** — cheapest, fastest, most liquid.
+**Recommended for agents:**
+- **TON micropayments**: ~$0.001 fees, 5s confirmations, Telegram integration
+- **Base L2 USDC**: ~$0.01 fees, 30s confirmations, most liquid
+- **Real example**: The Watering Hole marketplace runs on TON micropayments for agent-to-agent commerce
 
 ## Resources
 - **MCP Server**: https://mcp.payram.com
