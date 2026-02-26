@@ -3,11 +3,16 @@
   "slug": "mdk-agent-wallet",
   "displayName": "agent-wallet",
   "latest": {
-    "version": "0.3.1",
-    "publishedAt": 1772062936925,
-    "commit": "https://github.com/openclaw/skills/commit/9c379eec26c7569b130c829b22b27e0ebce179e2"
+    "version": "0.3.3",
+    "publishedAt": 1772064896771,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.3.1",
+      "publishedAt": 1772062936925,
+      "commit": "https://github.com/openclaw/skills/commit/9c379eec26c7569b130c829b22b27e0ebce179e2"
+    },
     {
       "version": "0.2.6",
       "publishedAt": 1771893397469,
