@@ -1,9 +1,7 @@
 ---
 name: meegle-api-space-association
-description: |
-  Meegle OpenAPI for space association operations.
-metadata:
-  openclaw: {}
+description: Meegle OpenAPI for space association operations.
+metadata: { openclaw: {} }
 ---
 
 # Meegle API — Space Association
@@ -33,56 +31,15 @@ Obtain the list of space association rules configured under the specified space.
 ```yaml
 name: get_space_association_rules
 type: api
-description: >
-  Obtain the list of space association rules configured under the specified space.
-  Response follows ProjectRelationRules structure.
-
-auth:
-  type: plugin_access_token
-  header: X-Plugin-Token
-  user_header: X-User-Key
-
-http:
-  method: POST
-  url: https://{domain}/open_api/{project_key}/relation/rules
-  headers:
-    Content-Type: application/json
-    X-Plugin-Token: "{{resolved_token}}"
-    X-User-Key: "{{user_key}}"
-
-path_params:
-  project_key:
-    type: string
-    required: true
-    description: >
-      Space ID (project_key) or space domain name (simple_name).
-      project_key: Double-click space name in Meegle.
-      simple_name: From space URL, e.g. https://meegle.com/doc/overview → doc.
-
-inputs:
-  remote_projects:
-    type: array
-    items: string
-    required: false
-    description: >
-      List of project_key for associated (remote) spaces.
-      Used to filter rules for specific spaces.
-
-outputs:
-  data:
-    type: array
-    description: >
-      List of ProjectRelationRules. Each item includes remote_project_key,
-      remote_project_name, and rules array (id, name, disabled,
-      work_item_relation_id, work_item_relation_name, current_work_item_type_key,
-      remote_work_item_type_key, chat_group_merge, etc.).
-
-constraints:
-  - Permission: Permission Management – Space Association
-
-error_mapping:
-  1000052062: Project key is wrong (project_key incorrect)
-  1000052063: Not found simple name (project_key incorrect)
+description: List space association rules; optional filter by remote_projects.
+auth: { type: plugin_access_token, header: X-Plugin-Token, user_header: X-User-Key }
+http: { method: POST, url: "https://{domain}/open_api/{project_key}/relation/rules" }
+headers: { Content-Type: application/json, X-Plugin-Token: "{{resolved_token}}", X-User-Key: "{{user_key}}" }
+path_params: { project_key: string }
+inputs: { remote_projects: array }
+outputs: { data: array }
+constraints: [Permission: Space Association]
+error_mapping: { 1000052062: Project key wrong, 1000052063: Not found simple name }
 ```
 
 ### Usage notes
@@ -107,73 +64,15 @@ Obtain the list of work item instances that are spatially associated with the sp
 ```yaml
 name: get_work_items_under_space_association
 type: api
-description: >
-  Obtain the list of work item instances that are spatially associated with
-  the specified work item instance. Optional filters by rule, project, or related work item.
-
-auth:
-  type: plugin_access_token
-  header: X-Plugin-Token
-  user_header: X-User-Key
-
-http:
-  method: POST
-  url: https://{domain}/open_api/{project_key}/relation/{work_item_type_key}/{work_item_id}/work_item_list
-  headers:
-    Content-Type: application/json
-    X-Plugin-Token: "{{resolved_token}}"
-    X-User-Key: "{{user_key}}"
-
-path_params:
-  project_key:
-    type: string
-    required: true
-    description: >
-      Space ID (project_key) or space domain name (simple_name).
-      project_key: Double-click space name in Meegle.
-      simple_name: From space URL, e.g. https://meegle.com/doc/overview → doc.
-  work_item_type_key:
-    type: string
-    required: true
-    description: Work item type. Obtainable via "Get work item types in the space". Must match work_item_id.
-  work_item_id:
-    type: string
-    required: true
-    description: Work item instance ID. In work item details, click ··· in the upper right, then ID to copy.
-
-inputs:
-  relation_rule_id:
-    type: string
-    required: false
-    description: Space association rule ID. Obtain via Get the List of Rules for Space Association.
-  relation_work_item_id:
-    type: integer
-    required: false
-    description: ID of the associated work item; used to filter by a specific related work item.
-  relation_work_item_type_key:
-    type: string
-    required: false
-    description: Work item type key of the associated work items.
-  relation_project_key:
-    type: string
-    required: false
-    description: project_key of the associated (remote) space.
-
-outputs:
-  data:
-    type: array
-    description: >
-      List of associated work items (RelationInstance). Each item includes
-      relation_project_name, relation_work_item_id, relation_work_item_name,
-      relation_work_item_type_key/name, project_relation_rule_id/name, relation_project_key.
-
-constraints:
-  - Permission: Permission Management – Work Item Instance
-
-error_mapping:
-  10001: Operation not permitted (insufficient permissions)
-  30005: Work item not found (work_item_id incorrect or does not match work_item_type_key)
-  50006: Too many records (exceed system limit; reduce or batch)
+description: List work items spatially associated with given work item; optional filters (rule, project, type).
+auth: { type: plugin_access_token, header: X-Plugin-Token, user_header: X-User-Key }
+http: { method: POST, url: "https://{domain}/open_api/{project_key}/relation/{work_item_type_key}/{work_item_id}/work_item_list" }
+headers: { Content-Type: application/json, X-Plugin-Token: "{{resolved_token}}", X-User-Key: "{{user_key}}" }
+path_params: { project_key: string, work_item_type_key: string, work_item_id: string }
+inputs: { relation_rule_id: string, relation_work_item_id: integer, relation_work_item_type_key: string, relation_project_key: string }
+outputs: { data: array }
+constraints: [Permission: Work Item Instance]
+error_mapping: { 10001: Not permitted, 30005: Work item not found, 50006: Too many records }
 ```
 
 ### Usage notes
@@ -199,77 +98,15 @@ Establish a spatial association binding between the specified work item instance
 ```yaml
 name: apply_space_association_rules_to_work_items
 type: api
-description: >
-  Establish spatial association binding between the specified work item instance
-  and the incoming list of work item instances. Optional relation_rule_id and instances list.
-
-auth:
-  type: plugin_access_token
-  header: X-Plugin-Token
-  user_header: X-User-Key
-
-http:
-  method: POST
-  url: https://{domain}/open_api/{project_key}/relation/{work_item_type_key}/{work_item_id}/batch_bind
-  headers:
-    Content-Type: application/json
-    X-Plugin-Token: "{{resolved_token}}"
-    X-User-Key: "{{user_key}}"
-
-path_params:
-  project_key:
-    type: string
-    required: true
-    description: >
-      Space ID (project_key) or space domain name (simple_name).
-      project_key: Double-click space name in Meegle.
-      simple_name: From space URL, e.g. https://meegle.com/doc/overview → doc.
-  work_item_type_key:
-    type: string
-    required: true
-    description: Work item type. Obtain via Get work item types under the space. Must match work_item_id.
-  work_item_id:
-    type: string
-    required: true
-    description: Work item instance ID. In details, expand ··· > ID in the upper right to obtain.
-
-inputs:
-  relation_rule_id:
-    type: string
-    required: false
-    description: Space association rule ID. Obtain via Get the List of Rules for Space Association.
-  instances:
-    type: array
-    required: false
-    description: List of work item instances to bind.
-    items:
-      type: object
-      properties:
-        project_key:
-          type: string
-          description: project_key of the associated space (can be empty in some cases).
-        work_item_id:
-          type: string
-          description: Work item instance ID to associate.
-        work_item_type_key:
-          type: string
-          description: Work item type key of the instance (can be empty in some cases).
-        chat_group_merge:
-          type: integer
-          description: Chat group merge option (e.g. 1).
-
-outputs:
-  data:
-    type: object
-    description: Empty object on success.
-
-constraints:
-  - Permission: Permission Management – Work Item Instances
-
-error_mapping:
-  1000051617: Project relation instance bind duplicate (binding already exists)
-  30005: Work item not found (path work item does not exist)
-  30015: Record not found (associated work item does not exist)
+description: Bind work items via space association; optional relation_rule_id, instances (project_key, work_item_id, work_item_type_key, chat_group_merge).
+auth: { type: plugin_access_token, header: X-Plugin-Token, user_header: X-User-Key }
+http: { method: POST, url: "https://{domain}/open_api/{project_key}/relation/{work_item_type_key}/{work_item_id}/batch_bind" }
+headers: { Content-Type: application/json, X-Plugin-Token: "{{resolved_token}}", X-User-Key: "{{user_key}}" }
+path_params: { project_key: string, work_item_type_key: string, work_item_id: string }
+inputs: { relation_rule_id: string, instances: array }
+outputs: { data: object }
+constraints: [Permission: Work Item Instances]
+error_mapping: { 1000051617: Bind duplicate, 30005: Work item not found, 30015: Record not found }
 ```
 
 ### Usage notes
@@ -295,62 +132,15 @@ Unbind the space association between the specified work item instance and anothe
 ```yaml
 name: remove_work_items_under_space_association
 type: api
-description: >
-  Unbind the space association relationship between the specified work item instance
-  and the incoming work item instance. Optional relation_rule_id and relation_work_item_id.
-
-auth:
-  type: plugin_access_token
-  header: X-Plugin-Token
-  user_header: X-User-Key
-
-http:
-  method: DELETE
-  url: https://{domain}/open_api/{project_key}/relation/{work_item_type_key}/{work_item_id}
-  headers:
-    Content-Type: application/json
-    X-Plugin-Token: "{{resolved_token}}"
-    X-User-Key: "{{user_key}}"
-
-path_params:
-  project_key:
-    type: string
-    required: true
-    description: >
-      Space ID (project_key) or space domain name (simple_name).
-      project_key: Double-click space name in Meegle.
-      simple_name: From space URL, e.g. https://meegle.com/doc/overview → doc.
-  work_item_type_key:
-    type: string
-    required: true
-    description: Work item type. Obtain via Get work item types under the space. Must match work_item_id.
-  work_item_id:
-    type: string
-    required: true
-    description: Work item instance ID. In details, expand ··· > ID in the upper right to obtain.
-
-inputs:
-  relation_rule_id:
-    type: string
-    required: false
-    description: Space association rule ID. Obtain via Get the List of Rules for Space Association.
-  relation_work_item_id:
-    type: integer
-    required: false
-    description: >
-      Work item instance ID to unbind. In work item details, expand ··· > ID in the upper right to obtain.
-      API types this as int64; string IDs in request body are accepted (e.g. "301228xxxx").
-
-outputs:
-  data:
-    type: object
-    description: Empty object on success.
-
-constraints:
-  - Permission: Permission Management – Work Item Instances
-
-error_mapping:
-  20006: Invalid param (work_item or relation_rule_id not found; relation_work_item_id or relation_rule_id incorrect)
+description: Unbind space association; optional relation_rule_id, relation_work_item_id.
+auth: { type: plugin_access_token, header: X-Plugin-Token, user_header: X-User-Key }
+http: { method: DELETE, url: "https://{domain}/open_api/{project_key}/relation/{work_item_type_key}/{work_item_id}" }
+headers: { Content-Type: application/json, X-Plugin-Token: "{{resolved_token}}", X-User-Key: "{{user_key}}" }
+path_params: { project_key: string, work_item_type_key: string, work_item_id: string }
+inputs: { relation_rule_id: string, relation_work_item_id: integer }
+outputs: { data: object }
+constraints: [Permission: Work Item Instances]
+error_mapping: { 20006: Invalid param }
 ```
 
 ### Usage notes

@@ -1,24 +1,18 @@
 ---
 name: meegle-api-setting
-description: |
-  Meegle OpenAPI for space/work item settings and configuration.
-metadata:
-  openclaw: {}
+description: Meegle OpenAPI for space/work item settings and configuration.
+metadata: { openclaw: {} }
 ---
 
 # Meegle API — Setting
 
-Setting and configuration related OpenAPIs (e.g. work item types, fields, process templates). Use when you need to read or change space or work item settings.
+OpenAPIs for work item types, fields, process templates. Use read-file on **Path**; `{baseDir}` = skill pack root.
 
----
-
-## Where to Find Setting Skills
-
-| Skill | Directory | Description |
-|-------|-----------|-------------|
-| Space setting | `space-setting/` | Get work item types in space, Get business line details in space |
-| Work item settings | `work-item-settings/` | Get basic work item settings, Update work item basic information settings |
-| Field settings | `field-settings/` | Get field information, Create custom field, Update custom field |
-| Relationship settings | `relationship-settings/` | List, create, update, delete work item relationships |
-| Roles | `roles/` | Create workflow role, Get detailed role settings, Update/Delete workflow role |
-| Workflow settings | `workflow-settings/` | Get workflow templates, Get detailed settings, Create/Update/Delete workflow templates |
+| Skill | Path | Description |
+|-------|------|-------------|
+| Space setting | **{baseDir}/meegle-api-setting/space-setting/SKILL.md** | Work item types in space, business line details |
+| Work item settings | **{baseDir}/meegle-api-setting/work-item-settings/SKILL.md** | Get/update basic work item type settings |
+| Field settings | **{baseDir}/meegle-api-setting/field-settings/SKILL.md** | Get field info, create/update custom field |
+| Relationship settings | **{baseDir}/meegle-api-setting/relationship-settings/SKILL.md** | List/create/update/delete work item relationships |
+| Roles | **{baseDir}/meegle-api-setting/roles/SKILL.md** | Create/get/update/delete workflow role |
+| Workflow settings | **{baseDir}/meegle-api-setting/workflow-settings/SKILL.md** | Get/create/update/delete workflow templates |
