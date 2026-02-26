@@ -1,13 +1,18 @@
 {
   "owner": "ivangdavila",
   "slug": "self-improving",
-  "displayName": "Self-Improving Agent",
+  "displayName": "Self Improving",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1772019493427,
-    "commit": "https://github.com/openclaw/skills/commit/a25955fb1bcf813be715e0c0eceb90c0261a8fa1"
+    "version": "1.1.2",
+    "publishedAt": 1772104981216,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1772019493427,
+      "commit": "https://github.com/openclaw/skills/commit/a25955fb1bcf813be715e0c0eceb90c0261a8fa1"
+    },
     {
       "version": "1.1.0",
       "publishedAt": 1771530801802,
