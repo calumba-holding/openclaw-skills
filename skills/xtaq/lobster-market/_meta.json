@@ -3,9 +3,15 @@
   "slug": "lobster-market",
   "displayName": "Lobster Market",
   "latest": {
-    "version": "1.1.1",
-    "publishedAt": 1770911771343,
-    "commit": "https://github.com/openclaw/skills/commit/bffdc8932266ec30d4c0f997aabb3fa5889f4650"
+    "version": "2.1.0",
+    "publishedAt": 1772074006790,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.1",
+      "publishedAt": 1770911771343,
+      "commit": "https://github.com/openclaw/skills/commit/bffdc8932266ec30d4c0f997aabb3fa5889f4650"
+    }
+  ]
 }

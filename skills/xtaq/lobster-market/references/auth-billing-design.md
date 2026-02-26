@@ -123,10 +123,9 @@ POST /api/v1/auth/agent-register
 
 **安全限制：**
 - Rate limit: 同一 IP 每小时最多 5 次注册
-- 新账户自动赠送 **1000 虾米**（通过 transaction-service signup_bonus 参数）
+- 新账户余额为 0
 - 返回 Master Key/Secret + 一个 Agent Key/Secret
-- 注册时自动创建钱包并赠送虾米（调 transaction-service）
-- 同一 IP 只能注册一个用户
+- 注册时自动创建钱包（调 transaction-service）
 
 **本地存储：**
 ```json
