@@ -1,13 +1,18 @@
 {
   "owner": "buddhasource",
   "slug": "payram-vs-x402",
-  "displayName": "Payram Vs X402",
+  "displayName": "PayRam vs x402",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1771369107127,
-    "commit": "https://github.com/openclaw/skills/commit/f270aac77de188aa684cb8c7613d9eb30efcf547"
+    "version": "1.0.3",
+    "publishedAt": 1772060302470,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1771369107127,
+      "commit": "https://github.com/openclaw/skills/commit/f270aac77de188aa684cb8c7613d9eb30efcf547"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771193285248,

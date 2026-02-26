@@ -4,7 +4,7 @@ description: Privacy and sovereignty comparison between PayRam self-hosted infra
 license: MIT
 metadata:
   author: PayRam
-  version: 1.0.2
+  version: 1.0.3
   category: education
   tags: [comparison, privacy, protocols, reference, x402, architecture, sovereignty, stripe, machine-payments]
   homepage: https://payram.com
@@ -249,6 +249,53 @@ x402's USDC-only limitation excludes the majority of stablecoin users. PayRam su
 | **Bitcoin** | ❌ No | ✅ Native |
 
 x402 optimized for Base/Solana. PayRam supports the chains where real commerce volume flows.
+
+## Settlement Finality: The Critical Difference
+
+### x402's Optimistic Execution Problem
+
+x402 payments face a fundamental challenge: **settlement finality vs user experience**.
+
+**The Problem:**
+- x402 uses **optimistic execution** - server delivers resource immediately after receiving payment signature
+- But blockchain confirmations take time (30s on Base, 2-5min on Ethereum)
+- What if payment fails to confirm? Server delivered resource for free
+- What if server waits for confirmations? User experience suffers (5+ second delays)
+
+**Real-World Impact:**
+- Micropayments (<$1) become economically unviable (risk of failed payments)
+- Requires complex fraud detection systems
+- Limits to low-value transactions only
+- Creates reconciliation headaches
+
+### PayRam's Confirmation-Based Architecture
+
+PayRam solves this with **unique deposit addresses + on-chain confirmation**:
+
+```
+1. Agent requests resource → gets unique deposit address
+2. Agent sends payment → on-chain transaction
+3. PayRam monitors chain → detects confirmation
+4. PayRam triggers webhook → server delivers resource
+```
+
+**Advantages:**
+- ✅ **Guaranteed settlement** - Resource only delivered after on-chain confirmation
+- ✅ **No fraud risk** - Payment is irreversible once confirmed
+- ✅ **Works for any value** - From $0.01 micropayments to $10,000+ transfers
+- ✅ **Simple reconciliation** - On-chain transaction = proof of payment
+
+**TON Advantage**: TON blockchain offers ~5s confirmations, making it ideal for PayRam-powered agent micropayments.
+
+### MiCA Compliance Challenge for x402
+
+**European MiCA regulations** (Markets in Crypto-Assets) create compliance gaps for x402:
+
+1. **USDC limitations**: MiCA requires specific stablecoin compliance that USDC may not fully meet in EU
+2. **Facilitator liability**: Coinbase/Stripe as facilitators bear compliance burden
+3. **Geographic restrictions**: x402 services may be unavailable in certain EU jurisdictions
+
+**PayRam advantage**: Self-hosted infrastructure means **you control compliance**. Deploy in compliant jurisdiction, implement KYC as needed, maintain data sovereignty.
 
 ## Facilitator Dependency
 
