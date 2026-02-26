@@ -3,11 +3,16 @@
   "slug": "glm-web-search",
   "displayName": "glm-web-search",
   "latest": {
-    "version": "1.0.4",
-    "publishedAt": 1771917376209,
-    "commit": "https://github.com/openclaw/skills/commit/9c9a3c9b0a21e20767e8e70a7f5799ebd300ddf5"
+    "version": "1.0.6",
+    "publishedAt": 1772112193976,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.4",
+      "publishedAt": 1771917376209,
+      "commit": "https://github.com/openclaw/skills/commit/9c9a3c9b0a21e20767e8e70a7f5799ebd300ddf5"
+    },
     {
       "version": "1.0.3",
       "publishedAt": 1771775520844,
