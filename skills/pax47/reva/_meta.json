@@ -3,11 +3,16 @@
   "slug": "reva",
   "displayName": "Reva",
   "latest": {
-    "version": "0.1.3",
-    "publishedAt": 1771563213846,
-    "commit": "https://github.com/openclaw/skills/commit/a9c1c6c186404ad627d515f02f787277944589a6"
+    "version": "0.1.5",
+    "publishedAt": 1772040255457,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.1.3",
+      "publishedAt": 1771563213846,
+      "commit": "https://github.com/openclaw/skills/commit/a9c1c6c186404ad627d515f02f787277944589a6"
+    },
     {
       "version": "0.1.1",
       "publishedAt": 1771375753061,

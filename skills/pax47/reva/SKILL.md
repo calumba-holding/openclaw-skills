@@ -1,6 +1,11 @@
 ---
 name: reva
 description: Complete Reva wallet management - passwordless authentication, PayID name claiming, multi-chain crypto transfers to PayIDs or wallet addresses, balance tracking across networks, account details information, and deposit management
+homepage: https://revapay.ai
+user-invocable: true
+dependencies:
+  - jq
+  - curl
 ---
 
 # Reva
@@ -256,10 +261,33 @@ Validate email format before sending requests. PayID format should be alphanumer
 
 ## Security Notes
 
-- Access tokens are stored in encrypted storage at `~/.openclaw/payid/auth.json`
+**User Authentication and Control:**
+
+- **All operations require explicit user authentication** - users must complete passwordless OTP verification before any protected operations
+- **Transfers are NEVER autonomous** - every transfer requires the user to explicitly provide: token, chain, recipient, and amount
+- The skill cannot initiate transfers on its own; it only executes transfers when the user explicitly requests them with all required parameters
+- Users maintain full control over their wallet operations at all times
+
+**Token Storage:**
+
+- Access tokens are stored locally in `~/.openclaw/payid/auth.json` with restricted file permissions (chmod 600)
+- This is a standard OAuth/JWT token pattern - tokens are stored locally for session persistence
+- Users can clear their token at any time by deleting the auth file or using the skill's logout functionality
+- Tokens expire and require re-authentication when invalid
+
+**Data Security:**
+
 - Never log or display access tokens to the user
-- OTP codes should only be entered once and never stored
-- Always use HTTPS for API requests (enforced in scripts)
+- OTP codes are only entered once and never stored
+- All API requests use HTTPS encryption (enforced in scripts)
+- All JSON payloads are constructed using `jq` to prevent injection attacks
+- The skill communicates only with the official Reva API (https://api.revapay.ai)
+
+**External API:**
+
+- This skill integrates with Reva (https://revapay.ai), a legitimate cryptocurrency wallet service
+- The API endpoint (https://api.revapay.ai) is the official production API for Reva
+- All transfers are executed through user-authenticated API calls, not autonomous actions
 
 ## Script Reference
 
