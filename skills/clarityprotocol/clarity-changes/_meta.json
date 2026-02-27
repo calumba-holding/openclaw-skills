@@ -1,0 +1,11 @@
+{
+  "owner": "clarityprotocol",
+  "slug": "clarity-changes",
+  "displayName": "Clarity Changes",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772051504944,
+    "commit": null
+  },
+  "history": []
+}
