@@ -1,12 +1,12 @@
 ---
 name: mkts-market-data
-description: Query real-time market data for stocks, crypto, ETFs, and commodities from mkts
+description: Real-time market data, portfolio tracking, trade journaling, screening, and news for stocks, crypto, ETFs, commodities, and forex — no API key required to start
 metadata: {"openclaw":{"requires":{"bins":["curl"]},"optionalEnv":["MKTS_API_KEY"],"emoji":"📊"}}
 ---
 
 # mkts Market Data Skill
 
-You can query real-time and cached market data for stocks, crypto, ETFs, and commodities using the mkts API.
+A complete financial toolkit for AI agents. Get market overviews, live quotes, historical OHLCV data, earnings calendars, and news from 8+ sources. Screen assets by price, volume, and market cap. Compare tickers side-by-side. Track portfolios with P&L, allocation, and benchmark performance. Log trade rationale in a journal. Manage watchlists. No API key needed for market data — register programmatically for higher limits.
 
 **Base URL**: `https://mkts.io/api/v1`
 
@@ -48,7 +48,7 @@ curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets?search=appl
 curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/assets?sort=change24h&dir=desc&limit=10&offset=0"
 ```
 
-Query params: `type` (crypto|stock|etf|commodity), `sector`, `platform`, `marketType`, `search`, `limit` (1-500), `offset`, `sort` (price|change24h|volume24h|marketCap), `dir` (asc|desc)
+Query params: `type` (crypto|stock|etf|commodity|forex), `sector`, `platform`, `marketType`, `search`, `limit` (1-500), `offset`, `sort` (price|change24h|volume24h|marketCap), `dir` (asc|desc)
 
 ### Single Asset
 Get details for a specific asset by symbol:
@@ -109,6 +109,14 @@ curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/brief
 
 Returns: global market stats, top 5 gainers/losers, sector summary, and natural-language highlights.
 
+### Macro Snapshot
+Get key macro indicators in one call (BTC, ETH, S&P 500, Nasdaq, Gold, Oil, DXY, VIX, 10Y):
+```bash
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/macro
+```
+
+Returns `{ indicators, generatedAt }`. Each indicator has `name`, `symbol`, `price`, and `change24h`. Snapshot assets (BTC, ETH, SPY, QQQ, GC=F, CL=F) update on data refresh; live indicators (DX-Y.NYB, ^VIX, ^TNX) are fetched in real-time with 60s caching.
+
 ### News
 Get latest financial news from RSS feeds (free, no extra API cost):
 ```bash
@@ -117,11 +125,15 @@ curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/news
 
 # Filter by category
 curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/news?category=crypto&limit=10"
+
+# News for a specific symbol (searches all feeds by symbol + company name)
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/news?symbol=HOOD"
+curl -s -H "X-API-Key: $MKTS_API_KEY" "https://mkts.io/api/v1/news?symbol=AAPL&limit=5"
 ```
 
-Query params: `category` (crypto|markets|commodities), `limit` (1-50, default 20).
+Query params: `category` (crypto|markets|commodities|forex), `symbol` (filter by asset symbol — overrides category), `limit` (1-50, default 20).
 
-Returns `{ count, news, sources }`. Each news item has `title`, `link`, `pubDate`, `source`, and `category`. Sources include CoinDesk, Cointelegraph, Decrypt, MarketWatch, CNBC, Investing.com, OilPrice, and FXStreet.
+Returns `{ count, news, sources }` (plus `symbol` when filtering by symbol). Each news item has `title`, `link`, `pubDate`, `source`, and `category`. Sources include CoinDesk, Cointelegraph, Decrypt, MarketWatch, CNBC, Investing.com, OilPrice, and FXStreet.
 
 ### Historical Prices (OHLCV)
 Get daily historical candles for any asset:
@@ -187,7 +199,7 @@ curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
   https://mkts.io/api/v1/portfolio
 ```
 
-POST body fields: `symbol` (required, uppercase), `name` (required), `assetType` (crypto|stock|etf|commodity), `quantity` (> 0), `avgCostBasis` (>= 0). Optional: `purchaseDate` (ISO string, max 20 chars), `notes` (max 1000 chars).
+POST body fields: `symbol` (required, uppercase), `name` (required), `assetType` (crypto|stock|etf|commodity|forex), `quantity` (> 0), `avgCostBasis` (>= 0). Optional: `purchaseDate` (ISO string, max 20 chars), `notes` (max 1000 chars).
 Returns the created holding with a server-generated `id`.
 
 ### Portfolio Performance with Benchmarks
@@ -225,6 +237,38 @@ curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
 POST body fields: `title` (required, max 200), `content` (required, max 10000). Optional: `symbol`, `tags` (array from: thesis, lesson, mistake, observation, buy, sell, watchlist).
 GET returns `{ count, entries }` sorted by most recent first.
 
+### Watchlist
+Create and manage watchlists of symbols:
+```bash
+# List all watchlists
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/watchlist
+
+# Create a watchlist (optionally with symbols)
+curl -s -X POST -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"name":"Tech","symbols":["AAPL","MSFT","GOOGL"]}' \
+  https://mkts.io/api/v1/watchlist
+
+# Get a single watchlist
+curl -s -H "X-API-Key: $MKTS_API_KEY" https://mkts.io/api/v1/watchlist/WATCHLIST_ID
+
+# Update a watchlist (rename, add/remove symbols)
+curl -s -X PATCH -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"name":"Big Tech","addSymbols":["AMZN"],"removeSymbols":["GOOGL"]}' \
+  https://mkts.io/api/v1/watchlist/WATCHLIST_ID
+
+# Delete a single watchlist
+curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
+  https://mkts.io/api/v1/watchlist/WATCHLIST_ID
+
+# Delete all watchlists
+curl -s -X DELETE -H "X-API-Key: $MKTS_API_KEY" \
+  https://mkts.io/api/v1/watchlist
+```
+
+POST body fields: `name` (required, max 100 chars). Optional: `symbols` (array of uppercase symbols).
+PATCH body fields (all optional): `name`, `addSymbols` (array), `removeSymbols` (array).
+GET returns `{ count, watchlists }` sorted by most recent first. Each watchlist has `id`, `userId`, `name`, `symbols`, `createdAt`, `updatedAt`.
+
 ## Response Format
 
 All responses follow this structure:
@@ -261,15 +305,36 @@ When rate limited, you'll receive a 429 response with a `Retry-After` header (in
 
 ## Error Handling
 
-- **401**: Invalid API key, or API key required (portfolio/journal endpoints)
+- **401**: Invalid API key, or API key required (portfolio/journal/watchlist endpoints)
 - **404**: Asset not found
 - **429**: Rate limit exceeded — wait and retry after `Retry-After` seconds
 - **500/502/503**: Server error — retry with backoff
 
+### Ask (Natural Language)
+Query market data using natural language. Requires API key. Counts against daily AI usage limit (5/day free, unlimited premium).
+```bash
+# Screen for assets
+curl -s -X POST -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"q":"tech stocks down more than 5%"}' \
+  https://mkts.io/api/v1/ask
+
+# Look up a single asset
+curl -s -X POST -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"q":"what is bitcoin at?"}' \
+  https://mkts.io/api/v1/ask
+
+# Top movers
+curl -s -X POST -H "X-API-Key: $MKTS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"q":"top crypto gainers today"}' \
+  https://mkts.io/api/v1/ask
+```
+
+POST body: `{ "q": "your question" }` (max 500 chars). Returns `{ query, action, summary, results, timestamp }`. Supported actions: `screen`, `lookup`, `compare`, `movers`, `macro`, `brief`. Results are cached for 5 minutes.
+
 ## Tips for Agents
 
 - **No API key needed to start** — market data endpoints work without auth (20 req/hour). Register at `POST /register` when you need higher limits
-- Portfolio and journal endpoints **require an API key** — register first if you need these
+- Portfolio, journal, and watchlist endpoints **require an API key** — register first if you need these
 - Use `/v1/brief` for morning market summaries — it combines everything in one call
 - Use `/v1/screen` for building watchlists or alert conditions
 - Use `/v1/compare` when the user asks to compare specific tickers
@@ -280,9 +345,14 @@ When rate limited, you'll receive a 429 response with a `Retry-After` header (in
 - Use `POST /v1/portfolio` to add holdings — the `id` is generated server-side, use it for subsequent deletes
 - Use `/v1/portfolio/performance?range=YTD&benchmarks=SPY` to answer "how am I doing vs the S&P?"
 - Use `/v1/journal` to log trade rationale — attach a `symbol` and `tags` for better organization
-- Portfolio and journal endpoints return `Cache-Control: private, no-store` — do not cache these
+- Portfolio, journal, and watchlist endpoints return `Cache-Control: private, no-store` — do not cache these
+- Use `/v1/watchlist` to manage symbol watchlists — create a list, then use `/v1/compare` or `/v1/screen` with those symbols
+- Use `PATCH /v1/watchlist/{id}` with `addSymbols`/`removeSymbols` to manage symbols without replacing the whole list
 - Use `/v1/news?category=crypto` to get relevant headlines before making trade decisions
 - Use `/v1/asset/{symbol}/history` for technical analysis — stocks get full OHLCV, crypto gets close + volume
 - Use `/v1/earnings?symbols=AAPL` before earnings season — check EPS estimates and recent quarter surprises
 - Use `/v1/earnings?week=current` for a quick weekly earnings calendar (zero real-time API calls)
 - Use `/v1/portfolio/card` to generate a shareable portfolio image — pipe to a file with `-o card.png`
+- Use `/v1/news?symbol=AAPL` to get news specifically about an asset — searches all feeds by symbol and company name
+- Use `/v1/macro` for a quick macro dashboard — BTC, ETH, S&P 500, Nasdaq, Gold, Oil, DXY, VIX, and 10Y in one call
+- Use `POST /v1/ask` for complex natural language queries — it parses intent and routes to the right data. Requires API key, counts against AI daily limit
