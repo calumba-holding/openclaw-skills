@@ -1,0 +1,11 @@
+{
+  "owner": "cryptocana",
+  "slug": "nova-drift",
+  "displayName": "Drift",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1771951627501,
+    "commit": null
+  },
+  "history": []
+}
