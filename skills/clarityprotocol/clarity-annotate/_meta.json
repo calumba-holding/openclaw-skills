@@ -1,0 +1,11 @@
+{
+  "owner": "clarityprotocol",
+  "slug": "clarity-annotate",
+  "displayName": "Clarity Annotate",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772051501007,
+    "commit": null
+  },
+  "history": []
+}
