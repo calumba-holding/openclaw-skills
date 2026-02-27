@@ -56,7 +56,59 @@ else
   fi
 fi
 
-echo "=== 4. 检查登录状态 ==="
+echo "=== 4. 检查生图 API 配置 ==="
+IMG_API_TYPE="${IMG_API_TYPE:-gemini}"
+IMG_OK=false
+
+case "$IMG_API_TYPE" in
+  gemini)
+    if [ -n "${GEMINI_API_KEY:-}" ]; then
+      echo "✅ Gemini API Key 已配置 (IMG_API_TYPE=gemini)"
+      IMG_OK=true
+    else
+      echo "❌ Gemini API Key 未配置（需设置 GEMINI_API_KEY）"
+    fi
+    ;;
+  openai)
+    if [ -n "${IMG_API_KEY:-}" ]; then
+      echo "✅ OpenAI 兼容 API Key 已配置 (IMG_API_TYPE=openai, BASE=${IMG_API_BASE:-https://api.openai.com/v1})"
+      IMG_OK=true
+    else
+      echo "❌ OpenAI 兼容 API Key 未配置（需设置 IMG_API_KEY）"
+    fi
+    ;;
+  hunyuan)
+    if [ -n "${HUNYUAN_SECRET_ID:-}" ] && [ -n "${HUNYUAN_SECRET_KEY:-}" ]; then
+      echo "✅ 腾讯云混元 API 已配置 (IMG_API_TYPE=hunyuan)"
+      IMG_OK=true
+    else
+      echo "❌ 腾讯云混元 API 未配置（需设置 HUNYUAN_SECRET_ID 和 HUNYUAN_SECRET_KEY）"
+    fi
+    ;;
+  *)
+    echo "⚠️ 未知的 IMG_API_TYPE: $IMG_API_TYPE（支持 gemini/openai/hunyuan）"
+    ;;
+esac
+
+# 如果当前类型未配置，检查是否有其他可用的
+if [ "$IMG_OK" = false ]; then
+  FALLBACKS=""
+  [ -n "${GEMINI_API_KEY:-}" ] && FALLBACKS="${FALLBACKS} gemini(GEMINI_API_KEY)"
+  [ -n "${IMG_API_KEY:-}" ] && FALLBACKS="${FALLBACKS} openai(IMG_API_KEY)"
+  [ -n "${HUNYUAN_SECRET_ID:-}" ] && [ -n "${HUNYUAN_SECRET_KEY:-}" ] && FALLBACKS="${FALLBACKS} hunyuan(HUNYUAN_SECRET_ID+KEY)"
+  if [ -n "$FALLBACKS" ]; then
+    echo "💡 检测到其他可用的生图 API:$FALLBACKS"
+    echo "   可通过 export IMG_API_TYPE=xxx 切换"
+  else
+    echo "⚠️ 未配置任何生图 API，封面生成功能不可用"
+    echo "   请设置以下任一组环境变量："
+    echo "   - GEMINI_API_KEY（推荐）"
+    echo "   - IMG_API_KEY + IMG_API_BASE"
+    echo "   - HUNYUAN_SECRET_ID + HUNYUAN_SECRET_KEY"
+  fi
+fi
+
+echo "=== 5. 检查登录状态 ==="
 SESSION_ID=$(curl -s -D /tmp/xhs_headers -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"openclaw","version":"1.0"}},"id":1}' > /dev/null && grep -i 'Mcp-Session-Id' /tmp/xhs_headers | tr -d '\r' | awk '{print $2}')

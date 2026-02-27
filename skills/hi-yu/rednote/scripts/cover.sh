@@ -1,7 +1,7 @@
 #!/bin/bash
 # 小红书封面图生成脚本
 # 功能：AI生成主题图片（上半部分3:2）+ 标题文字纯色底（下半部分3:2）→ 拼接为3:4封面图
-# 支持多种生图 API：Google Gemini（默认）、OpenAI / OpenAI 兼容 API
+# 支持多种生图 API：Google Gemini（默认）、OpenAI / OpenAI 兼容 API、腾讯云混元生图（AIART）
 #
 # 用法:
 #   bash cover.sh "标题文字" "AI图片生成prompt" [输出路径] [底色] [字色]
@@ -16,7 +16,7 @@
 #   $5 - 标题字色（可选，默认 #1A1A1A）
 #
 # 环境变量（生图 API 配置）:
-#   IMG_API_TYPE    - API 类型: "gemini"（默认）或 "openai"
+#   IMG_API_TYPE    - API 类型: "gemini"（默认）| "openai" | "hunyuan"
 #
 #   Gemini 模式:
 #     GEMINI_API_KEY  - Google Gemini API Key（必须设置）
@@ -26,6 +26,13 @@
 #     IMG_API_KEY     - API Key（必须设置）
 #     IMG_API_BASE    - API Base URL（默认 https://api.openai.com/v1）
 #     IMG_MODEL       - 模型名称（默认 dall-e-3）
+#
+#   腾讯云混元生图（AIART）模式:
+#     HUNYUAN_SECRET_ID   - 腾讯云 SecretId（必须设置）
+#     HUNYUAN_SECRET_KEY  - 腾讯云 SecretKey（必须设置）
+#     HUNYUAN_REGION      - 地域（默认 ap-guangzhou）
+#     HUNYUAN_ENDPOINT    - 请求域名（默认 aiart.tencentcloudapi.com）
+#     HUNYUAN_RSP_TYPE    - 返回类型 url|base64（默认 url）
 #
 # 最终封面尺寸: 1080x1440 (3:4)
 #   上半部分: 1080x720 (3:2) AI生成图片
@@ -39,7 +46,7 @@ OUTPUT="${3:-/tmp/xhs_cover.png}"
 BG_COLOR="${4:-#FFFFFF}"
 TEXT_COLOR="${5:-#1A1A1A}"
 
-# 生图 API 配置（支持 gemini 和 openai 两种模式）
+# 生图 API 配置（支持 gemini / openai / hunyuan 三种模式）
 IMG_API_TYPE="${IMG_API_TYPE:-gemini}"
 
 # Gemini 配置
@@ -51,6 +58,13 @@ GEMINI_API_URL="https://generativelanguage.googleapis.com/v1beta/models/${GEMINI
 IMG_API_KEY="${IMG_API_KEY:-}"
 IMG_API_BASE="${IMG_API_BASE:-https://api.openai.com/v1}"
 IMG_MODEL="${IMG_MODEL:-dall-e-3}"
+
+# 腾讯云混元生图（AIART）配置
+HUNYUAN_SECRET_ID="${HUNYUAN_SECRET_ID:-}"
+HUNYUAN_SECRET_KEY="${HUNYUAN_SECRET_KEY:-}"
+HUNYUAN_REGION="${HUNYUAN_REGION:-ap-guangzhou}"
+HUNYUAN_ENDPOINT="${HUNYUAN_ENDPOINT:-aiart.tencentcloudapi.com}"
+HUNYUAN_RSP_TYPE="${HUNYUAN_RSP_TYPE:-url}"  # url | base64
 
 # 尺寸定义
 COVER_W=1080
@@ -104,10 +118,15 @@ if [ "$USER_IMAGE_MODE" = false ]; then
     echo "请先设置: export GEMINI_API_KEY=\"your-api-key\""
     echo "获取地址: https://aistudio.google.com/apikey"
     echo "或切换为 OpenAI 模式: export IMG_API_TYPE=openai IMG_API_KEY=xxx"
+    echo "或切换为 混元 模式: export IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=xxx HUNYUAN_SECRET_KEY=xxx"
     exit 1
   elif [ "$IMG_API_TYPE" = "openai" ] && [ -z "$IMG_API_KEY" ]; then
     echo "❌ 错误: OpenAI 模式下未设置 IMG_API_KEY 环境变量"
     echo "请先设置: export IMG_API_KEY=\"your-api-key\" IMG_API_BASE=\"https://api.openai.com/v1\""
+    exit 1
+  elif [ "$IMG_API_TYPE" = "hunyuan" ] && { [ -z "$HUNYUAN_SECRET_ID" ] || [ -z "$HUNYUAN_SECRET_KEY" ]; }; then
+    echo "❌ 错误: 混元模式下未设置 HUNYUAN_SECRET_ID / HUNYUAN_SECRET_KEY 环境变量"
+    echo "请先设置: export IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=\"AKID...\" HUNYUAN_SECRET_KEY=\"...\""
     exit 1
   fi
 fi
@@ -195,6 +214,63 @@ else:
     sys.exit(1)
 PYEOF
     python3 "$EXTRACT_PY" "$RESPONSE_FILE" "$AI_IMG" 2>/tmp/xhs_cover_err.log
+
+  elif [ "$IMG_API_TYPE" = "hunyuan" ]; then
+    echo "   服务: aiart (腾讯云混元生图)"
+    echo "   Endpoint: ${HUNYUAN_ENDPOINT} | Region: ${HUNYUAN_REGION} | RspImgType: ${HUNYUAN_RSP_TYPE}"
+
+    # 通过腾讯云 SDK 调用 TextToImageRapid
+    GEN_PY="${TMP_DIR}/gen_hunyuan.py"
+    cat > "$GEN_PY" << 'PYEOF'
+import os, sys, json, base64, urllib.request
+from tencentcloud.common import credential
+from tencentcloud.common.profile.client_profile import ClientProfile
+from tencentcloud.common.profile.http_profile import HttpProfile
+from tencentcloud.aiart.v20221229 import aiart_client, models
+
+prompt = sys.argv[1]
+out_path = sys.argv[2]
+
+sid = os.environ.get('HUNYUAN_SECRET_ID')
+skey = os.environ.get('HUNYUAN_SECRET_KEY')
+region = os.environ.get('HUNYUAN_REGION', 'ap-guangzhou')
+endpoint = os.environ.get('HUNYUAN_ENDPOINT', 'aiart.tencentcloudapi.com')
+rsp_type = os.environ.get('HUNYUAN_RSP_TYPE', 'url')
+
+if not sid or not skey:
+    raise SystemExit('missing HUNYUAN_SECRET_ID/HUNYUAN_SECRET_KEY')
+
+cred = credential.Credential(sid, skey)
+httpProfile = HttpProfile()
+httpProfile.endpoint = endpoint
+clientProfile = ClientProfile()
+clientProfile.httpProfile = httpProfile
+client = aiart_client.AiartClient(cred, region, clientProfile)
+
+req = models.TextToImageRapidRequest()
+req.Prompt = prompt
+req.RspImgType = rsp_type
+
+resp = client.TextToImageRapid(req)
+
+# resp.ResultImage: url 或 base64
+if rsp_type == 'base64':
+    img_bytes = base64.b64decode(resp.ResultImage)
+    with open(out_path, 'wb') as f:
+        f.write(img_bytes)
+else:
+    # url
+    urllib.request.urlretrieve(resp.ResultImage, out_path)
+
+print(json.dumps({
+    'RequestId': resp.RequestId,
+    'Seed': resp.Seed,
+    'RspImgType': rsp_type,
+}, ensure_ascii=False))
+PYEOF
+
+    # 用 python3 的 argv 传 prompt，避免 bash 引号地狱
+    python3 "$GEN_PY" "$PROMPT" "$AI_IMG" 2>/tmp/xhs_cover_err.log | tee "${TMP_DIR}/hunyuan_meta.json" >/dev/null
 
   else
     # Gemini 模式（默认）

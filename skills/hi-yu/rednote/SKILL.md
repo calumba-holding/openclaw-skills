@@ -99,6 +99,7 @@ bash {baseDir}/scripts/generate.sh content "完整内容" "选定标题"
 
 - **Gemini**：`GEMINI_API_KEY=xxx bash cover.sh "标题" "prompt" ...`
 - **OpenAI兼容**：`IMG_API_TYPE=openai IMG_API_KEY=xxx IMG_API_BASE=https://api.openai.com/v1 IMG_MODEL=dall-e-3 bash cover.sh "标题" "prompt" ...`
+- **腾讯云混元生图（AIART）**：`IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=AKID... HUNYUAN_SECRET_KEY=... HUNYUAN_REGION=ap-guangzhou bash cover.sh "标题" "prompt" ...`
 - **其他方式**：用户提供图片路径，走 `__USER_IMAGE__` 模式
 
 若用户之前已提供过 API Key（本次会话中），后续生图直接复用，无需重复询问。
@@ -327,14 +328,13 @@ echo "$BASE64_STR" | base64 -d > /tmp/xhs_qr.png
 pkill -f xiaohongshu-login 2>/dev/null
 sleep 1
 cd ~/xiaohongshu-mcp && DISPLAY=:99 nohup ./xiaohongshu-login-linux-amd64 > login.log 2>&1 &
-sleep 8
+sleep 5
 ```
 
 #### 步骤 2: 截取二维码
 
 ```bash
-export DISPLAY=:99
-import -window root /tmp/xhs_qr.png
+DISPLAY=:99 import -window root /tmp/xhs_qr.png
 ```
 
 #### 步骤 2.1: 检测截图内是否有二维码
