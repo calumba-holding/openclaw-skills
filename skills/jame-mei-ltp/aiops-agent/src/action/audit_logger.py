@@ -5,7 +5,7 @@ Audit logger for tracking all remediation operations.
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 

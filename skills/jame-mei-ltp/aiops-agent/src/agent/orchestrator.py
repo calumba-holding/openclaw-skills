@@ -8,7 +8,7 @@ import asyncio
 import signal
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 

@@ -158,3 +158,39 @@ kubernetes:
   in_cluster: ${K8S_IN_CLUSTER:-false}
   kubeconfig: ${KUBECONFIG:-~/.kube/config}
   namespace: default
+
+# K8s Cluster Operations Configuration
+k8s_cluster:
+  drain_timeout_seconds: 300
+  drain_grace_period: 30
+  ignore_daemonsets: true
+  delete_emptydir_data: false
+  force_drain: false
+
+# Lark (Feishu) Notification Configuration
+lark:
+  enabled: ${LARK_ENABLED:-false}
+  app_id: ${LARK_APP_ID}
+  app_secret: ${LARK_APP_SECRET}
+  webhook_url: ${LARK_WEBHOOK_URL}
+  verification_token: ${LARK_VERIFICATION_TOKEN}
+  encrypt_key: ${LARK_ENCRYPT_KEY}
+
+# Ansible Executor Configuration
+ansible:
+  enabled: ${ANSIBLE_ENABLED:-false}
+  playbooks_dir: ${ANSIBLE_PLAYBOOKS_DIR:-/etc/sre-agent/ansible/playbooks}
+  roles_dir: ${ANSIBLE_ROLES_DIR:-/etc/sre-agent/ansible/roles}
+  inventory_file: ${ANSIBLE_INVENTORY}
+  timeout_seconds: 600
+  forks: 5
+  become: false
+  become_user: root
+
+# Learning Engine Configuration
+learning:
+  enabled: true
+  min_executions_for_learning: 3
+  success_rate_threshold: 0.8
+  auto_risk_adjustment: true
+  max_risk_reduction: 0.2

@@ -5,7 +5,7 @@ Evaluates multi-dimensional risk to determine automation level.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import structlog
 

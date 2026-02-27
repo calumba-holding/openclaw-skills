@@ -6,7 +6,7 @@ and operational knowledge.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 import structlog
@@ -56,7 +56,7 @@ class Runbook(BaseModel):
 class SearchResult(BaseModel):
     """Search result with similarity score."""
 
-    item: Incident | Runbook
+    item: Union[Incident, Runbook]
     score: float
     item_type: str
 
@@ -415,4 +415,185 @@ class KnowledgeBase:
             "collection": self.collection_name,
             "incident_count": len(self._incidents),
             "runbook_count": len(self._runbooks),
+            "execution_case_count": len(getattr(self, "_execution_cases", {})),
         }
+
+    async def add_execution_case(self, case: "ExecutionCase") -> str:
+        """
+        Add an execution case to the knowledge base.
+
+        Args:
+            case: The execution case to store
+
+        Returns:
+            The case ID
+        """
+        from src.models.playbook_stats import ExecutionCase
+
+        # Initialize storage if needed
+        if not hasattr(self, "_execution_cases"):
+            self._execution_cases: Dict[str, ExecutionCase] = {}
+
+        # Generate embedding from case text
+        embedding = await self._generate_embedding(case.to_search_text())
+        case.embedding = embedding
+
+        # Store in Qdrant if available
+        if self._client and self._initialized and embedding:
+            try:
+                from qdrant_client.models import PointStruct
+
+                self._client.upsert(
+                    collection_name=self.collection_name,
+                    points=[
+                        PointStruct(
+                            id=hash(case.id) % (2**63),
+                            vector=embedding,
+                            payload={
+                                "type": "execution_case",
+                                "id": case.id,
+                                "anomaly_id": case.anomaly_id,
+                                "anomaly_type": case.anomaly_type,
+                                "metric_name": case.metric_name,
+                                "metric_category": case.metric_category,
+                                "severity": case.severity,
+                                "playbook_id": case.playbook_id,
+                                "plan_id": case.plan_id,
+                                "action_types": case.action_types,
+                                "target": case.target,
+                                "namespace": case.namespace,
+                                "success": case.success,
+                                "duration_seconds": case.duration_seconds,
+                                "error_message": case.error_message,
+                                "root_cause": case.root_cause,
+                                "resolution_summary": case.resolution_summary,
+                                "lessons_learned": case.lessons_learned,
+                                "tags": case.tags,
+                                "created_at": case.created_at.isoformat(),
+                            },
+                        )
+                    ],
+                )
+            except Exception as e:
+                logger.warning("Failed to store execution case in Qdrant", error=str(e))
+
+        # Always store locally
+        self._execution_cases[case.id] = case
+
+        logger.info(
+            "Added execution case",
+            case_id=case.id,
+            playbook=case.playbook_id,
+            success=case.success,
+        )
+        return case.id
+
+    async def search_similar_cases(
+        self,
+        query: str,
+        limit: int = 5,
+        min_score: float = 0.5,
+        success_only: bool = False,
+    ) -> List[SearchResult]:
+        """
+        Search for similar execution cases.
+
+        Args:
+            query: Search query
+            limit: Maximum results
+            min_score: Minimum similarity score
+            success_only: Only return successful cases
+
+        Returns:
+            List of matching cases
+        """
+        from src.models.playbook_stats import ExecutionCase
+
+        results: List[SearchResult] = []
+        query_embedding = await self._generate_embedding(query)
+
+        if self._client and self._initialized and query_embedding:
+            try:
+                must_conditions = [{"key": "type", "match": {"value": "execution_case"}}]
+                if success_only:
+                    must_conditions.append({"key": "success", "match": {"value": True}})
+
+                search_results = self._client.search(
+                    collection_name=self.collection_name,
+                    query_vector=query_embedding,
+                    query_filter={"must": must_conditions},
+                    limit=limit,
+                )
+
+                for result in search_results:
+                    if result.score >= min_score:
+                        payload = result.payload
+                        case = ExecutionCase(
+                            id=payload["id"],
+                            anomaly_id=payload["anomaly_id"],
+                            anomaly_type=payload["anomaly_type"],
+                            metric_name=payload["metric_name"],
+                            metric_category=payload["metric_category"],
+                            severity=payload["severity"],
+                            playbook_id=payload["playbook_id"],
+                            plan_id=payload["plan_id"],
+                            action_types=payload.get("action_types", []),
+                            target=payload.get("target", ""),
+                            namespace=payload.get("namespace", ""),
+                            success=payload["success"],
+                            duration_seconds=payload.get("duration_seconds", 0),
+                            error_message=payload.get("error_message"),
+                            root_cause=payload.get("root_cause"),
+                            resolution_summary=payload.get("resolution_summary"),
+                            lessons_learned=payload.get("lessons_learned", []),
+                            tags=payload.get("tags", []),
+                        )
+                        results.append(
+                            SearchResult(
+                                item=case,
+                                score=result.score,
+                                item_type="execution_case",
+                            )
+                        )
+            except Exception as e:
+                logger.warning("Qdrant case search failed", error=str(e))
+
+        # Fallback to local search
+        if not results and hasattr(self, "_execution_cases"):
+            results = self._local_search_cases(query, limit, min_score, success_only)
+
+        return results
+
+    def _local_search_cases(
+        self,
+        query: str,
+        limit: int,
+        min_score: float,
+        success_only: bool,
+    ) -> List[SearchResult]:
+        """Local keyword search for execution cases."""
+        from src.models.playbook_stats import ExecutionCase
+
+        if not hasattr(self, "_execution_cases"):
+            return []
+
+        results: List[SearchResult] = []
+        query_lower = query.lower()
+        query_words = set(query_lower.split())
+
+        for case in self._execution_cases.values():
+            if success_only and not case.success:
+                continue
+
+            text = case.to_search_text().lower()
+            text_words = set(text.split())
+            overlap = len(query_words & text_words)
+            score = overlap / max(len(query_words), 1)
+
+            if score >= min_score:
+                results.append(
+                    SearchResult(item=case, score=score, item_type="execution_case")
+                )
+
+        results.sort(key=lambda x: x.score, reverse=True)
+        return results[:limit]

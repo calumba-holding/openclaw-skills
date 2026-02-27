@@ -5,7 +5,7 @@ Combines risk assessment, playbooks, and RCA to create action plans.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 

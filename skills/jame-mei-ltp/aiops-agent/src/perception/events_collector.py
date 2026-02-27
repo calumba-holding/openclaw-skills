@@ -3,7 +3,7 @@ Events collector for Kubernetes events and configuration changes.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 from kubernetes import client, config

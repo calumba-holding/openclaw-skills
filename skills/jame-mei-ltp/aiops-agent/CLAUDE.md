@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the SRE Agent project - an AI-powered intelligent operations agent system based on the OpenClaw framework. The system transforms traditional reactive alerting into proactive prediction, intelligent diagnosis, and automated remediation for AIOps.
 
-**Current Status**: Design phase - no source code implemented yet. The repository contains comprehensive design documents.
+**Current Status**: Active development - core modules implemented with recent feature additions.
 
 ## Architecture
 
@@ -37,6 +37,11 @@ The system follows a four-layer architecture:
 - **RAGKnowledgeBase**: Historical incident knowledge base with vector search
   - Stores past incidents, runbooks, best practices
   - Uses embeddings (text-embedding-3) and vector DB (Qdrant/Milvus)
+- **LearningEngine**: Execution feedback and continuous improvement
+  - Tracks playbook execution statistics (success rate, duration)
+  - Automatic risk score adjustment based on historical performance
+  - Stores execution cases in knowledge base for similarity search
+  - Extracts lessons learned from failures
 
 ### 3. Decision Layer (决策层)
 - **RiskAssessment**: Multi-dimensional risk scoring
@@ -54,30 +59,68 @@ The system follows a four-layer architecture:
 - **AutoRemediation**: Automated fixes
   - Pod restarts, scaling, configuration rollback, version rollback, traffic control
 - **AuditLogger**: Complete audit trail of all operations
+- **Notifiers**: Multi-channel notification support
+  - **WebhookNotifier**: Generic HTTP webhook notifications (Slack, Discord, etc.)
+  - **LarkNotifier**: Lark (Feishu) with interactive approval cards
+- **Executors**: Multiple execution backends
+  - **KubernetesExecutor**: Pod/Deployment level operations
+  - **K8sClusterExecutor**: Node-level operations (cordon, drain, uncordon), PVC operations, NetworkPolicy
+  - **AnsibleExecutor**: Ansible playbook and role execution
+  - **HTTPExecutor**: Custom webhook calls
 
-## Project Structure (Intended)
+## Project Structure
 
 ```
 sre-agent/
 ├── src/
 │   ├── agent/
-│   │   └── sre_agent.py          # Main agent orchestration
+│   │   ├── orchestrator.py       # Main agent orchestration
+│   │   └── prompts.py            # LLM prompts
 │   ├── perception/                # Data collection layer
 │   │   ├── metrics_collector.py
 │   │   ├── logs_collector.py
-│   │   └── events_collector.py
+│   │   ├── events_collector.py
+│   │   └── normalizer.py
 │   ├── cognition/                 # AI analysis layer
 │   │   ├── baseline_engine.py
 │   │   ├── anomaly_detector.py
 │   │   ├── trend_predictor.py
 │   │   ├── rca_engine.py
-│   │   └── rag_knowledge_base.py
+│   │   ├── knowledge_base.py     # RAG knowledge base
+│   │   └── learning_engine.py    # Execution learning (NEW)
 │   ├── decision/                  # Decision layer
 │   │   ├── risk_assessment.py
-│   │   └── action_planner.py
-│   └── action/                    # Execution layer
-│       ├── alert_manager.py
-│       └── auto_remediation.py
+│   │   ├── action_planner.py
+│   │   └── playbook_engine.py
+│   ├── action/                    # Execution layer
+│   │   ├── auto_remediation.py
+│   │   ├── audit_logger.py
+│   │   ├── notification_manager.py
+│   │   ├── notifiers/            # Multi-channel notifications (NEW)
+│   │   │   ├── base_notifier.py
+│   │   │   ├── webhook_notifier.py
+│   │   │   └── lark_notifier.py  # Lark with interactive cards
+│   │   └── executors/
+│   │       ├── k8s_executor.py
+│   │       ├── k8s_cluster_executor.py  # Node/PVC/NetworkPolicy (NEW)
+│   │       ├── ansible_executor.py      # Ansible playbooks (NEW)
+│   │       └── http_executor.py
+│   ├── api/                       # REST API
+│   │   ├── main.py
+│   │   └── routes/
+│   │       ├── health.py
+│   │       ├── anomalies.py
+│   │       ├── approvals.py
+│   │       └── callbacks.py      # Lark callback handler (NEW)
+│   ├── models/                    # Data models
+│   │   ├── anomaly.py
+│   │   ├── baseline.py
+│   │   ├── action_plan.py
+│   │   ├── audit.py
+│   │   └── playbook_stats.py     # Execution statistics (NEW)
+│   └── config/
+│       ├── constants.py
+│       └── settings.py
 ├── config/
 │   └── config.yaml               # Main configuration
 ├── tests/                        # Test files
@@ -249,3 +292,84 @@ Environment variables (.env):
 1. Add new method to `AutoRemediation` class
 2. Add routing logic in `_execute_step()` method
 3. Ensure proper validation and rollback handling
+
+## Recent Feature Additions
+
+### Lark (飞书) Approval Integration
+Interactive approval workflow via Lark cards:
+- **Approval Cards**: Rich cards with Approve/Reject buttons
+- **Card Updates**: Automatic card update after user action
+- **Callback API**: `/api/v1/callbacks/lark` endpoint for Lark callbacks
+- **Signature Verification**: Secure callback verification
+
+Configuration:
+```yaml
+lark:
+  enabled: true
+  app_id: ${LARK_APP_ID}
+  app_secret: ${LARK_APP_SECRET}
+  webhook_url: ${LARK_WEBHOOK_URL}
+  verification_token: ${LARK_VERIFICATION_TOKEN}
+```
+
+### Learning Engine (学习闭环)
+Automatic learning from execution outcomes:
+- **Playbook Statistics**: Tracks success rate, duration, failure patterns
+- **Risk Adjustment**: Automatically suggests risk score adjustments based on historical performance
+- **Execution Cases**: Stores cases in knowledge base for similarity search
+- **Lessons Learned**: Extracts insights from failures
+
+API Endpoints:
+- `GET /api/v1/learning/stats` - Learning engine statistics
+- `GET /api/v1/playbooks/stats` - All playbook statistics
+- `GET /api/v1/playbooks/stats/{id}` - Specific playbook statistics
+- `GET /api/v1/playbooks/executions/{id}` - Playbook execution history
+
+Configuration:
+```yaml
+learning:
+  enabled: true
+  min_executions_for_learning: 3
+  success_rate_threshold: 0.8
+  auto_risk_adjustment: true
+  max_risk_reduction: 0.2
+```
+
+### New Executors
+
+#### Ansible Executor
+Execute Ansible playbooks and roles:
+```python
+ActionType.ANSIBLE_PLAYBOOK  # Run playbook
+ActionType.ANSIBLE_ROLE      # Run role via temp playbook
+```
+
+Configuration:
+```yaml
+ansible:
+  enabled: true
+  playbooks_dir: /etc/sre-agent/ansible/playbooks
+  roles_dir: /etc/sre-agent/ansible/roles
+  inventory_file: /etc/sre-agent/ansible/inventory
+  timeout_seconds: 600
+```
+
+#### K8s Cluster Executor
+Node and cluster-level operations:
+```python
+ActionType.NODE_CORDON           # Mark node unschedulable
+ActionType.NODE_DRAIN            # Evict pods and cordon
+ActionType.NODE_UNCORDON         # Mark node schedulable
+ActionType.PVC_EXPAND            # Expand PVC size
+ActionType.PVC_SNAPSHOT          # Create VolumeSnapshot
+ActionType.NETWORK_POLICY_APPLY  # Apply NetworkPolicy
+ActionType.NETWORK_POLICY_REMOVE # Remove NetworkPolicy
+```
+
+Configuration:
+```yaml
+k8s_cluster:
+  drain_timeout_seconds: 300
+  drain_grace_period: 30
+  ignore_daemonsets: true
+```

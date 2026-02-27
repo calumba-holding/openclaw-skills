@@ -49,6 +49,7 @@ class ActionStatus(str, Enum):
 class ActionType(str, Enum):
     """Types of remediation actions."""
 
+    # Pod-level actions
     POD_RESTART = "pod_restart"
     HPA_SCALE = "hpa_scale"
     DEPLOYMENT_ROLLBACK = "deployment_rollback"
@@ -58,6 +59,19 @@ class ActionType(str, Enum):
     DATABASE_FAILOVER = "database_failover"
     CACHE_FLUSH = "cache_flush"
     CUSTOM_WEBHOOK = "custom_webhook"
+
+    # Ansible actions
+    ANSIBLE_PLAYBOOK = "ansible_playbook"
+    ANSIBLE_ROLE = "ansible_role"
+
+    # K8s cluster-level actions
+    NODE_CORDON = "node_cordon"
+    NODE_DRAIN = "node_drain"
+    NODE_UNCORDON = "node_uncordon"
+    PVC_EXPAND = "pvc_expand"
+    PVC_SNAPSHOT = "pvc_snapshot"
+    NETWORK_POLICY_APPLY = "network_policy_apply"
+    NETWORK_POLICY_REMOVE = "network_policy_remove"
 
 
 class MetricCategory(str, Enum):

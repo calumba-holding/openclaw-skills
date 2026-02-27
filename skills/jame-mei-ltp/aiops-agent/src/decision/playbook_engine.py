@@ -5,7 +5,7 @@ Playbooks define remediation procedures as YAML files.
 """
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 import structlog

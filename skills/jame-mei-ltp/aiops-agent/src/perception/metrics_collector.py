@@ -6,7 +6,7 @@ Collects time series metrics using PromQL queries.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import httpx
 import structlog

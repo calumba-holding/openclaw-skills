@@ -4,7 +4,7 @@ Kubernetes executor for remediation actions.
 Handles K8s operations like pod restart, scaling, rollback.
 """
 
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 from kubernetes import client, config

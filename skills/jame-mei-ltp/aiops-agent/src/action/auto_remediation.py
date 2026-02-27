@@ -5,16 +5,19 @@ Executes approved remediation actions with safety checks and rollback.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import structlog
 
 from src.action.audit_logger import AuditLogger
+from src.action.executors.ansible_executor import AnsibleExecutor
 from src.action.executors.http_executor import HTTPExecutor
+from src.action.executors.k8s_cluster_executor import K8sClusterExecutor
 from src.action.executors.k8s_executor import KubernetesExecutor
 from src.config.constants import ActionStatus, ActionType
 from src.config.settings import get_settings
 from src.models.action_plan import ActionPlan, ActionStep
+from src.models.anomaly import Anomaly
 
 logger = structlog.get_logger()
 
@@ -31,7 +34,7 @@ class AutoRemediation:
     - Rate limiting
     """
 
-    def __init__(self):
+    def __init__(self, learning_engine=None):
         settings = get_settings()
         self._enabled = settings.auto_remediation.enabled
         self._dry_run = settings.auto_remediation.dry_run
@@ -41,24 +44,40 @@ class AutoRemediation:
 
         # Executors
         self._k8s_executor = KubernetesExecutor()
+        self._k8s_cluster_executor = K8sClusterExecutor()
         self._http_executor = HTTPExecutor()
+        self._ansible_executor = AnsibleExecutor()
         self._audit_logger = AuditLogger()
+
+        # Learning engine (optional)
+        self._learning_engine = learning_engine
 
         # State tracking
         self._active_executions: dict[str, ActionPlan] = {}
         self._recent_targets: dict[str, datetime] = {}  # For cooldown
+
+        # Track anomaly for learning
+        self._plan_anomalies: dict[str, Anomaly] = {}
+        self._plan_playbook_ids: dict[str, str] = {}
 
     @property
     def is_enabled(self) -> bool:
         """Check if remediation is enabled."""
         return self._enabled
 
-    async def execute_plan(self, plan: ActionPlan) -> ActionPlan:
+    async def execute_plan(
+        self,
+        plan: ActionPlan,
+        anomaly: Optional[Anomaly] = None,
+        playbook_id: Optional[str] = None,
+    ) -> ActionPlan:
         """
         Execute an action plan.
 
         Args:
             plan: Approved action plan
+            anomaly: The anomaly that triggered this plan (for learning)
+            playbook_id: ID of the playbook used (for learning)
 
         Returns:
             Updated plan with execution results
@@ -75,6 +94,12 @@ class AutoRemediation:
         if len(self._active_executions) >= self._max_concurrent:
             plan.error_message = "Max concurrent executions reached"
             return plan
+
+        # Track anomaly and playbook for learning
+        if anomaly:
+            self._plan_anomalies[plan.id] = anomaly
+        if playbook_id:
+            self._plan_playbook_ids[plan.id] = playbook_id
 
         # Start execution
         plan.mark_started()
@@ -115,7 +140,42 @@ class AutoRemediation:
         finally:
             self._active_executions.pop(plan.id, None)
 
+            # Learning: Record execution for analysis
+            await self._record_learning(plan)
+
         return plan
+
+    async def _record_learning(self, plan: ActionPlan) -> None:
+        """Record execution outcome for learning."""
+        if not self._learning_engine:
+            return
+
+        # Only record completed executions
+        if plan.status not in (ActionStatus.SUCCESS, ActionStatus.FAILED, ActionStatus.ROLLED_BACK):
+            return
+
+        anomaly = self._plan_anomalies.pop(plan.id, None)
+        playbook_id = self._plan_playbook_ids.pop(plan.id, None)
+
+        if not anomaly or not playbook_id:
+            logger.debug(
+                "Skipping learning record - missing anomaly or playbook",
+                plan_id=plan.id,
+            )
+            return
+
+        try:
+            await self._learning_engine.record_execution(
+                plan=plan,
+                anomaly=anomaly,
+                playbook_id=playbook_id,
+            )
+        except Exception as e:
+            logger.warning(
+                "Failed to record execution for learning",
+                plan_id=plan.id,
+                error=str(e),
+            )
 
     async def _execute_step(self, plan: ActionPlan, step: ActionStep) -> bool:
         """Execute a single step."""
@@ -207,11 +267,24 @@ class AutoRemediation:
     async def _dispatch_action(self, step: ActionStep) -> dict[str, Any]:
         """Dispatch action to appropriate executor."""
         action_handlers = {
+            # Pod/Deployment level (K8s executor)
             ActionType.POD_RESTART: self._k8s_executor.restart_pod,
             ActionType.HPA_SCALE: self._k8s_executor.scale_hpa,
             ActionType.DEPLOYMENT_ROLLBACK: self._k8s_executor.rollback_deployment,
             ActionType.CONFIG_ROLLBACK: self._k8s_executor.rollback_configmap,
+            # HTTP
             ActionType.CUSTOM_WEBHOOK: self._http_executor.call_webhook,
+            # Ansible
+            ActionType.ANSIBLE_PLAYBOOK: self._ansible_executor.run_playbook,
+            ActionType.ANSIBLE_ROLE: self._ansible_executor.run_role,
+            # K8s cluster level
+            ActionType.NODE_CORDON: self._k8s_cluster_executor.cordon_node,
+            ActionType.NODE_DRAIN: self._k8s_cluster_executor.drain_node,
+            ActionType.NODE_UNCORDON: self._k8s_cluster_executor.uncordon_node,
+            ActionType.PVC_EXPAND: self._k8s_cluster_executor.expand_pvc,
+            ActionType.PVC_SNAPSHOT: self._k8s_cluster_executor.create_pvc_snapshot,
+            ActionType.NETWORK_POLICY_APPLY: self._k8s_cluster_executor.apply_network_policy,
+            ActionType.NETWORK_POLICY_REMOVE: self._k8s_cluster_executor.remove_network_policy,
         }
 
         handler = action_handlers.get(step.action_type)

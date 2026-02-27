@@ -12,6 +12,11 @@
 4. [自动创建功能](#4-自动创建功能)
 5. [配置示例](#5-配置示例)
 6. [API 查询](#6-api-查询)
+7. [新增功能配置](#7-新增功能配置)
+   - [Lark 飞书通知](#71-lark-飞书-通知)
+   - [Ansible 执行器](#72-ansible-执行器)
+   - [K8s 集群级执行器](#73-k8s-集群级执行器)
+   - [学习引擎](#74-学习引擎)
 
 ---
 
@@ -605,6 +610,211 @@ prometheus:
   use_mimir: true
   mimir_url: http://your-mimir:9009
 ```
+
+---
+
+## 7. 新增功能配置
+
+### 7.1 Lark (飞书) 通知
+
+支持通过飞书发送交互式审批卡片。
+
+**环境变量**:
+```bash
+# 启用飞书通知
+LARK_ENABLED=true
+
+# 飞书应用凭证
+LARK_APP_ID=cli_xxx
+LARK_APP_SECRET=xxx
+
+# Webhook URL (机器人)
+LARK_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/xxx
+
+# 回调验证 Token
+LARK_VERIFICATION_TOKEN=xxx
+
+# 消息加密密钥 (可选)
+LARK_ENCRYPT_KEY=xxx
+```
+
+**配置文件**:
+```yaml
+lark:
+  enabled: true
+  app_id: ${LARK_APP_ID}
+  app_secret: ${LARK_APP_SECRET}
+  webhook_url: ${LARK_WEBHOOK_URL}
+  verification_token: ${LARK_VERIFICATION_TOKEN}
+  encrypt_key: ${LARK_ENCRYPT_KEY}
+```
+
+**功能说明**:
+- 发送异常告警卡片
+- 发送交互式审批卡片 (带批准/拒绝按钮)
+- 用户点击按钮后自动更新卡片状态
+- 支持签名验证和消息加密
+
+**回调配置**:
+
+在飞书开放平台配置事件订阅，回调地址设置为：
+```
+https://your-domain/api/v1/callbacks/lark
+```
+
+### 7.2 Ansible 执行器
+
+支持执行 Ansible Playbook 和 Role。
+
+**环境变量**:
+```bash
+# 启用 Ansible 执行器
+ANSIBLE_ENABLED=true
+
+# Playbook 目录
+ANSIBLE_PLAYBOOKS_DIR=/etc/sre-agent/ansible/playbooks
+
+# Roles 目录
+ANSIBLE_ROLES_DIR=/etc/sre-agent/ansible/roles
+
+# Inventory 文件
+ANSIBLE_INVENTORY=/etc/sre-agent/ansible/inventory
+```
+
+**配置文件**:
+```yaml
+ansible:
+  enabled: true
+  playbooks_dir: /etc/sre-agent/ansible/playbooks
+  roles_dir: /etc/sre-agent/ansible/roles
+  inventory_file: /etc/sre-agent/ansible/inventory
+  timeout_seconds: 600
+  forks: 5
+  become: false
+  become_user: root
+```
+
+**支持的 ActionType**:
+- `ANSIBLE_PLAYBOOK`: 执行 Playbook
+- `ANSIBLE_ROLE`: 执行 Role (通过临时 Playbook)
+
+**Playbook 参数**:
+```yaml
+parameters:
+  hosts: "web_servers"          # 目标主机
+  extra_vars:                   # 额外变量
+    app_version: "1.2.3"
+  tags: ["deploy", "restart"]   # 执行标签
+  skip_tags: ["cleanup"]        # 跳过标签
+  check: false                  # 检查模式 (dry-run)
+  diff: true                    # 显示差异
+  verbosity: 1                  # 详细程度 (0-4)
+```
+
+### 7.3 K8s 集群级执行器
+
+支持节点级别和集群级别的操作。
+
+**配置文件**:
+```yaml
+k8s_cluster:
+  drain_timeout_seconds: 300    # Drain 超时时间
+  drain_grace_period: 30        # Pod 优雅终止时间
+  ignore_daemonsets: true       # 忽略 DaemonSet Pod
+  delete_emptydir_data: false   # 是否删除 emptyDir 数据
+  force_drain: false            # 强制 Drain
+```
+
+**支持的 ActionType**:
+
+| ActionType | 说明 | Target 格式 |
+|------------|------|-------------|
+| `NODE_CORDON` | 标记节点不可调度 | `node/<name>` |
+| `NODE_DRAIN` | 驱逐 Pod 并 Cordon | `node/<name>` |
+| `NODE_UNCORDON` | 标记节点可调度 | `node/<name>` |
+| `PVC_EXPAND` | 扩容 PVC | `pvc/<ns>/<name>` |
+| `PVC_SNAPSHOT` | 创建 VolumeSnapshot | `pvc/<ns>/<name>` |
+| `NETWORK_POLICY_APPLY` | 应用 NetworkPolicy | `netpol/<ns>/<name>` |
+| `NETWORK_POLICY_REMOVE` | 删除 NetworkPolicy | `netpol/<ns>/<name>` |
+
+**Drain 参数**:
+```yaml
+parameters:
+  grace_period: 30              # 优雅终止时间
+  timeout: 300                  # 超时时间
+  ignore_daemonsets: true       # 忽略 DaemonSet
+  delete_emptydir_data: false   # 删除 emptyDir 数据
+  force: false                  # 强制驱逐
+  dry_run: false                # 只显示将被驱逐的 Pod
+```
+
+**PVC 扩容参数**:
+```yaml
+parameters:
+  new_size: "20Gi"              # 新大小 (必需)
+```
+
+**PVC 快照参数**:
+```yaml
+parameters:
+  snapshot_class: "csi-snapclass"  # VolumeSnapshotClass (可选)
+  snapshot_name: "my-snapshot"     # 快照名称 (可选，自动生成)
+```
+
+### 7.4 学习引擎
+
+自动从执行结果中学习，持续优化风险评估。
+
+**配置文件**:
+```yaml
+learning:
+  enabled: true
+  min_executions_for_learning: 3    # 最少执行3次后才开始学习
+  success_rate_threshold: 0.8       # 成功率阈值
+  auto_risk_adjustment: true        # 自动风险调整
+  max_risk_reduction: 0.2           # 最大风险降低幅度
+```
+
+**API 端点**:
+
+```bash
+# 学习引擎统计
+curl http://localhost:8000/api/v1/learning/stats
+
+# 所有 Playbook 统计
+curl http://localhost:8000/api/v1/playbooks/stats
+
+# 单个 Playbook 统计
+curl http://localhost:8000/api/v1/playbooks/stats/{playbook_id}
+
+# Playbook 执行历史
+curl http://localhost:8000/api/v1/playbooks/executions/{playbook_id}
+```
+
+**响应示例**:
+```json
+{
+  "playbook_id": "restart-pod-playbook",
+  "playbook_name": "Restart Pod",
+  "total_executions": 25,
+  "success_rate": "92.0%",
+  "avg_duration": "15.3s",
+  "confidence": "0.92",
+  "risk_adjustment": "-0.10",
+  "last_execution": "2026-02-25T10:30:00Z"
+}
+```
+
+**风险调整逻辑**:
+
+| 成功率 | 风险调整 |
+|--------|----------|
+| >= 95% | -0.15 |
+| >= 90% | -0.10 |
+| >= 80% | -0.05 |
+| >= 70% | 0.00 |
+| >= 50% | +0.05 |
+| < 50% | +0.15 |
 
 ---
 

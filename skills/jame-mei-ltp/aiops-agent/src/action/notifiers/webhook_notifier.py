@@ -1,36 +1,29 @@
 """
-Notification manager for sending alerts via HTTP webhook.
+Webhook notifier for generic HTTP webhook notifications.
 
-Supports:
-- Anomaly notifications
-- Prediction alerts
-- Remediation status updates
-- Approval requests
+Refactored from the original notification_manager to implement BaseNotifier.
 """
 
 from datetime import datetime
-from string import Template
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from src.action.notifiers.base_notifier import BaseNotifier, NotificationResult
 from src.config.settings import get_settings
-from src.models.anomaly import Anomaly, AnomalyBatch
+from src.models.anomaly import Anomaly
 
 logger = structlog.get_logger()
 
 
-class NotificationManager:
+class WebhookNotifier(BaseNotifier):
     """
-    Manages notifications via HTTP webhook.
+    HTTP Webhook notifier.
 
-    Features:
-    - Template-based message formatting
-    - Retry logic for reliability
-    - Rate limiting
-    - Deduplication
+    Sends notifications via HTTP POST to a configured webhook URL.
+    Compatible with Slack, Discord, and other webhook-based services.
     """
 
     def __init__(
@@ -39,64 +32,73 @@ class NotificationManager:
         timeout_seconds: Optional[int] = None,
         retry_attempts: Optional[int] = None,
     ):
+        super().__init__(name="webhook")
         settings = get_settings()
         self.webhook_url = webhook_url or settings.notification.webhook.url
         self.timeout_seconds = timeout_seconds or settings.notification.webhook.timeout_seconds
         self.retry_attempts = retry_attempts or settings.notification.webhook.retry_attempts
 
-        self._client: httpx.Optional[AsyncClient] = None
-        self._last_notification_times: Dict[str, datetime] = {}
-        self._notification_cooldown_seconds = 300  # 5 minutes between duplicate notifications
+        self._client: Optional[httpx.AsyncClient] = None
+        self._enabled = bool(self.webhook_url)
 
     async def start(self) -> None:
-        """Initialize the notification manager."""
+        """Initialize the HTTP client."""
         self._client = httpx.AsyncClient(timeout=self.timeout_seconds)
-        logger.info("Notification manager started", webhook_configured=bool(self.webhook_url))
+        logger.info(
+            "Webhook notifier started",
+            webhook_configured=bool(self.webhook_url),
+        )
 
     async def stop(self) -> None:
-        """Shutdown the notification manager."""
+        """Close the HTTP client."""
         if self._client:
             await self._client.aclose()
             self._client = None
-        logger.info("Notification manager stopped")
+        logger.info("Webhook notifier stopped")
 
-    async def notify_anomaly(self, anomaly: Anomaly) -> bool:
-        """
-        Send notification for a detected anomaly.
-
-        Args:
-            anomaly: The detected anomaly
-
-        Returns:
-            True if notification was sent successfully
-        """
-        if not self._should_notify(f"anomaly:{anomaly.metric_key}"):
-            logger.debug(
-                "Skipping duplicate notification",
-                anomaly_id=anomaly.id,
+    async def send_anomaly(self, anomaly: Anomaly) -> NotificationResult:
+        """Send notification for a detected anomaly."""
+        if not self.should_notify(f"anomaly:{anomaly.metric_key}"):
+            return NotificationResult(
+                success=False,
+                error="Skipped due to cooldown",
             )
-            return False
 
         message = self._format_anomaly_message(anomaly)
         return await self._send_notification(message, "anomaly", anomaly.id)
 
-    async def notify_anomaly_batch(self, batch: AnomalyBatch) -> int:
-        """
-        Send notifications for a batch of anomalies.
+    async def send_approval_request(
+        self,
+        plan_id: str,
+        action_type: str,
+        target: str,
+        risk_score: float,
+        summary: str,
+        callback_url: Optional[str] = None,
+    ) -> NotificationResult:
+        """Send notification requesting approval for an action."""
+        message = self._format_approval_message(
+            plan_id, action_type, target, risk_score, summary
+        )
+        return await self._send_notification(message, "approval", plan_id)
 
-        Args:
-            batch: Batch of detected anomalies
+    async def send_remediation_status(
+        self,
+        action_type: str,
+        target: str,
+        status: str,
+        duration_seconds: Optional[int] = None,
+        error: Optional[str] = None,
+    ) -> NotificationResult:
+        """Send notification for remediation action status."""
+        message = self._format_remediation_message(
+            action_type, target, status, duration_seconds, error
+        )
+        return await self._send_notification(
+            message, "remediation", f"{action_type}:{target}"
+        )
 
-        Returns:
-            Number of notifications sent
-        """
-        sent_count = 0
-        for anomaly in batch.anomalies:
-            if await self.notify_anomaly(anomaly):
-                sent_count += 1
-        return sent_count
-
-    async def notify_prediction(
+    async def send_prediction_alert(
         self,
         metric_name: str,
         current_value: float,
@@ -104,96 +106,38 @@ class NotificationManager:
         threshold: float,
         eta_hours: float,
         labels: Optional[Dict[str, str]] = None,
-    ) -> bool:
-        """
-        Send notification for a trend prediction.
-
-        Args:
-            metric_name: Name of the metric
-            current_value: Current metric value
-            predicted_value: Predicted future value
-            threshold: Threshold that will be breached
-            eta_hours: Hours until predicted breach
-            labels: Metric labels
-
-        Returns:
-            True if notification was sent successfully
-        """
+    ) -> NotificationResult:
+        """Send notification for a trend prediction."""
         key = f"prediction:{metric_name}"
-        if not self._should_notify(key):
-            return False
+        if not self.should_notify(key):
+            return NotificationResult(
+                success=False,
+                error="Skipped due to cooldown",
+            )
 
         message = self._format_prediction_message(
             metric_name, current_value, predicted_value, threshold, eta_hours, labels
         )
         return await self._send_notification(message, "prediction", metric_name)
 
-    async def notify_remediation(
-        self,
-        action_type: str,
-        target: str,
-        status: str,
-        duration_seconds: Optional[int] = None,
-        error: Optional[str] = None,
-    ) -> bool:
-        """
-        Send notification for remediation action status.
-
-        Args:
-            action_type: Type of remediation action
-            target: Target of the action
-            status: Action status
-            duration_seconds: Duration of the action
-            error: Error message if failed
-
-        Returns:
-            True if notification was sent successfully
-        """
-        message = self._format_remediation_message(
-            action_type, target, status, duration_seconds, error
-        )
-        return await self._send_notification(message, "remediation", f"{action_type}:{target}")
-
-    async def notify_approval_request(
-        self,
-        plan_id: str,
-        action_type: str,
-        target: str,
-        risk_score: float,
-        summary: str,
-    ) -> bool:
-        """
-        Send notification requesting approval for an action.
-
-        Args:
-            plan_id: Action plan ID
-            action_type: Type of action
-            target: Target of the action
-            risk_score: Risk score of the action
-            summary: Summary of the action
-
-        Returns:
-            True if notification was sent successfully
-        """
-        message = self._format_approval_message(
-            plan_id, action_type, target, risk_score, summary
-        )
-        return await self._send_notification(message, "approval", plan_id)
-
     async def _send_notification(
         self,
         message: Dict[str, Any],
         notification_type: str,
         identifier: str,
-    ) -> bool:
+    ) -> NotificationResult:
         """Send notification to webhook."""
         if not self.webhook_url:
-            logger.warning("No webhook URL configured, skipping notification")
-            return False
+            return NotificationResult(
+                success=False,
+                error="No webhook URL configured",
+            )
 
         if not self._client:
-            logger.warning("Notification manager not started")
-            return False
+            return NotificationResult(
+                success=False,
+                error="Notifier not started",
+            )
 
         try:
             response = await self._send_with_retry(message)
@@ -201,30 +145,39 @@ class NotificationManager:
 
             if success:
                 logger.info(
-                    "Notification sent",
+                    "Webhook notification sent",
                     type=notification_type,
                     identifier=identifier,
                     status=response.status_code,
                 )
+                return NotificationResult(
+                    success=True,
+                    message_id=identifier,
+                )
             else:
                 logger.warning(
-                    "Notification failed",
+                    "Webhook notification failed",
                     type=notification_type,
                     identifier=identifier,
                     status=response.status_code,
                     response=response.text[:200],
                 )
-
-            return success
+                return NotificationResult(
+                    success=False,
+                    error=f"HTTP {response.status_code}: {response.text[:100]}",
+                )
 
         except Exception as e:
             logger.error(
-                "Failed to send notification",
+                "Failed to send webhook notification",
                 type=notification_type,
                 identifier=identifier,
                 error=str(e),
             )
-            return False
+            return NotificationResult(
+                success=False,
+                error=str(e),
+            )
 
     @retry(
         stop=stop_after_attempt(3),
@@ -237,19 +190,6 @@ class NotificationManager:
             json=message,
             headers={"Content-Type": "application/json"},
         )
-
-    def _should_notify(self, key: str) -> bool:
-        """Check if we should send a notification (deduplication)."""
-        now = datetime.utcnow()
-        last_time = self._last_notification_times.get(key)
-
-        if last_time:
-            elapsed = (now - last_time).total_seconds()
-            if elapsed < self._notification_cooldown_seconds:
-                return False
-
-        self._last_notification_times[key] = now
-        return True
 
     def _format_anomaly_message(self, anomaly: Anomaly) -> Dict[str, Any]:
         """Format anomaly notification message."""

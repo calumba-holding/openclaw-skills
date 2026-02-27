@@ -186,6 +186,55 @@ class KubernetesSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="K8S_")
 
 
+class K8sClusterSettings(BaseSettings):
+    """K8s cluster-level operation settings."""
+
+    drain_timeout_seconds: int = 300
+    drain_grace_period: int = 30
+    ignore_daemonsets: bool = True
+    delete_emptydir_data: bool = False
+    force_drain: bool = False
+
+
+class LarkSettings(BaseSettings):
+    """Lark (Feishu) notification configuration."""
+
+    enabled: bool = False
+    app_id: str = ""
+    app_secret: str = ""
+    webhook_url: str = ""
+    verification_token: str = ""
+    encrypt_key: str = ""
+
+    model_config = SettingsConfigDict(env_prefix="LARK_")
+
+
+class AnsibleSettings(BaseSettings):
+    """Ansible executor configuration."""
+
+    enabled: bool = False
+    playbooks_dir: str = "/etc/sre-agent/ansible/playbooks"
+    roles_dir: str = "/etc/sre-agent/ansible/roles"
+    inventory_file: str = ""
+    timeout_seconds: int = 600
+    forks: int = 5
+    become: bool = False
+    become_user: str = "root"
+    extra_vars: Dict[str, Any] = Field(default_factory=dict)
+
+    model_config = SettingsConfigDict(env_prefix="ANSIBLE_")
+
+
+class LearningSettings(BaseSettings):
+    """Learning engine configuration."""
+
+    enabled: bool = True
+    min_executions_for_learning: int = 3
+    success_rate_threshold: float = 0.8
+    auto_risk_adjustment: bool = True
+    max_risk_reduction: float = 0.2
+
+
 class Settings(BaseSettings):
     """Main settings class that aggregates all configuration."""
 
@@ -217,6 +266,10 @@ class Settings(BaseSettings):
     audit: AuditSettings = Field(default_factory=AuditSettings)
     api: APISettings = Field(default_factory=APISettings)
     kubernetes: KubernetesSettings = Field(default_factory=KubernetesSettings)
+    k8s_cluster: K8sClusterSettings = Field(default_factory=K8sClusterSettings)
+    lark: LarkSettings = Field(default_factory=LarkSettings)
+    ansible: AnsibleSettings = Field(default_factory=AnsibleSettings)
+    learning: LearningSettings = Field(default_factory=LearningSettings)
 
     # Direct environment variable overrides
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
@@ -224,6 +277,9 @@ class Settings(BaseSettings):
     loki_url: str = Field(default="", alias="LOKI_URL")
     qdrant_url: str = Field(default="", alias="QDRANT_URL")
     webhook_url: str = Field(default="", alias="WEBHOOK_URL")
+    lark_webhook_url: str = Field(default="", alias="LARK_WEBHOOK_URL")
+    lark_app_id: str = Field(default="", alias="LARK_APP_ID")
+    lark_app_secret: str = Field(default="", alias="LARK_APP_SECRET")
 
     def model_post_init(self, __context: Any) -> None:
         """Apply environment variable overrides after initialization."""
@@ -237,6 +293,12 @@ class Settings(BaseSettings):
             self.qdrant.url = self.qdrant_url
         if self.webhook_url:
             self.notification.webhook.url = self.webhook_url
+        if self.lark_webhook_url:
+            self.lark.webhook_url = self.lark_webhook_url
+        if self.lark_app_id:
+            self.lark.app_id = self.lark_app_id
+        if self.lark_app_secret:
+            self.lark.app_secret = self.lark_app_secret
 
     @field_validator("log_level")
     @classmethod

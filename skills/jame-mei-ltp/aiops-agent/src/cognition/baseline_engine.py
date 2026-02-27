@@ -6,7 +6,7 @@ to establish baselines for anomaly detection.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import structlog

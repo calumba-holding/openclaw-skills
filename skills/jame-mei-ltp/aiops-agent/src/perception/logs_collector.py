@@ -6,7 +6,7 @@ Collects structured logs using LogQL queries.
 
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import httpx
 import structlog

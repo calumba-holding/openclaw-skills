@@ -11,7 +11,7 @@ Provides REST API for:
 import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 from fastapi import FastAPI, HTTPException, Query
@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.agent.orchestrator import SREAgentOrchestrator, setup_logging
-from src.api.routes import anomalies, health
+from src.api.routes import anomalies, callbacks, health
 from src.config.constants import AnomalySeverity, MetricCategory
 from src.config.settings import get_settings
 
@@ -27,7 +27,7 @@ logger = structlog.get_logger()
 
 # Global agent instance
 _agent: Optional[SREAgentOrchestrator] = None
-_agent_task: asyncio.Optional[Task] = None
+_agent_task: Optional[asyncio.Task] = None
 
 
 @asynccontextmanager
@@ -41,6 +41,10 @@ async def lifespan(app: FastAPI):
     # Initialize and start the agent
     _agent = SREAgentOrchestrator()
     _agent_task = asyncio.create_task(_agent.start())
+
+    # Set up callback dependencies
+    if hasattr(_agent, "_action_planner") and _agent._action_planner:
+        callbacks.set_action_planner(_agent._action_planner)
 
     yield
 
@@ -78,6 +82,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, tags=["Health"])
 app.include_router(anomalies.router, prefix="/api/v1", tags=["Anomalies"])
+app.include_router(callbacks.router, prefix="/api/v1", tags=["Callbacks"])
 
 
 def get_agent() -> SREAgentOrchestrator:
@@ -243,6 +248,83 @@ async def list_metrics() -> Dict[str, Any]:
     return {
         "configured_metrics": agent._metrics_collector.configured_metrics,
         "count": len(agent._metrics_collector.configured_metrics),
+    }
+
+
+@app.get("/api/v1/learning/stats")
+async def get_learning_stats() -> Dict[str, Any]:
+    """Get learning engine statistics."""
+    agent = get_agent()
+
+    if not hasattr(agent, "_learning_engine") or not agent._learning_engine:
+        return {
+            "enabled": False,
+            "message": "Learning engine not available",
+        }
+
+    return agent._learning_engine.get_summary()
+
+
+@app.get("/api/v1/playbooks/stats")
+async def list_playbook_stats() -> Dict[str, Any]:
+    """Get all playbook execution statistics."""
+    agent = get_agent()
+
+    if not hasattr(agent, "_learning_engine") or not agent._learning_engine:
+        return {
+            "enabled": False,
+            "playbooks": [],
+        }
+
+    stats = agent._learning_engine.get_all_playbook_stats()
+    return {
+        "count": len(stats),
+        "playbooks": [s.get_summary() for s in stats],
+    }
+
+
+@app.get("/api/v1/playbooks/stats/{playbook_id}")
+async def get_playbook_stats(playbook_id: str) -> Dict[str, Any]:
+    """Get statistics for a specific playbook."""
+    agent = get_agent()
+
+    if not hasattr(agent, "_learning_engine") or not agent._learning_engine:
+        raise HTTPException(status_code=503, detail="Learning engine not available")
+
+    stats = agent._learning_engine.get_playbook_stats(playbook_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail=f"Playbook {playbook_id} not found")
+
+    return stats.get_summary()
+
+
+@app.get("/api/v1/playbooks/executions/{playbook_id}")
+async def get_playbook_executions(
+    playbook_id: str,
+    limit: int = Query(20, ge=1, le=100),
+) -> Dict[str, Any]:
+    """Get recent executions for a playbook."""
+    agent = get_agent()
+
+    if not hasattr(agent, "_learning_engine") or not agent._learning_engine:
+        raise HTTPException(status_code=503, detail="Learning engine not available")
+
+    executions = agent._learning_engine.get_recent_executions(playbook_id, limit)
+    return {
+        "playbook_id": playbook_id,
+        "count": len(executions),
+        "executions": [
+            {
+                "id": e.id,
+                "plan_id": e.plan_id,
+                "success": e.success,
+                "duration_seconds": e.duration_seconds,
+                "executed_at": e.executed_at.isoformat(),
+                "error_message": e.error_message,
+                "rolled_back": e.rolled_back,
+            }
+            for e in executions
+        ],
     }
 
 
