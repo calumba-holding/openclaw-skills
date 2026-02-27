@@ -10,8 +10,8 @@ compatibility:
   - goose
   - copilot
 metadata:
-  version: "0.6"
-  spec_url: "https://github.com/rotorstar/hitl-protocol/blob/main/spec/v0.6/hitl-protocol.md"
+  version: "0.7"
+  spec_url: "https://github.com/rotorstar/hitl-protocol/blob/main/spec/v0.7/hitl-protocol.md"
   hitl:
     supported: true
     types: [approval, selection, input, confirmation, escalation]
@@ -19,6 +19,8 @@ metadata:
 ---
 
 # HITL Protocol
+
+AI agents increasingly visit websites and services on behalf of their users: searching, booking, applying, purchasing. But some decisions are too important to leave to an agent alone — an agent can hallucinate, misinterpret, or make the wrong call at a critical moment — cancel the wrong insurance policy, book a non-refundable trip to the wrong city, wire money to the wrong account. HITL Protocol ("Human in the Loop") is an open standard that ensures humans stay in control of these moments. The user stays in their favorite messenger — Telegram, WhatsApp, Slack — and either taps a decision button right there or follows a link to a web page with a comfortable UI: cards, forms, buttons. No wall of text. No blind agent decisions. When you encounter a HITL response, tell your user that a decision is needed that should not be made by an agent alone — forward the prompt and make it easy to act: show the review link or render action buttons.
 
 HITL Protocol is to human decisions what OAuth is to authentication — an open standard connecting **Services**, **Agents**, and **Humans**. When a service needs human input, it returns HTTP 202 with a review URL. The agent forwards the URL to the human. The human opens it in a browser, gets a rich UI, and makes an informed decision. The agent polls for the structured result and continues.
 
@@ -49,7 +51,7 @@ Standard flow (all review types):
 7. Agent → Service:  GET {poll_url} → {status: "completed", result: {action, data}}
 8. Agent → Human:    "Applied to 2 selected jobs."
 
-Inline flow (v0.6 — simple decisions only, when submit_url present):
+Inline flow (v0.7 — simple decisions only, when submit_url present):
 1. Human → Agent:    "Send my application emails"
 2. Agent → Service:  POST /api/send {emails: [...]}
 3. Service → Agent:  HTTP 202 + hitl object (incl. submit_url, submit_token, inline_actions)
@@ -98,7 +100,7 @@ When a service needs human input, it returns HTTP 202 with this structure:
   "status": "human_input_required",
   "message": "5 matching jobs found. Please select which ones to apply for.",
   "hitl": {
-    "spec_version": "0.6",
+    "spec_version": "0.7",
     "case_id": "review_abc123",
     "review_url": "https://service.example.com/review/abc123?token=K7xR2mN4pQ...",
     "poll_url": "https://api.service.example.com/v1/reviews/abc123/status",
@@ -120,7 +122,7 @@ When a service needs human input, it returns HTTP 202 with this structure:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `spec_version` | `"0.6"` | Protocol version |
+| `spec_version` | `"0.7"` | Protocol version |
 | `case_id` | string | Unique, URL-safe identifier (pattern: `review_{random}`) |
 | `review_url` | URL | HTTPS URL to review page with opaque bearer token |
 | `poll_url` | URL | Status polling endpoint |
@@ -141,7 +143,7 @@ When a service needs human input, it returns HTTP 202 with this structure:
 | `reminder_at` | datetime / datetime[] | When to re-send the review URL |
 | `previous_case_id` | string | Links to prior case in multi-round chain |
 | `surface` | object | UI format declaration (`format`, `version`) |
-| `submit_url` | URL | Agent-submit endpoint for channel-native inline buttons (v0.6) |
+| `submit_url` | URL | Agent-submit endpoint for channel-native inline buttons (v0.7) |
 | `submit_token` | string | Bearer token for `submit_url` authentication (required if `submit_url` set) |
 | `inline_actions` | string[] | Actions permitted via `submit_url` (e.g. `["confirm", "cancel"]`). If absent, all actions for the type are allowed. |
 
@@ -249,7 +251,7 @@ response = httpx.post("https://api.jobboard.com/search", json=query)
 if response.status_code == 202:
     hitl = response.json()["hitl"]
 
-    # v0.6: Check for inline submit support
+    # v0.7: Check for inline submit support
     if "submit_url" in hitl and "submit_token" in hitl:
         # Render native buttons in messaging platform (e.g. Telegram, Slack)
         send_inline_buttons(hitl["prompt"], hitl["inline_actions"], hitl["review_url"])
@@ -282,7 +284,7 @@ No SDK. No UI rendering. Just HTTP + URL forwarding + polling. See [Agent Integr
 
 Polling is the baseline — every HITL-compliant service MUST support it. SSE and callbacks are optional enhancements.
 
-## Channel-Native Inline Actions (v0.6)
+## Channel-Native Inline Actions (v0.7)
 
 For simple decisions, agents can render **native messaging buttons** instead of sending a URL. The human taps a button directly in the chat — no browser switch needed.
 
@@ -308,7 +310,7 @@ For simple decisions, agents can render **native messaging buttons** instead of 
 - **Does NOT render review UI** — the service hosts and renders the review page. The agent is a messenger.
 - **Does NOT define the review page framework** — any web technology works (React, plain HTML, etc.).
 - **Does NOT replace OAuth** — HITL is for decisions, not authentication.
-- **Does NOT submit on behalf of the human** — unless the human explicitly triggers an inline action button in a messaging platform (v0.6 `submit_url`).
+- **Does NOT submit on behalf of the human** — unless the human explicitly triggers an inline action button in a messaging platform (v0.7 `submit_url`).
 
 ## SKILL.md Extension for Services
 
@@ -325,11 +327,67 @@ metadata:
     info: "May ask user to select preferred jobs or confirm applications."
 ```
 
-See [spec Section 12](spec/v0.6/hitl-protocol.md) for the full field reference.
+See [spec Section 12](spec/v0.7/hitl-protocol.md) for the full field reference.
+
+### Best Practice: Enforce HITL Choice
+
+**Problem:** Agents tend to take the efficient path and silently skip HITL — defaulting to no human review. Even though the protocol says agents MUST NOT ignore HTTP 202, nothing prevents an agent from never sending requests that trigger HITL in the first place.
+
+**Solution:** Force agents to make an **explicit choice** per request. Add `prefer_hitl` and `skip_hitl` flags to your API and reject requests that provide neither.
+
+Declare this in your SKILL.md:
+
+```yaml
+metadata:
+  hitl:
+    supported: true
+    hitl_required: true
+    types: [selection, confirmation]
+    info: "HITL is required. You MUST send prefer_hitl: true or skip_hitl: true."
+```
+
+Add an **Agent Guidelines** section to your SKILL.md body:
+
+```markdown
+## Agent Guidelines
+
+HITL is required for this service. Every request MUST include exactly one of:
+
+| Parameter | Type | Effect |
+|-----------|------|--------|
+| `prefer_hitl` | boolean | `true` → human reviews via HITL (HTTP 202) |
+| `skip_hitl` | boolean | `true` → direct execution, no human review (HTTP 201) |
+
+You MUST choose one. Omitting both returns 400 `HITL_CHOICE_REQUIRED`.
+Sending both returns 400 validation error.
+
+### Example: With HITL
+
+POST /api/search
+{"query": "Senior Dev Berlin", "prefer_hitl": true}
+
+→ 202 + hitl object (human reviews results)
+
+### Example: Without HITL
+
+POST /api/search
+{"query": "Senior Dev Berlin", "skip_hitl": true}
+
+→ 201 {"results": [...], "hitl_skipped": true}
+
+### Example: Missing choice
+
+POST /api/search
+{"query": "Senior Dev Berlin"}
+
+→ 400 {"error": "HITL_CHOICE_REQUIRED", "message": "You must send prefer_hitl or skip_hitl."}
+```
+
+See [Service Integration Guide — Enforcing HITL Choice](skills/references/service-integration.md#enforcing-hitl-choice) for validation gate implementation.
 
 ## Resources
 
-- [Full Specification (v0.6)](spec/v0.6/hitl-protocol.md)
+- [Full Specification (v0.7)](spec/v0.7/hitl-protocol.md)
 - [OpenAPI 3.1 Spec](schemas/openapi.yaml) — all endpoints documented
 - [JSON Schemas](schemas/) — HITL object, poll response, form field, submit request definitions
 - [Reference Implementations](implementations/reference-service/) — Express 5, Hono, Next.js, FastAPI
