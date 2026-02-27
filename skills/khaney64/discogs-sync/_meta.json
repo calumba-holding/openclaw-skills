@@ -1,0 +1,11 @@
+{
+  "owner": "khaney64",
+  "slug": "discogs-sync",
+  "displayName": "Discogs Sync",
+  "latest": {
+    "version": "0.1.9",
+    "publishedAt": 1772147533497,
+    "commit": null
+  },
+  "history": []
+}
