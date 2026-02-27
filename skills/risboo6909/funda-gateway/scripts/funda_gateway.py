@@ -1,6 +1,11 @@
 import argparse
+import base64
+import io
+from pathlib import Path
 import socket
 import time
+import urllib.error
+import urllib.request
 
 from simple_http_server import PathValue, route, server
 from simple_http_server.basic_models import Parameter
@@ -8,6 +13,7 @@ from simple_http_server.basic_models import Parameter
 from funda import Funda
 
 MULTI_PAGE_REQUEST_DELAY_SECONDS = 0.3
+SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args():
@@ -31,7 +37,7 @@ def fetch_public_id(url):
         raise ValueError(f"Invalid Funda listing URL: {url}")
 
 
-def _as_list_param(value):
+def _as_list_param(value, lowercase=True):
     if isinstance(value, list):
         items = value
     elif value is None:
@@ -42,7 +48,13 @@ def _as_list_param(value):
     result = []
     for item in items:
         if isinstance(item, str):
-            result.extend(part.strip() for part in item.split(",") if part.strip())
+            for part in item.split(","):
+                text = part.strip()
+                if not text:
+                    continue
+                if lowercase:
+                    text = text.lower()
+                result.append(text)
         elif item is not None:
             result.append(str(item))
     return result
@@ -64,8 +76,45 @@ def _as_optional_str(value):
         if not value:
             return None
         value = value[0]
-    text = str(value).strip()
+    text = str(value).strip().lower()
     return text or None
+
+
+def _build_preview_base64(image_bytes, max_size=320, quality=65):
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise RuntimeError(
+            "Pillow is required for preview generation. Install package 'Pillow'."
+        ) from exc
+
+    with Image.open(io.BytesIO(image_bytes)) as img:
+        img = img.convert("RGB")
+        img.thumbnail((max_size, max_size))
+        output = io.BytesIO()
+        img.save(output, format="JPEG", optimize=True, quality=quality)
+        preview_bytes = output.getvalue()
+
+    return "image/jpeg", base64.b64encode(preview_bytes).decode("ascii")
+
+
+def _as_bool_flag(value):
+    text = (_as_optional_str(value) or "").lower()
+    return text in {"1", "true", "yes", "on"}
+
+
+def _resolve_output_base_dir(dir_value):
+    relative = _as_optional_str(dir_value) or "previews"
+    relative_path = Path(relative)
+    if relative_path.is_absolute():
+        raise ValueError("dir must be a relative path")
+
+    base_dir = (SKILL_ROOT / relative_path).resolve()
+    skill_root_resolved = SKILL_ROOT.resolve()
+    if skill_root_resolved not in base_dir.parents and base_dir != skill_root_resolved:
+        raise ValueError("dir must stay inside skill root")
+
+    return base_dir
 
 
 def is_port_listening(port, host="127.0.0.1", timeout=0.5):
@@ -80,20 +129,124 @@ def spin_up_server(server_port, funda_timeout):
 
     f = Funda(timeout=funda_timeout)
 
-    @route("/get_listing/{path_part}", method=["GET"])
-    def get_listing(path_part=PathValue()):
-        return f.get_listing(path_part).to_dict()
+    @route("/get_listing/{id}", method=["GET"])
+    def get_listing(id=PathValue()):
+        return f.get_listing(id).to_dict()
 
-    @route("/get_price_history/{path_part}", method=["GET"])
-    def get_price_history(path_part=PathValue()):
-        listing = f.get_listing(path_part)
+    @route("/get_price_history/{id}", method=["GET"])
+    def get_price_history(id=PathValue()):
+        listing = f.get_listing(id)
         return {item["date"]: item for item in f.get_price_history(listing)}
+
+    @route("/get_previews/{id}", method=["GET"])
+    def get_previews(
+        id=PathValue(),
+        limit=Parameter("limit", default="5"),  # Maximum number of previews to return
+        preview_size=Parameter("preview_size", default="320"),  # Max preview side in px
+        preview_quality=Parameter("preview_quality", default="65"),  # JPEG quality
+        save=Parameter("save", default="0"),  # Save resized previews to disk
+        dir=Parameter("dir", default=""),  # Relative output directory inside skill root
+        filename_pattern=Parameter("filename_pattern", default=""),  # e.g. {id}_{index}
+        ids=Parameter("ids", default=""),
+    ):  # Comma-separated photo IDs (like 224/802/529). If omitted, take first N photos.
+        listing = f.get_listing(id)
+        photo_urls = sorted(listing.get("photo_urls") or [])
+        if not photo_urls:
+            return {"id": id, "count": 0, "previews": []}
+
+        photo_ids_to_urls = {
+            "/".join(url.split("/")[-3:]).split(".")[0]: url for url in photo_urls
+        }
+
+        ids = _as_list_param(ids)
+
+        max_items = _as_optional_int(limit) or 5
+        max_items = max(1, min(max_items, 50))
+        max_size = _as_optional_int(preview_size) or 320
+        max_size = max(64, min(max_size, 1024))
+        quality = _as_optional_int(preview_quality) or 65
+        quality = max(30, min(quality, 90))
+        should_save = _as_bool_flag(save)
+        pattern = _as_optional_str(filename_pattern)
+
+        output_base_dir = None
+        if should_save:
+            output_base_dir = _resolve_output_base_dir(dir)
+
+        if ids:
+            urls_to_download = [
+                photo_ids_to_urls[photo_id]
+                for photo_id in ids
+                if photo_id in photo_ids_to_urls
+            ]
+        else:
+            urls_to_download = photo_urls
+
+        urls_to_download = urls_to_download[:max_items]
+        previews = []
+
+        for index, url in enumerate(urls_to_download, start=1):
+            photo_id = "/".join(url.split("/")[-3:]).split(".")[0]
+            try:
+                request = urllib.request.Request(
+                    url, headers={"User-Agent": "Mozilla/5.0"}
+                )
+                with urllib.request.urlopen(request, timeout=funda_timeout) as response:
+                    content = response.read()
+                content_type, encoded = _build_preview_base64(
+                    content, max_size=max_size, quality=quality
+                )
+                previews.append(
+                    {
+                        "id": photo_id,
+                        "url": url,
+                        "content_type": content_type,
+                    }
+                )
+
+                if not should_save:
+                    previews[-1]["base64"] = encoded
+
+                if should_save and output_base_dir is not None:
+                    safe_photo_id = photo_id.replace("/", "-")
+                    if pattern:
+                        filename = pattern.format(id=id, index=index, photo_id=safe_photo_id)
+                        filename = Path(filename).name
+                    else:
+                        filename = f"{safe_photo_id}.jpg"
+                    if not filename.lower().endswith(".jpg"):
+                        filename = f"{filename}.jpg"
+
+                    if pattern:
+                        target_dir = output_base_dir
+                    else:
+                        target_dir = output_base_dir / str(id)
+                    target_dir.mkdir(parents=True, exist_ok=True)
+
+                    output_path = target_dir / filename
+                    output_path.write_bytes(base64.b64decode(encoded))
+                    previews[-1]["saved_path"] = str(output_path.resolve())
+                    previews[-1]["relative_path"] = str(
+                        output_path.resolve().relative_to(SKILL_ROOT.resolve())
+                    )
+            except urllib.error.URLError as exc:
+                previews.append(
+                    {
+                        "id": photo_id,
+                        "url": url,
+                        "error": str(exc),
+                    }
+                )
+
+        return {"id": id, "count": len(previews), "previews": previews}
 
     @route("/search_listings", method=["GET", "POST"])
     def search_listings(
         location=Parameter("location", default="Amsterdam"),  # City or area name
         offering_type=Parameter("offering_type", default=""),  # "buy" or "rent"
-        availability=Parameter("availability", default=""),  # available/negotiations/sold
+        availability=Parameter(
+            "availability", default=""
+        ),  # available/negotiations/sold
         radius_km=Parameter("radius_km", default=""),  # Search radius in kilometers
         price_min=Parameter("price_min", default=""),  # Minimum price
         price_max=Parameter("price_max", default=""),  # Maximum price
@@ -107,8 +260,10 @@ def spin_up_server(server_port, funda_timeout):
         page=Parameter("page", default=""),  # Backward-compatible single page alias
         pages=Parameter("pages", default="0"),  # Page numbers (15 results per page)
     ):
+        location = _as_optional_str(location) or "amsterdam"
         object_type = _as_list_param(object_type) or None
-        energy_label = _as_list_param(energy_label) or None
+        energy_label = _as_list_param(energy_label, lowercase=False)
+        energy_label = [item.upper() for item in energy_label] or None
         availability = _as_list_param(availability) or None
         pages = _as_list_param(pages)
         if not pages:

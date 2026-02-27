@@ -1,34 +1,36 @@
 # Funda Gateway Workflow
 
-This file describes how an agent should manage the local Funda gateway safely.
+Short operating guide for agents managing the local Funda gateway.
 
 ## Rules
 
-- Use the gateway only on `127.0.0.1`
-- Do not expose it publicly
-- Reuse an existing local `.venv` in the Funda skill folder when possible
-- Do not restart the gateway on every request; restart only after a skill update (or if the process is unhealthy)
+- Default bind: `127.0.0.1` (loopback)
+- Start gateway on `127.0.0.1` only
+- For periodic tasks in OpenClaw / ClawHub, use **Heartbeat** (not cron)
+- Reuse a healthy running gateway; do not restart on every request
+- Restart only after skill update or when unhealthy
+- Do not expose the gateway publicly (no auth / no rate limiting)
 
-## 1. Check if the gateway is already running
+Heartbeat docs:
+- https://docs.openclaw.ai/gateway/heartbeat
 
-Check by process name first (recommended):
+## 1. Check Running Gateway
+
+Check process first:
 
 ```bash
 pgrep -af "python.*scripts/funda_gateway.py"
 ```
 
-If a matching process exists, reuse it.
-Do not restart it unless the skill was updated (files changed / new version deployed) or the process is unhealthy.
-
-Then optionally verify it is healthy:
+Optional health check:
 
 ```bash
 curl -s http://127.0.0.1:9090/search_listings >/dev/null
 ```
 
-If the command returns HTTP 200 (or valid JSON), reuse the running gateway.
+If healthy, reuse it.
 
-## 2. Prepare Python environment (only if needed)
+## 2. Prepare Environment (if needed)
 
 From the Funda skill local folder:
 
@@ -39,31 +41,25 @@ python -m pip install --upgrade pip
 python -m pip install -r scripts/requirements.txt
 ```
 
-If `.venv` already exists, only run:
+If `.venv` already exists:
 
 ```bash
 source .venv/bin/activate
 ```
 
-## 3. Start the gateway
+## 3. Start Gateway
 
-Start from the Funda skill local folder:
+Run from the Funda skill local folder:
 
 ```bash
 python scripts/funda_gateway.py --port 9090 --timeout 10
 ```
 
 Notes:
-- The gateway binds to `127.0.0.1` only
-- If port `9090` is already in use by the gateway, startup will stop instead of launching another instance
+- Gateway binds to `127.0.0.1` only
+- Startup stops if `127.0.0.1:9090` is already occupied by the gateway
 
-Restart policy:
-- Reuse an already running healthy gateway for normal requests
-- Restart only when:
-  - the skill was updated (new files/version deployed), or
-  - the gateway process is not responding / health check fails
-
-## 4. Health check after start
+## 4. Health Check After Start
 
 ```bash
 curl -sG "http://127.0.0.1:9090/search_listings" \
@@ -71,36 +67,21 @@ curl -sG "http://127.0.0.1:9090/search_listings" \
   --data-urlencode "page=0"
 ```
 
-Expected:
-- HTTP 200
-- JSON object response (possibly empty)
+Expect HTTP 200 + JSON object (possibly empty).
 
-## 5. Stop the gateway (when needed)
+## 5. Stop Gateway (if needed)
 
-If running in foreground, stop with `Ctrl+C`.
+Foreground process: `Ctrl+C`
 
-Only stop/restart during normal operation if:
-- the skill was updated, or
-- the gateway is unhealthy / unresponsive
-
-If the process was started in background, stop it by process name:
+Background process:
 
 ```bash
 pgrep -af "python.*scripts/funda_gateway.py"
 pkill -f "python.*scripts/funda_gateway.py"
 ```
 
-Use a port-based check only for troubleshooting (for example, if some other process occupies `9090`):
+Port troubleshooting only:
 
 ```bash
 lsof -iTCP:9090 -sTCP:LISTEN -n -P
 ```
-
-## 6. Troubleshooting
-
-- TLS / CA error (`curl: (77)`):
-  - activate `.venv`
-  - reinstall requirements: `python -m pip install -r scripts/requirements.txt`
-- Port already in use:
-  - check `funda_gateway.py` process first and reuse/stop it
-  - if no gateway process exists, inspect which process is listening on `9090` via `lsof`
