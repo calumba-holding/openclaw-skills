@@ -1,6 +1,6 @@
 ---
 name: soulprint
-description: "Soulprint decentralized identity verification for AI agents. Use when: proving a real human is behind a bot, issuing privacy-preserving identity proofs, running a validator node, adding identity verification middleware to an API or MCP server, checking bot reputation scores, enforcing protocol-level immutable trust thresholds, or running BFT P2P consensus without a blockchain. Supports Colombian cédula (full) and 6+ other countries. v0.3.3 adds BFT consensus: nullifier registration via PROPOSE→VOTE→COMMIT without gas fees or external dependencies."
+description: "Soulprint decentralized identity verification for AI agents. v0.4.1 — ProtocolThresholds on-chain (Base Sepolia): mutable threshold governance via superAdmin, GET /protocol/thresholds endpoint, validator auto-loads from blockchain at startup. Also: P2P auto-bootstrap, network/stats with total_peers, 6 bug fixes in verify. Use when: proving a real human is behind a bot, issuing privacy-preserving identity proofs, running a validator node, adding identity verification middleware to an API or MCP server, checking bot reputation scores, or enforcing protocol-level configurable trust thresholds."
 homepage: https://soulprint.digital
 metadata:
   {
@@ -88,11 +88,24 @@ npx soulprint node
 Node API endpoints:
 ```
 GET  /info                — node info and network stats
+GET  /network/stats       — live stats for web visualization (total_peers, verified_identities, uptime)
 GET  /protocol            — immutable protocol constants (floors, thresholds)
+GET  /health              — code integrity hash + governance status
 POST /verify              — verify proof and register anti-replay hash
+POST /token/renew         — auto-renew SPT (pre-emptive 1h / grace 7 days)
+POST /challenge           — ZK challenge-response peer integrity check
 POST /reputation/attest   — issue bot reputation attestation (+1 / -1)
 GET  /reputation/:did     — get current bot reputation score (0-20)
-GET  /proof-hash/:hash    — check if a proof hash is registered
+POST /peers/register      — register peer (runs challenge-response first, then auto-dials P2P)
+GET  /mcps/verified       — list verified MCPs from on-chain registry
+GET  /mcps/status/:addr   — check a specific MCP's verification status
+```
+
+**Connect nodes automatically (WSL2 / Docker / cloud):**
+```bash
+SOULPRINT_BOOTSTRAP_HTTP=http://node1:4888,http://node2:4888 \
+  node packages/network/dist/server.js
+# → auto-registers HTTP peers on startup (bypasses mDNS which requires multicast)
 ```
 
 ---
@@ -339,17 +352,39 @@ Attestations propagate via GossipSub; HTTP fallback for legacy nodes.
 
 ---
 
+
+## Challenge-Response Peer Integrity (v0.3.7)
+
+Before accepting a new peer, the node sends two ZK proofs:
+- A **known-valid** proof (public protocol vector) — peer must return `true`
+- A **freshly-mutated invalid** proof (unique per challenge via random nonce) — peer must return `false`
+
+The peer signs its response with its Ed25519 node key. This detects:
+- Nodes with ZK bypass (always returning `true`)
+- Impersonation
+- Pre-computed response caching
+- Replay attacks
+
+Any peer that fails is rejected with HTTP 403.
+
+## SPT Auto-Renewal (v0.3.6)
+
+Tokens (24h lifetime) renew automatically:
+- If < 1h remaining → pre-emptive renew via `POST /token/renew`
+- If expired < 7 days → grace window renew
+- Express/MCP middlewares handle this transparently when `nodeUrl` is set
+
 ## 7 npm Packages
 
 | Package | Version | Purpose |
 |---|---|---|
 | `soulprint` | latest | CLI (`npx soulprint verify-me`) |
-| `soulprint-core` | 0.1.7 | DID management, tokens, protocol constants, anti-farming |
-| `soulprint-verify` | 0.1.4 | OCR + face match (on-demand), biometric PROTOCOL thresholds |
-| `soulprint-zkp` | 0.1.4 | ZK proofs (Circom + snarkjs), face_key via PROTOCOL.FACE_KEY_DIMS |
-| `soulprint-network` | 0.2.3 | HTTP validator + P2P + credential validators + anti-farming engine |
-| `soulprint-mcp` | 0.1.4 | MCP middleware with auto-clamp + retry |
-| `soulprint-express` | 0.1.3 | Express/Fastify middleware |
+| `soulprint-core` | 0.1.10 | DID management, tokens, protocol constants, anti-farming |
+| `soulprint-verify` | 0.1.6 | OCR + face match (on-demand), biometric PROTOCOL thresholds |
+| `soulprint-zkp` | 0.1.5 | ZK proofs (Circom + snarkjs), face_key via PROTOCOL.FACE_KEY_DIMS |
+| `soulprint-network` | 0.4.1 | HTTP validator + P2P + ProtocolThresholds (on-chain) + SOULPRINT_BOOTSTRAP_HTTP + credential validators |
+| `soulprint-mcp` | 0.1.5 | MCP middleware with auto-clamp + retry |
+| `soulprint-express` | 0.1.4 | Express/Fastify middleware |
 
 ---
 
