@@ -1,33 +1,51 @@
 ---
-title: Use useSingleEndpoint for AG-UI Protocol
+title: Configure the agent Prop for Agent Routing
 impact: CRITICAL
-impactDescription: required for v2 agent communication protocol
-tags: provider, AG-UI, protocol, endpoint
+impactDescription: without agent prop, requests may route to wrong agent or use default behavior
+tags: provider, agent, routing, configuration
 ---
 
-## Use useSingleEndpoint for AG-UI Protocol
+## Configure the agent Prop for Agent Routing
 
-CopilotKit v2 uses the AG-UI protocol, which communicates through a single streaming endpoint. Enable `useSingleEndpoint` on the provider to route all agent traffic through one connection, reducing overhead and enabling proper event streaming.
+When using CoAgents (LangGraph, CrewAI), set the `agent` prop on `CopilotKit` to specify which agent handles requests. Without it, requests use default routing which may not match the agent you intend.
 
-**Incorrect (legacy multi-endpoint mode):**
-
-```tsx
-<CopilotKitProvider runtimeUrl="/api/copilotkit">
-  <MyApp />
-</CopilotKitProvider>
-```
-
-**Correct (single endpoint for AG-UI):**
+**Incorrect (no agent specified, ambiguous routing):**
 
 ```tsx
-<CopilotKitProvider
-  runtimeUrl="/api/copilotkit"
-  useSingleEndpoint
->
-  <MyApp />
-</CopilotKitProvider>
+import { CopilotKit } from "@copilotkit/react-core";
+
+function App() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <MyApp />
+    </CopilotKit>
+  )
+}
 ```
 
-When using Copilot Cloud, `useSingleEndpoint` is the default and does not need to be set explicitly.
+**Correct (agent explicitly configured):**
 
-Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/components/CopilotKitProvider)
+```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
+function App() {
+  return (
+    <CopilotKit
+      runtimeUrl="/api/copilotkit"
+      agent="sample_agent"
+    >
+      <MyApp />
+    </CopilotKit>
+  )
+}
+```
+
+When using Copilot Cloud with `publicApiKey`, the same `agent` prop applies:
+
+```tsx
+<CopilotKit publicApiKey="ck_pub_..." agent="sample_agent">
+  <MyApp />
+</CopilotKit>
+```
+
+Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/v1/components/CopilotKit)

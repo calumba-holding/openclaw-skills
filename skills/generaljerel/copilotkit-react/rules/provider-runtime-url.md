@@ -7,17 +7,19 @@ tags: provider, setup, configuration
 
 ## Always Configure runtimeUrl
 
-CopilotKitProvider requires a `runtimeUrl` to connect to your agent backend. Without it, all agent interactions silently fail. The runtime URL points to your CopilotKit runtime endpoint that bridges frontend and agent.
+The `CopilotKit` provider requires a `runtimeUrl` to connect to your agent backend. Without it, all agent interactions silently fail. The runtime URL points to your CopilotKit runtime endpoint that bridges frontend and agent.
 
 **Incorrect (no runtime URL, agents can't connect):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider>
+    <CopilotKit>
       <CopilotChat />
       <MyApp />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
@@ -25,12 +27,14 @@ function App() {
 **Correct (runtime URL configured):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit">
       <CopilotChat />
       <MyApp />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
@@ -38,10 +42,10 @@ function App() {
 For Copilot Cloud, use `publicApiKey` instead of `runtimeUrl`:
 
 ```tsx
-<CopilotKitProvider publicApiKey="ck_pub_...">
+<CopilotKit publicApiKey="ck_pub_...">
   <CopilotChat />
   <MyApp />
-</CopilotKitProvider>
+</CopilotKit>
 ```
 
-Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/components/CopilotKitProvider)
+Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/v1/components/CopilotKit)

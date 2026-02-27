@@ -7,17 +7,19 @@ tags: provider, nesting, multi-agent, configuration
 
 ## Scope Agent Config with Nested Providers
 
-When different parts of your app need different agent configurations (different agents, tools, or context), nest CopilotKitProviders to scope configuration. Inner providers inherit from outer ones but can override specific settings.
+When different parts of your app need different agent configurations (different agents, tools, or context), nest `CopilotKit` providers to scope configuration. Inner providers inherit from outer ones but can override specific settings via the `agent` prop.
 
 **Incorrect (single provider, all agents share config):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit">
       <ResearchPanel />
       <WritingPanel />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
@@ -25,18 +27,20 @@ function App() {
 **Correct (nested providers scope agent config):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
-      <CopilotKitProvider agentId="researcher">
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <CopilotKit agent="researcher">
         <ResearchPanel />
-      </CopilotKitProvider>
-      <CopilotKitProvider agentId="writer">
+      </CopilotKit>
+      <CopilotKit agent="writer">
         <WritingPanel />
-      </CopilotKitProvider>
-    </CopilotKitProvider>
+      </CopilotKit>
+    </CopilotKit>
   )
 }
 ```
 
-Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/components/CopilotKitProvider)
+Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/v1/components/CopilotKit)

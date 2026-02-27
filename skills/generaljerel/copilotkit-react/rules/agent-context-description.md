@@ -2,29 +2,47 @@
 title: Write Descriptive Context Values
 impact: HIGH
 impactDescription: vague context produces vague agent responses
-tags: agent, context, useAgentContext, quality
+tags: agent, context, useCopilotReadable, quality
 ---
 
 ## Write Descriptive Context Values
 
-When using `useAgentContext`, provide specific, descriptive context that helps the agent understand the current application state. Vague or minimal context leads to generic agent responses that don't match the user's situation.
+When using `useCopilotReadable` to provide context to your agent, supply specific, descriptive values that help the agent understand the current application state. Vague or minimal context leads to generic agent responses that don't match the user's situation.
 
 **Incorrect (vague context, agent lacks understanding):**
 
 ```tsx
-useAgentContext({
-  context: "user is on dashboard",
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+useCopilotReadable({
+  description: "Current page",
+  value: "dashboard",
 })
 ```
 
 **Correct (specific context with relevant details):**
 
 ```tsx
-useAgentContext({
-  context: `The user is viewing the project dashboard for "${project.name}". 
-There are ${tasks.length} tasks, ${tasks.filter(t => t.status === "overdue").length} are overdue. 
-The user has admin permissions and can reassign tasks.`,
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+useCopilotReadable({
+  description: "Current project dashboard state",
+  value: {
+    projectName: project.name,
+    totalTasks: tasks.length,
+    overdueTasks: tasks.filter(t => t.status === "overdue").length,
+    userRole: "admin",
+  },
 })
 ```
 
-Reference: [useAgentContext](https://docs.copilotkit.ai/reference/hooks/useAgentContext)
+In v2, you can also provide context via `useAgent` shared state:
+
+```tsx
+import { useAgent } from "@copilotkit/react-core/v2";
+
+const { agent } = useAgent({ agentId: "researcher" });
+agent.setState({ projectName: project.name, taskCount: tasks.length });
+```
+
+Reference: [useCopilotReadable](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotReadable)

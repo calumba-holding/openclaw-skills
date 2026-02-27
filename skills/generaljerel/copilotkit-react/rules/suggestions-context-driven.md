@@ -7,11 +7,13 @@ tags: suggestions, context, relevance
 
 ## Provide Rich Context for Suggestions
 
-Suggestions are only as good as the context available. Combine `useConfigureSuggestions` with `useAgentContext` to give the suggestion engine enough information to produce relevant, actionable suggestions.
+Suggestions are only as good as the context available. Combine `useConfigureSuggestions` (v2) with `useCopilotReadable` to give the suggestion engine enough information to produce relevant, actionable suggestions.
 
 **Incorrect (suggestions without context):**
 
 ```tsx
+import { useConfigureSuggestions } from "@copilotkit/react-core/v2";
+
 function TaskBoard() {
   useConfigureSuggestions({
     instructions: "Suggest helpful actions",
@@ -25,12 +27,16 @@ function TaskBoard() {
 **Correct (suggestions enriched with context):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+import { useConfigureSuggestions } from "@copilotkit/react-core/v2";
+
 function TaskBoard() {
   const tasks = useTasks()
   const overdue = tasks.filter(t => t.isOverdue)
 
-  useAgentContext({
-    context: {
+  useCopilotReadable({
+    description: "Task board state",
+    value: {
       totalTasks: tasks.length,
       overdueTasks: overdue.map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate })),
       currentSprint: "Sprint 14",
@@ -40,10 +46,11 @@ function TaskBoard() {
   useConfigureSuggestions({
     instructions: "Suggest actions based on overdue tasks and sprint progress. Prioritize urgent items.",
     maxSuggestions: 3,
+    available: "after-first-message",
   })
 
   return <Board tasks={tasks} />
 }
 ```
 
-Reference: [useConfigureSuggestions](https://docs.copilotkit.ai/reference/hooks/useConfigureSuggestions)
+Reference: [useConfigureSuggestions (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useConfigureSuggestions)

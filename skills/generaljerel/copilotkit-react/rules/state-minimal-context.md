@@ -12,11 +12,14 @@ Only provide context that the agent needs for its current task. Dumping entire a
 **Incorrect (entire app state as context):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
 function App() {
   const appState = useAppStore()
 
-  useAgentContext({
-    context: JSON.stringify(appState),
+  useCopilotReadable({
+    description: "Application state",
+    value: JSON.stringify(appState),
   })
 
   return <Dashboard />
@@ -26,18 +29,24 @@ function App() {
 **Correct (only relevant context for the current view):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
 function ProjectView({ projectId }: { projectId: string }) {
   const project = useProject(projectId)
   const tasks = useTasks(projectId)
 
-  useAgentContext({
-    context: `Current project: ${project.name} (${project.status}).
-Active tasks: ${tasks.filter(t => t.status === "active").length}.
-User role: ${project.currentUserRole}.`,
+  useCopilotReadable({
+    description: "Current project details",
+    value: {
+      name: project.name,
+      status: project.status,
+      activeTasks: tasks.filter(t => t.status === "active").length,
+      userRole: project.currentUserRole,
+    },
   })
 
   return <ProjectDashboard project={project} tasks={tasks} />
 }
 ```
 
-Reference: [useAgentContext](https://docs.copilotkit.ai/reference/hooks/useAgentContext)
+Reference: [useCopilotReadable](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotReadable)

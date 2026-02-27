@@ -12,30 +12,38 @@ Register a wildcard `"*"` renderer with `useRenderTool` to catch tool calls that
 **Incorrect (no fallback, unknown tools render blank):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "show_chart",
-  render: ({ args }) => <Chart data={args.data} />,
+  parameters: z.object({ data: z.array(z.number()) }),
+  render: ({ parameters }) => <Chart data={parameters.data} />,
 })
 ```
 
 **Correct (wildcard fallback for unknown tools):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "show_chart",
-  render: ({ args }) => <Chart data={args.data} />,
+  parameters: z.object({ data: z.array(z.number()) }),
+  render: ({ parameters }) => <Chart data={parameters.data} />,
 })
 
 useRenderTool({
   name: "*",
-  render: ({ name, args, status }) => (
+  render: ({ name, parameters, status }) => (
     <GenericToolCard
       toolName={name}
-      args={args}
+      args={parameters}
       isLoading={status === "inProgress"}
     />
   ),
 })
 ```
 
-Reference: [useRenderTool](https://docs.copilotkit.ai/reference/hooks/useRenderTool)
+Reference: [useRenderTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useRenderTool)

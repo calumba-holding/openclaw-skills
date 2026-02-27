@@ -1,6 +1,6 @@
 # CopilotKit React Patterns
 
-**Version 1.0.0**  
+**Version 2.0.0**  
 CopilotKit  
 February 2026
 
@@ -14,69 +14,70 @@ February 2026
 
 ## Abstract
 
-Best practices for building agentic React applications with CopilotKit. Contains 25 rules across 6 categories covering provider configuration, agent hooks, tool rendering, state management, chat UI, and suggestions. Each rule includes incorrect vs correct code examples grounded in the CopilotKit v2 React SDK.
+Best practices for building agentic React applications with CopilotKit. Contains 25 rules across 6 categories covering provider configuration, agent hooks, tool rendering, state management, chat UI, and suggestions. Each rule includes incorrect vs correct code examples for both v1 (@copilotkit/react-core) and v2 (@copilotkit/react-core/v2) APIs.
 
 ---
 
 ## Table of Contents
 
-1. [Provider Setup](#1-provider-setup) — **CRITICAL**
-   - 1.1 [Always Configure runtimeUrl](#1.1-always-configure-runtimeurl)
-   - 1.2 [Register Tools via Hooks Inside Provider](#1.2-register-tools-via-hooks-inside-provider)
-   - 1.3 [Scope Agent Config with Nested Providers](#1.3-scope-agent-config-with-nested-providers)
-   - 1.4 [Use useSingleEndpoint for AG-UI Protocol](#1.4-use-usesingleendpoint-for-ag-ui-protocol)
-2. [Agent Hooks](#2-agent-hooks) — **HIGH**
-   - 2.1 [Always Pass agentId for Multi-Agent](#2.1-always-pass-agentid-for-multi-agent)
-   - 2.2 [Declare Dependency Arrays for useFrontendTool](#2.2-declare-dependency-arrays-for-usefrontendtool)
-   - 2.3 [Specify useAgent Update Subscriptions](#2.3-specify-useagent-update-subscriptions)
-   - 2.4 [Stabilize Tool Handler References](#2.4-stabilize-tool-handler-references)
-   - 2.5 [Write Descriptive Context Values](#2.5-write-descriptive-context-values)
-3. [Tool Rendering](#3-tool-rendering) — **HIGH**
-   - 3.1 [Define Zod Schemas for Tool Args](#3.1-define-zod-schemas-for-tool-args)
-   - 3.2 [Handle All Tool Call Statuses](#3.2-handle-all-tool-call-statuses)
-   - 3.3 [Prefer useComponent for Simple Rendering](#3.3-prefer-usecomponent-for-simple-rendering)
-   - 3.4 [Register Wildcard Renderer as Fallback](#3.4-register-wildcard-renderer-as-fallback)
-   - 3.5 [useRenderTool for Display, useFrontendTool for Effects](#3.5-userendertool-for-display-usefrontendtool-for-effects)
-4. [Context & State](#4-context-&-state) — **MEDIUM**
-   - 4.1 [Avoid Stale Closures in Tool Handlers](#4.1-avoid-stale-closures-in-tool-handlers)
-   - 4.2 [Provide Only Relevant Context](#4.2-provide-only-relevant-context)
-   - 4.3 [Split Context by Domain](#4.3-split-context-by-domain)
-   - 4.4 [Use Structured Objects in Context](#4.4-use-structured-objects-in-context)
-5. [Chat UI](#5-chat-ui) — **MEDIUM**
-   - 5.1 [Choose Appropriate Chat Layout](#5.1-choose-appropriate-chat-layout)
-   - 5.2 [Customize Labels for Your Domain](#5.2-customize-labels-for-your-domain)
-   - 5.3 [Provide Welcome Screen with Prompts](#5.3-provide-welcome-screen-with-prompts)
-   - 5.4 [Use Appropriate Input Mode](#5.4-use-appropriate-input-mode)
-6. [Suggestions](#6-suggestions) — **LOW**
-   - 6.1 [Configure Suggestion Generation](#6.1-configure-suggestion-generation)
-   - 6.2 [Handle Suggestion Loading States](#6.2-handle-suggestion-loading-states)
-   - 6.3 [Provide Rich Context for Suggestions](#6.3-provide-rich-context-for-suggestions)
+1. [Provider Setup](#1-provider-setup)
+   1. [Always Configure runtimeUrl](#11-always-configure-runtimeurl)
+   2. [Configure the agent Prop for Agent Routing](#12-configure-the-agent-prop-for-agent-routing)
+   3. [Register Tools via Hooks Inside Provider](#13-register-tools-via-hooks-inside-provider)
+   4. [Scope Agent Config with Nested Providers](#14-scope-agent-config-with-nested-providers)
+2. [Agent Hooks](#2-agent-hooks)
+   1. [Always Pass agentId for Multi-Agent](#21-always-pass-agentid-for-multi-agent)
+   2. [Declare Dependency Arrays for useFrontendTool](#22-declare-dependency-arrays-for-usefrontendtool)
+   3. [Specify useAgent Update Subscriptions](#23-specify-useagent-update-subscriptions)
+   4. [Stabilize Tool Handler References](#24-stabilize-tool-handler-references)
+   5. [Write Descriptive Context Values](#25-write-descriptive-context-values)
+3. [Tool Rendering](#3-tool-rendering)
+   1. [Define Zod Schemas for Tool Args](#31-define-zod-schemas-for-tool-args)
+   2. [Handle All Tool Call Statuses](#32-handle-all-tool-call-statuses)
+   3. [Register Wildcard Renderer as Fallback](#33-register-wildcard-renderer-as-fallback)
+   4. [Use useFrontendTool render Prop for Simple UI](#34-use-usefrontendtool-render-prop-for-simple-ui)
+   5. [useRenderTool for Display, useFrontendTool for Effects](#35-userendertool-for-display-usefrontendtool-for-effects)
+4. [Context & State](#4-context--state)
+   1. [Avoid Stale Closures in Tool Handlers](#41-avoid-stale-closures-in-tool-handlers)
+   2. [Provide Only Relevant Context](#42-provide-only-relevant-context)
+   3. [Split Context by Domain](#43-split-context-by-domain)
+   4. [Use Structured Objects in Context](#44-use-structured-objects-in-context)
+5. [Chat UI](#5-chat-ui)
+   1. [Choose Appropriate Chat Layout](#51-choose-appropriate-chat-layout)
+   2. [Customize Labels for Your Domain](#52-customize-labels-for-your-domain)
+   3. [Provide Welcome Screen with Prompts](#53-provide-welcome-screen-with-prompts)
+   4. [Use Appropriate Input Mode](#54-use-appropriate-input-mode)
+6. [Suggestions](#6-suggestions)
+   1. [Configure Suggestion Generation](#61-configure-suggestion-generation)
+   2. [Handle Suggestion Loading States](#62-handle-suggestion-loading-states)
+   3. [Provide Rich Context for Suggestions](#63-provide-rich-context-for-suggestions)
 
 ---
 
 ## 1. Provider Setup
 
-**Impact: CRITICAL**
+**Impact:** CRITICAL  
+Correct `CopilotKit` provider configuration is the foundation. Misconfiguration causes silent failures, broken agent connections, or degraded performance.
 
-Correct CopilotKitProvider configuration is the foundation. Misconfiguration causes silent failures, broken agent connections, or degraded performance.
+---
 
 ### 1.1 Always Configure runtimeUrl
 
-**Impact: CRITICAL (agents will not connect without a runtime URL)**
+**Impact: CRITICAL** — agents will not connect without a runtime URL
 
-## Always Configure runtimeUrl
-
-CopilotKitProvider requires a `runtimeUrl` to connect to your agent backend. Without it, all agent interactions silently fail. The runtime URL points to your CopilotKit runtime endpoint that bridges frontend and agent.
+The `CopilotKit` provider requires a `runtimeUrl` to connect to your agent backend. Without it, all agent interactions silently fail. The runtime URL points to your CopilotKit runtime endpoint that bridges frontend and agent.
 
 **Incorrect (no runtime URL, agents can't connect):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider>
+    <CopilotKit>
       <CopilotChat />
       <MyApp />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
@@ -84,12 +85,14 @@ function App() {
 **Correct (runtime URL configured):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit">
       <CopilotChat />
       <MyApp />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
@@ -97,21 +100,70 @@ function App() {
 For Copilot Cloud, use `publicApiKey` instead of `runtimeUrl`:
 
 ```tsx
-<CopilotKitProvider publicApiKey="ck_pub_...">
+<CopilotKit publicApiKey="ck_pub_...">
   <CopilotChat />
   <MyApp />
-</CopilotKitProvider>
+</CopilotKit>
 ```
 
-Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/components/CopilotKitProvider)
+Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/v1/components/CopilotKit)
 
-### 1.2 Register Tools via Hooks Inside Provider
+---
 
-**Impact: MEDIUM (hooks provide dynamic registration and proper lifecycle management)**
+### 1.2 Configure the agent Prop for Agent Routing
 
-## Register Tools via Hooks Inside Provider
+**Impact: CRITICAL** — without agent prop, requests may route to wrong agent or use default behavior
 
-Register tools using `useFrontendTool` and `useRenderTool` hooks inside components that are children of CopilotKitProvider, rather than passing tool definitions as props. Hook-based registration ties tool availability to component lifecycle and enables dynamic tool sets.
+When using CoAgents (LangGraph, CrewAI), set the `agent` prop on `CopilotKit` to specify which agent handles requests. Without it, requests use default routing which may not match the agent you intend.
+
+**Incorrect (no agent specified, ambiguous routing):**
+
+```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
+function App() {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <MyApp />
+    </CopilotKit>
+  )
+}
+```
+
+**Correct (agent explicitly configured):**
+
+```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
+function App() {
+  return (
+    <CopilotKit
+      runtimeUrl="/api/copilotkit"
+      agent="sample_agent"
+    >
+      <MyApp />
+    </CopilotKit>
+  )
+}
+```
+
+When using Copilot Cloud with `publicApiKey`, the same `agent` prop applies:
+
+```tsx
+<CopilotKit publicApiKey="ck_pub_..." agent="sample_agent">
+  <MyApp />
+</CopilotKit>
+```
+
+Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/v1/components/CopilotKit)
+
+---
+
+### 1.3 Register Tools via Hooks Inside Provider
+
+**Impact: MEDIUM** — hooks provide dynamic registration and proper lifecycle management
+
+Register tools using `useCopilotAction` (v1) or `useFrontendTool` (v2) hooks inside components that are children of `CopilotKit`, rather than passing tool definitions as props. Hook-based registration ties tool availability to component lifecycle and enables dynamic tool sets.
 
 **Incorrect (static tool props on provider):**
 
@@ -122,18 +174,20 @@ const tools = [
 
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit" tools={tools}>
+    <CopilotKit runtimeUrl="/api/copilotkit" tools={tools}>
       <MyApp />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
 
-**Correct (hook-based registration inside provider):**
+**Correct (hook-based registration inside provider, v1):**
 
 ```tsx
+import { useCopilotAction } from "@copilotkit/react-core";
+
 function MyApp() {
-  useFrontendTool({
+  useCopilotAction({
     name: "search",
     description: "Search the documentation",
     parameters: [{ name: "query", type: "string", description: "Search query" }],
@@ -146,25 +200,47 @@ function MyApp() {
 }
 ```
 
-Reference: [useFrontendTool](https://docs.copilotkit.ai/reference/hooks/useFrontendTool)
+**Correct (hook-based registration inside provider, v2 with Zod):**
 
-### 1.3 Scope Agent Config with Nested Providers
+```tsx
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
 
-**Impact: HIGH (prevents agent configuration conflicts in multi-agent apps)**
+function MyApp() {
+  useFrontendTool({
+    name: "search",
+    description: "Search the documentation",
+    parameters: z.object({ query: z.string().describe("Search query") }),
+    handler: async ({ query }) => {
+      return await searchDocs(query)
+    },
+  })
 
-## Scope Agent Config with Nested Providers
+  return <Dashboard />
+}
+```
 
-When different parts of your app need different agent configurations (different agents, tools, or context), nest CopilotKitProviders to scope configuration. Inner providers inherit from outer ones but can override specific settings.
+Reference: [useCopilotAction](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotAction) | [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool)
+
+---
+
+### 1.4 Scope Agent Config with Nested Providers
+
+**Impact: HIGH** — prevents agent configuration conflicts in multi-agent apps
+
+When different parts of your app need different agent configurations (different agents, tools, or context), nest `CopilotKit` providers to scope configuration. Inner providers inherit from outer ones but can override specific settings via the `agent` prop.
 
 **Incorrect (single provider, all agents share config):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit">
       <ResearchPanel />
       <WritingPanel />
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
@@ -172,87 +248,63 @@ function App() {
 **Correct (nested providers scope agent config):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
-      <CopilotKitProvider agentId="researcher">
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <CopilotKit agent="researcher">
         <ResearchPanel />
-      </CopilotKitProvider>
-      <CopilotKitProvider agentId="writer">
+      </CopilotKit>
+      <CopilotKit agent="writer">
         <WritingPanel />
-      </CopilotKitProvider>
-    </CopilotKitProvider>
+      </CopilotKit>
+    </CopilotKit>
   )
 }
 ```
 
-Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/components/CopilotKitProvider)
+Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/v1/components/CopilotKit)
 
-### 1.4 Use useSingleEndpoint for AG-UI Protocol
-
-**Impact: CRITICAL (required for v2 agent communication protocol)**
-
-## Use useSingleEndpoint for AG-UI Protocol
-
-CopilotKit v2 uses the AG-UI protocol, which communicates through a single streaming endpoint. Enable `useSingleEndpoint` on the provider to route all agent traffic through one connection, reducing overhead and enabling proper event streaming.
-
-**Incorrect (legacy multi-endpoint mode):**
-
-```tsx
-<CopilotKitProvider runtimeUrl="/api/copilotkit">
-  <MyApp />
-</CopilotKitProvider>
-```
-
-**Correct (single endpoint for AG-UI):**
-
-```tsx
-<CopilotKitProvider
-  runtimeUrl="/api/copilotkit"
-  useSingleEndpoint
->
-  <MyApp />
-</CopilotKitProvider>
-```
-
-When using Copilot Cloud, `useSingleEndpoint` is the default and does not need to be set explicitly.
-
-Reference: [CopilotKit Provider](https://docs.copilotkit.ai/reference/components/CopilotKitProvider)
+---
 
 ## 2. Agent Hooks
 
-**Impact: HIGH**
+**Impact:** HIGH  
+Patterns for useAgent (v2), useFrontendTool (v2), useCopilotReadable (v1), and useCopilotAction (v1). Incorrect usage causes re-render storms, stale state, or broken agent interactions.
 
-Patterns for useAgent, useFrontendTool, useAgentContext, and useHumanInTheLoop. Incorrect usage causes re-render storms, stale state, or broken agent interactions.
+---
 
 ### 2.1 Always Pass agentId for Multi-Agent
 
-**Impact: HIGH (without agentId, requests route to wrong agent or fail)**
+**Impact: HIGH** — without agentId, requests route to wrong agent or fail
 
-## Always Pass agentId for Multi-Agent
-
-When your application has multiple agents, always specify `agentId` in hooks like `useAgent`, `useFrontendTool`, and in the provider. Without it, CopilotKit cannot route requests to the correct agent, causing unexpected behavior or errors.
+When your application has multiple agents, always specify `agentId` in hooks like `useAgent` and `useFrontendTool`, or use the `agent` prop on the `CopilotKit` provider. Without it, CopilotKit cannot route requests to the correct agent, causing unexpected behavior or errors.
 
 **Incorrect (no agentId, ambiguous routing):**
 
 ```tsx
+import { useAgent, useFrontendTool } from "@copilotkit/react-core/v2";
+
 function ResearchPanel() {
-  const { agent, run } = useAgent({})
+  const { agent } = useAgent({})
 
   useFrontendTool({
     name: "save_result",
     handler: async ({ result }) => saveToDb(result),
   })
 
-  return <button onClick={() => run("Research AI trends")}>Go</button>
+  return <button onClick={() => agent.runAgent()}>Go</button>
 }
 ```
 
 **Correct (explicit agentId for routing):**
 
 ```tsx
+import { useAgent, useFrontendTool } from "@copilotkit/react-core/v2";
+
 function ResearchPanel() {
-  const { agent, run } = useAgent({ agentId: "researcher" })
+  const { agent } = useAgent({ agentId: "researcher" })
 
   useFrontendTool({
     name: "save_result",
@@ -260,23 +312,25 @@ function ResearchPanel() {
     handler: async ({ result }) => saveToDb(result),
   })
 
-  return <button onClick={() => run("Research AI trends")}>Go</button>
+  return <button onClick={() => agent.runAgent()}>Go</button>
 }
 ```
 
-Reference: [useAgent Hook](https://docs.copilotkit.ai/reference/hooks/useAgent)
+Reference: [useAgent Hook](https://docs.copilotkit.ai/reference/v2/hooks/useAgent)
+
+---
 
 ### 2.2 Declare Dependency Arrays for useFrontendTool
 
-**Impact: MEDIUM (missing deps cause stale closures or infinite re-registrations)**
+**Impact: MEDIUM** — missing deps cause stale closures or infinite re-registrations
 
-## Declare Dependency Arrays for useFrontendTool
-
-`useFrontendTool` re-registers the tool when its configuration changes. Without a dependency array, the tool re-registers on every render. Include all values from the component scope that the handler uses.
+`useFrontendTool` (v2) and `useCopilotAction` (v1) accept a dependency array that controls when the tool re-registers. Without it, the tool re-registers on every render. Include all values from the component scope that the handler uses.
 
 **Incorrect (no deps, re-registers every render):**
 
 ```tsx
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+
 function TaskPanel({ projectId }: { projectId: string }) {
   useFrontendTool({
     name: "create_task",
@@ -292,80 +346,90 @@ function TaskPanel({ projectId }: { projectId: string }) {
 **Correct (deps array controls re-registration):**
 
 ```tsx
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+
 function TaskPanel({ projectId }: { projectId: string }) {
-  useFrontendTool({
-    name: "create_task",
-    handler: async ({ title }) => {
-      await createTask(projectId, title)
+  useFrontendTool(
+    {
+      name: "create_task",
+      handler: async ({ title }) => {
+        await createTask(projectId, title)
+      },
     },
-    deps: [projectId],
-  })
+    [projectId],
+  )
 
   return <TaskList projectId={projectId} />
 }
 ```
 
-Reference: [useFrontendTool](https://docs.copilotkit.ai/reference/hooks/useFrontendTool)
+Reference: [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool)
+
+---
 
 ### 2.3 Specify useAgent Update Subscriptions
 
-**Impact: HIGH (prevents unnecessary re-renders from agent state changes)**
+**Impact: HIGH** — prevents unnecessary re-renders from agent state changes
 
-## Specify useAgent Update Subscriptions
-
-The `useAgent` hook accepts an `updates` array that controls which agent changes trigger a React re-render. Without specifying updates, your component may re-render on every agent event. Only subscribe to the updates your component actually needs.
+The `useAgent` hook (v2) accepts an `updates` array that controls which agent changes trigger a React re-render. By default it subscribes to all updates (`OnMessagesChanged`, `OnStateChanged`, `OnRunStatusChanged`). Only subscribe to the updates your component actually needs to avoid excessive re-renders.
 
 **Incorrect (subscribes to all updates, causes re-render storms):**
 
 ```tsx
+import { useAgent } from "@copilotkit/react-core/v2";
+
 function AgentStatus() {
   const { agent } = useAgent({ agentId: "researcher" })
 
-  return <div>Status: {agent.runStatus}</div>
+  return <div>Running: {agent.isRunning ? "yes" : "no"}</div>
 }
 ```
 
 **Correct (subscribes only to run status changes):**
 
 ```tsx
-import { UseAgentUpdate } from "@copilotkitnext/react"
+import { useAgent } from "@copilotkit/react-core/v2";
 
 function AgentStatus() {
   const { agent } = useAgent({
     agentId: "researcher",
-    updates: [UseAgentUpdate.OnRunStatusChanged],
+    updates: ["OnRunStatusChanged"],
   })
 
-  return <div>Status: {agent.runStatus}</div>
+  return <div>Running: {agent.isRunning ? "yes" : "no"}</div>
 }
 ```
 
 Available update types:
-- `UseAgentUpdate.OnMessagesChanged` - re-render when messages update
-- `UseAgentUpdate.OnStateChanged` - re-render when agent state changes
-- `UseAgentUpdate.OnRunStatusChanged` - re-render when run status changes
+- `"OnMessagesChanged"` - re-render when messages update
+- `"OnStateChanged"` - re-render when agent state changes
+- `"OnRunStatusChanged"` - re-render when run status changes
 
-Reference: [useAgent Hook](https://docs.copilotkit.ai/reference/hooks/useAgent)
+Reference: [useAgent Hook (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useAgent)
+
+---
 
 ### 2.4 Stabilize Tool Handler References
 
-**Impact: MEDIUM (unstable handler references cause tool re-registration churn)**
+**Impact: MEDIUM** — unstable handler references cause tool re-registration churn
 
-## Stabilize Tool Handler References
-
-When passing handler functions to `useFrontendTool`, wrap them with `useCallback` to maintain stable references. Unstable function references trigger unnecessary tool re-registrations, which can interrupt in-flight agent tool calls.
+When passing handler functions to `useFrontendTool` (v2) or `useCopilotAction` (v1), wrap them with `useCallback` to maintain stable references. Unstable function references trigger unnecessary tool re-registrations, which can interrupt in-flight agent tool calls.
 
 **Incorrect (new handler created every render):**
 
 ```tsx
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+
 function DocumentEditor({ docId }: { docId: string }) {
-  useFrontendTool({
-    name: "update_document",
-    handler: async ({ content }) => {
-      await updateDoc(docId, content)
+  useFrontendTool(
+    {
+      name: "update_document",
+      handler: async ({ content }) => {
+        await updateDoc(docId, content)
+      },
     },
-    deps: [docId],
-  })
+    [docId],
+  )
 
   return <Editor docId={docId} />
 }
@@ -374,6 +438,9 @@ function DocumentEditor({ docId }: { docId: string }) {
 **Correct (stable handler via useCallback):**
 
 ```tsx
+import { useCallback } from "react";
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+
 function DocumentEditor({ docId }: { docId: string }) {
   const handler = useCallback(
     async ({ content }: { content: string }) => {
@@ -382,70 +449,93 @@ function DocumentEditor({ docId }: { docId: string }) {
     [docId]
   )
 
-  useFrontendTool({
-    name: "update_document",
-    handler,
-    deps: [docId],
-  })
+  useFrontendTool(
+    {
+      name: "update_document",
+      handler,
+    },
+    [docId],
+  )
 
   return <Editor docId={docId} />
 }
 ```
 
-Reference: [useFrontendTool](https://docs.copilotkit.ai/reference/hooks/useFrontendTool)
+Reference: [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool)
+
+---
 
 ### 2.5 Write Descriptive Context Values
 
-**Impact: HIGH (vague context produces vague agent responses)**
+**Impact: HIGH** — vague context produces vague agent responses
 
-## Write Descriptive Context Values
-
-When using `useAgentContext`, provide specific, descriptive context that helps the agent understand the current application state. Vague or minimal context leads to generic agent responses that don't match the user's situation.
+When using `useCopilotReadable` to provide context to your agent, supply specific, descriptive values that help the agent understand the current application state. Vague or minimal context leads to generic agent responses that don't match the user's situation.
 
 **Incorrect (vague context, agent lacks understanding):**
 
 ```tsx
-useAgentContext({
-  context: "user is on dashboard",
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+useCopilotReadable({
+  description: "Current page",
+  value: "dashboard",
 })
 ```
 
 **Correct (specific context with relevant details):**
 
 ```tsx
-useAgentContext({
-  context: `The user is viewing the project dashboard for "${project.name}". 
-There are ${tasks.length} tasks, ${tasks.filter(t => t.status === "overdue").length} are overdue. 
-The user has admin permissions and can reassign tasks.`,
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+useCopilotReadable({
+  description: "Current project dashboard state",
+  value: {
+    projectName: project.name,
+    totalTasks: tasks.length,
+    overdueTasks: tasks.filter(t => t.status === "overdue").length,
+    userRole: "admin",
+  },
 })
 ```
 
-Reference: [useAgentContext](https://docs.copilotkit.ai/reference/hooks/useAgentContext)
+In v2, you can also provide context via `useAgent` shared state:
+
+```tsx
+import { useAgent } from "@copilotkit/react-core/v2";
+
+const { agent } = useAgent({ agentId: "researcher" });
+agent.setState({ projectName: project.name, taskCount: tasks.length });
+```
+
+Reference: [useCopilotReadable](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotReadable)
+
+---
 
 ## 3. Tool Rendering
 
-**Impact: HIGH**
-
+**Impact:** HIGH  
 Rules for rendering agent tool calls in the UI. Proper tool rendering is what makes CopilotKit's generative UI possible.
+
+---
 
 ### 3.1 Define Zod Schemas for Tool Args
 
-**Impact: HIGH (enables type-safe rendering and partial arg streaming)**
+**Impact: HIGH** — enables type-safe rendering and partial arg streaming
 
-## Define Zod Schemas for Tool Args
+When using `useRenderTool` (v2), always define a Zod schema for the `parameters` field. This enables type-safe access to tool arguments and allows CopilotKit to stream partial arguments while the tool call is in progress, giving users real-time feedback.
 
-When using `useRenderTool`, always define a Zod schema for the `args` parameter. This enables type-safe access to tool arguments and allows CopilotKit to stream partial arguments while the tool call is in progress, giving users real-time feedback.
-
-**Incorrect (no schema, args are untyped):**
+**Incorrect (no schema, parameters are untyped):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+
 useRenderTool({
   name: "show_weather",
-  render: ({ args, status }) => {
+  render: ({ parameters, status }) => {
     return (
       <WeatherCard
-        city={args.city}
-        temp={args.temperature}
+        city={parameters.city}
+        temp={parameters.temperature}
       />
     )
   },
@@ -455,24 +545,25 @@ useRenderTool({
 **Correct (Zod schema provides type safety and streaming):**
 
 ```tsx
-import { z } from "zod"
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
 
 useRenderTool({
   name: "show_weather",
-  args: z.object({
+  parameters: z.object({
     city: z.string(),
     temperature: z.number(),
     condition: z.enum(["sunny", "cloudy", "rainy"]),
   }),
-  render: ({ args, status }) => {
+  render: ({ parameters, status }) => {
     if (status === "inProgress") {
-      return <WeatherCardSkeleton city={args.city} />
+      return <WeatherCardSkeleton city={parameters.city} />
     }
     return (
       <WeatherCard
-        city={args.city}
-        temp={args.temperature}
-        condition={args.condition}
+        city={parameters.city}
+        temp={parameters.temperature}
+        condition={parameters.condition}
       />
     )
   },
@@ -480,28 +571,33 @@ useRenderTool({
 ```
 
 The Zod schema enables:
-- TypeScript inference for `args` in the render function
-- Partial args during `inProgress` status (for streaming UI)
+- TypeScript inference for `parameters` in the render function
+- Partial parameters during `inProgress` status (for streaming UI)
 - Validation before `executing` and `complete` statuses
 
-Reference: [useRenderTool](https://docs.copilotkit.ai/reference/hooks/useRenderTool)
+In v1, use `useCopilotAction` with `render` and plain parameter arrays instead.
+
+Reference: [useRenderTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useRenderTool)
+
+---
 
 ### 3.2 Handle All Tool Call Statuses
 
-**Impact: HIGH (unhandled statuses cause blank UI or missing loading states)**
-
-## Handle All Tool Call Statuses
+**Impact: HIGH** — unhandled statuses cause blank UI or missing loading states
 
 Tool renders receive a `status` field with three possible values: `inProgress`, `executing`, and `complete`. Handle all three to provide proper loading states, execution feedback, and final results. Ignoring statuses causes jarring UI transitions.
 
 **Incorrect (only handles complete, no loading state):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "search_results",
-  args: z.object({ query: z.string(), results: z.array(z.string()) }),
-  render: ({ args }) => {
-    return <ResultsList results={args.results} />
+  parameters: z.object({ query: z.string(), results: z.array(z.string()) }),
+  render: ({ parameters }) => {
+    return <ResultsList results={parameters.results} />
   },
 })
 ```
@@ -509,123 +605,152 @@ useRenderTool({
 **Correct (handles all three statuses):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "search_results",
-  args: z.object({ query: z.string(), results: z.array(z.string()) }),
-  render: ({ args, status }) => {
+  parameters: z.object({ query: z.string(), results: z.array(z.string()) }),
+  render: ({ parameters, status }) => {
     if (status === "inProgress") {
-      return <SearchSkeleton query={args.query} />
+      return <SearchSkeleton query={parameters.query} />
     }
     if (status === "executing") {
-      return <SearchProgress query={args.query} />
+      return <SearchProgress query={parameters.query} />
     }
-    return <ResultsList results={args.results} />
+    return <ResultsList results={parameters.results} />
   },
 })
 ```
 
-Reference: [useRenderTool](https://docs.copilotkit.ai/reference/hooks/useRenderTool)
+The same status values apply to v1's `useCopilotAction` render prop.
 
-### 3.3 Prefer useComponent for Simple Rendering
+Reference: [useRenderTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useRenderTool)
 
-**Impact: MEDIUM (reduces boilerplate for common component-rendering patterns)**
+---
 
-## Prefer useComponent for Simple Rendering
+### 3.3 Register Wildcard Renderer as Fallback
 
-When a tool call simply renders a React component from its arguments with no special status handling, use `useComponent` instead of `useRenderTool`. It provides a simpler API that maps tool args directly to component props.
-
-**Incorrect (verbose useRenderTool for simple case):**
-
-```tsx
-useRenderTool({
-  name: "show_user_card",
-  args: z.object({
-    name: z.string(),
-    email: z.string(),
-    avatar: z.string(),
-  }),
-  render: ({ args, status }) => {
-    if (status !== "complete") return <UserCardSkeleton />
-    return <UserCard name={args.name} email={args.email} avatar={args.avatar} />
-  },
-})
-```
-
-**Correct (useComponent for direct mapping):**
-
-```tsx
-useComponent({
-  name: "show_user_card",
-  component: UserCard,
-  args: z.object({
-    name: z.string(),
-    email: z.string(),
-    avatar: z.string(),
-  }),
-})
-```
-
-`useComponent` automatically handles loading states and maps args to component props.
-
-Reference: [useComponent](https://docs.copilotkit.ai/reference/hooks/useComponent)
-
-### 3.4 Register Wildcard Renderer as Fallback
-
-**Impact: MEDIUM (prevents missing UI when agent calls unregistered tools)**
-
-## Register Wildcard Renderer as Fallback
+**Impact: MEDIUM** — prevents missing UI when agent calls unregistered tools
 
 Register a wildcard `"*"` renderer with `useRenderTool` to catch tool calls that don't have a dedicated renderer. Without a fallback, unregistered tool calls render nothing in the chat, confusing users.
 
 **Incorrect (no fallback, unknown tools render blank):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "show_chart",
-  render: ({ args }) => <Chart data={args.data} />,
+  parameters: z.object({ data: z.array(z.number()) }),
+  render: ({ parameters }) => <Chart data={parameters.data} />,
 })
 ```
 
 **Correct (wildcard fallback for unknown tools):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "show_chart",
-  render: ({ args }) => <Chart data={args.data} />,
+  parameters: z.object({ data: z.array(z.number()) }),
+  render: ({ parameters }) => <Chart data={parameters.data} />,
 })
 
 useRenderTool({
   name: "*",
-  render: ({ name, args, status }) => (
+  render: ({ name, parameters, status }) => (
     <GenericToolCard
       toolName={name}
-      args={args}
+      args={parameters}
       isLoading={status === "inProgress"}
     />
   ),
 })
 ```
 
-Reference: [useRenderTool](https://docs.copilotkit.ai/reference/hooks/useRenderTool)
+Reference: [useRenderTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useRenderTool)
+
+---
+
+### 3.4 Use useFrontendTool render Prop for Simple UI
+
+**Impact: MEDIUM** — reduces boilerplate for common component-rendering patterns
+
+When a tool call needs both side effects and UI rendering, use `useFrontendTool` with its optional `render` prop instead of registering separate `useFrontendTool` and `useRenderTool` hooks. This keeps the tool definition in one place.
+
+**Incorrect (separate hooks for a simple tool):**
+
+```tsx
+import { useFrontendTool, useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
+const schema = z.object({ name: z.string(), email: z.string() });
+
+useFrontendTool({
+  name: "show_user_card",
+  parameters: schema,
+  handler: async ({ name, email }) => {
+    return `Showing card for ${name}`
+  },
+})
+
+useRenderTool({
+  name: "show_user_card",
+  parameters: schema,
+  render: ({ parameters, status }) => {
+    if (status !== "complete") return <UserCardSkeleton />
+    return <UserCard name={parameters.name} email={parameters.email} />
+  },
+})
+```
+
+**Correct (single useFrontendTool with render prop):**
+
+```tsx
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
+useFrontendTool({
+  name: "show_user_card",
+  parameters: z.object({ name: z.string(), email: z.string() }),
+  handler: async ({ name, email }) => {
+    return `Showing card for ${name}`
+  },
+  render: ({ name, args, status, result }) => {
+    if (status !== "complete") return <UserCardSkeleton />
+    return <UserCard name={args.name} email={args.email} />
+  },
+})
+```
+
+In v1, `useCopilotAction` similarly combines `handler` and `render` in one definition.
+
+Reference: [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool)
+
+---
 
 ### 3.5 useRenderTool for Display, useFrontendTool for Effects
 
-**Impact: HIGH (mixing concerns causes side effects during streaming or double execution)**
-
-## useRenderTool for Display, useFrontendTool for Effects
+**Impact: HIGH** — mixing concerns causes side effects during streaming or double execution
 
 Use `useRenderTool` when you only need to display UI in response to a tool call. Use `useFrontendTool` when the tool call should trigger side effects (API calls, state mutations, navigation). Mixing them causes side effects to fire during streaming or display-only tools to swallow return values.
 
 **Incorrect (side effects in a render tool):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+
 useRenderTool({
   name: "create_ticket",
-  render: ({ args, status }) => {
+  render: ({ parameters, status }) => {
     if (status === "complete") {
-      createTicketInDb(args)
+      createTicketInDb(parameters)
     }
-    return <TicketCard {...args} />
+    return <TicketCard {...parameters} />
   },
 })
 ```
@@ -633,47 +758,63 @@ useRenderTool({
 **Correct (separate render from effects):**
 
 ```tsx
+import { useFrontendTool, useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
+const ticketSchema = z.object({
+  title: z.string(),
+  priority: z.enum(["low", "medium", "high"]),
+});
+
 useFrontendTool({
   name: "create_ticket",
+  parameters: ticketSchema,
   handler: async ({ title, priority }) => {
     const ticket = await createTicketInDb({ title, priority })
-    return { ticketId: ticket.id }
+    return `Created ticket ${ticket.id}`
   },
 })
 
 useRenderTool({
   name: "create_ticket",
-  render: ({ args, status }) => {
+  parameters: ticketSchema,
+  render: ({ parameters, status }) => {
     if (status === "inProgress") return <TicketSkeleton />
-    return <TicketCard title={args.title} priority={args.priority} />
+    return <TicketCard title={parameters.title} priority={parameters.priority} />
   },
 })
 ```
 
-Reference: [useFrontendTool](https://docs.copilotkit.ai/reference/hooks/useFrontendTool)
+In v1, use `useCopilotAction` with both `handler` and `render` props on the same action.
+
+Reference: [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool) | [useRenderTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useRenderTool)
+
+---
 
 ## 4. Context & State
 
-**Impact: MEDIUM**
-
+**Impact:** MEDIUM  
 Patterns for providing context to agents and managing shared state. Good context = good agent responses.
+
+---
 
 ### 4.1 Avoid Stale Closures in Tool Handlers
 
-**Impact: HIGH (stale closures cause tools to operate on outdated state)**
+**Impact: HIGH** — stale closures cause tools to operate on outdated state
 
-## Avoid Stale Closures in Tool Handlers
-
-Tool handlers registered with `useFrontendTool` capture variables from their closure. If state changes between registration and invocation, the handler sees stale values. Use functional state updates or refs to always access current state.
+Tool handlers registered with `useFrontendTool` (v2) or `useCopilotAction` (v1) capture variables from their closure. If state changes between registration and invocation, the handler sees stale values. Use functional state updates or refs to always access current state.
 
 **Incorrect (stale closure captures initial items):**
 
 ```tsx
+import { useCopilotAction } from "@copilotkit/react-core";
+
 function TodoPanel() {
   const [items, setItems] = useState<string[]>([])
 
-  useFrontendTool({
+  useCopilotAction({
     name: "add_todo",
+    parameters: [{ name: "title", type: "string", description: "Todo title" }],
     handler: async ({ title }) => {
       setItems([...items, title])
     },
@@ -686,11 +827,14 @@ function TodoPanel() {
 **Correct (functional update always uses current state):**
 
 ```tsx
+import { useCopilotAction } from "@copilotkit/react-core";
+
 function TodoPanel() {
   const [items, setItems] = useState<string[]>([])
 
-  useFrontendTool({
+  useCopilotAction({
     name: "add_todo",
+    parameters: [{ name: "title", type: "string", description: "Todo title" }],
     handler: async ({ title }) => {
       setItems(prev => [...prev, title])
     },
@@ -700,24 +844,27 @@ function TodoPanel() {
 }
 ```
 
-Reference: [useFrontendTool](https://docs.copilotkit.ai/reference/hooks/useFrontendTool)
+Reference: [useCopilotAction](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotAction) | [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool)
+
+---
 
 ### 4.2 Provide Only Relevant Context
 
-**Impact: MEDIUM (excessive context wastes tokens and confuses agents)**
-
-## Provide Only Relevant Context
+**Impact: MEDIUM** — excessive context wastes tokens and confuses agents
 
 Only provide context that the agent needs for its current task. Dumping entire app state into context wastes LLM tokens, increases latency, and can confuse the agent with irrelevant information.
 
 **Incorrect (entire app state as context):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
 function App() {
   const appState = useAppStore()
 
-  useAgentContext({
-    context: JSON.stringify(appState),
+  useCopilotReadable({
+    description: "Application state",
+    value: JSON.stringify(appState),
   })
 
   return <Dashboard />
@@ -727,40 +874,49 @@ function App() {
 **Correct (only relevant context for the current view):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
 function ProjectView({ projectId }: { projectId: string }) {
   const project = useProject(projectId)
   const tasks = useTasks(projectId)
 
-  useAgentContext({
-    context: `Current project: ${project.name} (${project.status}).
-Active tasks: ${tasks.filter(t => t.status === "active").length}.
-User role: ${project.currentUserRole}.`,
+  useCopilotReadable({
+    description: "Current project details",
+    value: {
+      name: project.name,
+      status: project.status,
+      activeTasks: tasks.filter(t => t.status === "active").length,
+      userRole: project.currentUserRole,
+    },
   })
 
   return <ProjectDashboard project={project} tasks={tasks} />
 }
 ```
 
-Reference: [useAgentContext](https://docs.copilotkit.ai/reference/hooks/useAgentContext)
+Reference: [useCopilotReadable](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotReadable)
+
+---
 
 ### 4.3 Split Context by Domain
 
-**Impact: MEDIUM (granular context updates avoid re-sending unchanged data)**
+**Impact: MEDIUM** — granular context updates avoid re-sending unchanged data
 
-## Split Context by Domain
-
-Instead of one large `useAgentContext` call, split context into multiple calls by domain. This way, only the changed domain's context gets re-sent to the agent, reducing token usage and improving response quality.
+Instead of one large `useCopilotReadable` call, split context into multiple calls by domain. This way, only the changed domain's context gets re-sent to the agent, reducing token usage and improving response quality.
 
 **Incorrect (single monolithic context):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
 function Dashboard() {
   const user = useUser()
   const projects = useProjects()
   const notifications = useNotifications()
 
-  useAgentContext({
-    context: `User: ${user.name}, Role: ${user.role}. 
+  useCopilotReadable({
+    description: "Everything",
+    value: `User: ${user.name}, Role: ${user.role}. 
 Projects: ${JSON.stringify(projects)}. 
 Notifications: ${notifications.length} unread.`,
   })
@@ -772,53 +928,61 @@ Notifications: ${notifications.length} unread.`,
 **Correct (split context by domain):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+
 function Dashboard() {
   const user = useUser()
   const projects = useProjects()
   const notifications = useNotifications()
 
-  useAgentContext({
-    context: { userName: user.name, role: user.role },
+  useCopilotReadable({
     description: "Current user information",
+    value: { userName: user.name, role: user.role },
   })
 
-  useAgentContext({
-    context: { projects: projects.map(p => ({ id: p.id, name: p.name, status: p.status })) },
+  useCopilotReadable({
     description: "User's projects",
+    value: { projects: projects.map(p => ({ id: p.id, name: p.name, status: p.status })) },
   })
 
-  useAgentContext({
-    context: { unreadCount: notifications.length },
+  useCopilotReadable({
     description: "Notification status",
+    value: { unreadCount: notifications.length },
   })
 
   return <DashboardView />
 }
 ```
 
-Reference: [useAgentContext](https://docs.copilotkit.ai/reference/hooks/useAgentContext)
+Reference: [useCopilotReadable](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotReadable)
+
+---
 
 ### 4.4 Use Structured Objects in Context
 
-**Impact: MEDIUM (structured data enables better agent reasoning than flat strings)**
+**Impact: MEDIUM** — structured data enables better agent reasoning than flat strings
 
-## Use Structured Objects in Context
-
-When providing context via `useAgentContext`, use structured objects rather than serialized strings. Structured data helps agents parse and reason about context more reliably than free-form text.
+When providing context via `useCopilotReadable`, use structured objects for the `value` rather than serialized strings. Structured data helps agents parse and reason about context more reliably than free-form text.
 
 **Incorrect (serialized string, hard for agent to parse):**
 
 ```tsx
-useAgentContext({
-  context: `items: ${items.map(i => `${i.name}(${i.price})`).join(", ")}`,
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+useCopilotReadable({
+  description: "Cart items",
+  value: `items: ${items.map(i => `${i.name}(${i.price})`).join(", ")}`,
 })
 ```
 
 **Correct (structured object for reliable parsing):**
 
 ```tsx
-useAgentContext({
-  context: {
+import { useCopilotReadable } from "@copilotkit/react-core";
+
+useCopilotReadable({
+  description: "Shopping cart contents",
+  value: {
     cartItems: items.map(item => ({
       name: item.name,
       price: item.price,
@@ -830,19 +994,20 @@ useAgentContext({
 })
 ```
 
-Reference: [useAgentContext](https://docs.copilotkit.ai/reference/hooks/useAgentContext)
+Reference: [useCopilotReadable](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotReadable)
+
+---
 
 ## 5. Chat UI
 
-**Impact: MEDIUM**
-
+**Impact:** MEDIUM  
 Rules for configuring and customizing CopilotChat, CopilotSidebar, and CopilotPopup components.
+
+---
 
 ### 5.1 Choose Appropriate Chat Layout
 
-**Impact: MEDIUM (wrong layout choice degrades UX for the use case)**
-
-## Choose Appropriate Chat Layout
+**Impact: MEDIUM** — wrong layout choice degrades UX for the use case
 
 Choose `CopilotSidebar` for persistent, always-visible agent interaction (e.g., copilot-assisted workflows). Choose `CopilotPopup` for on-demand, quick interactions. Choose `CopilotChat` for inline, embedded chat in a specific page section.
 
@@ -876,11 +1041,11 @@ function ProjectWorkspace() {
 
 Reference: [Chat Components](https://docs.copilotkit.ai/reference/components/chat)
 
+---
+
 ### 5.2 Customize Labels for Your Domain
 
-**Impact: LOW (default labels feel generic and reduce user trust)**
-
-## Customize Labels for Your Domain
+**Impact: LOW** — default labels feel generic and reduce user trust
 
 Always customize the `labels` prop on chat components to match your application's domain. Default labels like "How can I help?" feel generic and don't build user confidence in the agent's capabilities.
 
@@ -908,11 +1073,11 @@ Always customize the `labels` prop on chat components to match your application'
 
 Reference: [Chat Components](https://docs.copilotkit.ai/reference/components/chat)
 
+---
+
 ### 5.3 Provide Welcome Screen with Prompts
 
-**Impact: LOW (users don't know what to ask without guidance)**
-
-## Provide Welcome Screen with Prompts
+**Impact: LOW** — users don't know what to ask without guidance
 
 Configure a welcome screen with suggested prompts to guide users on what the agent can do. An empty chat box with no guidance leads to low engagement because users don't know what to ask.
 
@@ -940,11 +1105,11 @@ Configure a welcome screen with suggested prompts to guide users on what the age
 
 Reference: [Chat Components](https://docs.copilotkit.ai/reference/components/chat)
 
+---
+
 ### 5.4 Use Appropriate Input Mode
 
-**Impact: LOW (wrong input mode creates friction for the interaction type)**
-
-## Use Appropriate Input Mode
+**Impact: LOW** — wrong input mode creates friction for the interaction type
 
 Set the `inputMode` prop to match your use case. Use `"text"` for general chat, `"voice"` for hands-free workflows, and `"multi"` to let users switch between text and voice.
 
@@ -975,57 +1140,77 @@ function DrivingAssistant() {
 
 Reference: [Chat Components](https://docs.copilotkit.ai/reference/components/chat)
 
+---
+
 ## 6. Suggestions
 
-**Impact: LOW**
-
+**Impact:** LOW  
 Patterns for configuring proactive suggestions that help users discover agent capabilities.
+
+---
 
 ### 6.1 Configure Suggestion Generation
 
-**Impact: LOW (unconfigured suggestions are generic and unhelpful)**
+**Impact: LOW** — unconfigured suggestions are generic and unhelpful
 
-## Configure Suggestion Generation
-
-Use `useConfigureSuggestions` to control how and when suggestions are generated. Without configuration, suggestions may be too generic or generated at inappropriate times, wasting LLM calls.
+Use `useConfigureSuggestions` (v2) or `useCopilotChatSuggestions` (v1) to control how and when suggestions are generated. Without configuration, suggestions may be too generic or generated at inappropriate times, wasting LLM calls.
 
 **Incorrect (no suggestion configuration):**
 
 ```tsx
+import { CopilotKit } from "@copilotkit/react-core";
+
 function App() {
   return (
-    <CopilotKitProvider runtimeUrl="/api/copilotkit">
+    <CopilotKit runtimeUrl="/api/copilotkit">
       <CopilotSidebar>
         <Dashboard />
       </CopilotSidebar>
-    </CopilotKitProvider>
+    </CopilotKit>
   )
 }
 ```
 
-**Correct (configured suggestion generation):**
+**Correct (v2 configured suggestion generation):**
 
 ```tsx
+import { useConfigureSuggestions } from "@copilotkit/react-core/v2";
+
 function Dashboard() {
   useConfigureSuggestions({
     instructions: "Suggest actions relevant to the user's current project and recent activity.",
     maxSuggestions: 3,
-    minDelay: 1000,
+    available: "after-first-message",
   })
 
   return <DashboardView />
 }
 ```
 
-Reference: [useConfigureSuggestions](https://docs.copilotkit.ai/reference/hooks/useConfigureSuggestions)
+**Correct (v1 alternative):**
+
+```tsx
+import { useCopilotChatSuggestions } from "@copilotkit/react-ui";
+
+function Dashboard() {
+  useCopilotChatSuggestions({
+    instructions: "Suggest actions relevant to the user's current project.",
+    maxSuggestions: 3,
+  })
+
+  return <DashboardView />
+}
+```
+
+Reference: [useConfigureSuggestions (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useConfigureSuggestions) | [useCopilotChatSuggestions (v1)](https://docs.copilotkit.ai/reference/v1/hooks/useCopilotChatSuggestions)
+
+---
 
 ### 6.2 Handle Suggestion Loading States
 
-**Impact: LOW (unhandled loading causes layout shift when suggestions appear)**
+**Impact: LOW** — unhandled loading causes layout shift when suggestions appear
 
-## Handle Suggestion Loading States
-
-When rendering suggestions in the UI, handle the loading state to prevent layout shifts. Suggestions are generated asynchronously and may take a moment to appear.
+When rendering suggestions in the UI, use the `useSuggestions` hook (v2) to access loading state and prevent layout shifts. Suggestions are generated asynchronously and may take a moment to appear.
 
 **Incorrect (no loading state, content jumps when suggestions load):**
 
@@ -1041,23 +1226,23 @@ function SuggestionBar({ suggestions }: { suggestions: string[] }) {
 }
 ```
 
-**Correct (loading state with stable layout):**
+**Correct (useSuggestions hook with loading state):**
 
 ```tsx
-function SuggestionBar({
-  suggestions,
-  isLoading,
-}: {
-  suggestions: string[]
-  isLoading: boolean
-}) {
+import { useSuggestions } from "@copilotkit/react-core/v2";
+
+function SuggestionBar() {
+  const { suggestions, isLoading } = useSuggestions()
+
   return (
     <div className="suggestions" style={{ minHeight: 48 }}>
       {isLoading ? (
         <SuggestionSkeleton count={3} />
       ) : (
         suggestions.map(s => (
-          <button key={s}>{s}</button>
+          <button key={s.title} onClick={() => /* send s.message */}>
+            {s.title}
+          </button>
         ))
       )}
     </div>
@@ -1065,19 +1250,21 @@ function SuggestionBar({
 }
 ```
 
-Reference: [useConfigureSuggestions](https://docs.copilotkit.ai/reference/hooks/useConfigureSuggestions)
+Reference: [useSuggestions (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useSuggestions)
+
+---
 
 ### 6.3 Provide Rich Context for Suggestions
 
-**Impact: LOW (suggestions without context are generic and irrelevant)**
+**Impact: LOW** — suggestions without context are generic and irrelevant
 
-## Provide Rich Context for Suggestions
-
-Suggestions are only as good as the context available. Combine `useConfigureSuggestions` with `useAgentContext` to give the suggestion engine enough information to produce relevant, actionable suggestions.
+Suggestions are only as good as the context available. Combine `useConfigureSuggestions` (v2) with `useCopilotReadable` to give the suggestion engine enough information to produce relevant, actionable suggestions.
 
 **Incorrect (suggestions without context):**
 
 ```tsx
+import { useConfigureSuggestions } from "@copilotkit/react-core/v2";
+
 function TaskBoard() {
   useConfigureSuggestions({
     instructions: "Suggest helpful actions",
@@ -1091,12 +1278,16 @@ function TaskBoard() {
 **Correct (suggestions enriched with context):**
 
 ```tsx
+import { useCopilotReadable } from "@copilotkit/react-core";
+import { useConfigureSuggestions } from "@copilotkit/react-core/v2";
+
 function TaskBoard() {
   const tasks = useTasks()
   const overdue = tasks.filter(t => t.isOverdue)
 
-  useAgentContext({
-    context: {
+  useCopilotReadable({
+    description: "Task board state",
+    value: {
       totalTasks: tasks.length,
       overdueTasks: overdue.map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate })),
       currentSprint: "Sprint 14",
@@ -1106,13 +1297,14 @@ function TaskBoard() {
   useConfigureSuggestions({
     instructions: "Suggest actions based on overdue tasks and sprint progress. Prioritize urgent items.",
     maxSuggestions: 3,
+    available: "after-first-message",
   })
 
   return <Board tasks={tasks} />
 }
 ```
 
-Reference: [useConfigureSuggestions](https://docs.copilotkit.ai/reference/hooks/useConfigureSuggestions)
+Reference: [useConfigureSuggestions (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useConfigureSuggestions)
 
 ---
 
@@ -1120,5 +1312,6 @@ Reference: [useConfigureSuggestions](https://docs.copilotkit.ai/reference/hooks/
 
 - https://docs.copilotkit.ai
 - https://github.com/CopilotKit/CopilotKit
-- https://docs.copilotkit.ai/reference/hooks
-- https://docs.copilotkit.ai/reference/components
+- https://docs.copilotkit.ai/reference/v1/hooks
+- https://docs.copilotkit.ai/reference/v2/hooks
+- https://docs.copilotkit.ai/reference/v1/components

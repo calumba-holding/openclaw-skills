@@ -12,11 +12,14 @@ Tool renders receive a `status` field with three possible values: `inProgress`, 
 **Incorrect (only handles complete, no loading state):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "search_results",
-  args: z.object({ query: z.string(), results: z.array(z.string()) }),
-  render: ({ args }) => {
-    return <ResultsList results={args.results} />
+  parameters: z.object({ query: z.string(), results: z.array(z.string()) }),
+  render: ({ parameters }) => {
+    return <ResultsList results={parameters.results} />
   },
 })
 ```
@@ -24,19 +27,24 @@ useRenderTool({
 **Correct (handles all three statuses):**
 
 ```tsx
+import { useRenderTool } from "@copilotkit/react-core/v2";
+import { z } from "zod";
+
 useRenderTool({
   name: "search_results",
-  args: z.object({ query: z.string(), results: z.array(z.string()) }),
-  render: ({ args, status }) => {
+  parameters: z.object({ query: z.string(), results: z.array(z.string()) }),
+  render: ({ parameters, status }) => {
     if (status === "inProgress") {
-      return <SearchSkeleton query={args.query} />
+      return <SearchSkeleton query={parameters.query} />
     }
     if (status === "executing") {
-      return <SearchProgress query={args.query} />
+      return <SearchProgress query={parameters.query} />
     }
-    return <ResultsList results={args.results} />
+    return <ResultsList results={parameters.results} />
   },
 })
 ```
 
-Reference: [useRenderTool](https://docs.copilotkit.ai/reference/hooks/useRenderTool)
+The same status values apply to v1's `useCopilotAction` render prop.
+
+Reference: [useRenderTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useRenderTool)

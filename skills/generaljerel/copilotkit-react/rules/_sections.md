@@ -8,12 +8,12 @@ The section ID (in parentheses) is the filename prefix used to group rules.
 ## 1. Provider Setup (provider)
 
 **Impact:** CRITICAL
-**Description:** Correct CopilotKitProvider configuration is the foundation. Misconfiguration causes silent failures, broken agent connections, or degraded performance.
+**Description:** Correct `CopilotKit` provider configuration is the foundation. Misconfiguration causes silent failures, broken agent connections, or degraded performance.
 
 ## 2. Agent Hooks (agent)
 
 **Impact:** HIGH
-**Description:** Patterns for useAgent, useFrontendTool, useAgentContext, and useHumanInTheLoop. Incorrect usage causes re-render storms, stale state, or broken agent interactions.
+**Description:** Patterns for useAgent (v2), useFrontendTool (v2), useCopilotReadable (v1), and useCopilotAction (v1). Incorrect usage causes re-render storms, stale state, or broken agent interactions.
 
 ## 3. Tool Rendering (tool)
 

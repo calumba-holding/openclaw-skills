@@ -7,7 +7,7 @@ tags: suggestions, loading, UI, state
 
 ## Handle Suggestion Loading States
 
-When rendering suggestions in the UI, handle the loading state to prevent layout shifts. Suggestions are generated asynchronously and may take a moment to appear.
+When rendering suggestions in the UI, use the `useSuggestions` hook (v2) to access loading state and prevent layout shifts. Suggestions are generated asynchronously and may take a moment to appear.
 
 **Incorrect (no loading state, content jumps when suggestions load):**
 
@@ -23,23 +23,23 @@ function SuggestionBar({ suggestions }: { suggestions: string[] }) {
 }
 ```
 
-**Correct (loading state with stable layout):**
+**Correct (useSuggestions hook with loading state):**
 
 ```tsx
-function SuggestionBar({
-  suggestions,
-  isLoading,
-}: {
-  suggestions: string[]
-  isLoading: boolean
-}) {
+import { useSuggestions } from "@copilotkit/react-core/v2";
+
+function SuggestionBar() {
+  const { suggestions, isLoading } = useSuggestions()
+
   return (
     <div className="suggestions" style={{ minHeight: 48 }}>
       {isLoading ? (
         <SuggestionSkeleton count={3} />
       ) : (
         suggestions.map(s => (
-          <button key={s}>{s}</button>
+          <button key={s.title} onClick={() => /* send s.message */}>
+            {s.title}
+          </button>
         ))
       )}
     </div>
@@ -47,4 +47,4 @@ function SuggestionBar({
 }
 ```
 
-Reference: [useConfigureSuggestions](https://docs.copilotkit.ai/reference/hooks/useConfigureSuggestions)
+Reference: [useSuggestions (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useSuggestions)

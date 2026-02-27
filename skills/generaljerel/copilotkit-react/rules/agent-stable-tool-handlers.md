@@ -7,19 +7,23 @@ tags: agent, hooks, useCallback, performance
 
 ## Stabilize Tool Handler References
 
-When passing handler functions to `useFrontendTool`, wrap them with `useCallback` to maintain stable references. Unstable function references trigger unnecessary tool re-registrations, which can interrupt in-flight agent tool calls.
+When passing handler functions to `useFrontendTool` (v2) or `useCopilotAction` (v1), wrap them with `useCallback` to maintain stable references. Unstable function references trigger unnecessary tool re-registrations, which can interrupt in-flight agent tool calls.
 
 **Incorrect (new handler created every render):**
 
 ```tsx
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+
 function DocumentEditor({ docId }: { docId: string }) {
-  useFrontendTool({
-    name: "update_document",
-    handler: async ({ content }) => {
-      await updateDoc(docId, content)
+  useFrontendTool(
+    {
+      name: "update_document",
+      handler: async ({ content }) => {
+        await updateDoc(docId, content)
+      },
     },
-    deps: [docId],
-  })
+    [docId],
+  )
 
   return <Editor docId={docId} />
 }
@@ -28,6 +32,9 @@ function DocumentEditor({ docId }: { docId: string }) {
 **Correct (stable handler via useCallback):**
 
 ```tsx
+import { useCallback } from "react";
+import { useFrontendTool } from "@copilotkit/react-core/v2";
+
 function DocumentEditor({ docId }: { docId: string }) {
   const handler = useCallback(
     async ({ content }: { content: string }) => {
@@ -36,14 +43,16 @@ function DocumentEditor({ docId }: { docId: string }) {
     [docId]
   )
 
-  useFrontendTool({
-    name: "update_document",
-    handler,
-    deps: [docId],
-  })
+  useFrontendTool(
+    {
+      name: "update_document",
+      handler,
+    },
+    [docId],
+  )
 
   return <Editor docId={docId} />
 }
 ```
 
-Reference: [useFrontendTool](https://docs.copilotkit.ai/reference/hooks/useFrontendTool)
+Reference: [useFrontendTool (v2)](https://docs.copilotkit.ai/reference/v2/hooks/useFrontendTool)

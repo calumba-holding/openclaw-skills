@@ -7,28 +7,32 @@ tags: agent, hooks, multi-agent, routing
 
 ## Always Pass agentId for Multi-Agent
 
-When your application has multiple agents, always specify `agentId` in hooks like `useAgent`, `useFrontendTool`, and in the provider. Without it, CopilotKit cannot route requests to the correct agent, causing unexpected behavior or errors.
+When your application has multiple agents, always specify `agentId` in hooks like `useAgent` and `useFrontendTool`, or use the `agent` prop on the `CopilotKit` provider. Without it, CopilotKit cannot route requests to the correct agent, causing unexpected behavior or errors.
 
 **Incorrect (no agentId, ambiguous routing):**
 
 ```tsx
+import { useAgent, useFrontendTool } from "@copilotkit/react-core/v2";
+
 function ResearchPanel() {
-  const { agent, run } = useAgent({})
+  const { agent } = useAgent({})
 
   useFrontendTool({
     name: "save_result",
     handler: async ({ result }) => saveToDb(result),
   })
 
-  return <button onClick={() => run("Research AI trends")}>Go</button>
+  return <button onClick={() => agent.runAgent()}>Go</button>
 }
 ```
 
 **Correct (explicit agentId for routing):**
 
 ```tsx
+import { useAgent, useFrontendTool } from "@copilotkit/react-core/v2";
+
 function ResearchPanel() {
-  const { agent, run } = useAgent({ agentId: "researcher" })
+  const { agent } = useAgent({ agentId: "researcher" })
 
   useFrontendTool({
     name: "save_result",
@@ -36,8 +40,8 @@ function ResearchPanel() {
     handler: async ({ result }) => saveToDb(result),
   })
 
-  return <button onClick={() => run("Research AI trends")}>Go</button>
+  return <button onClick={() => agent.runAgent()}>Go</button>
 }
 ```
 
-Reference: [useAgent Hook](https://docs.copilotkit.ai/reference/hooks/useAgent)
+Reference: [useAgent Hook](https://docs.copilotkit.ai/reference/v2/hooks/useAgent)
