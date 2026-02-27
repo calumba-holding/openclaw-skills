@@ -1,55 +1,94 @@
 """
-Nova App Template — replace this with your app logic.
+main.py — Nova app entry point for {{APP_NAME}}.
+{{APP_DESC}}
 
-Required endpoints:
-  GET /                        — health check (returns enclave address)
-  POST /.well-known/attestation — raw CBOR attestation (Nova registry)
+Run locally (mock mode, no enclave needed):
+    IN_ENCLAVE=false uvicorn main:app --host 0.0.0.0 --port {{APP_PORT}} --reload
 
-Usage of odyn:
-  IN_ENCLAVE=true  → uses localhost:18000 (TEE)
-  IN_ENCLAVE=false → uses mock at odyn.sparsity.cloud:18000 (local dev)
+Odyn mock URL: http://odyn.sparsity.cloud:18000
+Full Odyn API: see references/odyn-api.md in the nova-app-builder skill
 """
-import base64
-from fastapi import FastAPI, HTTPException, Response
-from odyn import Odyn
 
-app = FastAPI(title="Nova App", version="1.0.0")
+import os
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from odyn import Odyn, OdynError
+
+APP_PORT = int(os.getenv("APP_PORT", "{{APP_PORT}}"))
+
+app = FastAPI(title="{{APP_NAME}}", description="{{APP_DESC}}")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # Lock down in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 odyn = Odyn()
 
+# ─── Required Nova endpoints ──────────────────────────────────────────────────
 
 @app.get("/")
 def health():
-    return {
-        "status": "ok",
-        "enclave": odyn.eth_address(),
-    }
-
-
-@app.get("/api/sign")
-def sign_example(message: str = "hello"):
-    """Sign an arbitrary message with the enclave key."""
+    """Health check — required by Nova Platform."""
     try:
-        result = odyn.sign_message(message)
-        return result  # {"signature": "0x...", "address": "0x..."}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        identity = odyn.eth_address()
+        return {
+            "status": "ok",
+            "app": "{{APP_NAME}}",
+            "enclave_address": identity.get("address"),
+        }
+    except OdynError as e:
+        return {"status": "degraded", "error": str(e)}
 
 
 @app.get("/api/attestation")
-def get_attestation():
-    """Base64-encoded Nitro attestation document."""
-    try:
-        cbor_bytes = odyn.get_attestation()
-        return {"attestation": base64.b64encode(cbor_bytes).decode()}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+def attestation_b64():
+    """Base64 attestation document — required by Nova Platform."""
+    return odyn.get_attestation()
 
 
 @app.post("/.well-known/attestation")
-def attestation_cbor():
-    """Raw CBOR attestation — required by Nova App Registry."""
+def attestation_raw():
+    """Raw CBOR attestation — required by Nova Platform for registry verification."""
+    import base64
+    from fastapi.responses import Response
+    doc = odyn.get_attestation()
+    cbor = doc.get("attestation", "")
+    if cbor:
+        return Response(content=base64.b64decode(cbor), media_type="application/cbor")
+    return doc
+
+
+# ─── Your app logic goes below ────────────────────────────────────────────────
+# Replace / extend these example routes with your actual functionality.
+
+@app.get("/api/hello")
+def hello():
+    """Example: return a signed greeting from inside the enclave."""
     try:
-        cbor_bytes = odyn.get_attestation()
-        return Response(content=cbor_bytes, media_type="application/cbor")
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        identity = odyn.eth_address()
+        sig = odyn.sign_message({"greeting": "Hello from TEE!", "app": "{{APP_NAME}}"})
+        return {
+            "message": "Hello from inside the Nitro Enclave!",
+            "enclave_address": identity["address"],
+            "signature": sig.get("signature"),
+        }
+    except OdynError as e:
+        return {"error": str(e)}
+
+
+# ─── Entrypoint ────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import uvicorn
+    in_enclave = os.getenv("IN_ENCLAVE", "false").lower() == "true"
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=APP_PORT,
+        reload=not in_enclave,
+        log_level="info",
+    )

@@ -1,235 +1,397 @@
-# Nova Platform API Reference
+# Nova Platform — API Reference
 
-Base URL: `https://sparsity.cloud`  
-Auth: `X-API-Key: <your_nova_api_key>` on every request  
-OpenAPI spec: `GET https://sparsity.cloud/api/openapi.json`  
-Interactive docs: `GET https://sparsity.cloud/api/docs`
+> **Authoritative sources**:
+> - API Docs (Swagger): https://sparsity.cloud/api/docs
+> - Create-App Guide: https://sparsity.cloud/resources/nova-api/create-app-guide
+> - OpenAPI spec: `GET https://sparsity.cloud/api/openapi.json`
 
----
-
-## AI Agent Pipeline (recommended order)
+## API Base URL
 
 ```
-1. POST /api/apps            → create app, get sqid
-2. POST /api/apps/{sqid}/builds → trigger build, get build_id
-3. GET  /api/apps/{sqid}/builds/{build_id}  → poll until status=success
-4. POST /api/apps/{sqid}/deployments → deploy, get dep_id
-5. GET  /api/apps/{sqid}/detail → poll deployments[] until state=running
-6. Read endpoint/subdomain from deployment object
+https://sparsity.cloud/api
 ```
 
----
+## Authentication
 
-## Auth
+`Authorization: Bearer <token>` — API key or JWT.
 
-### Get Profile
-```
-GET /api/auth/profile
-→ { id, email, username, ... }
+```bash
+curl -sX POST https://sparsity.cloud/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"..."}'
+# → {"access_token":"...","refresh_token":"..."}
 ```
 
 ---
 
-## Apps
+## Full Deployment Pipeline
 
-### Create App
+The complete lifecycle has **two phases**: off-chain setup and on-chain registration.
+
+```
+CREATE APP ──► TRIGGER BUILD ──► DEPLOY
+                    │
+                    ▼
+             [on-chain flow]
+         CREATE APP ON-CHAIN
+                    │
+                    ▼
+         ENROLL BUILD VERSION ON-CHAIN
+                    │
+                    ▼
+              DEPLOY INSTANCE
+                    │
+                    ▼
+          GENERATE ZK PROOF
+                    │
+                    ▼
+        REGISTER INSTANCE ON-CHAIN
+```
+
+> The platform auto-generates `enclaver.yaml` and `nova-build.yaml` in app-hub at build time. **Do not write these files yourself.**
+
+---
+
+## Phase 1: App + Build + Deployment
+
+### 1. Create App
+
 ```
 POST /api/apps
+Authorization: Bearer <token>
+```
+
+Pass only **`advanced`** — the `enclaver` field has been removed from the API.
+The platform uses `advanced` to auto-generate `enclaver.yaml` at build time.
+
+#### `advanced` field
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `directory` | string | Recommended | Build context dir in repo (default `"/"`) |
+| `app_listening_port` | int | Recommended | App listen port — **locked at creation** |
+| `dockerfile` | string | Optional | Dockerfile path relative to directory (default `"Dockerfile"`) |
+| `egress_allow` | string[] | Recommended | Egress allowlist — see rules below |
+| `egress_deny` | string[] | Optional | Egress denylist |
+| `enable_decentralized_kms` | bool | Optional | Enable Nova KMS |
+| `enable_persistent_storage` | bool | Recommended | Must be `true` when S3 enabled |
+| `enable_s3_storage` | bool | Optional | Enable S3 storage |
+| `enable_s3_kms_encryption` | bool | Optional | KMS-encrypt S3 data |
+| `enable_ipfs_storage` | bool | Optional | Enable IPFS storage |
+| `enable_walrus_storage` | bool | Optional | Enable Walrus storage |
+| `enable_app_wallet` | bool | Optional | Enable TEE App Wallet |
+| `enable_helios_rpc` | bool | Optional | Enable Helios light-client RPC |
+| `storage_region` | string | Optional | S3 region (default `"us-west-1"`) |
+| `s3_kms_key_scope` | string | Optional | KMS scope (`"object"`) |
+| `s3_kms_aad_mode` | string | Optional | AAD mode (`"key"`) |
+| `s3_kms_key_version` | string | Optional | Key version (`"v1"`) |
+| `s3_accept_plaintext` | bool | Optional | Accept plaintext S3 fallback |
+| `kms_app_id` | int | **Required if KMS** | On-chain KMS app ID |
+| `nova_app_registry` | string | **Required if KMS** | Registry contract: `0x0f68E6e699f2E972998a1EcC000c7ce103E64cc8` |
+| `helios_chains` | array | **Required if Helios** | Chain configs — locked at creation |
+
+#### Egress allow/deny rules
+
+> ⚠️ **`**` matches domain names only — it does NOT match IP addresses.**
+> Direct IP connections will be blocked unless you explicitly add the IP or CIDR.
+
+Pattern syntax:
+| Pattern | Matches |
+|---|---|
+| `"**"` | All domain names (does NOT match IPs) |
+| `"**.amazonaws.com"` | Any subdomain of amazonaws.com |
+| `"news.ycombinator.com"` | Exact domain |
+| `"0.0.0.0/0"` | All IPv4 addresses |
+| `"::/0"` | All IPv6 addresses |
+| `"169.254.169.254"` | Exact IP (IMDS — required for S3/KMS) |
+| `"66.254.33.0/24"` | IPv4 CIDR |
+
+**To allow everything** (domains + IPs):
+```json
+"egress_allow": ["**", "0.0.0.0/0", "::/0"]
+```
+
+**For AWS S3/KMS** (IMDS required):
+```json
+"egress_allow": ["**", "169.254.169.254"]
+```
+
+A request is allowed if it matches **at least one** allow pattern AND **no** deny pattern.
+If `egress_allow` is empty, all egress is disabled.
+
+Full reference: https://github.com/sparsity-xyz/enclaver/blob/sparsity/docs/enclaver.yaml
+
+#### Feature dependency rules
+
+```
+kms_enabled = enable_decentralized_kms || enable_s3_kms_encryption || enable_app_wallet
+
+enable_s3_storage=true   → enable_persistent_storage must be true
+enable_s3_kms_encryption → enable_s3_storage + enable_decentralized_kms + enable_persistent_storage
+enable_app_wallet        → enable_decentralized_kms
+
+kms_enabled → enable_helios_rpc=true + kms_app_id + nova_app_registry
+              + helios_chains must include base-sepolia (chain_id=84532, port=18545)
+
+enable_helios_rpc + !kms_enabled → helios_chains must have ≥1 business chain
+```
+
+#### Helios chain port mapping (fixed, locked at creation)
+
+| Chain | chain_id | kind | network | execution_rpc | local_rpc_port |
+|---|---|---|---|---|---|
+| Base Sepolia (Auth) | 84532 | opstack | base-sepolia | https://sepolia.base.org | **18545** |
+| Ethereum Mainnet | 1 | ethereum | mainnet | https://ethereum-rpc.publicnode.com | **18546** |
+| Ethereum Sepolia | 11155111 | ethereum | sepolia | https://rpc.sepolia.org | **18547** |
+| Ethereum Holesky | 17000 | ethereum | holesky | https://ethereum-holesky-rpc.publicnode.com | **18548** |
+| Base | 8453 | opstack | base | https://mainnet.base.org | **18549** |
+| OP Mainnet | 10 | opstack | op-mainnet | https://mainnet.optimism.io | **18551** |
+| Worldchain | 480 | opstack | worldchain | https://worldchain-mainnet.g.alchemy.com/public | **18552** |
+| Zora | 7777777 | opstack | zora | https://rpc.zora.energy | **18553** |
+| Unichain | 130 | opstack | unichain | https://mainnet.unichain.org | **18554** |
+
+> ⚠️ These port numbers are canonical. Always use the mapping above — do not invent ports.
+
+#### Full example (all features enabled)
+
+```json
 {
-  "name": "my-oracle",                       # required, unique per user
-  "description": "...",                      # optional
-  "repo_url": "https://github.com/user/repo",# required — must be public
-  "enclaver": {                              # optional, Nova uses these to generate enclaver.yaml
-    "ingress_port": 8000,                    # default: 8080
-    "api_port": 18000,                       # default: 9000 (match odyn.py!)
-    "aux_api_port": 18001,                   # default: 9001
-    "memory_mb": 1500,                       # default: 1500
-    "cpu_count": 2,                          # default: 2
-    "egress_allow": ["api.binance.com"]      # hostnames only, no ports
-  },
-  "app_contract_addr": "0x...",              # optional on-chain contract
-  "metadata_uri": "https://...",             # optional IPFS/HTTPS metadata
-  "advanced": {}                             # optional advanced JSON config
+  "name": "my-app",
+  "description": "My Nova app",
+  "repo_url": "https://github.com/your-org/your-repo",
+  "advanced": {
+    "directory": "/",
+    "app_listening_port": 8080,
+    "dockerfile": "Dockerfile",
+    "egress_allow": ["**", "0.0.0.0/0", "::/0"],
+    "egress_deny": [],
+    "enable_decentralized_kms": true,
+    "enable_persistent_storage": true,
+    "enable_s3_storage": true,
+    "enable_s3_kms_encryption": true,
+    "enable_ipfs_storage": false,
+    "enable_walrus_storage": false,
+    "enable_app_wallet": true,
+    "enable_helios_rpc": true,
+    "storage_region": "us-west-1",
+    "s3_kms_key_scope": "object",
+    "s3_kms_aad_mode": "key",
+    "s3_kms_key_version": "v1",
+    "s3_accept_plaintext": false,
+    "kms_app_id": 49,
+    "nova_app_registry": "0x0f68E6e699f2E972998a1EcC000c7ce103E64cc8",
+    "helios_chains": [
+      {"chain_id":"84532","kind":"opstack","network":"base-sepolia","execution_rpc":"https://sepolia.base.org","local_rpc_port":18545},
+      {"chain_id":"1","kind":"ethereum","network":"mainnet","execution_rpc":"https://ethereum-rpc.publicnode.com","local_rpc_port":18546},
+      {"chain_id":"10","kind":"opstack","network":"op-mainnet","execution_rpc":"https://mainnet.optimism.io","local_rpc_port":18551}
+    ]
+  }
 }
-→ 201 { "id": 1, "sqid": "abc123", "name": "my-oracle", "repo_url": "...", ... }
-```
-> **Note**: `api_port` must match what odyn.py uses. Official odyn.py uses 18000 in production.
-
-### Get App Detail
-```
-GET /api/apps/{app_sqid}/detail?log_limit=100
-→ { "app": {...}, "deployments": [...], "logs": [...] }
-```
-`deployments` is sorted by the platform (check `state` field per deployment).
-
-### Update App
-```
-PATCH /api/apps/{app_sqid}
-{ "name": "...", "description": "...", "repo_url": "..." }
 ```
 
-### List User Apps
-```
-GET /api/apps/user/{user_id}
-→ [{ "id", "sqid", "name", "repo_url", "created_at", ... }]
-```
-
-### Clone Repo Helper (useful to discover directories)
-```
-POST /api/apps/clone-repo
-{ "repo_url": "https://github.com/user/repo", "depth": 2 }
-→ { "directories": ["/", "/enclave", "/src"], "repo_path": "..." }
-```
-Use to enumerate sub-directories before creating an app.
+Response: `{ "id": 42, "sqid": "abc123", ... }` — use `sqid` in all subsequent calls.
 
 ---
 
-## Builds
+### 2. Trigger Build
 
-### Trigger Build
 ```
 POST /api/apps/{app_sqid}/builds
+```
+
+```json
 { "git_ref": "main", "version": "1.0.0" }
-→ 201 {
-  "id": 42,
-  "status": "pending",          # pending → building → success | failed
-  "github_run_id": "123456789", # GitHub Actions run — track at:
-                                 # https://github.com/sparsity-xyz/sparsity-nova-app-hub/actions/runs/{id}
-  "git_ref": "main",
-  "version": "1.0.0",
-  ...
-}
-```
-Build takes 2–5 minutes. Poll every 15 seconds.
-
-### Get Build
-```
-GET /api/apps/{app_sqid}/builds/{build_id}
-→ {
-  "id": 42,
-  "status": "success",          # pending | building | success | failed
-  "github_run_id": "...",
-  "image_uri": "...",
-  "image_digest": "...",
-  "pcr0": "0x...",
-  "pcr1": "0x...",
-  "pcr2": "0x...",
-  "error_message": null,
-  "build_attestation_url": "https://...",
-  ...
-}
 ```
 
-### List Builds
-```
-GET /api/apps/{app_sqid}/builds?limit=10
-→ [{ build objects }]
-```
+Poll: `GET /api/builds/{build_id}/status`
+Status: `pending → building → success | failed`
 
-### Retry Failed Build
-```
-POST /api/apps/{app_sqid}/builds/{build_id}/retry
-```
-
-### Delete Build
-```
-DELETE /api/apps/{app_sqid}/builds/{build_id}
-```
+Response includes `id` (build_id), `pcr0/pcr1/pcr2` (after success).
 
 ---
 
-## Deployments
+### 3. Create Deployment
 
-### Create Deployment
 ```
 POST /api/apps/{app_sqid}/deployments
-{
-  "build_id": 42,              # required — must be a successful build
-  "region": "us-west-1",      # required
-  "cpu": 2,                   # default: 2 (range: 1-8)
-  "ram_mib": 4096,            # default: 4096 (range: 512-32768)
-  "app_contract_addr": "0x..."# optional override
-}
-→ 201 {
-  "id": 7,
-  "state": "queued",          # queued → provisioning → pulling → verifying → running | failed
-  "region": "us-west-1",
-  "build_id": 42,
-  ...
-}
 ```
 
-### Deployment Action
-```
-POST /api/deployments/{deployment_id}/action
-{ "action": "start" }         # start | stop | delete
+```json
+{ "build_id": 123 }
 ```
 
-### Deployment Time Remaining
-```
-GET /api/deployments/{deployment_id}/remaining
-→ { "remaining_seconds": 3600, "is_running": true }
-```
+Poll: `GET /api/deployments/{deployment_id}/status`
 
 ---
 
-## On-Chain Registry
+### 4. Status Polling Endpoints
 
-### Create On-chain App (one-time per app)
+Use these dedicated endpoints to poll each stage — no need to parse nested objects.
+
+#### Build status (includes enrollment state)
+```
+GET /api/builds/{build_id}/status
+```
+| Field | Description |
+|---|---|
+| `status` | `pending` / `building` / `success` / `failed` |
+| `github_run_id` | GitHub Actions run link |
+| `error_message` | Error detail if failed |
+| `is_enrolled` | `true` once enrolled on-chain |
+| `onchain_version_id` | Set after enrollment |
+| `onchain_version_status` | On-chain version status |
+| `image_uri` | Built Docker image URI |
+| `completed_at` | Build completion timestamp |
+
+#### Deployment status (includes proof + on-chain instance state)
+```
+GET /api/deployments/{deployment_id}/status
+```
+| Field | Description |
+|---|---|
+| `deployment_state` | Deployment lifecycle state |
+| `deployment_message` | Human-readable status |
+| `remaining_seconds` | Billing time remaining |
+| `build_is_enrolled` | Whether build version is enrolled on-chain |
+| `onchain_version_id` | Enrolled version ID |
+| `proof_status` | ZK proof status (`pending`/`proving`/`proved`/`failed`) |
+| `proof_succinct_uri` | Proof URI once proved |
+| `onchain_instance_id` | Set after on-chain registration |
+| `onchain_instance_status` | On-chain instance status |
+| `ec2_enclave_state` | Raw AWS Nitro Enclave state |
+
+#### ZK proof status
+```
+GET /api/zkproof/status/{deployment_id}
+GET /api/zkproof/deployments/{deployment_id}/status   ← alias, same response
+```
+| Field | Description |
+|---|---|
+| `proof_status` | `pending` / `proving` / `proved` / `failed` |
+| `proof_succinct_uri` | Proof URI |
+| `proof_s3_uri` | S3 proof URI |
+| `registry_tx_hash` | On-chain registration tx hash |
+
+#### Unified app status (single endpoint for entire lifecycle)
+```
+GET /api/apps/{app_sqid}/status
+```
+Returns everything in one call:
+
+| Field | Description |
+|---|---|
+| `latest_build_status` | Current build status |
+| `latest_build_error_message` | Build error if any |
+| `latest_onchain_version_id` | Enrolled version ID |
+| `latest_onchain_version_status` | On-chain version status |
+| `latest_deployment_state` | Deployment state |
+| `latest_deployment_message` | Deployment message |
+| `latest_proof_status` | ZK proof status |
+| `latest_onchain_instance_id` | Instance ID after registration |
+| `latest_onchain_instance_status` | On-chain instance status |
+| `onchain_app_id` | App on-chain ID |
+| `onchain_app_status` | App on-chain status |
+
+---
+
+## Phase 2: On-Chain Registration
+
+### 5. Create App On-Chain
+
+Registers the app in the Nova App Registry contract on Base Sepolia.
+
 ```
 POST /api/apps/{app_sqid}/create-onchain
-→ { "tx_hash": "0x...", "onchain_app_id": 42 }
 ```
 
-### Enroll Build as Version
+No body. Response: `{ "tx_hash": "0x...", "onchain_app_id": 1 }`
+
+Poll result: `GET /api/apps/{app_sqid}/status` → check `onchain_app_id` is set.
+
+---
+
+### 6. Enroll Build Version On-Chain
+
+Enrolls the EIF's PCR measurements into the on-chain registry — the trusted code fingerprint.
+
 ```
 POST /api/apps/{app_sqid}/builds/{build_id}/enroll
-→ { "tx_hash": "0x...", "onchain_version_id": 1 }
 ```
 
-### Sync On-chain Status
+No body. Response: `{ "tx_hash": "0x...", "version_id": 1 }`
+
+Poll result: `GET /api/builds/{build_id}/status` → check `is_enrolled = true` and `onchain_version_id` is set.
+
+List enrolled versions: `GET /api/apps/{app_sqid}/versions`
+
+---
+
+### 7. Generate ZK Proof
+
+Requests ZK proof for a running deployment. The zkp-registration-service picks it up asynchronously.
+
 ```
-POST /api/apps/{app_sqid}/sync-onchain
+POST /api/zkproof/generate
+{ "deployment_id": 456 }
+```
+
+Poll: `GET /api/zkproof/status/{deployment_id}` (or alias `GET /api/zkproof/deployments/{deployment_id}/status`)
+
+Alternatively poll via deployment: `GET /api/deployments/{deployment_id}/status` → `proof_status` field.
+
+`proof_status`: `pending → proving → proved | failed`
+
+---
+
+### 8. Register Instance On-Chain
+
+After `proof_status = "proved"`, register the instance on-chain.
+
+```
+POST /api/zkproof/onchain/register
+{ "deployment_id": 456 }
+```
+
+Poll result: `GET /api/deployments/{deployment_id}/status` → check `onchain_instance_id` is set and `onchain_instance_status` is active.
+
+Or use unified view: `GET /api/apps/{app_sqid}/status` → `latest_onchain_instance_id`.
+
+---
+
+## Deployment Actions
+
+```
+POST /api/deployments/{deployment_id}/action
+{ "action": "start" | "stop" | "delete" }
 ```
 
 ---
 
-## Build Statuses
+## App Detail & Logs
 
-| Status | Meaning |
-|--------|---------|
-| `pending` | Queued, waiting for GitHub Actions runner |
-| `building` | GitHub Actions is running |
-| `success` | EIF built, ready to deploy |
-| `failed` | Build error — check `error_message` and GitHub Actions log |
-| `cancelled` | Manually cancelled |
-
-## Deployment States
-
-| State | Meaning |
-|-------|---------|
-| `queued` | Waiting for EC2 provisioning |
-| `provisioning` | EC2 starting up |
-| `pulling` | Pulling enclave image |
-| `verifying` | Attestation + ZK proof in progress |
-| `running` | Live ✅ |
-| `stopped` | Stopped |
-| `failed` | Error — check `message` field |
+```
+GET /api/apps/{app_sqid}/detail
+```
+Returns `app`, `deployments[]`, `logs[]`. The `app.hostname` field has the live URL.
 
 ---
 
-## Supported Regions
+## Blockchain Utilities
 
-- `us-west-1`
-- `us-east-1`
-- `eu-west-1`
+```
+GET /api/blockchain/registry-contract      # Nova App Registry contract address
+GET /api/blockchain/address/{address}      # On-chain address info + explorer URL
+GET /api/blockchain/transaction/{tx_hash}  # Tx info + explorer URL
+```
 
 ---
 
-## Error Handling
+## Standard App Endpoints (your enclave serves these)
 
-All errors return `{ "detail": "..." }` or `{ "detail": [{"loc": [...], "msg": "...", "type": "..."}] }` (422 validation errors).
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Health check |
+| `/.well-known/attestation` | **POST** | Raw CBOR binary attestation (Nitro attestation document) |
+| Any `/api/*` | any | Your business logic |
 
-HTTP 401 = invalid/missing API key.  
-HTTP 422 = validation error (check request body).  
-HTTP 429 = rate limited.
+> See https://sparsity.cloud/explore/52 for attestation verification examples.
