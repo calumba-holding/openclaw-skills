@@ -1,10 +1,10 @@
 ---
 name: Self-Improving Agent (With Self-Reflection)
 slug: self-improving
-version: 1.1.2
+version: 1.1.3
 homepage: https://clawic.com/skills/self-improving
 description: Self-reflection + Self-criticism + learning from corrections. Agent evaluates its own work, catches mistakes, and improves permanently.
-changelog: Added self-reflection capability — agent now evaluates its own work, not just user corrections.
+changelog: Fixed skill title display.
 metadata: {"clawdbot":{"emoji":"🧠","requires":{"bins":[]},"os":["linux","darwin","win32"],"configPaths":["~/self-improving/"]}}
 ---
 
