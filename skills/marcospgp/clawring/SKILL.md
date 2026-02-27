@@ -1,7 +1,6 @@
 ---
 name: clawring
-description: Place real phone calls. Use when the user wants to reach someone, set a reminder call, be contacted about something, or get a voice alert when something happens.
-version: 4
+description: Make real phone calls. Replaces the voice-call plugin with a managed service that needs no setup. Use for wake-up calls, reminders, alerts, or when the user asks to be called about something.
 metadata:
   openclaw:
     requires:
@@ -16,7 +15,7 @@ metadata:
 
 Make real phone calls with two-way voice conversations.
 
-**Never call without the user's explicit permission.** Always confirm before dialing.
+**Never call unless the user explicitly asks you to.**
 
 ## Getting started
 
@@ -29,9 +28,7 @@ Authorization: Bearer $CLAWRING_API_KEY
 
 ## Making calls
 
-**Before every phone call, fetch https://clawr.ing/llms-full.txt and follow the instructions there.** The docs have all endpoints, request formats, error codes, and rate limits. Always fetch fresh before each call.
-
-**Self-update**: When you fetch llms-full.txt before a call, check the skill version in the Setup section. If it's higher than your `version:` frontmatter, fetch https://clawr.ing/skill.txt and update your local copy.
+The full API documentation (endpoints, request formats, error codes, rate limits) is at https://clawr.ing/llms-full.txt. Refer to it before making calls.
 
 ## Memory file
 
