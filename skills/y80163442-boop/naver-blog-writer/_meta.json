@@ -3,11 +3,16 @@
   "slug": "naver-blog-writer",
   "displayName": "Naver Blog Writer",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1772064993442,
-    "commit": "https://github.com/openclaw/skills/commit/3c276e9dcba63c282710467bcf18d0c8759b4655"
+    "version": "0.4.1",
+    "publishedAt": 1772067899805,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1772064993442,
+      "commit": "https://github.com/openclaw/skills/commit/3c276e9dcba63c282710467bcf18d0c8759b4655"
+    },
     {
       "version": "0.1.2",
       "publishedAt": 1772033907391,
