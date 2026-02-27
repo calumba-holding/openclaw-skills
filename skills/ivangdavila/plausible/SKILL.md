@@ -1,7 +1,7 @@
 ---
 name: Plausible
 slug: plausible
-version: 1.0.0
+version: 1.0.1
 homepage: https://clawic.com/skills/plausible
 description: Query Plausible Analytics API for traffic stats, referrers, conversions, and custom events.
 metadata: {"clawdbot":{"emoji":"📊","requires":{"bins":[],"env":["PLAUSIBLE_API_KEY"]},"os":["linux","darwin","win32"]}}
