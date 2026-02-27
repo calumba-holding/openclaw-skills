@@ -170,9 +170,10 @@ function parseRichText(text: string): { text: string; facets?: RichText["facets"
 // ── Video upload ───────────────────────────────────────────────
 
 async function uploadVideo(filePath: string, mime: string): Promise<BlobRef> {
+    const validatedPath = validateFilePath(filePath);
     const { agent, login } = await import("./agent.ts");
     await login();
-    const fileBytes = fs.readFileSync(filePath);
+    const fileBytes = fs.readFileSync(validatedPath);
 
     const serviceAuth = await agent.com.atproto.server.getServiceAuth({
         aud: `did:web:video.bsky.app`,
@@ -269,9 +270,10 @@ async function uploadVideo(filePath: string, mime: string): Promise<BlobRef> {
 // ── Image upload ───────────────────────────────────────────────
 
 async function uploadImage(filePath: string, mime: string): Promise<BlobRef> {
+    const validatedPath = validateFilePath(filePath);
     const { agent, login } = await import("./agent.ts");
     await login();
-    const fileBytes = fs.readFileSync(filePath);
+    const fileBytes = fs.readFileSync(validatedPath);
     const response = await agent.uploadBlob(fileBytes, { encoding: mime });
     return response.data.blob;
 }
