@@ -1,0 +1,11 @@
+{
+  "owner": "ppiankov",
+  "slug": "host-hardening",
+  "displayName": "Host Hardening",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1772106429730,
+    "commit": null
+  },
+  "history": []
+}
