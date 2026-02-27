@@ -14,30 +14,215 @@ from datetime import datetime
 from pathlib import Path
 
 
-def get_project_root():
-    """Get project root directory - relative to this script."""
-    return Path(__file__).parent.parent
-
-
-def get_scripts_dir():
-    """Get scripts directory - where this script and langextract are located."""
-    return Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
+SCRIPTS_DIR = Path(__file__).parent
 
 
 def add_project_path():
-    """Add scripts directory to Python path so we can import bundled langextract."""
-    scripts_dir = get_scripts_dir()
-    if str(scripts_dir) not in sys.path:
-        sys.path.append(str(scripts_dir))
+    """将 scripts 目录添加到 Python 路径，以便导入 langextract。"""
+    if str(SCRIPTS_DIR) not in sys.path:
+        sys.path.append(str(SCRIPTS_DIR))
 
 
-def load_openclaw_config():
-    """Load OpenClaw configuration."""
-    config_path = Path.home() / ".openclaw" / "openclaw.json"
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return None
+
+def resolve_api_key(value):
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return value
+    key = value.strip()
+    if not key:
+        return None
+    env_value = os.getenv(key)
+    if env_value:
+        return env_value
+    if key.startswith("${") and key.endswith("}") and len(key) > 3:
+        env_value = os.getenv(key[2:-1])
+        if env_value:
+            return env_value
+    if key.startswith("$") and len(key) > 1:
+        env_value = os.getenv(key[1:])
+        if env_value:
+            return env_value
+    return key
+
+
+def map_timelimit(value: str, target: str) -> str:
+    """
+    将统一的时间过滤值映射到目标搜索引擎的格式。
+    
+    Args:
+        value: 统一值 (day/week/month/year/null/none/None)
+        target: 目标引擎 (ddgs/zai)
+    
+    Returns:
+        映射后的值
+    """
+    if value is None or str(value).lower() in ('null', 'none', ''):
+        return None if target == 'ddgs' else 'noLimit'
+    
+    mapping = {
+        'ddgs': {'day': 'd', 'week': 'w', 'month': 'm', 'year': 'y'},
+        'zai': {'day': 'oneDay', 'week': 'oneWeek', 'month': 'oneMonth', 'year': 'oneYear'}
+    }
+    
+    return mapping.get(target, {}).get(str(value).lower(), value)
+
+
+def get_langextract_config(conf: dict = None) -> dict:
+    """
+    获取 langextract 配置。
+    
+    Returns:
+        dict: {provider, model, baseUrl, apiKey}
+    
+    Raises:
+        ValueError: 配置缺失时抛出
+    """
+    if conf is None:
+        conf = load_project_conf()
+    
+    task_conf = conf.get('langextract', {})
+    
+    if not task_conf:
+        raise ValueError("langextract 配置缺失。请在 conf.json 中配置 langextract 节点，参考 conf.json.example")
+    
+    provider = task_conf.get('provider')
+    model = task_conf.get('model')
+    base_url = task_conf.get('baseUrl')
+    api_key = resolve_api_key(task_conf.get('apiKey'))
+    
+    missing = []
+    if not model:
+        missing.append('model')
+    if not base_url:
+        missing.append('baseUrl')
+    if not api_key:
+        missing.append('apiKey')
+    
+    if missing:
+        raise ValueError(f"langextract 配置不完整，缺少: {', '.join(missing)}。请参考 conf.json.example")
+    
+    return {
+        'provider': provider,
+        'model': model,
+        'baseUrl': base_url,
+        'apiKey': api_key
+    }
+
+
+def get_zhipu_search_config(conf: dict = None) -> dict:
+    """
+    获取智谱搜索配置。
+    
+    配置项:
+        enabled: 是否启用智谱搜索，默认 True
+        apiKey: API Key（支持环境变量引用）
+        search_engine: 搜索引擎 search_std/search_pro/search_pro_sogou/search_pro_quark，默认 search_pro
+        count: 返回结果数 1-50，默认 15
+        timelimit: 时间过滤 day/week/month/year/null，默认 null（不限）
+        content_size: 内容长度 medium/high，默认 high
+        search_domain_filter: 限定搜索域名，默认 null
+    """
+    if conf is None:
+        conf = load_project_conf()
+    
+    search_conf = conf.get('zhipu_search', {})
+    
+    api_key = resolve_api_key(search_conf.get('apiKey'))
+    timelimit = search_conf.get('timelimit')
+    
+    return {
+        'enabled': search_conf.get('enabled', True),
+        'apiKey': api_key,
+        'search_engine': search_conf.get('search_engine', 'search_pro'),
+        'count': search_conf.get('count', 15),
+        'timelimit': timelimit,
+        'timelimit_mapped': map_timelimit(timelimit, 'zai'),
+        'content_size': search_conf.get('content_size', 'high'),
+        'search_domain_filter': search_conf.get('search_domain_filter')
+    }
+
+
+def get_duckduckgo_search_config(conf: dict = None) -> dict:
+    """
+    获取 DuckDuckGo 搜索配置。
+    
+    配置项:
+        enabled: 是否启用 DuckDuckGo 搜索，默认 True
+        maxResults: 返回结果数，默认 20
+        region: 地区代码 cn-zh/us-en/wt-wt 等，默认 wt-wt（无限制）
+        safesearch: 安全搜索 on/moderate/off，默认 moderate
+        timelimit: 时间过滤 day/week/month/year/null，默认 null（不限）
+        backend: 搜索后端 auto/bing/google/duckduckgo/brave/yandex/yahoo，默认 auto
+        proxy: 代理地址，默认 null
+        timeout: 请求超时（秒），默认 10
+    """
+    if conf is None:
+        conf = load_project_conf()
+    
+    search_conf = conf.get('duckduckgo_search', {})
+    timelimit = search_conf.get('timelimit')
+    
+    return {
+        'enabled': search_conf.get('enabled', True),
+        'maxResults': search_conf.get('maxResults', 20),
+        'region': search_conf.get('region', 'wt-wt'),
+        'safesearch': search_conf.get('safesearch', 'moderate'),
+        'timelimit': timelimit,
+        'timelimit_mapped': map_timelimit(timelimit, 'ddgs'),
+        'backend': search_conf.get('backend', 'auto'),
+        'proxy': search_conf.get('proxy'),
+        'timeout': search_conf.get('timeout', 10)
+    }
+
+
+def get_volcengine_search_config(conf: dict = None) -> dict:
+    """获取火山引擎联网问答配置。"""
+    if conf is None:
+        conf = load_project_conf()
+    
+    search_conf = conf.get('volcengine_search', {})
+    
+    api_key = resolve_api_key(search_conf.get('apiKey'))
+    bot_id = resolve_api_key(search_conf.get('botId'))
+    
+    return {
+        'enabled': search_conf.get('enabled', False),
+        'apiKey': api_key,
+        'botId': bot_id
+    }
+
+
+def get_extraction_config(conf: dict = None) -> dict:
+    """获取结构化提取配置。"""
+    if conf is None:
+        conf = load_project_conf()
+    
+    extraction_conf = conf.get('extraction', {})
+    
+    return {
+        'max_content_length': extraction_conf.get('max_content_length', 70000)
+    }
+
+
+def get_project_conf_path():
+    """获取项目配置文件路径"""
+    return PROJECT_ROOT / "conf.json"
+
+
+def load_project_conf():
+    """加载项目配置"""
+    conf_path = get_project_conf_path()
+    if conf_path.exists():
+        try:
+            with open(conf_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"⚠️ conf.json 格式错误: {e}")
+            print(f"   请修复或删除 {conf_path} 后重试")
+            raise
+    return {}
 
 
 def parse_mcp_output(output: str):
@@ -62,46 +247,61 @@ def parse_mcp_output(output: str):
 def search_with_zhipu_mcp(query: str, verbose: bool = False):
     """
     Step 1a: Search using Zhipu AI's official zai-sdk (web_search API).
+    
+    配置参数从 conf.json 的 zhipu_search 节点读取:
+        search_engine: 搜索引擎
+        count: 返回结果数
+        timelimit: 时间过滤
+        content_size: 内容长度
+        search_domain_filter: 域名过滤
     """
+    search_conf = get_zhipu_search_config()
+    
     if verbose:
         print("\n" + "=" * 60)
         print("🔍 步骤 1a: 智谱 AI 网络搜索")
         print("=" * 60)
         print(f"\n📥 输入:")
         print(f"   搜索查询: {query}")
+        print(f"   搜索引擎: {search_conf['search_engine']}")
+        print(f"   结果数量: {search_conf['count']}")
+        print(f"   时间过滤: {search_conf['timelimit']} -> {search_conf['timelimit_mapped']}")
+        print(f"   内容长度: {search_conf['content_size']}")
+        if search_conf['search_domain_filter']:
+            print(f"   域名过滤: {search_conf['search_domain_filter']}")
     
     try:
-        # Try to use zai-sdk first (official SDK from Zhipu)
         try:
             from zai import ZhipuAiClient
             has_zai = True
         except ImportError:
             has_zai = False
         
-        # Get API key from config or environment - priority: zhipu_search_api_key > zhipu_api_key
-        api_key = os.getenv('ZHIPU_SEARCH_API_KEY') 
+        api_key = search_conf.get('apiKey')
         
         if not api_key:
-            raise ValueError("Zhipu API Key not found in OpenClaw config or environment variables")
+            raise ValueError("智谱搜索 API Key 未配置。请在 conf.json 的 zhipu_search.apiKey 中设置")
         
         if verbose:
             print(f"\n🤖 正在调用智谱搜索 API...")
-            print(f"   API Key: {api_key[:10]}...{api_key[:3]}")
             print(f"   使用 zai-sdk: {has_zai}")
         
         search_results = []
         
         if has_zai:
-            # Use official zai-sdk
             client = ZhipuAiClient(api_key=api_key)
             
-            response = client.web_search.web_search(
-                search_engine="search_pro",
-                search_query=query,
-                count=15,
-                search_recency_filter="noLimit",
-                content_size="high"
-            )
+            search_params = {
+                'search_engine': search_conf['search_engine'],
+                'search_query': query,
+                'count': search_conf['count'],
+                'search_recency_filter': search_conf['timelimit_mapped'],
+                'content_size': search_conf['content_size']
+            }
+            if search_conf['search_domain_filter']:
+                search_params['search_domain_filter'] = search_conf['search_domain_filter']
+            
+            response = client.web_search.web_search(**search_params)
             
             # Parse search results from the response
             if hasattr(response, 'search_result') and response.search_result:
@@ -186,16 +386,164 @@ def search_with_zhipu_mcp(query: str, verbose: bool = False):
         }
 
 
-def search_with_duckduckgo(query: str, verbose: bool = False, max_results: int = 20):
+def search_with_volcengine(query: str, verbose: bool = False):
+    """
+    Step 1c: Search using Volcengine (火山引擎联网问答Agent API).
+    
+    文档: https://www.volcengine.com/docs/85508/1510834
+    接入方式: APIKey接入
+    URL: https://open.feedcoopapi.com/agent_api/agent/chat/completion
+    """
+    if verbose:
+        print("\n" + "=" * 60)
+        print("🔍 步骤 1c: 火山引擎联网问答搜索")
+        print("=" * 60)
+        print(f"\n📥 输入:")
+        print(f"   搜索查询: {query}")
+    
+    try:
+        search_conf = get_volcengine_search_config()
+        api_key = search_conf.get('apiKey')
+        bot_id = search_conf.get('botId')
+        
+        if not api_key:
+            raise ValueError("火山引擎搜索 API Key 未配置。请在 conf.json 的 volcengine_search.apiKey 中设置")
+        if not bot_id:
+            raise ValueError("火山引擎 Bot ID 未配置。请在 conf.json 的 volcengine_search.botId 中设置")
+        
+        if verbose:
+            print(f"\n🤖 正在调用火山引擎联网问答 API...")
+            print(f"   Bot ID: {bot_id}")
+        
+        url = "https://open.feedcoopapi.com/agent_api/agent/chat/completion"
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "bot_id": bot_id,
+            "messages": [
+                {"role": "user", "content": query}
+            ],
+            "stream": False
+        }
+        
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        search_results = []
+        combined_content = ""
+        answer_content = ""
+        
+        if result.get("code") == 0 and result.get("data"):
+            data = result["data"]
+            
+            if "answer" in data:
+                answer_content = data["answer"]
+                combined_content += f"# [火山引擎] 联网问答结果\n\n{answer_content}\n\n"
+            
+            if "references" in data and data["references"]:
+                for ref in data["references"]:
+                    search_results.append({
+                        "title": ref.get("title", ""),
+                        "link": ref.get("url", ""),
+                        "content": ref.get("content", ref.get("summary", "")),
+                        "site_name": ref.get("site_name", "")
+                    })
+                    combined_content += f"## [{ref.get('site_name', '参考')}] {ref.get('title', '')}\n"
+                    combined_content += f"链接: {ref.get('url', '')}\n"
+                    combined_content += f"{ref.get('content', ref.get('summary', ''))}\n\n"
+            
+            if "search_results" in data and data["search_results"]:
+                for item in data["search_results"]:
+                    search_results.append({
+                        "title": item.get("title", ""),
+                        "link": item.get("url", item.get("link", "")),
+                        "content": item.get("content", item.get("snippet", "")),
+                        "site_name": item.get("site_name", "")
+                    })
+        
+        if verbose:
+            print(f"\n📤 输出:")
+            print(f"   火山引擎搜索成功: ✅")
+            print(f"   找到参考结果: {len(search_results)} 条")
+            if answer_content:
+                print(f"   回答内容长度: {len(answer_content)} 字符")
+                print(f"   回答预览: {answer_content[:200]}...")
+            
+            for i, item in enumerate(search_results[:3], 1):
+                print(f"\n   {i}. {item.get('title', 'No title')}")
+                print(f"      URL: {item.get('link', 'No link')}")
+                content = item.get('content', '')
+                if content:
+                    print(f"      摘要: {content[:100]}...")
+        
+        return {
+            "success": True,
+            "query": query,
+            "search_results": search_results,
+            "combined_content": combined_content,
+            "answer": answer_content,
+            "source": "volcengine"
+        }
+        
+    except Exception as e:
+        if verbose:
+            print(f"\n❌ 火山引擎搜索失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "error": str(e),
+            "query": query,
+            "source": "volcengine"
+        }
+
+
+def search_with_duckduckgo(query: str, verbose: bool = False, max_results: int = None):
     """
     Step 1b: Search using DuckDuckGo (ddgs).
+    
+    配置参数从 conf.json 的 duckduckgo_search 节点读取:
+        maxResults: 返回结果数
+        region: 地区代码
+        safesearch: 安全搜索
+        timelimit: 时间过滤
+        backend: 搜索后端
+        proxy: 代理地址
+        timeout: 请求超时
+    
+    Args:
+        query: 搜索查询
+        verbose: 显示详细信息
+        max_results: 覆盖配置的结果数（可选）
     """
+    search_conf = get_duckduckgo_search_config()
+    actual_max_results = max_results if max_results is not None else search_conf['maxResults']
+    
     if verbose:
         print("\n" + "=" * 60)
         print("🔍 步骤 1b: DuckDuckGo 搜索")
         print("=" * 60)
         print(f"\n📥 输入:")
         print(f"   搜索查询: {query}")
+        print(f"   结果数量: {actual_max_results}")
+        print(f"   地区代码: {search_conf['region']}")
+        print(f"   安全搜索: {search_conf['safesearch']}")
+        print(f"   时间过滤: {search_conf['timelimit']} -> {search_conf['timelimit_mapped']}")
+        print(f"   搜索后端: {search_conf['backend']}")
+        if search_conf['proxy']:
+            print(f"   代理地址: {search_conf['proxy']}")
+        print(f"   超时设置: {search_conf['timeout']}s")
     
     try:
         from ddgs import DDGS
@@ -203,8 +551,22 @@ def search_with_duckduckgo(query: str, verbose: bool = False, max_results: int =
         if verbose:
             print(f"\n🤖 正在调用 DuckDuckGo...")
         
-        with DDGS() as ddgs:
-            search_results = list(ddgs.text(query, max_results=max_results))
+        ddgs_kwargs = {'timeout': search_conf['timeout']}
+        if search_conf['proxy']:
+            ddgs_kwargs['proxy'] = search_conf['proxy']
+        
+        with DDGS(**ddgs_kwargs) as ddgs:
+            search_params = {
+                'query': query,
+                'max_results': actual_max_results,
+                'region': search_conf['region'],
+                'safesearch': search_conf['safesearch'],
+                'backend': search_conf['backend']
+            }
+            if search_conf['timelimit_mapped']:
+                search_params['timelimit'] = search_conf['timelimit_mapped']
+            
+            search_results = list(ddgs.text(**search_params))
         
         if verbose:
             print(f"\n📤 输出:")
@@ -250,7 +612,7 @@ def search_with_duckduckgo(query: str, verbose: bool = False, max_results: int =
         }
 
 
-def extract_with_langextract(zhipu_data, ddg_data, verbose: bool = False):
+def extract_with_langextract(zhipu_data, ddg_data, volcengine_data=None, verbose: bool = False):
     """
     Step 2: Extract structured information using configured model (doubao/glm/zhipu).
     """
@@ -259,91 +621,52 @@ def extract_with_langextract(zhipu_data, ddg_data, verbose: bool = False):
         print("📝 步骤 2: 结构化提取")
         print("=" * 60)
     
-    # Combine both search results
+    volcengine_data = volcengine_data or {}
+    
     combined_content = ""
     if zhipu_data.get("success"):
         combined_content += zhipu_data["combined_content"]
     if ddg_data.get("success"):
         combined_content += ddg_data["combined_content"]
+    if volcengine_data.get("success"):
+        combined_content += volcengine_data["combined_content"]
+    
+    extraction_config = get_extraction_config()
+    max_content_length = extraction_config['max_content_length']
+    if len(combined_content) > max_content_length:
+        if verbose:
+            print(f"⚠️ 内容过长 ({len(combined_content)} 字符)，截断至 {max_content_length} 字符")
+        combined_content = combined_content[:max_content_length]
     
     if not combined_content:
         if verbose:
-            print("❌ 两个搜索都失败，无法提取信息")
+            print("❌ 所有搜索都失败，无法提取信息")
         return {
             "success": False,
-            "error": "Both searches failed",
+            "error": "All searches failed",
             "zhipu_data": zhipu_data,
-            "ddg_data": ddg_data
+            "ddg_data": ddg_data,
+            "volcengine_data": volcengine_data
         }
     
     try:
-        config = load_openclaw_config()
-        
-        # Determine which model provider to use (priority: default model in config)
-        model_provider = None
-        model_name = None
-        api_key = None
-        base_url = None
-        
-        # First, check if there's a default model configured
-        if config and 'models' in config:
-            default_model = config['models'].get('defaultModel')
-            if default_model:
-                # Parse model name like "ark/doubao-seed-2-0-code" or "glm/glm-4-flash"
-                if '/' in default_model:
-                    provider_part, model_part = default_model.split('/', 1)
-                    model_provider = provider_part
-                    model_name = model_part
-        
-        # If no default model or couldn't parse, try to find available providers
-        if not model_provider or not model_name:
-            # Check providers in order: ark (doubao) first, then glm (zhipu)
-            providers_config = config.get('models', {}).get('providers', {}) if config else {}
-            
-            if 'ark' in providers_config:
-                model_provider = 'ark'
-                model_name = 'doubao-seed-2-0-code'
-            elif 'glm' in providers_config:
-                model_provider = 'glm'
-                model_name = 'glm-4-flash'
-        
-        # Get provider config
-        provider_config = {}
-        if config and 'models' in config and 'providers' in config['models']:
-            provider_config = config['models']['providers'].get(model_provider, {})
-        
-        # Get API key and base URL
-        if model_provider == 'ark':
-            # Doubao/Ark configuration
-            api_key = provider_config.get('apiKey')
-            base_url = provider_config.get('baseUrl', 'https://ark.cn-beijing.volces.com/api/coding/v3')
-            if not model_name:
-                model_name = 'doubao-seed-2-0-code'
-        elif model_provider == 'glm':
-            # Zhipu/GLM configuration
-            api_key = (
-                provider_config.get('zhipu_search_api_key') or 
-                provider_config.get('zhipu_api_key') or 
-                provider_config.get('apiKey')
-            )
-            base_url = provider_config.get('baseUrl', 'https://open.bigmodel.cn/api/paas/v4')
-            if not model_name:
-                model_name = 'glm-4-flash'
-        else:
-            raise ValueError(f"Unsupported model provider: {model_provider}")
+        model_config = get_langextract_config()
+        model_provider = model_config['provider']
+        model_name = model_config['model']
+        base_url = model_config['baseUrl']
+        api_key = model_config['apiKey']
         
         if not api_key:
-            raise ValueError(f"API Key not found for provider: {model_provider}")
+            raise ValueError("langextract API Key 未配置。请在 conf.json 的 langextract.apiKey 中设置")
         
         if verbose:
             print(f"\n📥 输入:")
             print(f"   总搜索内容长度: {len(combined_content)} 字符")
             print(f"   模型提供商: {model_provider}")
             print(f"   模型名称: {model_name}")
-            print(f"   API Key: {api_key[:10]}...")
             print(f"   Base URL: {base_url}")
         
-        extraction_prompt = f"""基于以下网络搜索结果（包含智谱和 DuckDuckGo 的结果），请提取结构化信息：
+        extraction_prompt = f"""基于以下网络搜索结果（包含智谱、DuckDuckGo、火山引擎的结果），请提取结构化信息：
 
 搜索结果：
 {combined_content}
@@ -399,6 +722,7 @@ def extract_with_langextract(zhipu_data, ddg_data, verbose: bool = False):
             "success": True,
             "zhipu_data": zhipu_data,
             "ddg_data": ddg_data,
+            "volcengine_data": volcengine_data,
             "combined_content": combined_content,
             "extracted_info": extracted_info,
             "model_provider": model_provider,
@@ -418,7 +742,8 @@ def extract_with_langextract(zhipu_data, ddg_data, verbose: bool = False):
             "success": False,
             "error": str(e),
             "zhipu_data": zhipu_data,
-            "ddg_data": ddg_data
+            "ddg_data": ddg_data,
+            "volcengine_data": volcengine_data
         }
 
 
@@ -462,6 +787,19 @@ def save_results(final_result, output_dir: str, save_json: bool = False, verbose
         if verbose:
             print(f"✅ 已保存: {ddg_file.name}")
     
+    # Save Volcengine search result
+    if final_result.get("volcengine_data", {}).get("success"):
+        volcengine_file = output_path / f"volcengine_search_result_{timestamp}.md"
+        with open(volcengine_file, "w", encoding="utf-8") as f:
+            f.write(f"# 火山引擎联网问答搜索结果\n\n")
+            f.write(f"**查询**: {final_result['volcengine_data']['query']}\n\n")
+            f.write(f"**时间**: {datetime.now().isoformat()}\n\n")
+            f.write("---\n\n")
+            f.write(final_result['volcengine_data']['combined_content'])
+        saved_files.append(str(volcengine_file))
+        if verbose:
+            print(f"✅ 已保存: {volcengine_file.name}")
+    
     # Save extracted info
     if final_result.get("success") and final_result.get("extracted_info"):
         extract_file = output_path / f"extracted_info_{timestamp}.md"
@@ -483,12 +821,19 @@ def save_results(final_result, output_dir: str, save_json: bool = False, verbose
         f.write(f"**状态**: {'✅ 成功' if final_result.get('success') else '❌ 失败'}\n\n")
         
         if final_result.get("success"):
-            query = final_result['zhipu_data']['query'] if final_result.get('zhipu_data') else final_result['ddg_data']['query']
+            query = (
+                final_result.get('zhipu_data', {}).get('query') or 
+                final_result.get('ddg_data', {}).get('query') or
+                final_result.get('volcengine_data', {}).get('query') or
+                ''
+            )
             f.write(f"**查询**: {query}\n\n")
             if final_result.get("zhipu_data", {}).get("success"):
                 f.write(f"**智谱搜索结果数**: {len(final_result['zhipu_data'].get('search_results', []))} 条\n\n")
             if final_result.get("ddg_data", {}).get("success"):
                 f.write(f"**DuckDuckGo 搜索结果数**: {len(final_result['ddg_data'].get('search_results', []))} 条\n\n")
+            if final_result.get("volcengine_data", {}).get("success"):
+                f.write(f"**火山引擎搜索结果数**: {len(final_result['volcengine_data'].get('search_results', []))} 条\n\n")
             f.write(f"**总搜索内容长度**: {len(final_result['combined_content'])} 字符\n\n")
             if final_result.get("extracted_info"):
                 f.write(f"**提取内容长度**: {len(final_result['extracted_info'])} 字符\n\n")
@@ -516,11 +861,10 @@ def save_results(final_result, output_dir: str, save_json: bool = False, verbose
 
 
 def main():
-    # Add scripts path first so we can import bundled langextract
     add_project_path()
     
     parser = argparse.ArgumentParser(
-        description="智谱 MCP + DuckDuckGo + 豆包 搜索提取工作流"
+        description="智谱 MCP + DuckDuckGo + 火山引擎 + 豆包 搜索提取工作流"
     )
     parser.add_argument(
         "query",
@@ -538,7 +882,7 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default=str(get_project_root() / "output"),
+        default=str(PROJECT_ROOT / "output"),
         help="输出目录"
     )
     parser.add_argument(
@@ -549,35 +893,55 @@ def main():
     parser.add_argument(
         "--ddg-max-results",
         type=int,
-        default=20,
-        help="DuckDuckGo 最大搜索结果数"
+        default=None,
+        help="DuckDuckGo 最大搜索结果数（覆盖配置文件，默认使用 conf.json 中的 maxResults）"
+    )
+    parser.add_argument(
+        "--volcengine",
+        action="store_true",
+        help="启用火山引擎联网问答搜索（需在 conf.json 中配置 volcengine_search）"
+    )
+    parser.add_argument(
+        "--volcengine-only",
+        action="store_true",
+        help="仅使用火山引擎搜索（不使用智谱和DuckDuckGo）"
     )
     
     args = parser.parse_args()
     
-    # Get query
-    search_query = args.query or args.query
-    if not search_query and len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
-        search_query = sys.argv[1]
+    # 获取查询关键词：位置参数或 --query 参数二选一
+    search_query = args.query
     
     if not search_query:
         print("❌ 请提供搜索关键词！")
         parser.print_help()
         sys.exit(1)
     
-    # Print header
     print("=" * 60)
-    print("🔄 智谱 MCP + DuckDuckGo + 豆包 工作流")
+    print("🔄 智谱 MCP + DuckDuckGo + 火山引擎 + 豆包 工作流")
     print("=" * 60)
     
-    # Step 1a: Search with Zhipu MCP
-    zhipu_result = search_with_zhipu_mcp(search_query, verbose=args.verbose)
+    zhipu_result = {}
+    ddg_result = {}
+    volcengine_result = {}
     
-    # Step 1b: Search with DuckDuckGo
-    ddg_result = search_with_duckduckgo(search_query, verbose=args.verbose, max_results=args.ddg_max_results)
+    if args.volcengine_only:
+        volcengine_result = search_with_volcengine(search_query, verbose=args.verbose)
+    else:
+        zhipu_search_conf = get_zhipu_search_config()
+        if zhipu_search_conf.get('enabled', True):
+            zhipu_result = search_with_zhipu_mcp(search_query, verbose=args.verbose)
+        else:
+            if args.verbose:
+                print("\n⏭️ 智谱搜索已禁用，跳过...")
+        ddg_result = search_with_duckduckgo(search_query, verbose=args.verbose, max_results=args.ddg_max_results)
+        
+        if args.volcengine:
+            volcengine_result = search_with_volcengine(search_query, verbose=args.verbose)
     
-    # Step 2: Extract with langextract
-    final_result = extract_with_langextract(zhipu_result, ddg_result, verbose=args.verbose)
+    final_result = extract_with_langextract(
+        zhipu_result, ddg_result, volcengine_result, verbose=args.verbose
+    )
     
     # Save results
     saved_files = save_results(
@@ -599,11 +963,12 @@ def main():
             print(f"   智谱搜索结果: {len(zhipu_result.get('search_results', []))} 条")
         if final_result.get("ddg_data", {}).get("success"):
             print(f"   DuckDuckGo 搜索结果: {len(ddg_result.get('search_results', []))} 条")
+        if final_result.get("volcengine_data", {}).get("success"):
+            print(f"   火山引擎搜索结果: {len(volcengine_result.get('search_results', []))} 条")
         print(f"   保存文件: {len(saved_files)} 个")
         for f in saved_files:
             print(f"   - {Path(f).name}")
         
-        # Print extracted info
         print("\n" + "=" * 60)
         print("📝 提取的信息")
         print("=" * 60)
