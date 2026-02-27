@@ -1,0 +1,11 @@
+{
+  "owner": "ivangdavila",
+  "slug": "hadoop",
+  "displayName": "Hadoop",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772035896718,
+    "commit": null
+  },
+  "history": []
+}
