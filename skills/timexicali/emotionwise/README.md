@@ -64,7 +64,7 @@ npm i -g clawhub
 clawhub login
 ```
 
-### 2) Publish first version
+### 2) Publish first public version
 Run from this project directory:
 
 ```bash
@@ -72,7 +72,7 @@ cd "/path/to/emotionwise-openclaw-skill"
 clawhub publish . \
   --slug emotionwise \
   --name "EmotionWise API" \
-  --version 0.1.0 \
+  --version 0.1.1 \
   --changelog "Initial public release" \
   --tags latest,api,nlp,sentiment
 ```
@@ -82,6 +82,6 @@ clawhub publish . \
 cd "/path/to/emotionwise-openclaw-skill"
 clawhub publish . \
   --slug emotionwise \
-  --version 0.1.1 \
-  --changelog "Improved instructions and error handling"
+  --version 0.1.2 \
+  --changelog "Compatibility fixes and packaging cleanup"
 ```

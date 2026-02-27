@@ -1,14 +1,8 @@
 ---
 name: emotionwise
 description: Analyze text for emotions and sarcasm using the EmotionWise API (28 labels, EN/ES).
-metadata:
-  openclaw:
-    emoji: "🧠"
-    requires:
-      env: ["EMOTIONWISE_API_KEY"]
-    primaryEnv: "EMOTIONWISE_API_KEY"
+metadata: {"openclaw":{"emoji":"🧠","homepage":"https://emotionwise.ai","requires":{"env":["EMOTIONWISE_API_KEY"]},"primaryEnv":"EMOTIONWISE_API_KEY"}}
 user-invocable: true
-homepage: https://emotionwise.ai
 ---
 
 # EmotionWise Skill
@@ -36,7 +30,7 @@ Body:
 
 ```json
 {
-  "emotions": ["joy", "admiration"],
+  "detected_emotions": ["joy", "admiration"],
   "confidence_scores": { "joy": 0.87, "admiration": 0.72 },
   "sarcasm_detected": false,
   "sarcasm_score": 0.04
