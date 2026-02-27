@@ -3,9 +3,15 @@
   "slug": "medium-writer",
   "displayName": "Medium Writer",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1772013057051,
-    "commit": "https://github.com/openclaw/skills/commit/4bb5d4f61b700bb691a43cf4d80018ea9301f565"
+    "version": "1.0.2",
+    "publishedAt": 1772128401912,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1772013057051,
+      "commit": "https://github.com/openclaw/skills/commit/4bb5d4f61b700bb691a43cf4d80018ea9301f565"
+    }
+  ]
 }
