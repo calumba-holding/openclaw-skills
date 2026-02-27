@@ -1,0 +1,11 @@
+{
+  "owner": "0x-professor",
+  "slug": "cyber-owasp-review",
+  "displayName": "Cyber Owasp Review",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1772130053421,
+    "commit": null
+  },
+  "history": []
+}
