@@ -12660,7 +12660,8 @@ async function createRepairJob({ objKey, method, isAsync }) {
     body: JSON.stringify({
       obj_key: objKey,
       method,
-      is_async: isAsync
+      is_async: isAsync,
+      is_skill: true
     })
   }).finally(cancel);
   const data = await readJsonSafe(res);

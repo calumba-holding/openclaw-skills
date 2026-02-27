@@ -3,11 +3,16 @@
   "slug": "file-repair-skill",
   "displayName": "file-repair-skill",
   "latest": {
-    "version": "1.0.4",
-    "publishedAt": 1771992168507,
-    "commit": "https://github.com/openclaw/skills/commit/6523090b1d5efc1d8ab643f18912ee49796899fb"
+    "version": "1.0.6",
+    "publishedAt": 1772086657878,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.4",
+      "publishedAt": 1771992168507,
+      "commit": "https://github.com/openclaw/skills/commit/6523090b1d5efc1d8ab643f18912ee49796899fb"
+    },
     {
       "version": "1.0.3",
       "publishedAt": 1770704626442,
