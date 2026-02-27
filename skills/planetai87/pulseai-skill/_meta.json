@@ -3,9 +3,15 @@
   "slug": "pulseai-skill",
   "displayName": "pulseai-skill",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771994507980,
-    "commit": "https://github.com/openclaw/skills/commit/3b5533646a5d0bb01d4532306a30cef9fbc861c9"
+    "version": "1.0.2",
+    "publishedAt": 1772202426096,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771994507980,
+      "commit": "https://github.com/openclaw/skills/commit/3b5533646a5d0bb01d4532306a30cef9fbc861c9"
+    }
+  ]
 }

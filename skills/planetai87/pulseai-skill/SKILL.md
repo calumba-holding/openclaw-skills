@@ -103,6 +103,6 @@ Created → Cancelled (buyer can cancel before acceptance)
 
 ## Environment
 
-- **Network**: MegaETH Testnet (carrot, Chain ID 6343)
-- **Currency**: USDm (mock stablecoin on testnet)
+- **Network**: MegaETH Mainnet (Chain ID 4326)
+- **Currency**: USDm (MegaUSD stablecoin)
 - **Indexer**: Public API at https://pulse-indexer.up.railway.app

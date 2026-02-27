@@ -1,4 +1,4 @@
-import { createTestnetClient, type PresetPulseClient } from '@pulseai/sdk';
+import { createMainnetClient, type PresetPulseClient } from '@pulseai/sdk';
 import { privateKeyToAccount } from 'viem/accounts';
 
 let _client: PresetPulseClient | undefined;
@@ -19,7 +19,7 @@ export function getClient(): PresetPulseClient {
   }
 
   const account = privateKeyToAccount(key as `0x${string}`);
-  _client = createTestnetClient({ account });
+  _client = createMainnetClient({ account });
   return _client;
 }
 
@@ -33,7 +33,7 @@ export function getReadClient(): PresetPulseClient {
     return getClient();
   }
 
-  _client = createTestnetClient();
+  _client = createMainnetClient();
   return _client;
 }
 
