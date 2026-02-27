@@ -69,6 +69,7 @@ CONFIG_SCHEMA = {
 }
 
 TRADE_SOURCE = "sdk:fastloop"
+SKILL_SLUG = "polymarket-fast-loop"
 _automaton_reported = False
 SMART_SIZING_PCT = 0.05  # 5% of balance per trade
 MIN_SHARES_PER_ORDER = 5  # Polymarket minimum
@@ -89,60 +90,10 @@ ASSET_PATTERNS = {
 }
 
 
-def _load_config(schema, skill_file, config_filename="config.json"):
-    """Load config with priority: config.json > env vars > defaults."""
-    from pathlib import Path
-    config_path = Path(skill_file).parent / config_filename
-    file_cfg = {}
-    if config_path.exists():
-        try:
-            with open(config_path) as f:
-                file_cfg = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            pass
-    result = {}
-    for key, spec in schema.items():
-        if key in file_cfg:
-            result[key] = file_cfg[key]
-        elif spec.get("env") and os.environ.get(spec["env"]):
-            val = os.environ.get(spec["env"])
-            type_fn = spec.get("type", str)
-            try:
-                if type_fn == bool:
-                    result[key] = val.lower() in ("true", "1", "yes")
-                else:
-                    result[key] = type_fn(val)
-            except (ValueError, TypeError):
-                result[key] = spec.get("default")
-        else:
-            result[key] = spec.get("default")
-    return result
-
-
-def _get_config_path(skill_file, config_filename="config.json"):
-    from pathlib import Path
-    return Path(skill_file).parent / config_filename
-
-
-def _update_config(updates, skill_file, config_filename="config.json"):
-    """Update config.json with new values."""
-    from pathlib import Path
-    config_path = Path(skill_file).parent / config_filename
-    existing = {}
-    if config_path.exists():
-        try:
-            with open(config_path) as f:
-                existing = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            pass
-    existing.update(updates)
-    with open(config_path, "w") as f:
-        json.dump(existing, f, indent=2)
-    return existing
-
+from simmer_sdk.skill import load_config, update_config, get_config_path
 
 # Load config
-cfg = _load_config(CONFIG_SCHEMA, __file__)
+cfg = load_config(CONFIG_SCHEMA, __file__, slug="polymarket-fast-loop")
 ENTRY_THRESHOLD = cfg["entry_threshold"]
 MIN_MOMENTUM_PCT = cfg["min_momentum_pct"]
 MAX_POSITION_USD = cfg["max_position"]
@@ -328,7 +279,7 @@ def discover_fast_market_markets(asset="BTC", window="5m"):
     patterns = ASSET_PATTERNS.get(asset, ASSET_PATTERNS["BTC"])
     url = (
         "https://gamma-api.polymarket.com/markets"
-        "?limit=20&closed=false&tag=crypto&order=createdAt&ascending=false"
+        "?limit=100&closed=false&tag=crypto&order=endDate&ascending=true"
     )
     result = _api_request(url)
     if not result or isinstance(result, dict) and result.get("error"):
@@ -378,14 +329,15 @@ def _parse_fast_market_end_time(question):
     if not match:
         return None
     try:
+        from zoneinfo import ZoneInfo
         date_str = match.group(1)
         time_str = match.group(2)
         year = datetime.now(timezone.utc).year
         dt_str = f"{date_str} {year} {time_str}"
-        # Parse as ET (UTC-5)
         dt = datetime.strptime(dt_str, "%B %d %Y %I:%M%p")
-        # Convert ET to UTC (+5 hours)
-        dt = dt.replace(tzinfo=timezone.utc) + timedelta(hours=5)
+        # Proper ET → UTC (handles EST/EDT automatically)
+        et = ZoneInfo("America/New_York")
+        dt = dt.replace(tzinfo=et).astimezone(timezone.utc)
         return dt
     except Exception:
         return None
@@ -394,13 +346,14 @@ def _parse_fast_market_end_time(question):
 def find_best_fast_market(markets):
     """Pick the best fast_market to trade: soonest expiring with enough time remaining."""
     now = datetime.now(timezone.utc)
+    max_remaining = _window_seconds.get(WINDOW, 300) * 2  # reject markets that haven't started yet (Gamma path handles live-now via time window; if a Simmer endpoint path is added, filter on is_live_now=True instead)
     candidates = []
     for m in markets:
         end_time = m.get("end_time")
         if not end_time:
             continue
         remaining = (end_time - now).total_seconds()
-        if remaining > MIN_TIME_REMAINING:
+        if remaining > MIN_TIME_REMAINING and remaining < max_remaining:
             candidates.append((remaining, m))
 
     if not candidates:
@@ -544,7 +497,7 @@ def execute_trade(market_id, side, amount):
             market_id=market_id,
             side=side,
             amount=amount,
-            source=TRADE_SOURCE,
+            source=TRADE_SOURCE, skill_slug=SKILL_SLUG,
         )
         return {
             "success": result.success,
@@ -605,7 +558,7 @@ def run_fast_market_strategy(dry_run=True, positions_only=False, show_config=Fal
     log(f"  Daily budget:     ${DAILY_BUDGET:.2f} (${daily_spend['spent']:.2f} spent today, {daily_spend['trades']} trades)")
 
     if show_config:
-        config_path = _get_config_path(__file__)
+        config_path = get_config_path(__file__)
         log(f"\n  Config file: {config_path}")
         log(f"\n  To change settings:")
         log(f'    python fast_trader.py --set entry_threshold=0.08')
@@ -856,7 +809,7 @@ def run_fast_market_strategy(dry_run=True, positions_only=False, show_config=Fal
             confidence = min(0.9, 0.5 + divergence + (momentum_pct / 100))
             log_trade(
                 trade_id=trade_id,
-                source=TRADE_SOURCE,
+                source=TRADE_SOURCE, skill_slug=SKILL_SLUG,
                 thesis=trade_rationale,
                 confidence=round(confidence, 2),
                 asset=ASSET,
@@ -927,7 +880,7 @@ if __name__ == "__main__":
                 print(f"Unknown config key: {key}")
                 print(f"Valid keys: {', '.join(CONFIG_SCHEMA.keys())}")
                 sys.exit(1)
-        result = _update_config(updates, __file__)
+        result = update_config(updates, __file__)
         print(f"✅ Config updated: {json.dumps(updates)}")
         sys.exit(0)
 
