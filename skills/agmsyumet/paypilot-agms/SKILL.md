@@ -1,6 +1,6 @@
 ---
 name: paypilot
-description: Process payments, send invoices, issue refunds, and manage transactions via a secure payment gateway proxy. Use when a user asks to charge someone, send a payment link, check sales, issue a refund, create recurring billing, or manage any payment-related task. Also use for merchant onboarding and first-time payment setup.
+description: Process payments, send invoices, issue refunds, manage subscriptions, and detect fraud via a secure payment gateway proxy. Use when a user asks to charge someone, send a payment link, check sales, issue a refund, create recurring billing, view fraud analytics, configure fraud rules, or manage any payment-related task. Supports 3D Secure, AVS/CVV verification, and risk scoring. Also use for merchant onboarding and first-time payment setup.
 homepage: https://agms.com/paypilot/
 source: https://github.com/agmsyumet/paypilot-skill
 author: AGMS (Avant-Garde Marketing Solutions)
@@ -129,6 +129,25 @@ curl -s "$API/v1/payments/charge" -X POST \
   -d '{"amount":500.00,"token":"VAULT_ID","description":"Consulting — January"}'
 ```
 
+Enable 3D Secure for higher-value or flagged transactions:
+```bash
+curl -s "$API/v1/payments/charge" -X POST \
+  -H "Content-Type: application/json" -H "$AUTH" \
+  -d '{"amount":2500.00,"token":"VAULT_ID","description":"Premium service","three_d_secure":true}'
+```
+
+The response includes risk assessment and verification:
+```json
+{
+  "transaction_id": "123",
+  "status": "complete",
+  "amount": 2500,
+  "risk": { "score": "low", "flags": [] },
+  "verification": { "avs": "Y", "cvv": "M" },
+  "three_d_secure": true
+}
+```
+
 ### Send Invoice / Payment Link
 ```bash
 curl -s "$API/v1/payments/invoice" -X POST \
@@ -193,6 +212,29 @@ curl -s "$API/v1/subscriptions" -X POST \
 curl -s "$API/v1/subscriptions/SUB_ID" -X DELETE -H "$AUTH"
 ```
 
+### Fraud Detection & Rules
+```bash
+# View 30-day fraud analytics
+curl -s "$API/v1/fraud/summary" -H "$AUTH" | jq .
+
+# List active fraud rules
+curl -s "$API/v1/fraud/rules" -H "$AUTH" | jq .
+
+# Create a fraud rule (flag transactions over $5000)
+curl -s "$API/v1/fraud/rules" -X POST \
+  -H "Content-Type: application/json" -H "$AUTH" \
+  -d '{"rule_type":"max_amount","threshold":"5000","action":"flag"}'
+
+# Other rule types: min_amount, velocity_limit
+# Actions: flag (alert), block (reject), review (hold)
+
+# Delete a rule
+curl -s "$API/v1/fraud/rules/RULE_ID" -X DELETE -H "$AUTH"
+```
+
+When reporting fraud stats:
+> "🛡️ Last 30 days: 45 transactions, 0 flagged, 0 blocked. 1 active rule (max $5,000). Fraud rate: 0.00%"
+
 ## Security Rules
 
 - **NEVER** ask for, log, or store raw credit card numbers
@@ -222,3 +264,13 @@ When checking sales:
 For detailed gateway API documentation, see `references/gateway-api.md`.
 For payment flow diagrams, see `references/payment-flows.md`.
 For PCI compliance guidelines, see `references/pci-compliance.md`.
+
+## Discovery
+
+AI agents and bots can discover PayPilot capabilities automatically:
+
+- **OpenAPI Spec:** `https://paypilot.agms.com/openapi.json`
+- **AI Plugin Manifest:** `https://paypilot.agms.com/.well-known/ai-plugin.json`
+- **LLM Resource Index:** `https://paypilot.agms.com/llms.txt`
+- **Landing Page:** `https://agms.com/paypilot/`
+- **ClawHub:** `https://clawhub.ai/agmsyumet/paypilot-agms`

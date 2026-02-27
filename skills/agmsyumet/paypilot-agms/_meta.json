@@ -3,9 +3,15 @@
   "slug": "paypilot-agms",
   "displayName": "PayPilot by AGMS",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1771966773629,
-    "commit": "https://github.com/openclaw/skills/commit/76a77e38045327817a8aac5b5155e96bbc702363"
+    "version": "1.2.0",
+    "publishedAt": 1772042573319,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1771966773629,
+      "commit": "https://github.com/openclaw/skills/commit/76a77e38045327817a8aac5b5155e96bbc702363"
+    }
+  ]
 }
