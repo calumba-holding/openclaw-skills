@@ -1,9 +1,11 @@
 ---
 name: perstudio
-description: Generate AI images and videos. Use when user asks to create images, photos, product shots, portraits, stickers, videos, or mentions perstudio.
+description: Studio-grade AI image and video generation — photorealistic portraits, product shots, stickers, animations, and more. Just describe what you want.
 user-invocable: true
 homepage: https://perstudio.ai
-version: 3.1.3
+repository: https://github.com/montenegronyc/perstudio-openclaw
+version: 3.2.1
+metadata: {"openclaw":{"requires":{"env":["PERSTUDIO_API_KEY"],"config":["plugins.entries.perstudio.config.apiKey"]},"primaryEnv":"PERSTUDIO_API_KEY","install":[{"id":"npm","kind":"node","package":"perstudio-openclaw","global":true,"label":"Install perstudio-openclaw"}],"emoji":"🎨"}}
 ---
 
 # Perstudio — AI Image & Video Generation
@@ -44,11 +46,13 @@ perstudio({ action: "generate_sync", intent: "a cyberpunk cityscape at sunset, n
 
 ### Transform an existing image
 ```
-perstudio({ action: "upload_asset", file_path: "/path/to/input.jpg" })
+perstudio({ action: "upload_asset", file_path: "~/Pictures/input.jpg" })
 // Returns: { asset_id: "abc123" }
 
 perstudio({ action: "generate_sync", intent: "transform into a watercolor painting", input_image_asset_id: "abc123" })
 ```
+
+> **Security note:** `upload_asset` only accepts files from allowed directories: `~/Pictures`, `~/Downloads`, `~/Desktop`, `~/.openclaw/workspace`, and the system temp directory. Paths outside these directories are rejected.
 
 ### Generate video
 ```
@@ -57,7 +61,7 @@ perstudio({ action: "generate_sync", intent: "a cat playing piano, cinematic lig
 
 ### Animate a still image
 ```
-perstudio({ action: "upload_asset", file_path: "/path/to/photo.jpg" })
+perstudio({ action: "upload_asset", file_path: "~/Pictures/photo.jpg" })
 perstudio({ action: "generate_sync", intent: "gentle wind blowing through hair, subtle movement", input_image_asset_id: "abc123" })
 ```
 
@@ -71,6 +75,12 @@ perstudio({ action: "balance" })
 - **Just describe what you want** — the system picks the best approach automatically.
 - **Be specific** — include style, lighting, and composition details for better results.
 - **Auto-upscale** — pass `auto_upscale: true` to automatically enhance resolution.
+
+## Security
+
+- **File access is restricted.** The `upload_asset` action enforces a directory allowlist — only files in `~/Pictures`, `~/Downloads`, `~/Desktop`, `~/.openclaw/workspace`, and the system temp directory can be uploaded. All other paths are rejected. Paths are resolved to their real location (following symlinks) before validation to prevent traversal attacks.
+- **API key required.** All generation requests require a valid `PERSTUDIO_API_KEY`. No data is sent to perstudio.ai without authentication.
+- **Open source.** The plugin source code is available at [github.com/montenegronyc/perstudio-openclaw](https://github.com/montenegronyc/perstudio-openclaw) for full review.
 
 ## Setup
 
