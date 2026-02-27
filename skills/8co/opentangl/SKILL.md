@@ -1,13 +1,17 @@
 ---
 name: opentangl
-description: Not a code generator — an entire dev team. Point it at any JS/TS project and a product vision. It plans features, writes code, verifies builds, creates PRs, reviews diffs, and merges — autonomously. Manages multiple repos as one product. Use when you want to ship code without writing it.
+description: Not a code generator — an entire dev team. You write the vision, it ships the code. Autonomous builds, PRs, reviews, and merges across multiple repos. Point it at any JS/TS project and a product vision. It plans features, writes code, verifies builds, creates PRs, reviews diffs, and merges — autonomously. Manages multiple repos as one product. Use when you want to ship code without writing it. AI code generation, autonomous development, workflow automation, multi-repo orchestration, TypeScript, JavaScript, GitHub, OpenAI, Anthropic, Claude, GPT, LLM, devtools, CI/CD, pull requests, code review.
 homepage: https://github.com/8co/opentangl
-metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["node","git","gh"],"env":["OPENAI_API_KEY"]},"primaryEnv":"OPENAI_API_KEY"}}
+category: development
+tags: ["ai-agents", "code-generation", "autonomous-development", "multi-repo", "typescript", "javascript", "github", "pull-requests", "openai", "anthropic", "claude", "gpt", "llm", "devtools", "workflow-automation", "ci-cd", "code-review", "codegen"]
+metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["node","git","gh"]}}}
 ---
 
 # OpenTangl
 
 Configure a self-driving development loop for any JavaScript/TypeScript project. This skill detects your project setup, generates configuration files, and prepares OpenTangl to run autonomously.
+
+**Follow these steps in order.** Complete each step fully before moving to the next. Wait for user confirmation at every gate before proceeding. Do not skip steps or combine them — the user needs to complete actions on their end between steps.
 
 ## Prerequisites
 
