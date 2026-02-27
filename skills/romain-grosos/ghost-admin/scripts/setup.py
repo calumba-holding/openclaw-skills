@@ -1,40 +1,25 @@
 #!/usr/bin/env python3
 """
-setup.py — Interactive setup for the Ghost skill.
+setup.py - Interactive setup for the Ghost skill.
 Run this after installing the skill to configure credentials and behavior.
 
 Usage: python3 scripts/setup.py
 """
 
-import base64
-import hashlib
-import hmac
 import json
 import sys
-import time
 from pathlib import Path
 
-# No subprocess usage in this file — pip installs must be done manually.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from jwt_utils import make_jwt as _make_jwt
 
 SKILL_DIR   = Path(__file__).resolve().parent.parent
-CONFIG_FILE = SKILL_DIR / "config.json"
+_CONFIG_DIR = Path.home() / ".openclaw" / "config" / "ghost"
+CONFIG_FILE = _CONFIG_DIR / "config.json"
 CREDS_FILE  = Path.home() / ".openclaw" / "secrets" / "ghost_creds"
 
-# ─── Dependency check ─────────────────────────────────────────────────────────
-
-def _ensure_requests():
-    try:
-        import requests  # noqa: F401
-    except ImportError:
-        print("✗ Missing dependency: 'requests' is not installed.")
-        print("  Install it with:  pip install requests")
-        print("  Then re-run:      python3 scripts/setup.py")
-        sys.exit(1)
-
-_ensure_requests()
-
 _DEFAULT_CONFIG = {
-    "allow_publish":       True,
+    "allow_publish":       False,
     "allow_delete":        False,
     "allow_member_access": False,
     "default_status":      "draft",
@@ -96,27 +81,15 @@ def _write_creds(ghost_url: str, admin_key: str):
 
 
 def _write_config(cfg: dict):
+    _CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n")
-
-
-def _b64url(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
-
-
-def _make_jwt(key_id: str, secret_hex: str) -> str:
-    now = int(time.time())
-    header  = {"alg": "HS256", "typ": "JWT", "kid": key_id}
-    payload = {"iat": now, "exp": now + 300, "aud": "/admin/"}
-    h = _b64url(json.dumps(header,  separators=(",", ":")).encode())
-    p = _b64url(json.dumps(payload, separators=(",", ":")).encode())
-    sig = hmac.new(bytes.fromhex(secret_hex), f"{h}.{p}".encode(), hashlib.sha256).digest()
-    return f"{h}.{p}.{_b64url(sig)}"
 
 
 def _test_connection(ghost_url: str, admin_key: str) -> tuple:
     """Returns (success: bool, info: str)."""
+    import urllib.error
+    import urllib.request
     try:
-        import requests
         parts = admin_key.split(":")
         if len(parts) != 2:
             return False, "Invalid key format (expected id:secret_hex)"
@@ -125,26 +98,48 @@ def _test_connection(ghost_url: str, admin_key: str) -> tuple:
         except ValueError:
             return False, "Invalid key: secret part is not valid hex"
         token = _make_jwt(parts[0], parts[1])
-        r = requests.get(
-            f"{ghost_url.rstrip('/')}/ghost/api/admin/site",
+        url = f"{ghost_url.rstrip('/')}/ghost/api/admin/site"
+        req = urllib.request.Request(
+            url,
             headers={"Authorization": f"Ghost {token}", "Accept-Version": "v5.0"},
-            timeout=10,
         )
-        if r.status_code == 200:
-            title = r.json().get("site", {}).get("title", "Ghost")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            title = data.get("site", {}).get("title", "Ghost")
             return True, title
-        return False, f"HTTP {r.status_code}: {r.text[:120]}"
+    except urllib.error.HTTPError as exc:
+        return False, f"HTTP {exc.code}: {exc.read().decode('utf-8', errors='replace')[:120]}"
     except Exception as e:
         return False, str(e)
 
 
+def cleanup():
+    """Remove all persistent files written by this skill (credentials + config)."""
+    print("Removing Ghost skill persistent files...")
+    removed = []
+    for path in [CREDS_FILE, CONFIG_FILE]:
+        if path.exists():
+            path.unlink()
+            removed.append(str(path))
+    try:
+        _CONFIG_DIR.rmdir()  # removes dir only if empty
+    except OSError:
+        pass
+    if removed:
+        for p in removed:
+            print(f"  Removed: {p}")
+        print("Done. Re-run setup.py to reconfigure.")
+    else:
+        print("  Nothing to remove.")
+
+
 def main():
     print("┌─────────────────────────────────────────┐")
-    print("│   Ghost Skill — Setup                   │")
+    print("│   Ghost Skill - Setup                   │")
     print("└─────────────────────────────────────────┘")
 
     # ── Step 1: Credentials ────────────────────────────────────────────────────
-    print("\n● Step 1/2 — Credentials\n")
+    print("\n● Step 1/2 - Credentials\n")
 
     existing = _load_existing_creds()
     ghost_url = admin_key = ""
@@ -171,18 +166,18 @@ def main():
         print("\n  Testing connection...", end=" ", flush=True)
         ok, info = _test_connection(ghost_url, admin_key)
         if ok:
-            print(f"✓ Connected — site: \"{info}\"")
+            print(f"✓ Connected - site: \"{info}\"")
         else:
-            print(f"✗ Failed — {info}")
+            print(f"✗ Failed - {info}")
             if not _ask_bool("  Save credentials anyway?", default=False):
-                print("  Aborted — no files written.")
+                print("  Aborted - no files written.")
                 sys.exit(1)
 
         _write_creds(ghost_url, admin_key)
         print(f"  ✓ Saved to {CREDS_FILE}")
 
     # ── Step 2: Permissions ────────────────────────────────────────────────────
-    print("\n● Step 2/2 — Permissions\n")
+    print("\n● Step 2/2 - Permissions\n")
     print("  Configure what operations the agent is allowed to perform.\n")
 
     cfg = _load_existing_config()
@@ -190,7 +185,7 @@ def main():
     print("  ── Content creation & editing ──")
     cfg["allow_publish"] = _ask_bool(
         "Allow publishing posts and pages?",
-        default=cfg.get("allow_publish", True),
+        default=cfg.get("allow_publish", False),
         hint="false = drafts only, agent cannot publish",
     )
     cfg["allow_delete"] = _ask_bool(
@@ -224,7 +219,7 @@ def main():
 
     print("\n  ── Safety ──")
     cfg["readonly_mode"] = _ask_bool(
-        "Enable readonly mode? (overrides all above — no writes at all)",
+        "Enable readonly mode? (overrides all above - no writes at all)",
         default=cfg.get("readonly_mode", False),
     )
 
@@ -245,7 +240,7 @@ def main():
         t if isinstance(t, str) else t.get("name", "") for t in cfg["default_tags"]
     ) or "(none)"
     print(f"  Default tags   : {tags_display}")
-    print(f"  Readonly       : {'⚠ ON — all writes blocked' if ro else '✗ off'}")
+    print(f"  Readonly       : {'⚠ ON - all writes blocked' if ro else '✗ off'}")
     print()
     print("  Run init.py to validate that all permissions work:")
     print("    python3 scripts/init.py")
@@ -253,4 +248,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--cleanup" in sys.argv:
+        cleanup()
+    else:
+        main()

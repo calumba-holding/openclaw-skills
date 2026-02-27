@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-init.py — Validate the Ghost skill configuration.
+init.py - Validate the Ghost skill configuration.
 Tests connection and permissions against the live instance.
 
 Write tests (create/update/delete) are only run when allow_delete=true.
@@ -16,7 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ghost import GhostClient, GhostError, PermissionDeniedError
 
 SKILL_DIR   = Path(__file__).resolve().parent.parent
-CONFIG_FILE = SKILL_DIR / "config.json"
+_CONFIG_DIR = Path.home() / ".openclaw" / "config" / "ghost"
+CONFIG_FILE = _CONFIG_DIR / "config.json"
 CREDS_FILE  = Path.home() / ".openclaw" / "secrets" / "ghost_creds"
 
 
@@ -59,7 +60,7 @@ class Results:
 
 def main():
     print("┌─────────────────────────────────────────┐")
-    print("│   Ghost Skill — Init Check              │")
+    print("│   Ghost Skill - Init Check              │")
     print("└─────────────────────────────────────────┘")
 
     # ── Pre-flight ─────────────────────────────────────────────────────────────
@@ -77,7 +78,7 @@ def main():
     cfg = gc.cfg
     ro           = cfg.get("readonly_mode", False)
     allow_delete = cfg.get("allow_delete", False)
-    # Write tests require allow_delete=true to guarantee cleanup — no orphan artifacts.
+    # Write tests require allow_delete=true to guarantee cleanup - no orphan artifacts.
     can_write_test = allow_delete and not ro
 
     r = Results()
@@ -123,22 +124,22 @@ def main():
 
     elif not allow_delete:
         # Cannot guarantee cleanup → skip all write tests to avoid orphan artifacts.
-        r.skip("Write (create draft)",   "allow_delete=false (write test skipped — no cleanup possible)")
+        r.skip("Write (create draft)",   "allow_delete=false (write test skipped - no cleanup possible)")
         r.skip("Write (update post)",    "allow_delete=false")
         r.skip("Publish / Unpublish",    "allow_publish=true" if cfg.get("allow_publish", True) else "allow_publish=false")
-        r.skip("Write (create tag)",     "allow_delete=false (write test skipped — no cleanup possible)")
+        r.skip("Write (create tag)",     "allow_delete=false (write test skipped - no cleanup possible)")
         r.skip("Delete (post + tag)",    "allow_delete=false")
         print(f"\n  ℹ  Write tests skipped: allow_delete=false ensures no test artifacts")
         print(f"     are left on the instance. Write access will be confirmed on first use.")
 
     else:
-        # allow_delete=true — safe to create and clean up test artifacts.
+        # allow_delete=true - safe to create and clean up test artifacts.
 
         # 3. Create draft post
         try:
             post = gc.create_post(
                 title=TEST_TITLE,
-                html="<p>Automated skill init check — safe to delete.</p>",
+                html="<p>Automated skill init check - safe to delete.</p>",
                 status="draft",
             )
             test_post_id = post.get("id")
@@ -173,13 +174,13 @@ def main():
 
         # 6. Create tag
         try:
-            tag = gc.create_tag(TEST_TAG, description="skill init test — safe to delete")
+            tag = gc.create_tag(TEST_TAG, description="skill init test - safe to delete")
             test_tag_id = tag.get("id")
             r.ok("Write (create tag)", f"id={test_tag_id}")
         except Exception as e:
             r.fail("Write (create tag)", str(e))
 
-        # Cleanup — delete test artifacts (guaranteed since allow_delete=true)
+        # Cleanup - delete test artifacts (guaranteed since allow_delete=true)
         if test_post_id:
             try:
                 gc.delete_post(test_post_id)

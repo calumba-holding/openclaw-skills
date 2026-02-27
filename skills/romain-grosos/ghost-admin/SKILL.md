@@ -2,7 +2,7 @@
 name: ghost
 description: "Ghost CMS content management via Admin API v5.x. Use when: (1) creating, editing, or publishing blog posts or static pages, (2) managing tags, (3) uploading images, (4) reading member/newsletter/tier info, (5) checking site settings. NOT for: theme management (needs Ghost CLI), webhook config, email sending (auto on publish), content import/export (use Ghost Admin UI), or multi-site setups."
 homepage: https://github.com/rwx-g/openclaw-skill-ghost
-compatibility: Python 3.9+ · requests · network access to Ghost instance · Admin API Key
+compatibility: Python 3.9+ · network access to Ghost instance · Admin API Key
 metadata:
   {
     "openclaw": {
@@ -12,14 +12,14 @@ metadata:
     }
   }
 ontology:
-  reads: []
-  writes: [posts, pages, tags, images, members]
+  reads: [posts, pages, tags, site, members, newsletters, tiers, users]
+  writes: [posts, pages, tags, images]
 ---
 
 # Ghost Skill
 
-Full Ghost Admin API v5 client. HS256 JWT auth via stdlib — no external dependencies beyond `requests`.
-Credentials: `~/.openclaw/secrets/ghost_creds` · Config: `config.json` in skill dir.
+Full Ghost Admin API v5 client. HS256 JWT auth and all HTTP calls via stdlib (urllib) - zero external dependencies.
+Credentials: `~/.openclaw/secrets/ghost_creds` · Config: `~/.openclaw/config/ghost/config.json`
 
 ## Trigger phrases
 
@@ -47,30 +47,46 @@ python3 scripts/ghost.py posts --limit 3 --fields "id,title,status"
 ## Setup
 
 ```bash
-pip install requests           # install dependency first (setup.py does not run pip)
 python3 scripts/setup.py       # interactive: credentials + permissions + connection test
 python3 scripts/init.py        # validate all configured permissions against live instance
 ```
 
-> init.py only runs write/delete tests when `allow_delete=true`. When `allow_delete=false`, write tests are skipped — no test artifacts are created, so none can be left behind.
+> init.py only runs write/delete tests when `allow_delete=true`. When `allow_delete=false`, write tests are skipped - no test artifacts are created, so none can be left behind.
 
-**Manual** — `~/.openclaw/secrets/ghost_creds` (chmod 600):
+**Manual** - `~/.openclaw/secrets/ghost_creds` (chmod 600):
 ```
 GHOST_URL=https://your-ghost.example.com
 GHOST_ADMIN_KEY=id:secret_hex
 ```
 Admin API Key: Ghost Admin → Settings → Integrations → Add custom integration → copy **Admin API Key**.
 
-**config.json** — behavior restrictions:
+**config.json** - behavior restrictions:
 
 | Key | Default | Effect |
 |-----|---------|--------|
-| `allow_publish` | `true` | allow status=published (false = drafts only) |
+| `allow_publish` | `false` | allow status=published (enable explicitly to publish) |
 | `allow_delete` | `false` | allow delete posts/pages/tags |
 | `allow_member_access` | `false` | enable member read/write |
 | `default_status` | `"draft"` | status applied when not specified |
 | `default_tags` | `[]` | tags always merged into new posts |
 | `readonly_mode` | `false` | override: block all writes |
+
+## Storage & credentials
+
+The skill reads and writes the following paths. All usage is intentional and documented:
+
+| Path | Written by | Purpose |
+|------|-----------|---------|
+| `~/.openclaw/secrets/ghost_creds` | `setup.py` | Ghost credentials (GHOST_URL, GHOST_ADMIN_KEY). chmod 600. Never committed. |
+| `~/.openclaw/config/ghost/config.json` | `setup.py` | Behavior restrictions (allow_publish, allow_delete, etc.). No secrets. Not in skill dir - survives clawhub updates. |
+
+Credentials can also be provided via environment variables (`GHOST_URL`, `GHOST_ADMIN_KEY`). The skill checks env vars first.
+
+**Cleanup on uninstall:** `clawhub uninstall ghost-admin` removes the skill directory. To also remove credentials and config:
+```bash
+python3 scripts/setup.py --cleanup
+```
+On reinstall, any existing config at `~/.openclaw/config/ghost/config.json` is picked up automatically.
 
 ## Module usage
 
@@ -185,7 +201,7 @@ for name in ["DevOps", "Security", "Linux", "Cloud"]:
 ## Notes
 - **`updated_at` conflict guard**: `update_post`/`update_page` auto-fetches `updated_at` if omitted.
 - **HTML content**: Ghost v5 stores Lexical internally but `html` import works perfectly for agent-generated content.
-- **`allow_publish: false`**: Status is silently capped to `"draft"` — no error raised.
+- **`allow_publish: false`**: Status is silently capped to `"draft"` - no error raised.
 - **JWT tokens**: Generated fresh per request (5-min TTL), no caching needed.
 - **Slug**: Auto-generated from title if omitted. Override with `--slug` for clean URLs.
 

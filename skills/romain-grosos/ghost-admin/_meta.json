@@ -3,11 +3,16 @@
   "slug": "ghost-admin",
   "displayName": "Ghost Admin",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1771838910239,
-    "commit": "https://github.com/openclaw/skills/commit/f4870f6dcf5eb54c7e4d47c4777eaa4543623576"
+    "version": "1.2.0",
+    "publishedAt": 1772051481701,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1771838910239,
+      "commit": "https://github.com/openclaw/skills/commit/f4870f6dcf5eb54c7e4d47c4777eaa4543623576"
+    },
     {
       "version": "1.0.5",
       "publishedAt": 1771801843601,

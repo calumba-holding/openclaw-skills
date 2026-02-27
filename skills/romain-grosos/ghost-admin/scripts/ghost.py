@@ -1,38 +1,41 @@
 #!/usr/bin/env python3
 """
-ghost.py — Ghost CMS Admin API client for OpenClaw
+ghost.py - Ghost CMS Admin API client for OpenClaw
 Skill: ghost | https://clawhub.ai
 
 Supports Ghost Admin API v5.x (self-hosted and Ghost Pro).
 Auth: JWT generated from Admin API Key (no external dependencies).
 
-Config  : <skill_dir>/config.json
+Config  : ~/.openclaw/config/ghost/config.json
 Secrets : ~/.openclaw/secrets/ghost_creds  (GHOST_URL, GHOST_ADMIN_KEY)
 
 GHOST_ADMIN_KEY format: <id>:<secret_hex>
   → Ghost Admin → Integrations → Add custom integration → Admin API Key
 """
 
-import base64
-import hashlib
-import hmac
 import json
 import os
 import sys
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from urllib.parse import urljoin
 
-import requests
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from jwt_utils import make_jwt as _make_jwt
+from _retry import with_retry
 
 # ─── Paths ─────────────────────────────────────────────────────────────────────
 
-SKILL_DIR   = Path(__file__).resolve().parent.parent
-CONFIG_FILE = SKILL_DIR / "config.json"
-CREDS_FILE  = Path.home() / ".openclaw" / "secrets" / "ghost_creds"
+SKILL_DIR    = Path(__file__).resolve().parent.parent
+_CONFIG_DIR  = Path.home() / ".openclaw" / "config" / "ghost"
+CONFIG_FILE  = _CONFIG_DIR / "config.json"
+CREDS_FILE   = Path.home() / ".openclaw" / "secrets" / "ghost_creds"
 
 _DEFAULT_CONFIG = {
-    "allow_publish":       True,
+    "allow_publish":       False,
     "allow_delete":        False,
     "allow_member_access": False,
     "default_status":      "draft",
@@ -66,28 +69,12 @@ def _load_creds() -> dict:
     return creds
 
 
-# ─── JWT (stdlib only, no PyJWT needed) ────────────────────────────────────────
-
-def _b64url(data: bytes) -> str:
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
-
-
-def _make_jwt(key_id: str, secret_hex: str) -> str:
-    """Generate a short-lived HS256 JWT for Ghost Admin API auth."""
-    now = int(time.time())
-    header  = {"alg": "HS256", "typ": "JWT", "kid": key_id}
-    payload = {"iat": now, "exp": now + 300, "aud": "/admin/"}
-    h = _b64url(json.dumps(header,  separators=(",", ":")).encode())
-    p = _b64url(json.dumps(payload, separators=(",", ":")).encode())
-    msg    = f"{h}.{p}".encode()
-    secret = bytes.fromhex(secret_hex)
-    sig    = hmac.new(secret, msg, hashlib.sha256).digest()
-    return f"{h}.{p}.{_b64url(sig)}"
-
-
 # ─── Exceptions ────────────────────────────────────────────────────────────────
 
 class GhostError(RuntimeError):
+    pass
+
+class GhostAPIError(GhostError):
     pass
 
 class PermissionDeniedError(GhostError):
@@ -132,39 +119,45 @@ class GhostClient:
             "Accept-Version": "v5.0",
         }
 
+    def _request(self, method: str, endpoint: str, payload: dict = None,
+                 params: dict = None) -> dict:
+        """Generic HTTP request using stdlib urllib."""
+        url = f"{self.api_url}/{endpoint.lstrip('/')}"
+        if params:
+            filtered = {k: v for k, v in params.items() if v is not None}
+            if filtered:
+                url += "?" + urllib.parse.urlencode(filtered)
+        headers = self._headers()
+        body = None
+        if payload is not None:
+            body = json.dumps(payload).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        try:
+            def _do():
+                with urllib.request.urlopen(req) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+            return with_retry(_do)
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise GhostAPIError(f"HTTP {exc.code} {method} {endpoint}: {detail[:300]}")
+        except urllib.error.URLError as exc:
+            raise GhostAPIError(f"Network error {method} {endpoint}: {exc.reason}")
+
     def _get(self, endpoint: str, params: dict = None) -> dict:
-        r = requests.get(
-            f"{self.api_url}/{endpoint.lstrip('/')}",
-            headers=self._headers(), params=params or {},
-        )
-        r.raise_for_status()
-        return r.json()
+        return self._request("GET", endpoint, params=params)
 
     def _post(self, endpoint: str, payload: dict, params: dict = None) -> dict:
         self._check_write()
-        r = requests.post(
-            f"{self.api_url}/{endpoint.lstrip('/')}",
-            headers=self._headers(), json=payload, params=params,
-        )
-        r.raise_for_status()
-        return r.json()
+        return self._request("POST", endpoint, payload=payload, params=params)
 
     def _put(self, endpoint: str, payload: dict, params: dict = None) -> dict:
         self._check_write()
-        r = requests.put(
-            f"{self.api_url}/{endpoint.lstrip('/')}",
-            headers=self._headers(), json=payload, params=params,
-        )
-        r.raise_for_status()
-        return r.json()
+        return self._request("PUT", endpoint, payload=payload, params=params)
 
     def _delete(self, endpoint: str) -> bool:
         self._check_delete()
-        r = requests.delete(
-            f"{self.api_url}/{endpoint.lstrip('/')}",
-            headers=self._headers(),
-        )
-        r.raise_for_status()
+        self._request("DELETE", endpoint)
         return True
 
     # ── Config enforcement ─────────────────────────────────────────────────────
@@ -185,7 +178,7 @@ class GhostClient:
 
     def _resolve_status(self, requested_status: str) -> str:
         """Enforce allow_publish: if False, cap status at 'draft'."""
-        if requested_status == "published" and not self.cfg.get("allow_publish", True):
+        if requested_status == "published" and not self.cfg.get("allow_publish", False):
             return "draft"
         if requested_status is None:
             return self.cfg.get("default_status", "draft")
@@ -303,7 +296,7 @@ class GhostClient:
 
     def publish_post(self, post_id: str) -> dict:
         """Publish a draft post."""
-        if not self.cfg.get("allow_publish", True):
+        if not self.cfg.get("allow_publish", False):
             raise PermissionDeniedError("allow_publish is disabled in config.json")
         return self.update_post(post_id, status="published")
 
@@ -346,7 +339,7 @@ class GhostClient:
         return self._delete(f"pages/{page_id}")
 
     def publish_page(self, page_id: str) -> dict:
-        if not self.cfg.get("allow_publish", True):
+        if not self.cfg.get("allow_publish", False):
             raise PermissionDeniedError("allow_publish is disabled in config.json")
         return self.update_page(page_id, status="published")
 
@@ -403,18 +396,40 @@ class GhostClient:
             ".svg": "image/svg+xml", ".webp": "image/webp",
         }
         mime = mime_map.get(path.suffix.lower(), "application/octet-stream")
-        token = _make_jwt(self._key_id, self._secret_hex)
-        headers = {"Authorization": f"Ghost {token}", "Accept-Version": "v5.0"}
-        files   = {"file": (path.name, path.read_bytes(), mime)}
-        data    = {}
-        if alt_text: data["alt"] = alt_text
-        if ref:      data["ref"] = ref
-        r = requests.post(
-            f"{self.api_url}/images/upload",
-            headers=headers, files=files, data=data,
+        boundary = f"----GhostUpload{int(time.time() * 1000)}"
+        file_bytes = path.read_bytes()
+        parts = []
+        parts.append(
+            f"--{boundary}\r\nContent-Disposition: form-data; "
+            f'name="file"; filename="{path.name}"\r\n'
+            f"Content-Type: {mime}\r\n\r\n".encode()
+            + file_bytes + b"\r\n"
         )
-        r.raise_for_status()
-        return r.json().get("images", [{}])[0]
+        for field, value in [("alt", alt_text), ("ref", ref)]:
+            if value:
+                parts.append(
+                    f"--{boundary}\r\nContent-Disposition: form-data; "
+                    f'name="{field}"\r\n\r\n{value}\r\n'.encode()
+                )
+        parts.append(f"--{boundary}--\r\n".encode())
+        body = b"".join(parts)
+        token = _make_jwt(self._key_id, self._secret_hex)
+        headers = {
+            "Authorization": f"Ghost {token}",
+            "Accept-Version": "v5.0",
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Content-Length": str(len(body)),
+        }
+        url = f"{self.api_url}/images/upload"
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            def _do():
+                with urllib.request.urlopen(req) as resp:
+                    return json.loads(resp.read().decode("utf-8")).get("images", [{}])[0]
+            return with_retry(_do)
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise GhostAPIError(f"HTTP {exc.code} image upload: {detail[:300]}")
 
     # ── Members ────────────────────────────────────────────────────────────────
 
@@ -596,7 +611,7 @@ def _cli():
         jout(gc.update_post(args.post_id, **fields))
 
     elif args.cmd == "post-delete":
-        gc.delete_post(args.post_id); print(f"✓ post {args.post_id} deleted")
+        gc.delete_post(args.post_id); jout({"ok": True, "action": "delete", "resource": "post", "id": args.post_id})
 
     elif args.cmd == "post-publish":
         jout(gc.publish_post(args.post_id))
@@ -617,7 +632,7 @@ def _cli():
         jout(gc.update_page(args.page_id, **json.loads(args.fields_json)))
 
     elif args.cmd == "page-delete":
-        gc.delete_page(args.page_id); print(f"✓ page {args.page_id} deleted")
+        gc.delete_page(args.page_id); jout({"ok": True, "action": "delete", "resource": "page", "id": args.page_id})
 
     elif args.cmd == "page-publish":
         jout(gc.publish_page(args.page_id))
@@ -638,7 +653,7 @@ def _cli():
         jout(gc.update_tag(args.tag_id, **json.loads(args.fields_json)))
 
     elif args.cmd == "tag-delete":
-        gc.delete_tag(args.tag_id); print(f"✓ tag {args.tag_id} deleted")
+        gc.delete_tag(args.tag_id); jout({"ok": True, "action": "delete", "resource": "tag", "id": args.tag_id})
 
     elif args.cmd == "image-upload":
         jout(gc.upload_image(args.file, alt_text=args.alt, ref=args.ref))
