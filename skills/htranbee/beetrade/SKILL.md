@@ -74,3 +74,7 @@ Use [references/commands.md](references/commands.md) for the full command catalo
 - Config file location: `~/.beecli/config.json`
 - Default API URL: `https://api.prod.beetrade.com/api/v2`
 - Command actions generally emit JSON; CLI help/argument validation output may not be JSON.
+
+## Risk Classification
+
+The skill provides access to a powerful CLI tool (`beecli`) for managing trading accounts, bots, and live trading operations, which inherently carries high risk. While the SKILL.md includes explicit `Safety Rules` and an `Execution Workflow` designed to mitigate prompt injection by requiring user confirmation for sensitive actions (e.g., live trading, deletions, credential updates, custom API URLs for login), the underlying capabilities remain high-risk. The `~/.beecli/config.json` file, which stores sensitive `accessToken` and `refreshToken`, is also a potential target for exfiltration if the agent's safety rules were bypassed. The skill is classified as suspicious due to these high-risk capabilities and the inherent prompt injection surface, despite the good-faith attempt at mitigation, as a successful bypass could lead to significant financial or security impact.
