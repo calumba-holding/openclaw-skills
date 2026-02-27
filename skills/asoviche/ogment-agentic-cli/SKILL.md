@@ -1,84 +1,95 @@
----
-name: ogment
-description: Access business integrations (SaaS, APIs, data) securely through Ogment. Use when the user asks to query, create, update, or manage data in external systems like Salesforce, Notion, Slack, databases, or any connected service.
-metadata: {"openclaw":{"emoji":"🦞","requires":{"bins":["ogment"]},"install":[{"id":"npm","kind":"node","package":"ogment","bins":["ogment"],"label":"Install Ogment CLI (npm)"}]}}
----
+# Ogment CLI Skill
 
-# Ogment
+Securely invoke MCP tools via the Ogment CLI. Use for accessing user's connected SaaS tools (Linear, Notion, Gmail, PostHog, etc.) through Ogment's governance layer.
 
-Ogment gives you secure access to business integrations — SaaS tools, internal APIs, and data — through a single CLI. Credentials never leave Ogment. You get scoped, revocable tokens with per-tool permissions and human approval flows.
+## When to Use
 
-## Setup (one-time)
+- User asks to interact with their connected services (issues, docs, emails, analytics)
+- You need to call MCP tools that require auth/credentials
+- Discovering what integrations the user has available
 
-If `ogment` is not installed or any command fails with "not logged in":
+## Core Workflow
 
-1. Install: `npm install -g ogment`
-2. Ask the user to run `ogment login` in their terminal (opens browser for OAuth — zero arguments needed)
-3. Login is a one-time step. After authenticating, all servers and tools are available automatically.
+status → catalog → catalog <server> → catalog <server> <tool> → invoke
 
-## Commands
+### 1. Check connectivity (if issues suspected)
 
-**Discover servers:**
-```bash
-ogment servers --json
-```
-Returns all available servers across all organizations.
+ogment status
 
-**Inspect a server's tools:**
-```bash
-ogment servers <server-path> --json
-```
-Returns the full list of tools with names, descriptions, and input schemas.
+Returns auth state, connectivity, and available servers. Check summary.status for quick health.
 
-**Call a tool:**
-```bash
-ogment call <server-path> <tool-name> '<json-args>'
-```
-Returns JSON. Arguments must be a single JSON string. Omit args for tools that take no parameters.
+### 2. Discover servers
 
-## Workflow
+ogment catalog
 
-Follow these steps in order:
+Returns list of servers with serverId and toolCount. Use serverId in subsequent calls.
 
-1. Run `ogment servers --json` to discover available servers
-2. Pick the server relevant to the user's request
-3. Run `ogment servers <path> --json` to see that server's tools
-4. Call the appropriate tool with `ogment call <server> <tool> '<args>'`
-5. Parse the JSON response and present results to the user
-6. If the user needs a different integration, go back to step 1
+### 3. List tools on a server
 
-## Examples
+ogment catalog <serverId>
 
-```bash
-# Discover all servers
-ogment servers --json
+Returns all tools with name and description. Scan descriptions to find the right tool.
 
-# Inspect tools on a server
-ogment servers salesforce --json
+### 4. Inspect tool schema
 
-# Query data
-ogment call salesforce query_accounts '{"limit":5}'
-ogment call notion search '{"query":"Q1 roadmap"}'
-ogment call data-warehouse run_query '{"sql":"SELECT * FROM orders LIMIT 10"}'
+ogment catalog <serverId> <toolName>
 
-# Create records
-ogment call salesforce create_record '{"type":"Contact","fields":{"Name":"Jane Doe","Email":"jane@example.com"}}'
+Returns inputSchema with properties, types, required fields, and descriptions.
 
-# Health check (no args)
-ogment call my-api get__health
-```
+### 5. Invoke a tool
 
-## Handling Errors
+ogment invoke <serverId>/<toolName> --input '<json>'
 
-- **"not logged in"** — ask the user to run `ogment login` in their terminal
-- **"server not found"** — run `ogment servers --json` to see available servers
-- **approval link returned** — the tool requires human approval. Show the approval URL to the user and ask them to approve. Then retry the same tool call.
-- **401 / authentication error** — the token may be expired. Ask the user to run `ogment logout` then `ogment login`
+Input can be:
+- Inline JSON: --input '{"query": "test"}'
+- File: --input @path/to/input.json
+- Stdin: echo '{}' | ogment invoke ... --input -
 
-## Important
+## Output Format
 
-- Always use `--json` when discovering servers and tools
-- `ogment call` returns JSON by default — no `--json` flag needed
-- Arguments to `ogment call` must be a single JSON string
-- Do not store or log tokens — Ogment handles all credentials server-side
-- Each tool call is authenticated, permission-checked, and logged by Ogment
+All commands return structured JSON with ok, data, error, meta, and next_actions fields.
+
+- Check ok first — boolean success indicator
+- next_actions — suggested follow-up commands
+- error.category — validation, not_found, remote, auth, internal
+- error.retryable — whether retry might help
+
+## Common Patterns
+
+### Find a tool by intent
+ogment catalog <serverId> | jq '.data.tools[] | select(.name + .description | test("email"; "i"))'
+
+### List issues assigned to user
+ogment invoke openclaw/Linear_list_issues --input '{"assignee": "me"}'
+
+### Search Notion
+ogment invoke openclaw/Notion_notion-search --input '{"query": "quarterly review", "query_type": "internal"}'
+
+### Get Gmail messages
+ogment invoke openclaw/gmail_listMessages --input '{"q": "is:unread", "maxResults": 10}'
+
+## Gotchas & Workarounds
+
+1. Opaque server errors - Re-check schema, verify required fields and types
+2. Example placeholders are broken - Ignore exampleInput, construct your own
+3. Server/tool IDs are case-sensitive - Use exact casing from catalog
+4. Empty strings cause 502s - Validate inputs before calling
+5. --quiet suppresses everything - Don't use it
+6. No tool search/filter - Pipe to jq and filter locally
+
+## Error Recovery
+
+TOOL_NOT_FOUND → Run ogment catalog to rediscover
+VALIDATION_INVALID_INPUT → Check JSON syntax
+TRANSPORT_REQUEST_FAILED → Check schema, required fields, types
+AUTH_INVALID_CREDENTIALS → Run ogment auth login
+HTTP_502 → Retry after delay
+
+## Pre-flight Checklist
+
+Before invoking a tool:
+1. Confirmed server exists (catalog)
+2. Confirmed tool exists (catalog <server>)
+3. Checked required fields in schema
+4. Matched types exactly (number vs string)
+5. Used exact casing for IDs
