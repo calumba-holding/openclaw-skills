@@ -5,6 +5,12 @@ description: Backtest stock trading strategies on historical OHLCV data and repo
 
 # Stock Strategy Backtester
 
+## Version Notice
+
+- `1.0.0` and `1.0.1` are deprecated.
+- Use `1.0.2` or newer only.
+- Deprecation reason: early versions bundled non-core marketplace automation files and may trigger security scanner warnings in some environments.
+
 ## Overview
 
 Run repeatable, long-only stock strategy backtests from daily OHLCV CSV files.
