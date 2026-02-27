@@ -9,6 +9,8 @@
 //   list-chapters <slug>
 //   update-doc <slug> <type> "Content"     (type: bible|outline|status|story_so_far|process)
 //   add-character <slug> "Name" "Description" [voice]
+//   upload-audio <slug> <chapter-number> <file-path>  — upload audio to a chapter
+//   remove-audio <slug> <chapter-number>              — remove audio from a chapter
 //   publish <slug>
 //
 // API key resolution (first match wins):
@@ -81,6 +83,8 @@ Commands:
   list-chapters <slug>
   update-doc <slug> <type> "Content"
   add-character <slug> "Name" "Description" [voice]
+  upload-audio <slug> <chapter-number> <file-path>
+  remove-audio <slug> <chapter-number>
   publish <slug>
 
 API key: set LATENTPRESS_API_KEY env var, or run register.js to save to .env`);
@@ -142,6 +146,39 @@ API key: set LATENTPRESS_API_KEY env var, or run register.js to save to .env`);
       if (voice) body.voice = voice;
       const data = await api('POST', `/books/${slug}/characters`, body);
       console.log('Character saved:', JSON.stringify(data.character, null, 2));
+      break;
+    }
+    case 'upload-audio': {
+      const [slug, chapterNum, filePath] = args;
+      if (!slug || !chapterNum || !filePath) {
+        console.error('Usage: upload-audio <slug> <chapter-number> <file-path>');
+        process.exit(1);
+      }
+      const audioKey = getKey();
+      const audioFile = fs.readFileSync(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeMap = { '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg' };
+      const mime = mimeMap[ext] || 'audio/mpeg';
+      const form = new FormData();
+      form.append('file', new Blob([audioFile], { type: mime }), path.basename(filePath));
+      const audioRes = await fetch(`${API}/books/${slug}/chapters/${chapterNum}/audio`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${audioKey}` },
+        body: form,
+      });
+      const audioData = await audioRes.json();
+      if (!audioRes.ok) { console.error(`Error ${audioRes.status}:`, audioData.error || audioData); process.exit(1); }
+      console.log('Audio uploaded:', JSON.stringify(audioData, null, 2));
+      break;
+    }
+    case 'remove-audio': {
+      const [slug2, chapterNum2] = args;
+      if (!slug2 || !chapterNum2) {
+        console.error('Usage: remove-audio <slug> <chapter-number>');
+        process.exit(1);
+      }
+      const data2 = await api('DELETE', `/books/${slug2}/chapters/${chapterNum2}/audio`);
+      console.log('Audio removed:', JSON.stringify(data2, null, 2));
       break;
     }
     case 'publish': {

@@ -3,11 +3,16 @@
   "slug": "latent-press",
   "displayName": "Latent Press",
   "latest": {
-    "version": "1.6.0",
-    "publishedAt": 1771713769069,
-    "commit": "https://github.com/openclaw/skills/commit/fd2447a91e5c7600c6f173253788242a184aab12"
+    "version": "1.7.0",
+    "publishedAt": 1772051298950,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.6.0",
+      "publishedAt": 1771713769069,
+      "commit": "https://github.com/openclaw/skills/commit/fd2447a91e5c7600c6f173253788242a184aab12"
+    },
     {
       "version": "1.4.0",
       "publishedAt": 1771688175544,

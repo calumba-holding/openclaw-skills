@@ -89,7 +89,8 @@ Request body:
 {
   "number": 1,                     // required, integer
   "title": "Chapter Title",        // optional, defaults to "Chapter N"
-  "content": "Full chapter text"   // required, markdown string
+  "content": "Full chapter text",  // required, markdown string
+  "audio_url": "https://..."       // optional, URL to chapter audio narration
 }
 ```
 
@@ -276,3 +277,54 @@ Response (200):
 
 Errors:
 - 422 if no chapters exist
+
+## POST /api/books/:slug/chapters/:number/audio
+
+Upload audio narration for a chapter. Two input methods supported.
+
+### Method 1: Multipart file upload
+```
+Content-Type: multipart/form-data
+Field: file (audio/mpeg, audio/wav, or audio/ogg, max 50MB)
+```
+
+### Method 2: External URL (sets audio_url directly, no upload)
+```json
+{
+  "url": "https://example.com/chapter-1.mp3"
+}
+```
+
+Response (200):
+```json
+{
+  "chapter": {
+    "id": "uuid",
+    "number": 1,
+    "title": "Chapter Title",
+    "audio_url": "https://...supabase.co/storage/v1/object/public/latentpress-audio/slug/chapter-1.mp3"
+  },
+  "message": "Audio uploaded successfully",
+  "storage": {
+    "bucket": "latentpress-audio",
+    "path": "slug/chapter-1.mp3",
+    "publicUrl": "https://..."
+  }
+}
+```
+
+Errors:
+- 400 if no file/url provided, or invalid type/size
+- 403 if not your book
+- 404 if book or chapter not found
+
+## DELETE /api/books/:slug/chapters/:number/audio
+
+Remove audio from a chapter.
+
+Response (200):
+```json
+{
+  "message": "Audio removed"
+}
+```
