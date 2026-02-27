@@ -686,7 +686,8 @@ Content-Type: application/json
   "input_mint": "So11111111111111111111111111111112",
   "output_mint": "2BZm...",
   "amount": 100000000,
-  "slippage_bps": 300
+  "slippage_bps": 300,
+  "wallet_address": "EQ7CzwjgzkZmpQ1RWThBAdjk3VkVLVrzZWU9ZdCPwAUN"
 }
 ```
 
@@ -696,6 +697,7 @@ Content-Type: application/json
 | `output_mint` | string | Yes | Token to buy. `So111...112` for SOL. |
 | `amount` | integer | Yes | Amount in smallest unit (lamports for SOL). Must be > 0. |
 | `slippage_bps` | integer | Yes | Slippage tolerance in basis points (1-5000). 300 = 3%. |
+| `wallet_address` | string | No | Caller's wallet to use as tx fee payer / signer. If omitted, defaults to the wallet associated with the API key. **Recommended for local signing.** |
 
 **Response:**
 ```json
@@ -710,13 +712,17 @@ Content-Type: application/json
     "platform_fee_lamports": "1000000",
     "platform_fee_rate": "0.01",
     "minimum_out_amount": "1455000000"
-  }
+  },
+  "fee_payer": "EQ7CzwjgzkZmpQ1RWThBAdjk3VkVLVrzZWU9ZdCPwAUN",
+  "signers": ["EQ7CzwjgzkZmpQ1RWThBAdjk3VkVLVrzZWU9ZdCPwAUN"]
 }
 ```
 
 **Notes:**
 - The transaction contains a recent blockhash which expires after ~60 seconds. Sign and submit promptly.
 - Platform fee is embedded as a SOL transfer instruction. Only charged on SOL-involved swaps.
+- When `wallet_address` is provided, `fee_payer` and `signers` in the response confirm which keys must sign. **Always verify `fee_payer` matches your wallet before signing.**
+- Without `wallet_address`, the API uses the wallet tied to your API key, which may differ from your agent's trading wallet — causing signer mismatch errors during local signing.
 
 ### 3. POST /agent/submit
 

@@ -1,6 +1,6 @@
 ---
 name: kryptogo-meme-trader
-version: 2.1.0
+version: 2.4.1
 description: Analyze and trade meme coins using KryptoGO's on-chain cluster analysis platform. Covers wallet clustering, address labels, accumulation/distribution detection, and automated swap execution via the Agent Trading API.
 author: KryptoGO
 license: MIT
@@ -134,7 +134,7 @@ After installing this skill, complete these steps in order:
 2. [ ] Run `python3 scripts/setup.py` to generate agent wallet
 3. [ ] Fund the agent wallet with SOL (min 0.1 SOL)
 4. [ ] Tell the agent your trading preferences (max position size, risk tolerance, etc.)
-5. [ ] Set up periodic monitoring — see [Heartbeat & Cron Integration](#heartbeat--cron-integration)
+5. [ ] Set up automated monitoring — run `bash scripts/cron-examples.sh setup-default` or see [Automated Monitoring (Cron)](#automated-monitoring-cron)
 
 ---
 
@@ -255,12 +255,7 @@ If any limit is hit, the agent **must stop and notify the user** — never silen
 
 ### Kill Switch
 
-To immediately stop all autonomous trading:
-1. **Remove the Trading Agent section from HEARTBEAT.md** — stops heartbeat-triggered trading
-2. **Run `openclaw cron remove <name>`** — stops cron-triggered trading
-3. **Remove or rename `.env`** — prevents any API calls or signing
-
-The agent has no persistence mechanism beyond HEARTBEAT.md and cron entries. Removing those stops all autonomous behavior.
+See [Automated Monitoring — Kill Switch](#kill-switch) for how to stop all autonomous trading.
 
 ### Audit Trail
 
@@ -273,17 +268,81 @@ These files are human-readable and can be reviewed at any time.
 
 ---
 
-## Heartbeat & Cron Integration
+## Automated Monitoring (Cron)
 
-### First-Time Auto-Setup
+The recommended setup uses **two OpenClaw cron jobs** working together:
 
-**Agent instruction:** The first time this skill is loaded in a conversation, check if HEARTBEAT.md already contains a "Trading Agent" section. If not, **proactively offer to add it** — ask the user: "I can set up periodic trading monitoring. Should I add it to your HEARTBEAT.md?" If confirmed, append the heartbeat block below.
+| Job | Interval | Purpose |
+|-----|----------|---------|
+| `stop-loss-tp` | Every **5 min** | Check portfolio, execute stop-loss / take-profit |
+| `discovery-scan` | Every **30 min** | Discover new tokens, analyze, and auto-buy qualifying ones |
 
-> Note: OpenClaw does not auto-modify HEARTBEAT.md on skill install. The agent must do this on first use.
+This separation ensures time-sensitive exit orders run frequently, while the heavier discovery + analysis pipeline runs at a sustainable pace.
 
-### Heartbeat — Periodic Monitoring (~30 min intervals)
+### Default Setup (Recommended)
 
-Add the following to your `HEARTBEAT.md`:
+Run this to install both cron jobs:
+
+```bash
+bash scripts/cron-examples.sh setup-default
+```
+
+Or add them manually:
+
+```bash
+# Job 1: Stop-loss / Take-profit — every 5 minutes
+openclaw cron add \
+  --every 5m \
+  --name "stop-loss-tp" \
+  --prompt "Load the kryptogo-meme-trader skill. Source .env. Call /agent/portfolio with the agent wallet.
+For each open position:
+- If unrealized PnL ≤ -stop_loss_pct → sell entire position (stop-loss).
+- If unrealized PnL ≥ +take_profit_pct → sell entire position (take-profit).
+Read thresholds from memory/trading-preferences.json (defaults: stop_loss_pct=30, take_profit_pct=100).
+Report every executed trade to the user. If no action taken, stay silent."
+
+# Job 2: Discovery & Analysis — every 30 minutes
+openclaw cron add \
+  --every 30m \
+  --name "discovery-scan" \
+  --prompt "Load the kryptogo-meme-trader skill. Source .env. Execute the full discovery workflow:
+1. Read memory/trading-preferences.json for current parameters.
+2. Read memory/trading-lessons.md (if exists) to avoid known bad patterns.
+3. Check open positions count — skip buying if at max_open_positions.
+4. Scan for candidates:
+   - Pro/Alpha tier: call /signal-dashboard (sort_by=signal_count, page_size=10).
+   - Free tier: call /agent/trending-tokens with min_market_cap filter.
+5. Run top candidates through the 7-step analysis pipeline.
+6. For tokens passing ALL criteria in the Bullish Checklist: execute buy with max_position_size.
+   For 'medium' risk: ask user for confirmation (unless risk_tolerance='aggressive').
+7. Log any new trades to memory/trading-journal.json.
+8. Update memory/trading-state.json with scan timestamp.
+9. If any trades were closed since last scan: run post-trade reflection and update trading-lessons.md.
+10. If 20+ trades or 7+ days since last review: trigger Strategy Review.
+Report ALL actions to the user. If nothing happened, stay silent."
+```
+
+### Quick Commands
+
+```bash
+# List active cron jobs
+openclaw cron list
+
+# Pause trading (remove both jobs)
+openclaw cron remove stop-loss-tp
+openclaw cron remove discovery-scan
+
+# Resume trading
+bash scripts/cron-examples.sh setup-default
+```
+
+### First-Time Auto-Setup (Agent Instruction)
+
+The first time this skill is loaded in a conversation, check if the `stop-loss-tp` and `discovery-scan` cron jobs already exist (via `openclaw cron list`). If not, **proactively offer to set them up** — ask the user: "I can set up automated stop-loss (every 5 min) and discovery scanning (every 30 min). Want me to add these cron jobs?" If confirmed, run `bash scripts/cron-examples.sh setup-default`.
+
+### Alternative: Heartbeat-Based Monitoring
+
+If you prefer a simpler setup (one check every ~30 min instead of two separate cron jobs), add this to `HEARTBEAT.md`:
 
 ```markdown
 ## Trading Agent
@@ -294,44 +353,22 @@ Add the following to your `HEARTBEAT.md`:
 - ALWAYS report any trade executed to the user — never silent HEARTBEAT_OK after trading
 ```
 
-**Heartbeat is best for:** 30-minute-level monitoring where slight timing drift is acceptable. Multiple checks (portfolio + scan) batch into a single heartbeat turn, saving API calls.
+**Tradeoff:** Heartbeat batches everything into one turn (~30 min intervals). This means stop-loss could be delayed up to 30 minutes. Use cron if you need faster exit execution.
 
-### Cron — Precise Scheduling (5-15 min intervals)
+### Monitoring Workflow
 
-For more frequent or precisely timed scans, use OpenClaw cron instead of heartbeat:
-
-```bash
-# Example: scan every 15 minutes during market hours (UTC)
-openclaw cron add --every 15m --name "trading-scan" --prompt "Run the kryptogo-meme-trader scan workflow: check portfolio for stop-loss/take-profit, then scan top 10 trending tokens. Execute qualifying trades. Report any actions taken."
-
-# Example: daily portfolio summary at 9 AM Taipei time (1 AM UTC)
-openclaw cron add --cron "0 1 * * *" --name "daily-portfolio" --prompt "Call /agent/portfolio and send me a daily summary of all open positions with PnL."
-
-# List active crons
-openclaw cron list
-
-# Remove a cron
-openclaw cron remove trading-scan
-```
-
-**Cron is best for:** exact timing, high-frequency scans (every 5-15 min), standalone tasks that don't need conversational context, or when you want a different model/thinking level.
-
-**Recommendation:** Use heartbeat for casual monitoring (check every ~30 min). Switch to cron if you want aggressive 5-15 min scan intervals or precise daily reports.
-
-### Heartbeat Workflow
-
-1. **Portfolio check** → Call `/agent/portfolio` with agent's wallet address
+1. **Portfolio check** (every 5 min via `stop-loss-tp`)
    - Execute stop-loss if unrealized loss > `stop_loss_pct`
    - Execute take-profit if unrealized gain > `take_profit_pct`
    - Flag stale positions (held > 7 days with no significant movement)
-2. **Signal scan** → Choose source based on subscription tier:
+2. **Signal scan** (every 30 min via `discovery-scan`)
    - **Pro/Alpha tier:** Use `/signal-dashboard` first — these are system-curated accumulation signals (clusters actively buying). Higher quality than raw trending lists because they're pre-filtered for smart money activity. Parameters: `chain_id`, `sort_by=signal_count`, `page_size=10`.
    - **Free tier:** Fall back to `/agent/trending-tokens` with filters (`min_market_cap`, `min_liquidity`, etc.)
    - Run top results through the 7-step analysis pipeline
    - Auto-trade if all criteria pass; ask user if risk = "medium"
 3. **State persistence** → Save to `memory/trading-state.json`
    - Tracks: last scan time, open positions, pending user reviews
-   - On next session/heartbeat, read this file to resume state
+   - On next scan, read this file to resume state
 4. **Learning check** → If any trades were closed since last check:
    - Log outcome to `memory/trading-journal.json`
    - Run post-trade reflection (mandatory for every closed trade)
@@ -340,16 +377,25 @@ openclaw cron remove trading-scan
 
 ### Notification Rules
 
-**Mandatory — agent MUST message the user (never silent HEARTBEAT_OK) when:**
+**Mandatory — agent MUST message the user when:**
 - Any trade is executed (buy or sell)
 - A stop-loss or take-profit is triggered
 - A position is flagged for manual review (medium risk, stale, etc.)
 - An error prevents normal operation (API down, insufficient SOL, quota exceeded)
 
-**Silent HEARTBEAT_OK is OK when:**
+**Stay silent when:**
 - Portfolio checked, no action needed
 - Tokens scanned, none qualified
 - Everything nominal
+
+### Kill Switch
+
+To immediately stop all autonomous trading:
+1. **Remove cron jobs:** `openclaw cron remove stop-loss-tp && openclaw cron remove discovery-scan`
+2. **Remove Trading Agent section from HEARTBEAT.md** (if using heartbeat mode)
+3. **Remove or rename `.env`** — prevents any API calls or signing
+
+The agent has no persistence mechanism beyond cron entries and HEARTBEAT.md. Removing those stops all autonomous behavior.
 
 ### Failure Recovery
 
@@ -362,11 +408,15 @@ If the agent crashes or session ends mid-trade:
 
 ## On-Chain Analysis Framework (7-Step Pipeline)
 
-### Step 1: Token Overview
+### Step 1: Token Overview & Market Cap Filter
 
 Call `/token-overview?address=<mint>&chain_id=<id>` — get name, price, market cap, holders, risk_level, liquidity.
 
 **Filter:** Skip if market cap < user's `min_market_cap`.
+
+**Early filtering from signal data:** When tokens come from `/signal-dashboard` or `/agent/trending-tokens`, the response already includes `current_price` and `total_supply`. You can compute `market_cap ≈ current_price * total_supply` immediately — no need to call `/token-overview` just for the first-pass market cap filter. This saves API calls on tokens that will be discarded anyway.
+
+**Preferences integration:** Always read `memory/trading-preferences.json` first and apply `min_market_cap` at the signal level before entering the full pipeline.
 
 ### Step 2: Cluster Analysis
 
@@ -379,20 +429,49 @@ Call `/analyze/<mint>?chain_id=<id>` — get wallet clusters, top holders, addre
 
 **Scam rule:** If a SINGLE cluster holds >50% of supply → skip (rug pull risk).
 
-### Step 3: Cluster Trend
+### Step 3: Cluster Trend (Multi-Timeframe)
 
-Call `/analyze-cluster-change/<mint>` — get ratio changes across 15m/1h/4h/1d/7d.
+Call `/analyze-cluster-change/<mint>` — get `cluster_ratio` and `changes` across 15m/1h/4h/1d/7d.
 
 **Core insight:** Price and cluster holdings DIVERGING is the most important signal.
 - Rising price + falling cluster % = distribution (bearish)
 - Falling price + rising cluster % = accumulation (bullish)
 
-### Step 4: Address Labels
+**Multi-timeframe interpretation:**
+
+| Timeframe | Purpose | Example |
+|-----------|---------|---------|
+| **7d** | Long-term trend — sustained accumulation vs. sustained distribution | 7d > 0 = week-long buying; 7d < 0 = week-long selling |
+| **1d** | Recent re-accumulation — did the entity start buying again? | 1d > 0 after 7d < 0 = potential reversal |
+| **4h** | Mid-term distribution detection | 4h < -5% = consider reducing or skipping entry |
+| **15m / 1h** | Short-term timing — wash trading, consolidation, or knife-catching | Used for entry timing, not for conviction |
+
+**Read together:** A token with 7d slightly negative but 1d positive suggests "mid-term correction followed by re-accumulation" — often a good entry if other signals align.
+
+### Step 4: Address Labels + Sell Pressure Verification
 
 Call `/token-wallet-labels` for token-specific labels (developer, sniper, bundle, new_wallet).
 Call `/wallet-labels` for behavior labels (smart_money, whale, blue_chip_profit, high_frequency).
 
-**Check sell pressure:** Developer/sniper/bundle still holding = high dump risk.
+> **Critical rule:** Labels represent *behavioral history*, not current holdings. Any risk judgment MUST be combined with `/balance-history` to check current balances.
+
+**Correct flow for assessing dev/sniper/bundle risk:**
+
+1. **Get labeled addresses** — call `/token-wallet-labels` to identify wallets tagged as `developer`, `sniper`, or `bundle`.
+2. **Check current balance** — for each risky address, call `/balance-history` with the specific `token_mint`:
+   - Look at the most recent balance entry.
+   - If balance ≈ 0 → the address has **exited** — do NOT count as risk.
+   - If balance is still significant → this is a **potential dump source**.
+3. **Compute risky holding ratio:**
+   ```
+   risky_ratio = (sum of tokens held by active dev/sniper/bundle wallets) / (total cluster holdings)
+   ```
+4. **Classify risk level:**
+   - `risky_ratio > 30%` → **high** — skip or require user confirmation
+   - `risky_ratio 10%–30%` → **medium** — proceed with caution
+   - `risky_ratio < 10%` → **low** — risk addresses have largely exited
+
+**Common mistake (do NOT do this):** Seeing `developer` or `sniper` labels and immediately marking the token as "HIGH RISK" without checking balances. Many risky addresses sell early and have zero balance by the time you analyze.
 
 ### Step 5: Deep Dive (Optional)
 
@@ -402,24 +481,52 @@ Call `/wallet-labels` for behavior labels (smart_money, whale, blue_chip_profit,
 - `/analyze-dca-limit-orders/<mint>` — DCA/limit order detection (Solana only)
 - `/cluster-wallet-connections` — fund flow between wallets
 
+**Holding Trend Analysis** — For a deeper conviction check, combine multiple API calls to track how key groups' holdings change over time as a percentage of total supply:
+
+1. Get `total_supply` from `/token-overview`
+2. Extract cluster wallet addresses and smart money addresses from `/analyze/<mint>`
+3. Call `/balance-history` with those wallets aggregated to get daily balances
+4. Compute `(balance / total_supply) * 100` for each day
+
+This reveals whether clusters and smart money are **steadily accumulating** (bullish) or **gradually distributing** (bearish) — a more granular signal than the snapshot cluster ratio from Step 2.
+
+> See `examples/deep-analysis-workflow.py` for a complete Python implementation of this technique.
+
 ### Step 6: Decision
 
 Apply the Bullish Checklist from the Decision Framework:
-- Market cap ≥ $500K
+- Market cap ≥ user's `min_market_cap`
 - Cluster ratio ≥ 30% and rising
 - Smart money/whale clusters increasing
-- Developer/sniper/bundle positions cleared
+- Developer/sniper/bundle positions cleared (verified via `/balance-history`, not just labels)
 - No high proportion of new wallets or high-frequency traders
 
 > Full decision framework: see `references/decision-framework.md`
 
+**Example: "Buy" decision (template)**
+
+A token with these characteristics is a reasonable entry with `max_position_size`:
+
+| Factor | Value | Assessment |
+|--------|-------|------------|
+| Market cap | ~$500K | ≥ min_market_cap |
+| Liquidity | ~$170K | Sufficient for position size |
+| Cluster ratio | ~31% | Controlled — major entity present |
+| 1d cluster change | > 0 | Recent re-accumulation |
+| 7d cluster change | Slightly negative | Prior distribution phase ended |
+| Dev/sniper/bundle | All exited (balance ≈ 0 via `/balance-history`) | No active dump risk |
+| Conclusion | **Mid-correction re-accumulation** — acceptable risk for trial position using `max_position_size` |
+
 ### Step 7: Execute Trade
 
 If all checks pass:
-1. `POST /agent/swap` — build unsigned transaction
-2. Sign locally with `solders` (private key never sent to server)
-3. `POST /agent/submit` — submit signed transaction
-4. Verify via explorer URL
+1. `POST /agent/swap` with `wallet_address` set to your agent's `SOLANA_WALLET_ADDRESS` — builds an unsigned transaction with that address as fee payer / signer
+2. **Verify before signing:** decode the unsigned tx and confirm `fee_payer` in the response matches your wallet
+3. Sign locally with `solders` (private key never sent to server)
+4. `POST /agent/submit` — submit signed transaction
+5. Verify via explorer URL
+
+> **Important:** Always pass `wallet_address` in the swap request. Without it, the API uses the wallet associated with your API key (which may differ from your agent's trading wallet), causing a signer mismatch when you try to sign locally.
 
 > Full trading workflow: see `examples/trading-workflow.py`
 
@@ -642,6 +749,43 @@ Week 3: Improved win rate from 40% → 55% with tighter parameters
 
 ---
 
+## Implementation Notes & Lessons
+
+These are hard-won lessons from real trading attempts. Follow them to avoid known pitfalls.
+
+### 1. Transaction Signer Must Match Your Wallet
+
+Before signing an unsigned transaction locally, **always decode it and verify** that the fee payer / first signer matches your `SOLANA_WALLET_ADDRESS`. If they don't match, the backend did not build the transaction for your wallet — do NOT attempt to sign it.
+
+**Fix:** Always pass `wallet_address` in the `POST /agent/swap` request body.
+
+### 2. `/agent/swap` Supports `wallet_address` Parameter
+
+The swap endpoint accepts an optional `wallet_address` field. When provided:
+- The unsigned transaction uses that address as the fee payer and signer
+- The response includes `fee_payer` and `signers` fields for client-side verification
+
+Without it, the API defaults to the wallet associated with your API key — which may be a different wallet than the one you're trying to sign with.
+
+### 3. Labels Are History, Not Current State
+
+`/token-wallet-labels` returns behavioral labels (developer, sniper, bundle) based on historical actions. These labels do NOT indicate current holdings. A developer who sold everything 3 days ago still carries the `developer` label.
+
+**Always verify current holdings via `/balance-history`** before making risk decisions based on labels.
+
+### 4. Analysis Pipeline Order Is Mandatory
+
+Never skip to trading without completing analysis. The pipeline order exists to prevent losses:
+
+1. Signal dashboard / trending tokens → candidates
+2. Market cap / liquidity / preferences filter → eliminate small/illiquid tokens
+3. Cluster multi-timeframe analysis → assess accumulation/distribution
+4. Label + `/balance-history` verification → confirm sell pressure is real or not
+5. Decision checklist → final go/no-go
+6. Swap + sign + submit → execute trade
+
+---
+
 ## Core Concepts Quick Reference
 
 | Concept | Key Insight |
@@ -653,8 +797,84 @@ Week 3: Improved win rate from 40% → 55% with tighter parameters
 | **Smart Money** | Realized profit >$100K. Their accumulation often precedes price moves |
 | **Accumulation** | Cluster % rising + price consolidating = bullish |
 | **Distribution** | Price rising + cluster % falling = bearish |
+| **Holding Trend** | Track cluster/smart money balance as % of total supply over time — reveals gradual accumulation/distribution invisible in snapshots |
 
 > Full concepts guide: see `references/concepts.md`
+
+---
+
+## Operational Scripts
+
+Ready-to-run scripts for common trading operations. All scripts load credentials from `~/.openclaw/workspace/.env` automatically.
+
+### Portfolio Check
+
+```bash
+bash scripts/portfolio.sh                    # Agent wallet
+bash scripts/portfolio.sh <wallet_address>   # Any wallet
+```
+
+Shows SOL balance, token holdings, and realized/unrealized PnL.
+
+### Trending Token Scanner
+
+```bash
+bash scripts/trending.sh           # Top 10 by volume on Solana
+bash scripts/trending.sh 20        # Top 20
+bash scripts/trending.sh 10 56     # Top 10 on BSC (chain_id=56)
+```
+
+### Full Analysis Dashboard
+
+```bash
+bash scripts/analysis.sh
+```
+
+Combines portfolio, signal dashboard (Pro/Alpha), trending tokens, and top candidate scoring into a single view. Outputs:
+1. Portfolio summary with PnL
+2. Active accumulation signals with cluster ratio trends
+3. Top 10 trending tokens by volume
+4. Top 5 candidates ranked by cluster ratio growth + early-stage picks
+
+### Swap Executor
+
+```bash
+# Buy 0.1 SOL worth of a token
+python3 scripts/swap.py <token_mint> 0.1
+
+# Sell tokens back to SOL
+python3 scripts/swap.py <token_mint> <amount_units> --sell
+
+# Custom slippage (basis points, default: 300 = 3%)
+python3 scripts/swap.py <token_mint> 0.1 --slippage 500
+```
+
+Handles the full build → local sign → submit flow. Verifies fee payer match, checks price impact (aborts >10%, warns >5%), and prints explorer URL on success.
+
+### API Connectivity Test
+
+```bash
+bash scripts/test-api.sh
+```
+
+Tests account, trending tokens, portfolio, and signal dashboard endpoints. Reports pass/fail for each.
+
+### Cron Setup
+
+```bash
+bash scripts/cron-examples.sh setup-default   # Install recommended dual-cron (5m stop-loss + 30m discovery)
+bash scripts/cron-examples.sh teardown         # Remove all trading cron jobs
+```
+
+See [Automated Monitoring (Cron)](#automated-monitoring-cron) for full details and alternative strategies.
+
+### Trading Preferences Template
+
+Copy `scripts/trading-preferences.example.json` to `memory/trading-preferences.json` and customize:
+
+```bash
+cp scripts/trading-preferences.example.json memory/trading-preferences.json
+```
 
 ---
 
@@ -670,9 +890,16 @@ kryptogo-meme-trader/
 │   └── decision-framework.md      ← Entry/exit strategies, bullish/bearish checklists
 ├── scripts/
 │   ├── setup.py                   ← First-time setup (keypair generation, dependency install)
-│   └── cron-examples.sh           ← Example cron configurations for different monitoring strategies
+│   ├── cron-examples.sh           ← Example cron configurations for different monitoring strategies
+│   ├── portfolio.sh               ← Check wallet balance, holdings, and PnL
+│   ├── trending.sh                ← Scan trending tokens by volume
+│   ├── analysis.sh                ← Full analysis dashboard (portfolio + signals + trending + candidates)
+│   ├── swap.py                    ← Build, sign locally, and submit swap transactions
+│   ├── test-api.sh                ← API connectivity test
+│   └── trading-preferences.example.json  ← Trading preferences template
 └── examples/
-    └── trading-workflow.py        ← Complete Python reference implementation
+    ├── trading-workflow.py        ← Complete Python reference implementation
+    └── deep-analysis-workflow.py  ← Holding trend analysis (cluster/smart money % of supply over time)
 
 Agent creates these memory files at runtime:
   memory/

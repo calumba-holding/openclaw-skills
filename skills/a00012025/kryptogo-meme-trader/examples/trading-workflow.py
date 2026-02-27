@@ -367,7 +367,11 @@ def sign_transaction(unsigned_tx_b64, private_key_b58):
 
 
 def build_swap(input_mint, output_mint, amount, slippage_bps=300):
-    """Build an unsigned swap transaction via the DEX aggregator."""
+    """Build an unsigned swap transaction via the DEX aggregator.
+
+    Always passes wallet_address so the returned transaction uses the agent's
+    wallet as fee payer / signer (required for local signing).
+    """
     resp = requests.post(
         f"{API_BASE}/agent/swap",
         headers=HEADERS,
@@ -376,10 +380,20 @@ def build_swap(input_mint, output_mint, amount, slippage_bps=300):
             "output_mint": output_mint,
             "amount": amount,
             "slippage_bps": slippage_bps,
+            "wallet_address": WALLET_ADDRESS,
         },
     )
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+
+    # Verify the transaction was built for our wallet
+    if data.get("fee_payer") and data["fee_payer"] != WALLET_ADDRESS:
+        raise ValueError(
+            f"Transaction fee_payer mismatch: expected {WALLET_ADDRESS}, "
+            f"got {data['fee_payer']}. Do not sign this transaction."
+        )
+
+    return data
 
 
 def submit_transaction(signed_tx_b64):
@@ -485,6 +499,56 @@ def scan_trending_tokens(chain_id="501", sort_by="5", period="2", **filters):
 # ---------------------------------------------------------------------------
 
 
+def check_rug_risk(token_mint):
+    """
+    Check for rug pull risks using RugCheck.xyz API.
+    Returns: (is_safe: bool, reason: str)
+    """
+    try:
+        url = f"https://api.rugcheck.xyz/v1/tokens/{token_mint}/report/summary"
+        resp = requests.get(url, timeout=2)
+        
+        if resp.status_code != 200:
+            print(f"Warning: RugCheck API unavailable ({resp.status_code}). Proceeding with caution.")
+            return True, "API_UNAVAILABLE" 
+
+        data = resp.json()
+        
+        # 1. Check Risk Score
+        score = data.get("score", 0)
+        # 5000 is a high threshold, many legit memes are 1000-3000 initially
+        if score > 5000:
+            return False, f"High Risk Score: {score}"
+
+        # 2. Check Specific Danger Risks
+        risks = data.get("risks", [])
+        danger_signals = []
+        for r in risks:
+            if r.get("level") == "danger":
+                name = r.get("name", "")
+                # Critical rug indicators that are instant rejects
+                if "Mint Authority" in name:
+                    danger_signals.append("Mint Authority Enabled")
+                elif "Freeze Authority" in name:
+                    danger_signals.append("Freeze Authority Enabled")
+                elif "LP Unlocked" in name:
+                    danger_signals.append("LP Not Locked/Burned")
+                elif "Low Liquidity" in name:
+                    danger_signals.append("Low Liquidity")
+                elif "High ownership" in name or "Single holder" in name:
+                    # KryptoGO cluster analysis handles this better, but good as a secondary check
+                    pass 
+
+        if danger_signals:
+            return False, f"Rug Risks: {', '.join(danger_signals)}"
+        
+        return True, "Safe"
+        
+    except Exception as e:
+        print(f"Warning: RugCheck check failed: {e}")
+        return True, "CHECK_ERROR"
+
+
 def analyze_and_trade(token_mint, max_position_sol=None):
     """
     Full pipeline: check balance -> analyze token -> assess risk -> execute trade.
@@ -492,6 +556,7 @@ def analyze_and_trade(token_mint, max_position_sol=None):
     G4 fix: Portfolio balance check at start to ensure sufficient SOL.
     G5 fix: Private key security warnings in comments.
     G6 fix: Uses scan_count from user preferences instead of hardcoded page_size.
+    G7 fix: RugCheck integration for LP security.
     """
     if max_position_sol is None:
         max_position_sol = PREFERENCES.get("max_position_size", 0.1)
@@ -511,6 +576,13 @@ def analyze_and_trade(token_mint, max_position_sol=None):
     if mcap < min_mcap:
         print(f"Market cap ${mcap:,.0f} below minimum ${min_mcap:,.0f}. Skipping.")
         return None
+
+    # [NEW] Step 1.5: Quick Rug Check (Fail Fast)
+    is_safe, risk_reason = check_rug_risk(token_mint)
+    if not is_safe:
+        print(f"RUG CHECK FAILED: {risk_reason}. Skipping.")
+        return None
+    print(f"Rug Check Passed: {risk_reason}")
 
     # Step 2: Cluster analysis
     cluster_changes = get_cluster_changes(token_mint)
@@ -689,7 +761,22 @@ def execute_exit(mint, symbol, action, reason, pnl_pct, pnl_sol, holding_hours):
     token_balance = 0
     for token in portfolio.get("tokens", []):
         if token["mint"] == mint:
-            token_balance = int(float(token.get("balance", 0)))
+            # Use raw_balance if available, otherwise assume balance is UI amount and we need decimals
+            # For now, let's look for a raw balance field or fetch token info to get decimals
+            
+            # 1. Try to get raw balance directly if the API provides it (it usually doesn't standardly)
+            if "raw_balance" in token:
+                 token_balance = int(token["raw_balance"])
+            else:
+                # 2. Fetch decimals to convert UI balance to raw units
+                try:
+                     overview = get_token_overview(mint)
+                     decimals = overview.get("decimals", 6) # Default to 6 if missing, but risky
+                     ui_balance = float(token.get("balance", 0))
+                     token_balance = int(ui_balance * (10 ** decimals))
+                except Exception as e:
+                     print(f"Error fetching decimals for {symbol}: {e}. Defaulting to int(balance) which is likely WRONG.")
+                     token_balance = int(float(token.get("balance", 0)))
             break
 
     if token_balance > 0:
