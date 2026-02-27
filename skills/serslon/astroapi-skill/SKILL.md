@@ -11,7 +11,7 @@ description: >-
 license: MIT
 compatibility: Requires curl
 allowed-tools: Bash(curl:*) Read
-version: 1.0.0
+version: 1.0.2
 metadata:
   openclaw:
     emoji: ⭐
