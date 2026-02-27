@@ -1,0 +1,11 @@
+{
+  "owner": "ivangdavila",
+  "slug": "matomo",
+  "displayName": "Matomo Analytics",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1772062322513,
+    "commit": null
+  },
+  "history": []
+}
