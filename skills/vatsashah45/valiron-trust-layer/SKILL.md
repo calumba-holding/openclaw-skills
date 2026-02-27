@@ -1,11 +1,30 @@
 ---
 name: valiron-payment-interceptor
 description: Intercept and authorize outgoing machine-to-machine payments (x402 or similar) using @valiron/sdk trust decisions on the counterparty agent before payment execution. Use when implementing payment middleware, wallet spend guards, policy engines, trust-based allow/deny/throttle decisions, fail-open/fail-closed behavior, and auditable transaction risk controls.
+metadata: {"openclaw":{"skillKey":"valiron-payment-interceptor","primaryEnv":"VALIRON_API_KEY"}}
 ---
 
 # Valiron Payment Interceptor
 
 Add a trust gate in front of outgoing agent payments.
+
+## Runtime requirements
+
+Declare and validate runtime prerequisites before enabling the interceptor:
+
+- Node.js runtime compatible with your app and `@valiron/sdk`.
+- Installed dependencies:
+  - `@valiron/sdk`
+  - Your payment rail package(s) (x402 or equivalent) used by the host app.
+- Configuration/credentials (via secret manager or env vars):
+  - `VALIRON_API_KEY` (optional today; reserved for authenticated deployments)
+  - `VALIRON_BASE_URL` (if using non-default endpoint)
+  - `VALIRON_TIMEOUT_MS` (optional, with safe default)
+- Policy/config inputs:
+  - Decision policy JSON (route-to-action matrix)
+  - Spend limit defaults and per-route overrides
+
+Fail startup (or fail closed for payment endpoints) when required policy/config inputs are missing. If your deployment enforces SDK auth, treat `VALIRON_API_KEY` as required.
 
 ## Workflow
 
@@ -53,6 +72,7 @@ Keep fallback mode explicit and versioned.
 
 ## Use bundled resources
 
+- Runtime + credential checklist: `references/runtime-requirements.md`
 - Decision matrix: `references/decision-policy.md`
 - Spend/risk controls: `references/spend-controls.md`
 - Fallback guidance: `references/fallback-modes.md`

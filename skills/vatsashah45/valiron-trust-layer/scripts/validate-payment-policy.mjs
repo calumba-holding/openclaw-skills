@@ -1,9 +1,37 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
 
-const file = process.argv[2];
-if (!file) {
+const fileArg = process.argv[2];
+if (!fileArg) {
   console.error('Usage: node scripts/validate-payment-policy.mjs <policy.json>');
+  process.exit(1);
+}
+
+function resolvePolicyPath(input) {
+  if (typeof input !== 'string' || input.trim() === '') throw new Error('empty path');
+  if (input.includes('\0')) throw new Error('path contains NUL byte');
+  if (path.isAbsolute(input)) throw new Error('absolute paths are not allowed');
+
+  const baseDir = process.cwd();
+  const resolved = path.resolve(baseDir, input);
+  const relative = path.relative(baseDir, resolved);
+
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('path traversal outside working directory is not allowed');
+  }
+  if (path.extname(resolved).toLowerCase() !== '.json') {
+    throw new Error('policy file must be a .json file');
+  }
+
+  return resolved;
+}
+
+let file;
+try {
+  file = resolvePolicyPath(fileArg);
+} catch (e) {
+  console.error(`Invalid policy path: ${e.message}`);
   process.exit(1);
 }
 
@@ -25,9 +53,12 @@ const validFallback = new Set(['fail-open-guarded', 'fail-closed']);
 
 let data;
 try {
+  const stat = fs.statSync(file);
+  if (!stat.isFile()) throw new Error('policy path must point to a regular file');
+  if (stat.size > 1_000_000) throw new Error('policy file too large (max 1MB)');
   data = JSON.parse(fs.readFileSync(file, 'utf8'));
 } catch (e) {
-  console.error('Invalid JSON:', e.message);
+  console.error('Invalid policy file or JSON:', e.message);
   process.exit(1);
 }
 
