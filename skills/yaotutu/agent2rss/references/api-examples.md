@@ -3,7 +3,7 @@
 本文档提供完整的 API 调用示例，包括请求格式和响应示例。
 
 ## 基础信息
-- 默认服务器: `http://agent2rss.yaotutu.top:8765`
+- 默认服务器: `https://agent2rss.yaotutu.top:8765`
 - API 基础路径: `/api`
 - 内容类型: `application/json`
 - 认证方式: `Authorization: Bearer <token>`
@@ -11,7 +11,7 @@
 ## 1. 创建频道
 请求
 ```bash
-curl -X POST http://agent2rss.yaotutu.top:8765/api/channels \
+curl -X POST https://agent2rss.yaotutu.top:8765/api/channels \
   -H "Content-Type: application/json" \
   -d '{"name":"技术博客","description":"分享技术文章和教程"}'
 ```
@@ -29,21 +29,21 @@ curl -X POST http://agent2rss.yaotutu.top:8765/api/channels \
     "maxPosts": 100,
     "createdAt": "2026-02-05T10:30:00.000Z"
   },
-  "rssUrl": "http://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/rss.xml"
+  "rssUrl": "https://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/rss.xml"
 }
 ```
 
 ## 2. 推送内容到频道（JSON 方式）
 最简参数
 ```bash
-curl -X POST http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/posts \
+curl -X POST https://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/posts \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ch_4fd9cdce724ffb8d6ec69187b5438ae2" \
   -d '{"content":"# 我的标题\n\n这是文章内容"}'
 ```
 完整参数
 ```bash
-curl -X POST http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/posts \
+curl -X POST https://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/posts \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ch_4fd9cdce724ffb8d6ec69187b5438ae2" \
   -d '{"content":"# Agent2RSS 使用指南\n\n## 简介\n\nAgent2RSS 是一个将任意内容转换为 RSS Feed 的服务...","title":"如何使用 Agent2RSS","link":"https://example.com/article","contentType":"markdown","author":"Claude","tags":["教程","RSS","技术"],"idempotencyKey":"article-2024-01-01-001"}'
@@ -79,7 +79,7 @@ curl -X POST http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-b
 
 ## 3. 推送内容到频道（文件上传方式）
 ```bash
-curl -X POST http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/posts/upload \
+curl -X POST https://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/posts/upload \
   -H "Authorization: Bearer ch_4fd9cdce724ffb8d6ec69187b5438ae2" \
   -F "file=@article.md" \
   -F "title=自定义标题" \
@@ -104,7 +104,7 @@ curl -X POST http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-b
 ## 4. 获取频道列表
 请求
 ```bash
-curl -X GET http://agent2rss.yaotutu.top:8765/api/channels
+curl -X GET https://agent2rss.yaotutu.top:8765/api/channels
 ```
 响应示例
 ```json
@@ -136,7 +136,7 @@ curl -X GET http://agent2rss.yaotutu.top:8765/api/channels
 ## 5. 获取单个频道信息
 请求
 ```bash
-curl -X GET http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece
+curl -X GET https://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece
 ```
 响应示例
 ```json
@@ -152,13 +152,13 @@ curl -X GET http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd
     "createdAt": "2026-02-05T10:30:00.000Z",
     "updatedAt": "2026-02-05T15:30:00.000Z"
   },
-  "rssUrl": "http://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/rss.xml"
+  "rssUrl": "https://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/rss.xml"
 }
 ```
 
 ## 6. 更新频道名称/描述（需 Token）
 ```bash
-curl -X PUT http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece \
+curl -X PUT https://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ch_4fd9cdce724ffb8d6ec69187b5438ae2" \
   -d '{"name":"新的频道名称","description":"更新后的频道描述"}'
@@ -183,7 +183,7 @@ curl -X PUT http://agent2rss.yaotutu.top:8765/api/channels/8cf83b0d-f856-4f7c-bd
 
 ## 7. 获取 RSS Feed
 ```bash
-curl -X GET http://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/rss.xml
+curl -X GET https://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4f6ca0338ece/rss.xml
 ```
 
 ## 错误响应示例
@@ -230,6 +230,6 @@ curl -X GET http://agent2rss.yaotutu.top:8765/channels/8cf83b0d-f856-4f7c-bd1c-4
 ```
 
 ## 使用技巧
-- **推荐文件上传**：`curl -X POST "http://agent2rss.yaotutu.top:8765/api/channels/default/posts/upload" -H "Authorization: Bearer ch_xxx" -F "file=@article.md" -F "idempotencyKey=article-001"`
+- **推荐文件上传**：`curl -X POST "https://agent2rss.yaotutu.top:8765/api/channels/default/posts/upload" -H "Authorization: Bearer ch_xxx" -F "file=@article.md" -F "idempotencyKey=article-001"`
 - **幂等性**：优先使用文章 URL/文件名/内容哈希作为 `idempotencyKey`
-- **健康检查**：`curl http://agent2rss.yaotutu.top:8765/health`
+- **健康检查**：`curl https://agent2rss.yaotutu.top:8765/health`
