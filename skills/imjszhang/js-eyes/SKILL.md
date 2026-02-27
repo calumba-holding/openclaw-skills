@@ -1,7 +1,7 @@
 ---
 name: js-eyes
 description: Browser automation for AI agents — control tabs, extract content, execute scripts and manage cookies via WebSocket.
-version: 1.4.1
+version: 1.4.3
 metadata:
   openclaw:
     emoji: "\U0001F441"
@@ -64,50 +64,67 @@ openclaw js-eyes server start    # Start the built-in server
 openclaw js-eyes server stop     # Stop the built-in server
 ```
 
-## Plugin Files
+## Skill Bundle Structure
 
-This skill bundle contains the OpenClaw plugin source — these are the files OpenClaw needs to load and run the plugin:
+This skill bundle is published from the repository root and contains all files required to run the OpenClaw plugin:
 
-| File | Role |
-|------|------|
-| `openclaw.plugin.json` | Plugin manifest — ID, description, config schema (JSON Schema) and UI hints for settings |
-| `package.json` | Node.js package descriptor — declares ESM module type and the plugin entry point |
-| `index.mjs` | Plugin logic — registers 7 AI tools, 1 background service (WebSocket server) and CLI commands with OpenClaw |
+```
+js-eyes/
+├── SKILL.md                        ← Skill entry point (this file)
+├── package.json                    ← Root package — declares ws dependency
+├── LICENSE
+├── openclaw-plugin/
+│   ├── openclaw.plugin.json        ← Plugin manifest (ID, config schema, UI hints)
+│   ├── package.json                ← ESM module descriptor, declares entry point
+│   └── index.mjs                   ← Plugin logic — registers 7 AI tools, 1 service, CLI
+├── server/
+│   ├── index.js                    ← HTTP + WebSocket server
+│   ├── ws-handler.js               ← Connection and message handling
+│   └── package.json
+└── clients/
+    └── js-eyes-client.js           ← Node.js client SDK for browser automation
+```
 
-> `index.mjs` imports the WebSocket server and client SDK from the parent repository (`../server/` and `../clients/`), so the full [js-eyes repo](https://github.com/imjszhang/js-eyes) must be cloned for the plugin to work. This directory alone is not self-contained.
+> `openclaw-plugin/index.mjs` imports from `../server/` and `../clients/` via relative paths, so the directory layout above must be preserved — `openclaw-plugin/` cannot be used in isolation.
 
 ## Prerequisites
 
-- **Node.js** >= 14
-- **Git**
+- **Node.js** >= 16
 - **A supported browser**: Chrome 88+ / Edge 88+ / Firefox 58+
 
-## Setup
+## Deploy to .openclaw
 
-### Step 1: Install the browser extension
-
-Download the latest version from [GitHub Releases](https://github.com/imjszhang/js-eyes/releases/latest):
-
-- **Chrome/Edge**: download `js-eyes-chrome-vX.Y.Z.zip`, open `chrome://extensions/` (or `edge://extensions/`), enable Developer mode, click "Load unpacked" and select the extracted folder
-- **Firefox**: download `js-eyes-firefox-vX.Y.Z.xpi`, drag and drop into the browser window
-
-### Step 2: Clone and install
+Install the skill via ClawHub:
 
 ```bash
-git clone https://github.com/imjszhang/js-eyes.git
-cd js-eyes
+clawhub install js-eyes
+```
+
+ClawHub installs into `./skills` under your current working directory (or your configured OpenClaw workspace). The bundle is self-contained — it includes the plugin, WebSocket server, and client SDK.
+
+**1. Install Node.js dependencies** — the `ws` package is required at runtime:
+
+```bash
+cd ./skills/js-eyes   # from the dir where you ran clawhub install; or ~/.openclaw/skills/js-eyes if using legacy sync
 npm install
 ```
 
-### Step 3: Register the plugin in OpenClaw
+> Run `npm install` if `ws` was not auto-installed via the Skills UI.
 
-Edit your OpenClaw config file (`~/.openclaw/openclaw.json`) and add the plugin:
+**2. Register the plugin** in `~/.openclaw/openclaw.json`. The path must point to the `openclaw-plugin` subdirectory inside the skill, **not** the skill root:
+
+| Install method | `<SKILL_ROOT>` | Plugin path for `plugins.load.paths` |
+|----------------|----------------|--------------------------------------|
+| ClawHub (workspace) | `./skills/js-eyes` or `$WORKSPACE/skills/js-eyes` | `./skills/js-eyes/openclaw-plugin` (use absolute path if needed) |
+| ClawHub (legacy sync) | `~/.openclaw/skills/js-eyes` | `~/.openclaw/skills/js-eyes/openclaw-plugin` |
+
+Example config (replace the path with your actual install location — use `pwd` after `cd` into the skill to get the absolute path). If you already have other plugins, **append** this path to the existing `paths` array:
 
 ```json
 {
   "plugins": {
     "load": {
-      "paths": ["~/projects/js-eyes/openclaw-plugin"]
+      "paths": ["/path/to/skills/js-eyes/openclaw-plugin"]
     },
     "entries": {
       "js-eyes": {
@@ -122,18 +139,25 @@ Edit your OpenClaw config file (`~/.openclaw/openclaw.json`) and add the plugin:
 }
 ```
 
-> Replace `~/projects/js-eyes/openclaw-plugin` with the actual absolute path to the `openclaw-plugin` directory inside the cloned repository.
+> **Path note**: `index.mjs` imports from `../server/` and `../clients/` relative to itself, so the bundle directory layout must be preserved. Point `paths` at the `openclaw-plugin` subdirectory only.
 
-### Step 4: Connect the browser extension
+**3. Restart OpenClaw** to load the plugin.
 
-1. Start OpenClaw — the built-in WebSocket server launches automatically on port 18080
-2. Click the JS Eyes extension icon in the browser toolbar
-3. Enter `http://localhost:18080` as the server address
-4. Click "Connect" — the status should turn green ("Connected")
+> **For developers**: clone the [full repository](https://github.com/imjszhang/js-eyes) and point `plugins.load.paths` to the `openclaw-plugin` directory inside your clone.
 
-### Step 5: Verify
+## Browser Extension Setup
 
-Run the following CLI command to confirm everything is working:
+The plugin talks to browsers through the JS Eyes extension. Install it separately (independent of ClawHub):
+
+1. Download from [GitHub Releases](https://github.com/imjszhang/js-eyes/releases/latest):
+   - **Chrome / Edge**: `js-eyes-chrome-vX.Y.Z.zip` — open `chrome://extensions/` (or `edge://extensions/`), enable Developer mode, click "Load unpacked", select the extracted folder
+   - **Firefox**: `js-eyes-firefox-vX.Y.Z.xpi` — drag and drop into the browser window
+
+2. Click the JS Eyes extension icon in the toolbar, enter `http://localhost:18080` as the server address, click **Connect** — the status should turn green.
+
+## Verify
+
+Run the CLI command to confirm everything is working:
 
 ```bash
 openclaw js-eyes status
@@ -165,12 +189,14 @@ You can also ask the AI agent to list your browser tabs — it should invoke `js
 |---------|-------|-----|
 | Extension shows "Disconnected" | Server not running | Check `openclaw js-eyes status`; ensure `autoStartServer` is `true` |
 | `js_eyes_get_tabs` returns empty | No extension connected | Click extension icon, verify address is correct, click Connect |
-| `Cannot find module 'ws'` | Dependencies not installed | Run `npm install` in the cloned `js-eyes` directory |
-| Tools not appearing in OpenClaw | Plugin path wrong or not enabled | Double-check the path in `plugins.load.paths` points to the `openclaw-plugin` folder |
+| `Cannot find module 'ws'` | Dependencies not installed | Run `npm install` in the skill root (where `package.json` declares `ws`) |
+| Tools not appearing in OpenClaw | Plugin path wrong or not enabled | Ensure `plugins.load.paths` points to the `openclaw-plugin` subdirectory, not the skill root |
+| Plugin path not found (Windows) | Path format | Use forward slashes in JSON, e.g. `C:/Users/you/skills/js-eyes/openclaw-plugin` |
 
 ## Links
 
 - Source: <https://github.com/imjszhang/js-eyes>
 - Releases: <https://github.com/imjszhang/js-eyes/releases>
+- ClawHub: <https://clawhub.ai/skills/js-eyes>
 - Author: [@imjszhang](https://x.com/imjszhang)
 - License: MIT
