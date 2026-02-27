@@ -1,0 +1,11 @@
+{
+  "owner": "mogglemoss",
+  "slug": "tempest-weather-wf",
+  "displayName": "Tempest Weather",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1771948170895,
+    "commit": null
+  },
+  "history": []
+}
