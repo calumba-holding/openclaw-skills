@@ -1,23 +1,85 @@
 #!/usr/bin/env python3
 import argparse
 import base64
+import hashlib
 import ipaddress
 import json
-import mimetypes
+import math
 import os
-import re
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
-TELEGRAM_TOKEN_URL_PATTERN = re.compile(
-    r"https?://api\.telegram\.org/file/bot[^/]+/", re.IGNORECASE
-)
-DEFAULT_MAX_AVATAR_BYTES = 1_048_576
+def _is_disallowed_host(host: str) -> bool:
+    """Check if host is internal/private (SSRF protection)."""
+    if not host:
+        return True
+
+    lowered = host.lower().rstrip(".")
+    if lowered in ("localhost", "localhost.localdomain"):
+        return True
+    if lowered.endswith(".local") or lowered.endswith(".internal"):
+        return True
+    if lowered in ("metadata.google.internal", "169.254.169.254"):
+        return True
+
+    try:
+        ip = ipaddress.ip_address(lowered)
+        return not ip.is_global
+    except ValueError:
+        return False
+
+
+def _resolve_and_validate_host(hostname: str) -> None:
+    """Resolve hostname and validate IP to prevent DNS rebinding attacks."""
+    import socket
+
+    try:
+        addr_info = socket.getaddrinfo(hostname, None)
+    except socket.gaierror as exc:
+        raise ValueError(f"Cannot resolve hostname: {hostname}") from exc
+
+    for _, _, _, _, sockaddr in addr_info:
+        ip = sockaddr[0]
+        if _is_disallowed_host(ip):
+            raise ValueError(f"Resolved IP {ip} for {hostname} is disallowed")
+
+
+def _sanitize_api_url(url: str) -> str:
+    """Sanitize API URL to prevent SSRF attacks."""
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme.lower() not in ("http", "https"):
+        raise ValueError(f"API URL must use HTTP or HTTPS scheme: {url}")
+
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if not host:
+        raise ValueError("API URL must have a valid hostname")
+
+    # First check: hostname string validation
+    if _is_disallowed_host(host):
+        raise ValueError(f"API URL points to disallowed host: {host}")
+
+    # Second check: DNS rebinding protection - resolve and validate IP
+    _resolve_and_validate_host(host)
+
+    # Third check: path traversal prevention
+    path = urllib.parse.unquote(parsed.path or "/")
+    if ".." in path or "//" in path.replace("//", "/"):
+        raise ValueError(f"API URL contains suspicious path traversal: {path}")
+
+    # Check against allowlist if configured
+    allow_hosts = os.getenv("QUOTLY_API_ALLOW_HOSTS", "")
+    if allow_hosts:
+        allowed = {h.strip().lower().rstrip(".") for h in allow_hosts.split(",") if h.strip()}
+        if host not in allowed:
+            raise ValueError(f"API URL host not in allowlist: {host}")
+
+    return parsed._replace(fragment="", username=None, password=None).geturl()
 
 
 def _first_non_empty(*values: Any) -> Any:
@@ -32,20 +94,18 @@ def _first_non_empty(*values: Any) -> Any:
     return None
 
 
-def _parse_env_bool(name: str, default: bool) -> bool:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    normalized = raw.strip().lower()
-    if normalized in ("1", "true", "yes", "on"):
-        return True
-    if normalized in ("0", "false", "no", "off"):
-        return False
-    print(
-        f"WARN: Invalid boolean env {name}={raw!r}, using default {default}.",
-        file=sys.stderr,
-    )
-    return default
+def _audit_log(action: str, details: Dict[str, Any]) -> None:
+    """Write audit log for security events."""
+    import datetime
+
+    audit_enabled = os.getenv("QUOTLY_AUDIT_LOG", "").lower() in ("1", "true", "yes")
+    if not audit_enabled:
+        return
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    log_entry = {"timestamp": timestamp, "action": action, **details}
+    # Log to stderr for capture by logging infrastructure
+    print(f"AUDIT: {json.dumps(log_entry, ensure_ascii=False)}", file=sys.stderr)
 
 
 def _parse_env_int(name: str, default: int) -> int:
@@ -59,16 +119,7 @@ def _parse_env_int(name: str, default: int) -> int:
             f"WARN: Invalid integer env {name}={raw!r}, using default {default}.",
             file=sys.stderr,
         )
-        return default
-
-
-def _get_path(obj: Any, *keys: str) -> Any:
-    current = obj
-    for key in keys:
-        if not isinstance(current, dict):
-            return None
-        current = current.get(key)
-    return current
+    return default
 
 
 def _as_int(value: Any, default: int) -> int:
@@ -76,6 +127,21 @@ def _as_int(value: Any, default: int) -> int:
         return int(str(value).strip())
     except Exception:
         return default
+
+
+def _clamp(value: int, minimum: int, maximum: int) -> int:
+    return max(minimum, min(maximum, value))
+
+
+def _estimate_canvas_height(messages: List[Dict[str, Any]]) -> int:
+    # Keep short quotes compact while giving multi-line batches room.
+    total_chars = 0
+    for message in messages:
+        text = str(message.get("text") or "")
+        total_chars += len(text.strip())
+    text_lines = max(1, math.ceil(total_chars / 18))
+    estimated = 180 + text_lines * 44 + max(0, len(messages) - 1) * 52
+    return _clamp(estimated, 320, 1024)
 
 
 def _clean_name(*parts: Any) -> Optional[str]:
@@ -88,383 +154,239 @@ def _clean_name(*parts: Any) -> Optional[str]:
     return " ".join(items)
 
 
-def _profile_from_obj(obj: Any) -> Dict[str, Any]:
-    if not isinstance(obj, dict):
-        return {}
-    name = _first_non_empty(
-        obj.get("name"),
-        obj.get("displayName"),
-        obj.get("display_name"),
-        _clean_name(obj.get("first_name"), obj.get("last_name")),
-        obj.get("username"),
-        obj.get("title"),
-    )
-    return {
-        "id": _first_non_empty(obj.get("id"), obj.get("user_id"), obj.get("sender_id")),
-        "name": name,
-        "avatar": _first_non_empty(
-            obj.get("avatar"),
-            obj.get("avatarUrl"),
-            obj.get("avatar_url"),
-            _get_path(obj, "photo", "url"),
-            obj.get("photoUrl"),
-        ),
-        "status_emoji": _first_non_empty(
-            obj.get("statusEmoji"),
-            obj.get("status_emoji"),
-            obj.get("emoji"),
-            obj.get("status"),
-        ),
-        "status_emoji_id": _first_non_empty(
-            obj.get("statusEmojiId"),
-            obj.get("status_emoji_id"),
-            obj.get("emoji_status"),
-            obj.get("emoji_status_id"),
-            obj.get("emoji_status_custom_emoji_id"),
-            _get_path(obj, "statusEmoji", "id"),
-            _get_path(obj, "status_emoji", "id"),
-        ),
-    }
+def _extract_message_items(input_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Extract message items from selected_messages.
 
+    Each item should have:
+    - message: { message_id, text, forward_from }
+    - overwrite_message (optional): { text, forward_from }
+    """
+    selected_messages = input_payload.get("selected_messages")
+    if not isinstance(selected_messages, list):
+        return []
 
-def _merge_profile(*profiles: Dict[str, Any]) -> Dict[str, Any]:
-    merged: Dict[str, Any] = {}
-    keys = ("id", "name", "avatar", "status_emoji", "status_emoji_id")
-    for key in keys:
-        merged[key] = _first_non_empty(
-            *(p.get(key) if isinstance(p, dict) else None for p in profiles)
-        )
-    return merged
-
-
-def _extract_context(payload: Dict[str, Any]) -> Dict[str, Any]:
-    context = payload.get("context")
-    if isinstance(context, dict):
-        return context
-    return payload
-
-
-def _extract_channel(context: Dict[str, Any]) -> str:
-    channel = _first_non_empty(
-        _get_path(context, "event", "channel"),
-        _get_path(context, "channel", "name"),
-        context.get("channel"),
-    )
-    return str(channel).strip().lower() if channel else ""
-
-
-def _extract_message(context: Dict[str, Any]) -> Dict[str, Any]:
-    message = context.get("message")
-    if isinstance(message, dict):
-        return message
-    event_message = _get_path(context, "event", "message")
-    if isinstance(event_message, dict):
-        return event_message
-    return {}
-
-
-def _extract_raw_payload(context: Dict[str, Any]) -> Any:
-    return _first_non_empty(
-        _get_path(context, "event", "rawPayload"),
-        _get_path(context, "event", "raw_payload"),
-        context.get("rawPayload"),
-        context.get("raw_payload"),
-    )
-
-
-def _coerce_message_obj(item_payload: Dict[str, Any]) -> Dict[str, Any]:
-    for candidate in (
-        _get_path(item_payload, "context", "message"),
-        item_payload.get("message"),
-        _get_path(item_payload, "event", "message"),
-    ):
-        if isinstance(candidate, dict):
-            return candidate
-
-    if any(
-        key in item_payload
-        for key in (
-            "text",
-            "body",
-            "content",
-            "sender",
-            "from",
-            "forward",
-            "forward_from",
-            "forward_origin",
-        )
-    ):
-        return item_payload
-    return {}
-
-
-def _extract_item_raw_payload(
-    item_payload: Dict[str, Any], fallback_raw_payload: Any
-) -> Any:
-    return _first_non_empty(
-        item_payload.get("rawPayload"),
-        item_payload.get("raw_payload"),
-        _get_path(item_payload, "event", "rawPayload"),
-        _get_path(item_payload, "event", "raw_payload"),
-        _get_path(item_payload, "context", "event", "rawPayload"),
-        _get_path(item_payload, "context", "event", "raw_payload"),
-        fallback_raw_payload,
-    )
-
-
-def _extract_message_items(
-    input_payload: Dict[str, Any], context: Dict[str, Any], fallback_raw_payload: Any
-) -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
 
-    def append_item(item_payload: Any) -> None:
-        if not isinstance(item_payload, dict):
-            return
-        message_obj = _coerce_message_obj(item_payload)
-        has_text_override = bool(
-            _first_non_empty(
-                item_payload.get("quote_text"), item_payload.get("original_text")
-            )
-        )
-        if not message_obj and not has_text_override:
-            return
-        items.append(
-            {
-                "payload": item_payload,
-                "message": message_obj,
-                "raw_payload": _extract_item_raw_payload(
-                    item_payload, fallback_raw_payload
-                ),
-            }
-        )
+    for item in selected_messages:
+        if not isinstance(item, dict):
+            continue
 
-    for source in (
-        input_payload.get("messages"),
-        context.get("messages"),
-        _get_path(context, "event", "messages"),
-    ):
-        if isinstance(source, list):
-            for item in source:
-                append_item(item)
+        message = item.get("message")
+        if not isinstance(message, dict):
+            continue
 
-    if not items:
-        append_item(input_payload)
+        items.append({
+            "payload": item,
+            "message": message,
+        })
 
     return items
 
 
-def _extract_forward_from_message(
-    message: Dict[str, Any],
-) -> Tuple[Dict[str, Any], Optional[str]]:
-    candidates = []
-    for key in (
-        "forward",
-        "forwardFrom",
-        "forward_from",
-        "forwardedFrom",
-        "source",
-        "origin",
-    ):
-        value = message.get(key)
-        if isinstance(value, dict):
-            candidates.append(value)
+def _extract_forward_from_message(message: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract forward source info from message.
 
-    for candidate in candidates:
-        for nested_key in ("sender", "from", "user", "source", "chat"):
-            nested = candidate.get(nested_key)
-            profile = _profile_from_obj(nested)
-            if profile.get("id") or profile.get("name") or profile.get("avatar"):
-                text = _first_non_empty(
-                    candidate.get("text"),
-                    candidate.get("message"),
-                    candidate.get("content"),
-                )
-                return profile, text
-        profile = _profile_from_obj(candidate)
-        if profile.get("id") or profile.get("name") or profile.get("avatar"):
-            text = _first_non_empty(
-                candidate.get("text"),
-                candidate.get("message"),
-                candidate.get("content"),
-            )
-            return profile, text
-
-    return {}, None
-
-
-def _telegram_profile_from_user(user: Dict[str, Any]) -> Dict[str, Any]:
-    if not isinstance(user, dict):
-        return {}
-    return {
-        "id": user.get("id"),
-        "name": _first_non_empty(
-            _clean_name(user.get("first_name"), user.get("last_name")),
-            user.get("username"),
-        ),
-        "status_emoji_id": _first_non_empty(
-            user.get("emoji_status_custom_emoji_id"),
-            user.get("emoji_status_id"),
-            _get_path(user, "emoji_status", "custom_emoji_id"),
-        ),
+    Forward source format:
+    {
+        "type": "hidden_user",  # optional, indicates hidden user
+        "id": 123456789,        # optional, user id
+        "first_name": "张",     # required, first name or nickname
+        "last_name": "三",      # optional, last name
+        "avatar_url": "",       # optional, avatar url or base64 data
+        "status_url": ""        # optional, status url or base64 data
     }
-
-
-def _telegram_profile_from_chat(chat: Dict[str, Any]) -> Dict[str, Any]:
-    if not isinstance(chat, dict):
-        return {}
-    return {
-        "id": chat.get("id"),
-        "name": _first_non_empty(chat.get("title"), chat.get("username")),
-    }
-
-
-def _extract_forward_from_raw(raw_payload: Any) -> Tuple[Dict[str, Any], Optional[str]]:
-    if not isinstance(raw_payload, dict):
-        return {}, None
-
-    message = raw_payload.get("message")
-    if not isinstance(message, dict):
-        message = raw_payload
-
-    forward_profile: Dict[str, Any] = {}
-    forward_text = _first_non_empty(message.get("text"), message.get("caption"))
-
+    """
     forward_from = message.get("forward_from")
     if isinstance(forward_from, dict):
-        forward_profile = _telegram_profile_from_user(forward_from)
-
-    if not forward_profile:
-        forward_origin = message.get("forward_origin")
-        if isinstance(forward_origin, dict):
-            origin_type = str(forward_origin.get("type") or "").strip().lower()
-            if origin_type == "user":
-                forward_profile = _telegram_profile_from_user(
-                    forward_origin.get("sender_user") or {}
-                )
-            elif origin_type in ("chat", "channel"):
-                forward_profile = _telegram_profile_from_chat(
-                    forward_origin.get("sender_chat") or {}
-                )
-            elif origin_type == "hidden_user":
-                forward_profile = {
-                    "name": _first_non_empty(
-                        forward_origin.get("sender_user_name"),
-                        forward_origin.get("sender_name"),
-                    )
-                }
-
-    if not forward_profile:
-        hidden_name = message.get("forward_sender_name")
-        if hidden_name:
-            forward_profile = {"name": hidden_name}
-
-    return forward_profile, forward_text
-
-
-def _normalize_user_id(value: Any) -> Optional[int]:
-    if value is None:
-        return None
-    if isinstance(value, int):
-        return value
-    text = str(value).strip()
-    if text.lstrip("-").isdigit():
-        return int(text)
-    return None
-
-
-def _tg_api_call(
-    token: str, method: str, params: Dict[str, Any], timeout_seconds: float
-) -> Dict[str, Any]:
-    query = urllib.parse.urlencode(params)
-    url = f"https://api.telegram.org/bot{token}/{method}?{query}"
-    request = urllib.request.Request(url, method="GET")
-    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    if not payload.get("ok"):
-        raise RuntimeError(f"Telegram API {method} failed: {payload}")
-    result = payload.get("result")
-    return result if isinstance(result, dict) else {}
-
-
-def _guess_mime_type(file_path: str) -> str:
-    mime_type, _ = mimetypes.guess_type(file_path)
-    if mime_type and mime_type.startswith("image/"):
-        return mime_type
-    return "image/jpeg"
-
-
-def _download_telegram_file_data_url(
-    token: str, file_path: str, timeout_seconds: float, max_avatar_bytes: int
-) -> Optional[str]:
-    download_url = f"https://api.telegram.org/file/bot{token}/{file_path}"
-    request = urllib.request.Request(download_url, method="GET")
-    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-        image_bytes = response.read(max_avatar_bytes + 1)
-    if len(image_bytes) > max_avatar_bytes:
-        raise RuntimeError(
-            f"Telegram avatar is larger than max_avatar_bytes ({max_avatar_bytes})."
+        # New simplified format
+        first_name = _first_non_empty(forward_from.get("first_name"))
+        last_name = _first_non_empty(forward_from.get("last_name"))
+        name = _first_non_empty(
+            forward_from.get("name"),
+            _clean_name(first_name, last_name),
         )
-    if not image_bytes:
-        return None
-    mime_type = _guess_mime_type(file_path)
-    encoded = base64.b64encode(image_bytes).decode("ascii")
-    return f"data:{mime_type};base64,{encoded}"
+        return {
+            "id": forward_from.get("id"),
+            "first_name": first_name,
+            "last_name": last_name,
+            "name": name,
+            "avatar": _first_non_empty(
+                forward_from.get("avatar_url"),
+                forward_from.get("avatar"),
+            ),
+            "status_url": _first_non_empty(
+                forward_from.get("status_url"),
+                forward_from.get("status"),
+            ),
+        }
+
+    return {}
 
 
-def _fetch_telegram_avatar_data_url(
-    token: str, user_id: int, timeout_seconds: float, max_avatar_bytes: int
-) -> Optional[str]:
-    photos_result = _tg_api_call(
-        token,
-        "getUserProfilePhotos",
-        {"user_id": user_id, "limit": 1},
-        timeout_seconds,
-    )
-    photos = photos_result.get("photos")
-    if not isinstance(photos, list) or not photos:
-        return None
+def _extract_entities(
+    item_payload: Dict[str, Any],
+    message: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """Extract message entities (formatting) from message or overwrite_message."""
+    # First check overwrite_message
+    overwrite = item_payload.get("overwrite_message")
+    if isinstance(overwrite, dict):
+        entities = overwrite.get("entities")
+        if isinstance(entities, list):
+            return _sanitize_entities(entities)
 
-    sizes = photos[0]
-    if not isinstance(sizes, list) or not sizes:
-        return None
+    # Then check message
+    entities = message.get("entities")
+    if isinstance(entities, list):
+        return _sanitize_entities(entities)
 
-    file_id = _first_non_empty(
-        *(photo.get("file_id") for photo in reversed(sizes) if isinstance(photo, dict))
-    )
-    if not file_id:
-        return None
+    # Also check caption_entities for media messages
+    caption_entities = message.get("caption_entities")
+    if isinstance(caption_entities, list):
+        return _sanitize_entities(caption_entities)
 
-    file_result = _tg_api_call(token, "getFile", {"file_id": file_id}, timeout_seconds)
-    file_path = file_result.get("file_path")
-    if not isinstance(file_path, str) or not file_path.strip():
-        return None
+    return []
 
-    return _download_telegram_file_data_url(
-        token, file_path, timeout_seconds, max_avatar_bytes
-    )
+
+def _apply_default_entities(text: str) -> List[Dict[str, Any]]:
+    """Apply default entity styling to text.
+
+    Default styles:
+    - URLs -> text_link
+    - @mentions -> mention
+    - #hashtags -> hashtag
+    - **bold** -> bold (markdown style)
+    - *italic* or _italic_ -> italic
+    - `code` -> code
+    """
+    import re
+
+    entities: List[Dict[str, Any]] = []
+
+    # URL pattern
+    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    for match in re.finditer(url_pattern, text):
+        entities.append({
+            "type": "text_link",
+            "offset": match.start(),
+            "length": match.end() - match.start(),
+            "url": match.group()
+        })
+
+    # @mention pattern
+    mention_pattern = r'@[\w\d_]+'
+    for match in re.finditer(mention_pattern, text):
+        entities.append({
+            "type": "mention",
+            "offset": match.start(),
+            "length": match.end() - match.start()
+        })
+
+    # #hashtag pattern
+    hashtag_pattern = r'#[\w\d_]+'
+    for match in re.finditer(hashtag_pattern, text):
+        entities.append({
+            "type": "hashtag",
+            "offset": match.start(),
+            "length": match.end() - match.start()
+        })
+
+    # **bold** markdown
+    bold_pattern = r'\*\*(.+?)\*\*'
+    for match in re.finditer(bold_pattern, text):
+        entities.append({
+            "type": "bold",
+            "offset": match.start(),
+            "length": match.end() - match.start()
+        })
+
+    # *italic* or _italic_ markdown
+    italic_pattern = r'\*(.+?)\*|_(.+?)_'
+    for match in re.finditer(italic_pattern, text):
+        entities.append({
+            "type": "italic",
+            "offset": match.start(),
+            "length": match.end() - match.start()
+        })
+
+    # `code` inline code
+    code_pattern = r'`([^`]+)`'
+    for match in re.finditer(code_pattern, text):
+        entities.append({
+            "type": "code",
+            "offset": match.start(),
+            "length": match.end() - match.start()
+        })
+
+    # Sort by offset to maintain order
+    entities.sort(key=lambda e: e["offset"])
+
+    # Remove overlapping entities (keep first one)
+    filtered: List[Dict[str, Any]] = []
+    last_end = 0
+    for entity in entities:
+        if entity["offset"] >= last_end:
+            filtered.append(entity)
+            last_end = entity["offset"] + entity["length"]
+
+    return filtered
+
+
+def _sanitize_entities(entities: List[Any]) -> List[Dict[str, Any]]:
+    """Sanitize and validate entity list for QuotLy API."""
+    valid_types = {
+        "mention", "hashtag", "cashtag", "bot_command", "url", "email",
+        "phone_number", "bold", "italic", "underline", "strikethrough",
+        "spoiler", "code", "pre", "text_link", "text_mention", "custom_emoji",
+    }
+    sanitized: List[Dict[str, Any]] = []
+
+    for entity in entities:
+        if not isinstance(entity, dict):
+            continue
+        entity_type = entity.get("type")
+        if entity_type not in valid_types:
+            continue
+        offset = entity.get("offset")
+        length = entity.get("length")
+        if not isinstance(offset, int) or not isinstance(length, int):
+            continue
+        if offset < 0 or length <= 0:
+            continue
+
+        clean_entity: Dict[str, Any] = {
+            "type": entity_type,
+            "offset": offset,
+            "length": length,
+        }
+        # Optional fields
+        if "url" in entity and isinstance(entity["url"], str):
+            clean_entity["url"] = entity["url"]
+        if "user" in entity and isinstance(entity["user"], dict):
+            clean_entity["user"] = entity["user"]
+        if "language" in entity and isinstance(entity["language"], str):
+            clean_entity["language"] = entity["language"]
+        if "custom_emoji_id" in entity and isinstance(entity["custom_emoji_id"], str):
+            clean_entity["custom_emoji_id"] = entity["custom_emoji_id"]
+
+        sanitized.append(clean_entity)
+
+    return sanitized
 
 
 def _extract_text(
-    base_payload: Dict[str, Any],
     item_payload: Dict[str, Any],
     message: Dict[str, Any],
-    forward_text_from_context: Optional[str],
-    forward_text_from_raw: Optional[str],
 ) -> str:
-    return str(
-        _first_non_empty(
-            item_payload.get("quote_text"),
-            base_payload.get("quote_text"),
-            message.get("text"),
-            message.get("body"),
-            message.get("content"),
-            forward_text_from_context,
-            forward_text_from_raw,
-            item_payload.get("original_text"),
-            base_payload.get("original_text"),
-            "",
-        )
-    )
+    """Extract quote text from overwrite_message or message."""
+    overwrite = item_payload.get("overwrite_message")
+    if isinstance(overwrite, dict):
+        text = _first_non_empty(overwrite.get("text"))
+        if text:
+            return str(text)
+    return str(_first_non_empty(message.get("text"), message.get("caption"), ""))
 
 
 def _decode_image_base64(image_data: str) -> bytes:
@@ -485,9 +407,15 @@ def _looks_like_webp(data: bytes) -> bool:
 def _request_quote_api_bytes(
     api_url: str, payload: Dict[str, Any], timeout_seconds: float
 ) -> bytes:
+    # Enforce max payload size (1MB)
+    payload_bytes = json.dumps(payload).encode("utf-8")
+    max_payload_size = 1024 * 1024
+    if len(payload_bytes) > max_payload_size:
+        raise ValueError(f"Payload exceeds maximum size of {max_payload_size} bytes")
+
     request = urllib.request.Request(
         api_url,
-        data=json.dumps(payload).encode("utf-8"),
+        data=payload_bytes,
         headers={
             "Content-Type": "application/json",
             "User-Agent": "openclaw-quotly-skill/1.0",
@@ -496,7 +424,15 @@ def _request_quote_api_bytes(
         method="POST",
     )
     with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-        return response.read()
+        # Enforce max response size (10MB)
+        max_response_size = 10 * 1024 * 1024
+        content_length = response.headers.get("Content-Length")
+        if content_length and int(content_length) > max_response_size:
+            raise ValueError(f"Response exceeds maximum size of {max_response_size} bytes")
+        data = response.read(max_response_size + 1)
+        if len(data) > max_response_size:
+            raise ValueError(f"Response exceeds maximum size of {max_response_size} bytes")
+        return data
 
 
 def _generate_quote_image(
@@ -513,11 +449,16 @@ def _generate_quote_image(
             if _looks_like_webp(body):
                 return body
             result = json.loads(body.decode("utf-8"))
-            image_data = _first_non_empty(
-                _get_path(result, "result", "image"), result.get("image")
-            )
+            # Try to extract image from result
+            image_data = result.get("image")
             if isinstance(image_data, str) and image_data.strip():
                 return _decode_image_base64(image_data)
+            # Try nested result.image
+            nested_result = result.get("result")
+            if isinstance(nested_result, dict):
+                image_data = nested_result.get("image")
+                if isinstance(image_data, str) and image_data.strip():
+                    return _decode_image_base64(image_data)
             raise RuntimeError(f"Invalid QuotLy response: {result}")
         except (
             urllib.error.HTTPError,
@@ -532,69 +473,217 @@ def _generate_quote_image(
     raise RuntimeError("Failed to generate quote image.")
 
 
+def _is_secure_posix_tmp_dir(path_value: str) -> bool:
+    if not os.path.isdir(path_value) or os.path.islink(path_value):
+        return False
+    if not hasattr(os, "getuid"):
+        return True
+    try:
+        st = os.stat(path_value, follow_symlinks=False)
+    except OSError:
+        return False
+    if st.st_uid != os.getuid():
+        return False
+    return (st.st_mode & 0o022) == 0
+
+
+def _resolve_openclaw_tmp_dir() -> str:
+    base_tmp = os.path.abspath(tempfile.gettempdir())
+    uid = os.getuid() if hasattr(os, "getuid") else None
+    fallback_name = "openclaw" if uid is None else f"openclaw-{uid}"
+    fallback_dir = os.path.join(base_tmp, fallback_name)
+
+    if os.name != "posix":
+        return fallback_dir
+
+    preferred_dir = "/tmp/openclaw"
+    if _is_secure_posix_tmp_dir(preferred_dir) and os.access(
+        preferred_dir, os.W_OK | os.X_OK
+    ):
+        return preferred_dir
+
+    if not os.path.exists(preferred_dir):
+        try:
+            if os.path.isdir("/tmp") and os.access("/tmp", os.W_OK | os.X_OK):
+                os.makedirs(preferred_dir, mode=0o700, exist_ok=True)
+        except OSError:
+            pass
+        if _is_secure_posix_tmp_dir(preferred_dir) and os.access(
+            preferred_dir, os.W_OK | os.X_OK
+        ):
+            return preferred_dir
+
+    return fallback_dir
+
+
+def _resolve_output_dir() -> str:
+    """Resolve a safe output directory for stickers."""
+    candidates = [
+        # Prefer OpenClaw's temp root so local-media allowlists accept MEDIA paths.
+        _resolve_openclaw_tmp_dir(),
+        # Keep workspace-local output as a fallback for local/dev runs.
+        os.path.join(os.getcwd(), ".openclaw-media"),
+        tempfile.gettempdir(),
+    ]
+
+    seen: set[str] = set()
+    for candidate in candidates:
+        normalized = os.path.abspath(candidate)
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        try:
+            os.makedirs(normalized, exist_ok=True)
+        except OSError:
+            continue
+        if os.path.isdir(normalized) and os.access(normalized, os.W_OK):
+            return normalized
+
+    raise RuntimeError("No writable directory available for sticker output.")
+
+
 def _save_temp_webp(image_bytes: bytes) -> str:
-    path = os.path.join(tempfile.gettempdir(), f"quotly-{uuid.uuid4().hex}.webp")
+    output_dir = _resolve_output_dir()
+    path = os.path.join(output_dir, f"quotly-{uuid.uuid4().hex}.webp")
     with open(path, "wb") as handle:
         handle.write(image_bytes)
     return os.path.abspath(path)
 
 
-def _contains_telegram_token_url(value: Any) -> bool:
-    if not isinstance(value, str):
-        return False
-    return bool(TELEGRAM_TOKEN_URL_PATTERN.search(value))
+def _stable_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
-def _estimate_data_url_size_bytes(data_url: str) -> int:
-    if "," not in data_url:
-        return 0
-    payload = data_url.split(",", 1)[1].replace("\n", "").replace("\r", "").strip()
-    if not payload:
-        return 0
-    return (len(payload) * 3) // 4
+def _resolve_context_event(input_payload: Dict[str, Any]) -> Dict[str, Any]:
+    context = input_payload.get("context")
+    if isinstance(context, dict):
+        event = context.get("event")
+        if isinstance(event, dict):
+            return event
+    event = input_payload.get("event")
+    if isinstance(event, dict):
+        return event
+    return {}
 
 
-def _parse_avatar_allow_hosts(raw_value: str) -> List[str]:
-    hosts: List[str] = []
-    for item in raw_value.split(","):
-        host = item.strip().lower().rstrip(".")
-        if host:
-            hosts.append(host)
-    return hosts
+def _payload_hash_dedupe_key(input_payload: Dict[str, Any]) -> Optional[str]:
+    selected_messages = input_payload.get("selected_messages")
+    if not isinstance(selected_messages, list) or not selected_messages:
+        return None
+    digest = hashlib.sha256(_stable_json(selected_messages).encode("utf-8")).hexdigest()
+    return f"payload:{digest[:32]}"
 
 
-def _host_matches_allowlist(host: str, allow_hosts: List[str]) -> bool:
-    for allowed in allow_hosts:
-        if host == allowed or host.endswith(f".{allowed}"):
+def _build_dedupe_key(input_payload: Dict[str, Any]) -> Optional[str]:
+    event = _resolve_context_event(input_payload)
+    channel = str(_first_non_empty(event.get("channel"), "unknown")).strip().lower()
+
+    for key in ("update_id", "event_id", "delivery_id", "id"):
+        value = event.get(key)
+        if value is None:
+            continue
+        value_text = str(value).strip()
+        if value_text:
+            return f"{channel}:{key}:{value_text}"
+
+    nested_update = event.get("update")
+    if isinstance(nested_update, dict):
+        value = nested_update.get("update_id")
+        if value is not None:
+            value_text = str(value).strip()
+            if value_text:
+                return f"{channel}:update_id:{value_text}"
+
+    return _payload_hash_dedupe_key(input_payload)
+
+
+def _dedupe_cache_path() -> str:
+    base_dir = _resolve_openclaw_tmp_dir()
+    os.makedirs(base_dir, exist_ok=True)
+    return os.path.join(base_dir, "quotly-dedup-cache.json")
+
+
+def _load_dedupe_cache(path: str) -> Dict[str, float]:
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    if not isinstance(payload, dict):
+        return {}
+
+    cleaned: Dict[str, float] = {}
+    for key, value in payload.items():
+        if not isinstance(key, str):
+            continue
+        if isinstance(value, (int, float)):
+            cleaned[key] = float(value)
+    return cleaned
+
+
+def _save_dedupe_cache(path: str, cache: Dict[str, float]) -> None:
+    temp_path = f"{path}.{uuid.uuid4().hex}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as handle:
+        json.dump(cache, handle, ensure_ascii=False, separators=(",", ":"))
+    os.replace(temp_path, path)
+
+
+def _acquire_lock(lock_path: str, timeout_seconds: float = 2.0) -> bool:
+    deadline = time.time() + max(0.1, timeout_seconds)
+    while time.time() < deadline:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
             return True
+        except FileExistsError:
+            time.sleep(0.05)
+        except OSError:
+            return False
     return False
 
 
-def _is_disallowed_host(host: str) -> bool:
-    if not host:
-        return True
-
-    lowered = host.lower().rstrip(".")
-    if lowered in ("localhost", "localhost.localdomain"):
-        return True
-    if lowered.endswith(".local") or lowered.endswith(".internal"):
-        return True
-    if lowered in ("metadata.google.internal",):
-        return True
-
+def _release_lock(lock_path: str) -> None:
     try:
-        ip = ipaddress.ip_address(lowered)
-        return not ip.is_global
-    except ValueError:
+        os.unlink(lock_path)
+    except OSError:
+        pass
+
+
+def _is_duplicate_recent(dedupe_key: str, dedupe_window_seconds: int) -> bool:
+    if dedupe_window_seconds <= 0:
         return False
 
+    cache_path = _dedupe_cache_path()
+    lock_path = f"{cache_path}.lock"
+    if not _acquire_lock(lock_path):
+        # Fail open: if lock can't be acquired, proceed with generation.
+        return False
 
-def _sanitize_avatar_for_renderer(
-    avatar_value: Any,
-    max_avatar_bytes: int,
-    disable_remote_avatar_url: bool,
-    avatar_allow_hosts: List[str],
-) -> Optional[str]:
+    now = time.time()
+    retention_seconds = max(dedupe_window_seconds * 4, 900)
+    try:
+        cache = _load_dedupe_cache(cache_path)
+        fresh_cache: Dict[str, float] = {}
+        for key, timestamp in cache.items():
+            if now - timestamp < retention_seconds:
+                fresh_cache[key] = timestamp
+
+        last_seen = fresh_cache.get(dedupe_key)
+        is_duplicate = isinstance(last_seen, float) and (now - last_seen) < dedupe_window_seconds
+        if not is_duplicate:
+            fresh_cache[dedupe_key] = now
+
+        _save_dedupe_cache(cache_path, fresh_cache)
+        return is_duplicate
+    finally:
+        _release_lock(lock_path)
+
+
+def _sanitize_avatar_for_renderer(avatar_value: Any) -> Optional[str]:
+    """Sanitize avatar URL for QuotLy renderer. Only accepts data URLs and simple HTTPS URLs."""
     if not isinstance(avatar_value, str):
         return None
 
@@ -602,73 +691,18 @@ def _sanitize_avatar_for_renderer(
     if not avatar:
         return None
 
-    if _contains_telegram_token_url(avatar):
-        print(
-            "WARN: Unsafe Telegram file URL contains bot token; avatar removed to avoid secret leakage.",
-            file=sys.stderr,
-        )
-        return None
-
+    # Accept data URLs (base64 encoded images)
     if avatar.lower().startswith("data:image/"):
-        data_size = _estimate_data_url_size_bytes(avatar)
-        if data_size > max_avatar_bytes:
-            print(
-                f"WARN: Avatar data URL too large ({data_size} bytes), removed.",
-                file=sys.stderr,
-            )
-            return None
         return avatar
 
+    # Accept simple HTTPS URLs without credentials
     parsed = urllib.parse.urlparse(avatar)
     if parsed.scheme.lower() != "https":
-        print("WARN: Non-HTTPS avatar URL removed.", file=sys.stderr)
         return None
     if parsed.username or parsed.password:
-        print("WARN: Avatar URL with embedded credentials removed.", file=sys.stderr)
-        return None
-    if disable_remote_avatar_url:
-        print(
-            "WARN: Remote avatar URL disabled by configuration; avatar removed.",
-            file=sys.stderr,
-        )
         return None
 
-    host = (parsed.hostname or "").lower().rstrip(".")
-    if _is_disallowed_host(host):
-        print(
-            "WARN: Avatar URL points to a disallowed host; avatar removed.",
-            file=sys.stderr,
-        )
-        return None
-    if avatar_allow_hosts and not _host_matches_allowlist(host, avatar_allow_hosts):
-        print(
-            "WARN: Avatar URL host is not in allowlist; avatar removed.",
-            file=sys.stderr,
-        )
-        return None
-
-    query_pairs = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
-    sensitive_query_keys = (
-        "token",
-        "sig",
-        "signature",
-        "auth",
-        "secret",
-        "credential",
-        "security",
-        "access_key",
-        "x-amz",
-        "x-goog",
-    )
-    for key, _ in query_pairs:
-        lowered = key.lower()
-        if any(marker in lowered for marker in sensitive_query_keys):
-            print(
-                "WARN: Avatar URL query looks sensitive; avatar removed.",
-                file=sys.stderr,
-            )
-            return None
-
+    # Remove fragment and return clean URL
     return parsed._replace(fragment="").geturl()
 
 
@@ -683,129 +717,105 @@ def _split_display_name(name: str) -> Tuple[str, Optional[str]]:
 
 
 def _resolve_source_profile(
-    base_payload: Dict[str, Any],
     item_payload: Dict[str, Any],
     message: Dict[str, Any],
-    raw_payload: Any,
-) -> Tuple[Dict[str, Any], Optional[str], Optional[str]]:
-    explicit_profile_base = {
-        "id": base_payload.get("source_id"),
-        "name": base_payload.get("source_name"),
-        "avatar": base_payload.get("source_avatar_url"),
-        "status_emoji": base_payload.get("source_status_emoji"),
-        "status_emoji_id": _first_non_empty(
-            base_payload.get("source_status_emoji_id"),
-            base_payload.get("source_status_id"),
-        ),
-    }
-    explicit_profile_item = {
-        "id": item_payload.get("source_id"),
-        "name": item_payload.get("source_name"),
-        "avatar": item_payload.get("source_avatar_url"),
-        "status_emoji": item_payload.get("source_status_emoji"),
-        "status_emoji_id": _first_non_empty(
-            item_payload.get("source_status_emoji_id"),
-            item_payload.get("source_status_id"),
-        ),
-    }
-    sender_profile = _merge_profile(
-        _profile_from_obj(message.get("sender")),
-        _profile_from_obj(message.get("from")),
-    )
-    forward_profile_context, forward_text_context = _extract_forward_from_message(
-        message
-    )
-    forward_profile_raw, forward_text_raw = _extract_forward_from_raw(raw_payload)
+) -> Dict[str, Any]:
+    """
+    Resolve source profile from forward_from or overwrite_message.forward_from.
 
-    source_profile = _merge_profile(
-        explicit_profile_item,
-        explicit_profile_base,
-        forward_profile_context,
-        forward_profile_raw,
-        sender_profile,
-    )
-    return source_profile, forward_text_context, forward_text_raw
+    Priority:
+    1. overwrite_message.forward_from (user override)
+    2. message.forward_from (original forward source)
+    """
+    # Check for overwrite in payload
+    overwrite = item_payload.get("overwrite_message")
+    if isinstance(overwrite, dict):
+        overwrite_forward = overwrite.get("forward_from")
+        if isinstance(overwrite_forward, dict):
+            # Build profile from overwrite
+            first_name = _first_non_empty(overwrite_forward.get("first_name"))
+            last_name = _first_non_empty(overwrite_forward.get("last_name"))
+            name = _first_non_empty(
+                overwrite_forward.get("name"),
+                _clean_name(first_name, last_name),
+            )
+            return {
+                "id": overwrite_forward.get("id"),
+                "first_name": first_name,
+                "last_name": last_name,
+                "name": name,
+                "avatar": _first_non_empty(
+                    overwrite_forward.get("avatar_url"),
+                    overwrite_forward.get("avatar"),
+                ),
+                "status_url": _first_non_empty(
+                    overwrite_forward.get("status_url"),
+                    overwrite_forward.get("status"),
+                ),
+            }
+
+    # Use message forward_from
+    return _extract_forward_from_message(message)
 
 
 def _build_quote_message(
-    base_payload: Dict[str, Any],
     item_payload: Dict[str, Any],
     message: Dict[str, Any],
-    raw_payload: Any,
-    channel: str,
     args: argparse.Namespace,
-    avatar_cache: Dict[int, Optional[str]],
-    avatar_allow_hosts: List[str],
 ) -> Optional[Dict[str, Any]]:
-    source_profile, forward_text_context, forward_text_raw = _resolve_source_profile(
-        base_payload, item_payload, message, raw_payload
+    """
+    Build a quote message for the QuotLy API.
+
+    Uses forward_from for source info and supports overwrite_message for overrides.
+    """
+    source_profile = _resolve_source_profile(item_payload, message)
+
+    # Extract source info from profile
+    source_id = source_profile.get("id")
+    source_first_name = _first_non_empty(source_profile.get("first_name"))
+    source_last_name = _first_non_empty(source_profile.get("last_name"))
+    source_name = str(
+        _first_non_empty(
+            _clean_name(source_first_name, source_last_name),
+            source_profile.get("name"),
+            "Unknown",
+        )
     )
     source_avatar = source_profile.get("avatar")
-    source_id = _normalize_user_id(source_profile.get("id"))
 
-    if (
-        not source_avatar
-        and channel == "telegram"
-        and source_id is not None
-        and not args.disable_telegram_avatar_lookup
-    ):
-        if source_id in avatar_cache:
-            source_avatar = avatar_cache[source_id]
-        else:
-            token = _first_non_empty(
-                os.getenv("TG_BOT_TOKEN"), os.getenv("TELEGRAM_BOT_TOKEN")
-            )
-            if token:
-                try:
-                    source_avatar = _fetch_telegram_avatar_data_url(
-                        str(token), source_id, args.timeout, args.max_avatar_bytes
-                    )
-                except Exception as avatar_exc:
-                    print(
-                        f"WARN: Telegram avatar lookup failed, continuing without avatar: {avatar_exc}",
-                        file=sys.stderr,
-                    )
-                    source_avatar = None
-            else:
-                source_avatar = None
-            avatar_cache[source_id] = source_avatar
-
-    source_avatar = _sanitize_avatar_for_renderer(
-        source_avatar,
-        args.max_avatar_bytes,
-        args.disable_remote_avatar_url,
-        avatar_allow_hosts,
-    )
-
-    source_name = str(_first_non_empty(source_profile.get("name"), "Unknown"))
-    source_status_emoji = _first_non_empty(source_profile.get("status_emoji"))
-    source_status_emoji_id = _first_non_empty(source_profile.get("status_emoji_id"))
-    display_name = source_name
-
-    quote_text = _extract_text(
-        base_payload, item_payload, message, forward_text_context, forward_text_raw
-    )
+    # Get quote text and entities
+    quote_text = _extract_text(item_payload, message)
     if not quote_text.strip():
         return None
 
-    first_name, last_name = _split_display_name(display_name)
+    # Extract entities from message or overwrite_message
+    entities = _extract_entities(item_payload, message)
+
+    # Build message_from for QuotLy API
+    first_name, last_name = _split_display_name(source_name)
+    if source_first_name:
+        first_name = str(source_first_name)
+    if source_last_name:
+        last_name = str(source_last_name)
+
     message_from: Dict[str, Any] = {"id": source_id if source_id is not None else 0}
     message_from["first_name"] = first_name
     if last_name:
         message_from["last_name"] = last_name
-    message_from["name"] = display_name
-    if source_status_emoji_id:
-        message_from["emoji_status"] = str(source_status_emoji_id)
-    elif source_status_emoji:
-        message_from["name"] = f"{display_name} {source_status_emoji}"
-        message_from["first_name"], message_from["last_name"] = _split_display_name(
-            message_from["name"]
-        )
+    message_from["name"] = source_name
+
+    # Handle avatar
     if source_avatar:
-        message_from["photo"] = {"url": str(source_avatar)}
+        sanitized_avatar = _sanitize_avatar_for_renderer(source_avatar)
+        if sanitized_avatar:
+            message_from["photo"] = {"url": str(sanitized_avatar)}
+
+    # Apply default entity styling if no entities provided
+    if not entities:
+        entities = _apply_default_entities(quote_text)
 
     return {
-        "entities": [],
+        "entities": entities,
         "avatar": True,
         "from": message_from,
         "text": quote_text,
@@ -832,11 +842,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Generate QuotLy-style sticker and output MEDIA path for OpenClaw.",
         epilog=(
-            "Risk controls use environment variables: "
-            "QUOTLY_DISABLE_TELEGRAM_AVATAR_LOOKUP, "
-            "QUOTLY_DISABLE_REMOTE_AVATAR_URL, "
-            "QUOTLY_AVATAR_ALLOW_HOSTS, "
-            "QUOTLY_MAX_AVATAR_BYTES."
+            "Environment variables:\n"
+            "  QUOTLY_API_URL - QuotLy API endpoint (default: https://bot.lyo.su/quote/generate).\n"
+            "  QUOTLY_API_ALLOW_HOSTS - Comma-separated list of allowed API hosts.\n"
+            "  QUOTLY_DEDUP_WINDOW_SECONDS - Suppress duplicate requests within N seconds (default: 180)."
         ),
     )
     parser.add_argument(
@@ -845,58 +854,37 @@ def main() -> int:
         help="Path to input JSON file, or '-' to read JSON from stdin.",
     )
     parser.add_argument(
-        "--api",
-        default="https://bot.lyo.su/quote/generate",
-        help="QuotLy API endpoint.",
-    )
-    parser.add_argument(
         "--timeout", type=float, default=20.0, help="Network timeout seconds."
-    )
-    parser.add_argument(
-        "--debug-raw", action="store_true", help="Print raw payload JSON to stderr."
     )
     args = parser.parse_args()
 
     try:
-        args.disable_telegram_avatar_lookup = _parse_env_bool(
-            "QUOTLY_DISABLE_TELEGRAM_AVATAR_LOOKUP", True
-        )
-        args.disable_remote_avatar_url = _parse_env_bool(
-            "QUOTLY_DISABLE_REMOTE_AVATAR_URL", True
-        )
-        args.max_avatar_bytes = _parse_env_int(
-            "QUOTLY_MAX_AVATAR_BYTES", DEFAULT_MAX_AVATAR_BYTES
-        )
-        if args.max_avatar_bytes <= 0:
-            raise RuntimeError("Environment QUOTLY_MAX_AVATAR_BYTES must be > 0.")
-
-        avatar_allow_hosts = _parse_avatar_allow_hosts(
-            os.getenv("QUOTLY_AVATAR_ALLOW_HOSTS", "")
-        )
         input_payload = _load_input_payload(args.input)
-
-        context = _extract_context(input_payload)
-        channel = _extract_channel(context)
-        raw_payload = _extract_raw_payload(context)
-        message_items = _extract_message_items(input_payload, context, raw_payload)
-
-        if args.debug_raw and isinstance(raw_payload, dict):
+        dedupe_window_seconds = _parse_env_int("QUOTLY_DEDUP_WINDOW_SECONDS", 180)
+        dedupe_key = _build_dedupe_key(input_payload)
+        if dedupe_key and _is_duplicate_recent(dedupe_key, dedupe_window_seconds):
+            _audit_log(
+                "generation_duplicate_skipped",
+                {"dedupe_key": dedupe_key, "window_seconds": dedupe_window_seconds},
+            )
             print(
-                json.dumps(raw_payload, ensure_ascii=False, indent=2), file=sys.stderr
+                f"WARN: Duplicate request skipped for dedupe key: {dedupe_key}",
+                file=sys.stderr,
+            )
+            return 0
+
+        message_items = _extract_message_items(input_payload)
+        if not message_items:
+            raise RuntimeError(
+                "selected_messages is required and must contain at least one message item."
             )
 
         quote_messages: List[Dict[str, Any]] = []
-        avatar_cache: Dict[int, Optional[str]] = {}
         for idx, item in enumerate(message_items, start=1):
             quote_message = _build_quote_message(
-                input_payload,
                 item["payload"],
                 item["message"],
-                item["raw_payload"],
-                channel,
                 args,
-                avatar_cache,
-                avatar_allow_hosts,
             )
             if quote_message is None:
                 print(
@@ -908,15 +896,21 @@ def main() -> int:
 
         if not quote_messages:
             raise RuntimeError(
-                "No quote text available. Provide quote_text or message.text/original_text."
+                "No quote text available. Provide overwrite_message.text or message.text."
             )
+
+        width = _as_int(input_payload.get("width", 512), 512)
+        height = _as_int(
+            input_payload.get("height", _estimate_canvas_height(quote_messages)),
+            _estimate_canvas_height(quote_messages),
+        )
 
         quotly_payload = {
             "type": "quote",
             "format": "webp",
             "backgroundColor": str(input_payload.get("background_color", "#1b1429")),
-            "width": _as_int(input_payload.get("width", 512), 512),
-            "height": _as_int(input_payload.get("height", 768), 768),
+            "width": _clamp(width, 256, 1024),
+            "height": _clamp(height, 320, 1024),
             "scale": _as_int(input_payload.get("scale", 2), 2),
             "maxWidth": _as_int(input_payload.get("max_width", 300), 300),
             "borderRadius": _as_int(input_payload.get("border_radius", 28), 28),
@@ -924,13 +918,19 @@ def main() -> int:
             "messages": quote_messages,
         }
 
-        image_bytes = _generate_quote_image(quotly_payload, args.api, args.timeout)
+        # Get and sanitize API URL to prevent SSRF
+        api_url = os.getenv("QUOTLY_API_URL", "https://bot.lyo.su/quote/generate")
+        _audit_log("api_request", {"url": api_url, "message_count": len(quote_messages)})
+        api_url = _sanitize_api_url(api_url)
+        image_bytes = _generate_quote_image(quotly_payload, api_url, args.timeout)
         media_path = _save_temp_webp(image_bytes)
 
+        _audit_log("generation_success", {"media_path": media_path, "size_bytes": len(image_bytes)})
         print("Quote sticker generated.")
         print(f"MEDIA:{media_path}")
         return 0
     except Exception as exc:
+        _audit_log("generation_failed", {"error": str(exc), "error_type": type(exc).__name__})
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
 

@@ -1,147 +1,149 @@
 ---
 name: quotly-style-sticker
-description: Generate QuotLy-style stickers from OpenClaw context and return MEDIA for auto-send. Use for single or multi-message quote cards (multiple forwarded messages merged into one sticker).
+description: Generate QuotLy-style stickers from forwarded messages and return one MEDIA path for auto-send. Use when users ask to create quote stickers from selected forwarded messages or quoted messages in groups.
 ---
 
 # QuotLy Style Sticker
 
-## Human Guide
+## How To Call (Agent)
 
-OpenClaw usage:
+1. Build payload with required `selected_messages`.
+2. When available, include event metadata for dedupe:
+   - `context.event.channel` (example: `telegram`)
+   - `context.event.update_id` (preferred)
+   - fallback keys: `event_id`, `delivery_id`, `id`
+3. Run:
+   - `python3 scripts/openclaw_quote_autoreply.py --input <json-file-or->`
+4. Use tool-emitted `MEDIA:` for delivery.
+5. Final assistant text must be empty.
 
-1. Enable `quotly-style-sticker` in OpenClaw.
-2. Forward one or multiple Telegram messages to OpenClaw.
-3. Trigger with a prompt such as `Use $quotly-style-sticker to generate a quote sticker`.
-4. OpenClaw sends back the generated sticker automatically.
+## Input
 
-Local usage:
-
-- `python scripts/openclaw_quote_autoreply.py --input <openclaw-input.json>`
-- `echo '<json>' | python scripts/openclaw_quote_autoreply.py --input -`
-- `python scripts/openclaw_quote_autoreply.py --input scripts/input.sample.json`
-
-Output contract:
-
-- `Quote sticker generated.`
-- `MEDIA:<absolute-path-to-webp>`
-
-Each request writes a unique temp file path.
-If `messages` has multiple entries, all entries are rendered into one sticker.
-
-## Skills Config (Human)
-
-Configure env vars in `openclaw.json` via `skills.entries.<skill>.env`:
-
-```json
-{
-  "skills": {
-    "entries": {
-      "quotly-style-sticker": {
-        "env": {
-          "QUOTLY_DISABLE_TELEGRAM_AVATAR_LOOKUP": "true",
-          "QUOTLY_DISABLE_REMOTE_AVATAR_URL": "true",
-          "QUOTLY_AVATAR_ALLOW_HOSTS": "cdn.telegram.org,images.example.com",
-          "QUOTLY_MAX_AVATAR_BYTES": "1048576",
-          "TG_BOT_TOKEN": "<optional for Telegram avatar lookup>"
-        }
-      }
-    }
-  }
-}
-```
-
-Sandbox note:
-
-- `skills.entries.<skill>.env` applies to host runs.
-- For sandboxed runs, provide env vars in sandbox docker env config.
-
-## Agent Contract
-
-Entry command:
-
-- `python scripts/openclaw_quote_autoreply.py --input <json-file-or->`
-
-### Input Model
-
-```json
-{
-  "messages": [
-    {
-      "message": {
-        "text": "...",
-        "forward": {
-          "sender": { "id": 1, "name": "User A" },
-          "text": "Forward text A"
-        }
+- Required: `selected_messages` (array, must not be empty)
+- Optional: `context.event` for dedupe accuracy
+  - `channel` (string)
+  - `update_id` (string or number, preferred)
+  - `event_id` / `delivery_id` / `id` (fallback keys)
+- Each item structure:
+  ```json5
+  {
+    "message": {
+      "message_id": 2002,
+      "text": "Forwarded message content",
+      "forward_from": {
+        "type": "hidden_user",  // optional, indicates hidden user
+        "id": 123456789,        // optional, user id
+        "first_name": "张",     // required, first name or nickname
+        "last_name": "三",      // optional, last name
+        "avatar_url": "",       // optional, avatar url or base64 data (from user profile or platform API)
+        "status_url": ""        // optional, status url or base64 data (from user profile or platform API)
       }
     },
+    // Optional: override message fields
+    "overwrite_message": {
+      "text": "哈哈哈哈哈",
+      "forward_from": {
+        "avatar_url": "",       // from user profile or platform API
+        "status_url": ""        // from user profile or platform API
+      },
+      "entities": [  // optional, text formatting entities
+        {"type": "bold", "offset": 0, "length": 4},
+        {"type": "italic", "offset": 5, "length": 4}
+      ]
+    }
+  }
+  ```
+- Optional canvas: `width`, `height`, `scale`, `max_width`, `border_radius`, `picture_radius`, `background_color`
+
+## Entities (Text Formatting)
+
+The skill supports Telegram-style message entities for text formatting:
+
+```json5
+[
+  {"type": "bold", "offset": 0, "length": 5},
+  {"type": "italic", "offset": 6, "length": 6},
+  {"type": "url", "offset": 13, "length": 15, "url": "https://example.com"}
+]
+```
+
+**Supported types:** `mention`, `hashtag`, `cashtag`, `bot_command`, `url`, `email`, `phone_number`, `bold`, `italic`, `underline`, `strikethrough`, `spoiler`, `code`, `pre`, `text_link`, `text_mention`, `custom_emoji`
+
+**Entity fields:**
+- `type` (required) - entity type
+- `offset` (required) - UTF-8 offset in text
+- `length` (required) - UTF-8 length
+- `url` (optional) - for `text_link` type
+- `user` (optional) - for `text_mention` type
+- `language` (optional) - for `pre` type
+- `custom_emoji_id` (optional) - for `custom_emoji` type
+
+## Field Mapping
+
+- Quote text:
+  - `overwrite_message.text` > `message.text`
+- Name/avatar:
+  - `overwrite_message.forward_from` > `message.forward_from`
+- Text formatting (entities):
+  - `overwrite_message.entities` > `message.entities` > `message.caption_entities`
+
+## Output
+
+- stdout includes:
+  - `Quote sticker generated.`
+  - `MEDIA:<absolute-path-to-webp>`
+- For duplicate retries detected within dedupe window, generation is skipped and no `MEDIA:` line is emitted.
+
+## Environment Variables
+
+- `QUOTLY_API_URL` - QuotLy API endpoint (default: `https://bot.lyo.su/quote/generate`).
+- `QUOTLY_API_ALLOW_HOSTS` - Comma-separated list of allowed API hosts (e.g., `bot.lyo.su`). When set, the skill will only contact hosts in this list.
+- `QUOTLY_AUDIT_LOG` - Set to `1`, `true`, or `yes` to enable audit logging to stderr.
+- `QUOTLY_DEDUP_WINDOW_SECONDS` - Suppress duplicate requests for the same event/payload within this window (default: `180`). Set to `0` to disable.
+
+## Dedupe Key (How `_build_dedupe_key` reads input)
+
+`_build_dedupe_key(input_payload)` resolves keys in this order:
+
+1. `context.event.update_id` (or `event_id` / `delivery_id` / `id`)
+2. `event.update_id` (or `event_id` / `delivery_id` / `id`) when `context.event` is missing
+3. `context.event.update.update_id` (nested update object)
+4. Fallback: stable hash of `selected_messages`
+
+Recommended wrapper payload:
+
+```json
+{
+  "context": {
+    "event": {
+      "channel": "telegram",
+      "update_id": 123456789
+    }
+  },
+  "selected_messages": [
     {
       "message": {
-        "text": "...",
-        "forward": {
-          "sender": { "id": 2, "name": "User B" },
-          "text": "Forward text B"
-        }
+        "message_id": 2002,
+        "text": "Forwarded message content"
       }
     }
-  ],
-  "context": { "event": { "channel": "telegram", "rawPayload": {} } }
+  ]
 }
 ```
 
-Single-message fallback is supported when `messages` is absent:
+## Security Notes
 
-- `context.message`
-- or root-level message-like fields (`text`, `sender`, `forward`, ...)
+- This skill sends message content to an external API to generate stickers.
+- **SSRF Protection**: Multiple layers of protection are implemented:
+  - Hostname validation blocks internal/private IPs, localhost, and metadata endpoints
+  - DNS rebinding protection: resolves hostnames and validates resolved IPs
+  - Path traversal prevention: blocks `..` and suspicious path patterns
+  - URL credentials stripping: removes username/password from URLs
+- **Request Limits**: Maximum payload size 1MB, maximum response size 10MB
+- **Audit Logging**: Enable with `QUOTLY_AUDIT_LOG=1` to log API requests and responses for security monitoring
+- In sensitive environments, always set `QUOTLY_API_ALLOW_HOSTS` to restrict which hosts the skill can contact.
+- Avatar and status URLs from user input are passed to the rendering service; ensure input comes from trusted sources.
 
-Override fields:
+## Reply Rule
 
-- Global fallback: `quote_text`, `original_text`, `source_id`, `source_name`, `source_status_emoji`, `source_status_emoji_id`, `source_avatar_url`
-- Per-message override: same keys inside each message item
-
-Resolution rules:
-
-1. Source identity: per-item `source_*` > global `source_*` > `message.forward.*` > `rawPayload` > `message.sender`.
-2. Quote text: per-item `quote_text` > global `quote_text` > message text > forwarded text > per-item/global `original_text`.
-3. Name fields sent to renderer: `first_name`/`last_name`; status uses `emoji_status` when status id is available.
-
-### Output Model
-
-- Must print one `MEDIA:` line with absolute path to generated `.webp`.
-- Non-fatal avatar issues should continue without avatar.
-
-## Avatar -> Renderer Path (Security)
-
-How avatar is passed to lyo:
-
-1. If message already has avatar URL, script sanitizes it and may pass sanitized HTTPS URL.
-2. If avatar is missing and Telegram lookup is enabled, script calls Telegram API, downloads avatar bytes, and sends `data:image/...;base64,...` inline data URL. Telegram lookup is disabled by default.
-3. Script never sends `https://api.telegram.org/file/bot<token>/...` to renderer.
-
-Avatar safety rules before sending to renderer:
-
-- Reject non-HTTPS remote URLs.
-- Reject URLs with embedded credentials.
-- Reject internal/private/loopback hosts.
-- Reject URLs with sensitive query keys (`token`, `sig`, `auth`, `x-amz`, `x-goog`, etc).
-- Enforce max avatar size for inline data URLs (`QUOTLY_MAX_AVATAR_BYTES`).
-
-## Runtime & Network
-
-Required env vars:
-
-- none
-
-Optional env vars:
-
-- `TG_BOT_TOKEN` or `TELEGRAM_BOT_TOKEN` (Telegram avatar lookup only)
-- `QUOTLY_DISABLE_TELEGRAM_AVATAR_LOOKUP` (default `true`)
-- `QUOTLY_DISABLE_REMOTE_AVATAR_URL` (default `true`)
-- `QUOTLY_AVATAR_ALLOW_HOSTS` (default empty)
-- `QUOTLY_MAX_AVATAR_BYTES` (default `1048576`)
-
-External endpoint:
-
-- default renderer: `https://bot.lyo.su/quote/generate`
-- fallback renderer URL: `https://bot.lyo.su/quote/generate.webp`
-- override: `--api <your-endpoint>`
+- Do not output any final text.
