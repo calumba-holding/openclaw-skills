@@ -3,11 +3,16 @@
   "slug": "minara",
   "displayName": "Minara",
   "latest": {
-    "version": "2.4.10",
-    "publishedAt": 1772120315539,
-    "commit": "https://github.com/openclaw/skills/commit/71527dc0c08e3c39e9b79c8ab4474bcf40a0fd95"
+    "version": "2.4.11",
+    "publishedAt": 1772164201748,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.4.10",
+      "publishedAt": 1772120315539,
+      "commit": "https://github.com/openclaw/skills/commit/71527dc0c08e3c39e9b79c8ab4474bcf40a0fd95"
+    },
     {
       "version": "2.4.7",
       "publishedAt": 1772001564042,
