@@ -3,19 +3,19 @@
 # Pass the path to scripts via --config flag.
 #
 # Example:
-#   cp config.example.yaml ~/.openclaw/config/restart-guard.yaml
-#   python3 scripts/restart.py --config ~/.openclaw/config/restart-guard.yaml
+#   cp config.example.yaml ~/.openclaw/custom/config/restart-guard.yaml
+#   python3 scripts/restart.py --config ~/.openclaw/custom/config/restart-guard.yaml
 
 # --- Paths ---
 paths:
   # Where to write the restart context file
-  context_file: "~/.openclaw/restart-guard/restart-context.md"
+  context_file: "~/.openclaw/custom/work/restart-context.md"
   # Lock file to prevent restart storms
   lock_file: "/tmp/restart-guard.lock"
   # Restart log (append-only history)
-  restart_log: "~/.openclaw/restart-guard/restart.log"
+  restart_log: "~/.openclaw/custom/work/restart.log"
   # Config backup directory (before restart)
-  backup_dir: "~/.openclaw/restart-guard/backup"
+  backup_dir: "~/.openclaw/custom/work/restart-backup"
   # OpenClaw config file (for backup)
   openclaw_config: "~/.openclaw/openclaw.json"
   # OpenClaw binary (auto-detected via `which` if empty)
@@ -26,20 +26,32 @@ gateway:
   host: "127.0.0.1"
   port: 18789
   # Delay before SIGUSR1 restart (ms)
-  restart_delay_ms: 2000
+  restart_delay_ms: 3000
   # Environment variable name containing the auth token
   auth_token_env: "GATEWAY_AUTH_TOKEN"
 
 # --- Guardian ---
 guardian:
   # How often to poll gateway health (seconds)
-  poll_interval: 3
-  # Max time to wait for restart completion (seconds)
+  poll_interval: 2
+  # Timeout waiting for gateway to become unreachable/down (ms)
+  wait_down_timeout_ms: 60000
+  # Timeout waiting for gateway to become healthy again (ms)
+  wait_up_timeout_ms: 120000
+  # Require N consecutive healthy checks to pass
+  health_success_streak: 2
+  # Legacy compatibility timeout (seconds)
   timeout: 120
   # Commands to run on timeout for diagnostics
   diagnostics:
     - "openclaw doctor --non-interactive"
-    - "openclaw logs --tail 30"
+    - "openclaw logs --tail 80"
+  # Total retry budget for result delivery (ms)
+  delivery_retry_budget_ms: 90000
+  # Retry interval between delivery rounds (ms)
+  delivery_retry_interval_ms: 2000
+  # Default log tail size for diagnostics
+  diagnostics_log_tail: 80
 
 # --- Safety ---
 safety:
@@ -57,8 +69,18 @@ notification:
   # Primary: use OpenClaw message tool (requires working gateway)
   primary: "openclaw"
 
+  # Notification mode:
+  # - origin: guardian ACK goes to the originating session (recommended)
+  # - selected: notify only selected channel/target
+  # - all: notify all configured channels
+  mode: "origin"
+
+  # Disaster delivery policy (origin ACK -> main fallback -> external broadcast)
+  emergency_policy: "origin_then_all"
+
   # Fallback channels: ALL listed channels are notified when primary fails.
-  # Supported: "telegram", "discord", "slack", "webhook"
+  # Supported built-ins: "telegram", "discord", "slack", "webhook"
+  # Other channels (e.g. feishu) are sent via openclaw message passthrough.
   # (Legacy: "fallback: telegram" still works for single channel)
   channels:
     # - telegram
@@ -68,8 +90,9 @@ notification:
 
   # Settings for OpenClaw message tool (primary)
   openclaw:
-    channel: ""        # e.g. "telegram", "discord", "slack" (empty = default channel)
-    to: ""             # e.g. "726647436" for Telegram chat ID (empty = default)
+    channel: ""        # e.g. "telegram", "discord", "slack", "feishu"
+    target: ""         # preferred on newer OpenClaw; e.g. Telegram chat id
+    to: ""             # legacy compatibility key (same value as target)
 
   # Telegram direct API
   telegram:

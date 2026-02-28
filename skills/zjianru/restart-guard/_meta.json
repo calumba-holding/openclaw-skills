@@ -1,13 +1,18 @@
 {
   "owner": "zjianru",
   "slug": "restart-guard",
-  "displayName": "Restart Guard",
+  "displayName": "restart-guard",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1770628896133,
-    "commit": "https://github.com/openclaw/skills/commit/9231966527de295eec84755ba004721a25e50cfe"
+    "version": "2.1.0",
+    "publishedAt": 1772192783510,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1770628896133,
+      "commit": "https://github.com/openclaw/skills/commit/9231966527de295eec84755ba004721a25e50cfe"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1770450792471,
