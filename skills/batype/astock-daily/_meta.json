@@ -1,0 +1,11 @@
+{
+  "owner": "batype",
+  "slug": "astock-daily",
+  "displayName": "Astock Daily",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772207243718,
+    "commit": null
+  },
+  "history": []
+}
