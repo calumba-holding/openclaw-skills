@@ -1,0 +1,11 @@
+{
+  "owner": "lhl09120",
+  "slug": "claude-code-runner",
+  "displayName": "Claude Code Runner",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1772176425525,
+    "commit": null
+  },
+  "history": []
+}
