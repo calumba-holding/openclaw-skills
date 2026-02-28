@@ -69,9 +69,7 @@ Both workflows default to `codex-cli` executor with `gpt-5.3-codex` model.
 | `soulforge run <workflow> "<task>" [flags]` | Start a workflow run |
 | `soulforge status [<query>]` | Check run status (ID prefix or task substring) |
 | `soulforge runs` | List all runs |
-| `soulforge approve <run-id> [--message "..."]` | Approve a checkpoint |
-| `soulforge reject <run-id> --reason "…"` | Reject with feedback (rewinds to prior step) |
-| `soulforge complete --run-id <id> --step-id <id> --data '<json>'` | Complete a structured-output step |
+| `soulforge complete --run-id <id> [--step-id <id>] [--force] --data '<json>'` | Complete a waiting/running structured-output step |
 | `soulforge cancel <run-id>` | Cancel a running workflow |
 | `soulforge resume <run-id>` | Resume a failed run |
 | `soulforge events [--run <id>] [--follow]` | Stream workflow events |
@@ -124,27 +122,24 @@ Routes callbacks to the correct OpenClaw agent session automatically — no toke
 
 Steps define when callbacks fire via `notify`:
 - `on_complete` — step finished successfully
-- `on_waiting` — step is waiting for human approval
+- `on_waiting` — step is waiting for checkpoint completion
 - `on_fail` — step failed
 
-`executor: self` steps default to `[on_waiting]`.
+`type: pause` steps default to `[on_waiting]`.
 
 ## Checkpoint Workflow
 
-Steps with `executor: self` pause for human approval:
+Steps with `type: pause` pause for checkpoint completion:
 
 ```bash
 # Check what's waiting
 soulforge status
 
-# Approve a checkpoint (optionally with context)
-soulforge approve <run-id> --message "Looks good, proceed"
-
-# Reject with feedback (rewinds to the step defined in on_reject.reset_to)
-soulforge reject <run-id> --reason "Stories are too granular, combine 3 and 4"
+# Complete the current waiting step
+soulforge complete --run-id <run-id> --data '{"status":"approved","notes":"Looks good"}'
 ```
 
-The review-gate steps in both workflows use a `gate` type for conditional routing:
+The review-gate steps in both workflows use `type: pause` with `gate.routes` for conditional routing:
 - **pass** → proceed to final-review
 - **fix** → loop back through review-fix → code-review → gate (up to 5 times)
 
@@ -160,7 +155,7 @@ soulforge run feature-dev "Refactor auth module" \
   --model opus
 ```
 
-Available executors: `claude-code`, `codex-cli`, `codex` (legacy). The override only applies to code steps — `self` (checkpoint) steps are never overridden.
+Available executors: `claude-code`, `codex-cli`, `codex` (legacy). The override only applies to code steps — pause checkpoints do not run an executor.
 
 ## Structured Step Output
 
@@ -195,7 +190,7 @@ When `--workdir` points to a git repository:
 ### Review gate workflow
 - The code-review → gate → fix loop posts findings as PR comments (audit trail)
 - Gate triage: FIX anything related to the task, SEPARATE genuine scope creep into new issues
-- Gate is `executor: self` — the calling agent (you) triages, not a human
+- Gate is a `type: pause` checkpoint — the calling agent (you) triages, not a human
 
 ### Build/test discovery
 - Workflows tell executors to "discover from AGENTS.md and repo scripts"
