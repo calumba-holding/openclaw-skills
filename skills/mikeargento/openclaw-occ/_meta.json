@@ -3,11 +3,16 @@
   "slug": "openclaw-occ",
   "displayName": "OCC for OpenClaw",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1772285704504,
-    "commit": "https://github.com/openclaw/skills/commit/4b450d51c62206d3754129a989204db54b2ecf82"
+    "version": "1.1.0",
+    "publishedAt": 1772307127293,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1772285704504,
+      "commit": "https://github.com/openclaw/skills/commit/4b450d51c62206d3754129a989204db54b2ecf82"
+    },
     {
       "version": "1.0.5",
       "publishedAt": 1772229736877,

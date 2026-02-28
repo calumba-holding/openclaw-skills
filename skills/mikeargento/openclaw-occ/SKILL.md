@@ -2,16 +2,17 @@
 name: openclaw-occ
 title: OCC for OpenClaw
 description: "OCC (Origin Controlled Computing) — cryptographic proof of every OpenClaw agent action. Install, configure, and audit."
-version: 1.0.7
-homepage: https://occ.fyi/openclaw
+version: 1.1.0
+homepage: https://occprotocol.com/openclaw
 source: https://github.com/mikeargento/occ-core
 requires:
   - npm
   - npx
   - curl
+  - wrangler
 metadata:
   openclaw:
-    homepage: https://occ.fyi/openclaw
+    homepage: https://occprotocol.com/openclaw
     emoji: "🔐"
 ---
 
@@ -20,6 +21,8 @@ metadata:
 `openclaw-occ` is an OpenClaw plugin that commits a cryptographic OCC (Origin Controlled Computing) proof after every tool the agent runs — bash commands, file reads, browser navigation, API calls. Proofs are stored locally in `~/.openclaw/workspace/occ-proofs/` as append-only JSONL files.
 
 If a malicious skill or prompt injection causes unauthorized actions, those actions either appear in the proof log without a valid signature, or are absent entirely — making the attack visible in the audit trail.
+
+**Why OCC proofs are different from regular logs:** a log is written by the system being monitored and can be deleted without leaving a trace. An OCC proof is committed to an external notary by the OpenClaw runtime automatically — the model's instructions cannot suppress it. Proofs are chained by a monotonic counter, so a gap (e.g. counter jumps from 41 to 43) is itself evidence of a suppressed action. Signatures are Ed25519 and verifiable offline — no trust in the notary is required to audit your trail.
 
 Use this skill to help users install the plugin, configure it, and understand their audit results.
 
@@ -155,5 +158,5 @@ One JSONL file per day. Append-only. Crash-safe. Easy to `grep`, archive, or pip
 ## More info
 
 - Plugin: `npm install openclaw-occ`
-- Docs: https://occ.fyi/openclaw
+- Docs: https://occprotocol.com/openclaw
 - Source: https://github.com/mikeargento/occ-core
