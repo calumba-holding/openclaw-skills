@@ -58,6 +58,7 @@ if (!dbPath || !existsSync(dbPath)) {
 const logger = {
   info: (...args: any[]) => console.log("[memento]", ...args),
   warn: (...args: any[]) => console.warn("[memento]", ...args),
+  error: (...args: any[]) => console.error("[memento:error]", ...args),
   debug: (...args: any[]) => {
     if (process.env.DEBUG) console.log("[memento:debug]", ...args);
   },

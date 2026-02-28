@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 6;
 
 // ---------------------------------------------------------------------------
 // Table definitions — Phase 1
@@ -151,6 +151,103 @@ END;
 `;
 
 // ---------------------------------------------------------------------------
+// Table definitions — Phase 2b: Knowledge Graph (fact relations)
+// ---------------------------------------------------------------------------
+
+/** Typed, weighted edges between facts — the knowledge graph */
+export const CREATE_FACT_RELATIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS fact_relations (
+  id            TEXT    PRIMARY KEY,
+  source_id     TEXT    NOT NULL REFERENCES facts(id),
+  target_id     TEXT    NOT NULL REFERENCES facts(id),
+  relation_type TEXT    NOT NULL,
+  strength      REAL    DEFAULT 1.0,
+  created_at    INTEGER NOT NULL,
+  created_by    TEXT,
+  metadata      TEXT
+);
+`;
+
+export const CREATE_FACT_RELATIONS_SOURCE_IDX = `
+CREATE INDEX IF NOT EXISTS idx_fact_relations_source ON fact_relations(source_id);
+`;
+
+export const CREATE_FACT_RELATIONS_TARGET_IDX = `
+CREATE INDEX IF NOT EXISTS idx_fact_relations_target ON fact_relations(target_id);
+`;
+
+export const CREATE_FACT_RELATIONS_TYPE_IDX = `
+CREATE INDEX IF NOT EXISTS idx_fact_relations_type ON fact_relations(relation_type);
+`;
+
+// ---------------------------------------------------------------------------
+// Table definitions — Phase 2c: Multi-Layer Memory (fact clusters)
+// ---------------------------------------------------------------------------
+
+/**
+ * Cluster nodes — higher-level abstractions that consolidate groups of facts
+ * (or other clusters). Each cluster lives at a specific abstraction `layer`:
+ *   - Layer 2: groups of individual facts (e.g., "Ben is a serious cyclist")
+ *   - Layer 3+: groups of clusters (e.g., "Ben's health & fitness profile")
+ *
+ * Clusters participate in the same graph as facts via fact_relations,
+ * but are stored separately because they carry different metadata
+ * (member list, layer depth, consolidation provenance).
+ */
+export const CREATE_FACT_CLUSTERS_TABLE = `
+CREATE TABLE IF NOT EXISTS fact_clusters (
+  id            TEXT    PRIMARY KEY,
+  agent_id      TEXT    NOT NULL,
+  summary       TEXT    NOT NULL,
+  description   TEXT,
+  layer         INTEGER NOT NULL DEFAULT 2,
+  visibility    TEXT    NOT NULL DEFAULT 'shared',
+  confidence    REAL    DEFAULT 1.0,
+  created_at    INTEGER NOT NULL,
+  updated_at    INTEGER NOT NULL,
+  is_active     INTEGER DEFAULT 1,
+  metadata      TEXT
+);
+`;
+
+export const CREATE_FACT_CLUSTERS_AGENT_IDX = `
+CREATE INDEX IF NOT EXISTS idx_fact_clusters_agent ON fact_clusters(agent_id);
+`;
+
+export const CREATE_FACT_CLUSTERS_LAYER_IDX = `
+CREATE INDEX IF NOT EXISTS idx_fact_clusters_layer ON fact_clusters(layer);
+`;
+
+export const CREATE_FACT_CLUSTERS_ACTIVE_IDX = `
+CREATE INDEX IF NOT EXISTS idx_fact_clusters_is_active ON fact_clusters(is_active);
+`;
+
+/**
+ * Membership edges linking facts → clusters and clusters → parent clusters.
+ * `member_type` distinguishes between the two: "fact" or "cluster".
+ *
+ * A single fact can belong to multiple clusters (soft clustering).
+ * A cluster can belong to higher-layer clusters (hierarchical).
+ */
+export const CREATE_CLUSTER_MEMBERS_TABLE = `
+CREATE TABLE IF NOT EXISTS cluster_members (
+  cluster_id    TEXT    NOT NULL REFERENCES fact_clusters(id),
+  member_id     TEXT    NOT NULL,
+  member_type   TEXT    NOT NULL,
+  added_at      INTEGER NOT NULL,
+  PRIMARY KEY (cluster_id, member_id)
+);
+`;
+
+export const CREATE_CLUSTER_MEMBERS_CLUSTER_IDX = `
+CREATE INDEX IF NOT EXISTS idx_cluster_members_cluster ON cluster_members(cluster_id);
+`;
+
+export const CREATE_CLUSTER_MEMBERS_MEMBER_IDX = `
+CREATE INDEX IF NOT EXISTS idx_cluster_members_member ON cluster_members(member_id);
+`;
+
+// ---------------------------------------------------------------------------
 // Schema migration v2 → v3: Add embedding column to facts
 // ---------------------------------------------------------------------------
 
@@ -167,6 +264,76 @@ export const CREATE_FACTS_EMBEDDING_IDX = `
 CREATE INDEX IF NOT EXISTS idx_facts_has_embedding
   ON facts(agent_id, is_active) WHERE embedding IS NOT NULL;
 `;
+
+// ---------------------------------------------------------------------------
+// Schema migration v3 → v4: Add fact_relations table
+// ---------------------------------------------------------------------------
+
+/**
+ * v3 → v4: Create fact_relations table for knowledge graph edges.
+ * Uses CREATE IF NOT EXISTS so it's safe to re-run.
+ */
+export const MIGRATE_V3_TO_V4 = [
+  CREATE_FACT_RELATIONS_TABLE,
+  CREATE_FACT_RELATIONS_SOURCE_IDX,
+  CREATE_FACT_RELATIONS_TARGET_IDX,
+  CREATE_FACT_RELATIONS_TYPE_IDX,
+];
+
+// ---------------------------------------------------------------------------
+// Schema migration v4 → v5: Add fact_clusters + cluster_members tables
+// ---------------------------------------------------------------------------
+
+export const MIGRATE_V4_TO_V5 = [
+  CREATE_FACT_CLUSTERS_TABLE,
+  CREATE_FACT_CLUSTERS_AGENT_IDX,
+  CREATE_FACT_CLUSTERS_LAYER_IDX,
+  CREATE_FACT_CLUSTERS_ACTIVE_IDX,
+  CREATE_CLUSTER_MEMBERS_TABLE,
+  CREATE_CLUSTER_MEMBERS_CLUSTER_IDX,
+  CREATE_CLUSTER_MEMBERS_MEMBER_IDX,
+];
+
+// ---------------------------------------------------------------------------
+// Table definitions — Phase 3: Remote Ingest
+// ---------------------------------------------------------------------------
+
+/** Authentication tokens for remote JSONL ingest */
+export const CREATE_INGEST_TOKENS_TABLE = `
+CREATE TABLE IF NOT EXISTS ingest_tokens (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  token_hash  TEXT NOT NULL UNIQUE,
+  created_at  INTEGER NOT NULL,
+  last_used_at INTEGER,
+  is_active   INTEGER DEFAULT 1
+);
+`;
+
+/** Dedup log — tracks ingested files by content hash */
+export const CREATE_INGEST_FILE_LOG_TABLE = `
+CREATE TABLE IF NOT EXISTS ingest_file_log (
+  id           TEXT PRIMARY KEY,
+  source       TEXT NOT NULL,
+  file_path    TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  ingested_at  INTEGER NOT NULL
+);
+`;
+
+export const CREATE_INGEST_FILE_LOG_HASH_IDX = `
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ingest_file_log_hash ON ingest_file_log(content_hash);
+`;
+
+// ---------------------------------------------------------------------------
+// Schema migration v5 → v6: Add ingest_tokens + ingest_file_log tables
+// ---------------------------------------------------------------------------
+
+export const MIGRATE_V5_TO_V6 = [
+  CREATE_INGEST_TOKENS_TABLE,
+  CREATE_INGEST_FILE_LOG_TABLE,
+  CREATE_INGEST_FILE_LOG_HASH_IDX,
+];
 
 // ---------------------------------------------------------------------------
 // All DDL statements to run on first boot (idempotent)
@@ -193,6 +360,23 @@ export const ALL_DDL = [
   CREATE_FACTS_FTS_INSERT_TRIGGER,
   CREATE_FACTS_FTS_DELETE_TRIGGER,
   CREATE_FACTS_FTS_UPDATE_TRIGGER,
+  // Phase 2b: Knowledge Graph
+  CREATE_FACT_RELATIONS_TABLE,
+  CREATE_FACT_RELATIONS_SOURCE_IDX,
+  CREATE_FACT_RELATIONS_TARGET_IDX,
+  CREATE_FACT_RELATIONS_TYPE_IDX,
+  // Phase 2c: Multi-Layer Memory (clusters)
+  CREATE_FACT_CLUSTERS_TABLE,
+  CREATE_FACT_CLUSTERS_AGENT_IDX,
+  CREATE_FACT_CLUSTERS_LAYER_IDX,
+  CREATE_FACT_CLUSTERS_ACTIVE_IDX,
+  CREATE_CLUSTER_MEMBERS_TABLE,
+  CREATE_CLUSTER_MEMBERS_CLUSTER_IDX,
+  CREATE_CLUSTER_MEMBERS_MEMBER_IDX,
+  // Phase 3: Remote Ingest
+  CREATE_INGEST_TOKENS_TABLE,
+  CREATE_INGEST_FILE_LOG_TABLE,
+  CREATE_INGEST_FILE_LOG_HASH_IDX,
 ];
 
 // ---------------------------------------------------------------------------
@@ -251,6 +435,46 @@ export type FactOccurrenceRow = {
   sentiment: string | null;
 };
 
+export type FactRelationRow = {
+  id: string;
+  source_id: string;
+  target_id: string;
+  /** 'related_to' | 'elaborates' | 'contradicts' | 'supports' | 'caused_by' | 'part_of' */
+  relation_type: string;
+  /** 0.0–1.0 edge weight */
+  strength: number;
+  created_at: number;
+  /** 'extraction' | 'consolidation' | 'user_feedback' | null */
+  created_by: string | null;
+  metadata: string | null;
+};
+
+export type FactClusterRow = {
+  id: string;
+  agent_id: string;
+  /** Human-readable one-line summary of what this cluster represents */
+  summary: string;
+  /** Longer description of the cluster's semantic scope */
+  description: string | null;
+  /** Abstraction level: 2 = group of facts, 3+ = group of clusters */
+  layer: number;
+  /** Inherited from most restrictive member visibility */
+  visibility: string;
+  confidence: number;
+  created_at: number;
+  updated_at: number;
+  is_active: number;
+  metadata: string | null;
+};
+
+export type ClusterMemberRow = {
+  cluster_id: string;
+  member_id: string;
+  /** 'fact' or 'cluster' */
+  member_type: string;
+  added_at: number;
+};
+
 export type ExtractionLogRow = {
   conversation_id: string;
   extracted_at: number;
@@ -259,4 +483,25 @@ export type ExtractionLogRow = {
   facts_updated: number;
   facts_deduplicated: number;
   error: string | null;
+};
+
+// ---------------------------------------------------------------------------
+// Row types — Phase 3: Remote Ingest
+// ---------------------------------------------------------------------------
+
+export type IngestTokenRow = {
+  id: string;
+  name: string;
+  token_hash: string;
+  created_at: number;
+  last_used_at: number | null;
+  is_active: number;
+};
+
+export type IngestFileLogRow = {
+  id: string;
+  source: string;
+  file_path: string;
+  content_hash: string;
+  ingested_at: number;
 };

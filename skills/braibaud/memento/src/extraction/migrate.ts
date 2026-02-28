@@ -266,6 +266,7 @@ function chunkText(text: string, maxBytes: number): string[] {
 const logger = {
   info: (...args: any[]) => console.log("[migrate]", ...args),
   warn: (...args: any[]) => console.warn("[migrate:WARN]", ...args),
+  error: (...args: any[]) => console.error("[migrate:ERROR]", ...args),
   // Suppress debug noise from extractor/deduplicator
   debug: (_msg: string) => {},
 };

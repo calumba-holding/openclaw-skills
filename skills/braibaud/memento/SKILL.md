@@ -2,7 +2,7 @@
 name: memento
 description: Local persistent memory for OpenClaw agents. Captures conversations, extracts structured facts via LLM, and auto-recalls relevant knowledge before each turn. Privacy-first, all stored data stays local in SQLite.
 metadata:
-  version: "0.3.2"
+  version: "0.5.0"
   author: braibaud
   license: MIT
   repository: https://github.com/braibaud/Memento
@@ -11,15 +11,26 @@ metadata:
     kind: plugin
     requires:
       node: ">=18.0.0"
-      env:
-        - ANTHROPIC_API_KEY
-        - OPENAI_API_KEY
-        - MISTRAL_API_KEY
-        - MEMENTO_API_KEY
-        - MEMENTO_WORKSPACE_MAIN
-      config:
-        - "~/.engram/conversations.sqlite"
-        - "~/.engram/migration-config.json"
+      optionalEnv:
+        - name: ANTHROPIC_API_KEY
+          when: "Using anthropic/* models for extraction"
+        - name: OPENAI_API_KEY
+          when: "Using openai/* models for extraction"
+        - name: MISTRAL_API_KEY
+          when: "Using mistral/* models for extraction"
+        - name: MEMENTO_API_KEY
+          when: "Generic fallback for any provider"
+        - name: MEMENTO_WORKSPACE_MAIN
+          when: "Migration only: path to agent workspace for bootstrapping"
+        - name: MEMENTO_AGENT_PATHS
+          when: "Deep consolidation CLI: explicit agent:path mappings"
+      dataFiles:
+        - path: "~/.engram/conversations.sqlite"
+          purpose: "Main database — conversations, facts, embeddings (local only, never uploaded)"
+        - path: "~/.engram/segments/*.jsonl"
+          purpose: "Human-readable conversation backups (local only)"
+        - path: "~/.engram/migration-config.json"
+          purpose: "Optional: agent workspace paths for one-time migration bootstrap"
     install:
       - id: npm
         kind: node
@@ -132,7 +143,13 @@ The `~/.engram` directory name is a legacy from when the project was called Engr
 
 ## Migration (Bootstrap from Existing Memory Files)
 
-To bootstrap Memento from existing agent memory files:
+Migration is an **optional, one-time** process to seed Memento from existing agent memory/markdown files. It is user-initiated only — never runs automatically.
+
+### What it reads
+
+Migration reads **only** the files you explicitly list in the config. It does **not** scan your filesystem, read arbitrary files, or access anything outside the configured paths.
+
+### Setup
 
 1. Create `~/.engram/migration-config.json` or set `MEMENTO_WORKSPACE_MAIN`:
 
@@ -148,11 +165,13 @@ To bootstrap Memento from existing agent memory files:
 }
 ```
 
-2. **Always dry-run first** to verify which files will be read:
+2. **Always dry-run first** to verify exactly which files will be read:
 
 ```bash
 npx tsx src/extraction/migrate.ts --all --dry-run
 ```
+
+The dry-run prints every file path it would read — review this before proceeding.
 
 3. Run the actual migration:
 
@@ -160,7 +179,13 @@ npx tsx src/extraction/migrate.ts --all --dry-run
 npx tsx src/extraction/migrate.ts --all
 ```
 
-⚠️ Migration reads files from the workspace paths you specify. Review the config before running.
+### Security notes
+
+- Migration only reads files matching the glob patterns you configure
+- Extracted facts inherit visibility classification (shared/private/secret)
+- Secret-classified facts are **never** sent to cloud LLM providers
+- Migration config file is optional — if absent, migration is completely inert
+- The migration script has no network access beyond the configured extraction LLM
 
 ## Architecture
 

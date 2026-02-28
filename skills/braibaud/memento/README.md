@@ -2,7 +2,7 @@
 
 **Memento** gives OpenClaw agents a long-term memory — structured, private, and stored entirely on your machine. All stored data stays local — no cloud sync, no subscriptions. Extraction uses your configured LLM provider; use a local model (Ollama) for fully air-gapped operation.
 
-> ⚠️ **Privacy note:** When `autoExtract` is enabled, conversation segments are sent to your configured LLM provider for fact extraction. If you use a cloud provider (Anthropic, OpenAI, Mistral), that text leaves your machine. For fully local operation, set `extractionModel` to `ollama/<model>`.
+> ⚠️ **Privacy note:** When `autoExtract` is enabled, conversation segments are sent to your configured LLM provider for fact extraction. Memento uses OpenClaw's built-in model routing — it inherits whichever model you have configured for your agent (including fallbacks). If you use a cloud provider (Anthropic, OpenAI, Mistral), that text leaves your machine. For fully local operation, configure your OpenClaw agent to use Ollama.
 
 ---
 
@@ -14,27 +14,36 @@
 - **🔒 Privacy-first** — facts are classified by visibility (`shared` / `private` / `secret`); secret facts never leave your machine or cross agent boundaries
 - **🌐 Cross-agent KB** — shared facts from multiple agents are surfaced with provenance tags in recall
 - **📊 Temporal intelligence** — recency, frequency, and category weights govern recall ranking
+- **🔗 Knowledge graph** — typed weighted relations between facts (supports, elaborates, contradicts, etc.) with 1-hop graph traversal during recall
+- **📦 Multi-layer memory** — facts cluster into higher-level summaries; incremental consolidation after each extraction + periodic deep "sleep" passes with confidence decay
 
 ---
 
 ## Architecture
 
 ```
-                ┌─────────────────────────────────────────────────────────────┐
-                │                      OpenClaw Agent                         │
-                │                                                             │
-  Conversation  │   message_received ──► ConversationBuffer ──► SegmentWriter │
-  Flow          │                                                    │         │
-                │                                          ExtractionTrigger  │
-                │                                                    │         │
-                │                                          extractFacts (LLM) │
-                │                                                    │         │
-                │                                          processExtractedFacts│
-                │                                                    │         │
-                │                                             SQLite facts DB  │
-                │                                                             │
-  Recall        │   before_prompt_build ──► searchRelevantFacts ──► inject   │
-                └─────────────────────────────────────────────────────────────┘
+                ┌──────────────────────────────────────────────────────────────┐
+                │                       OpenClaw Agent                         │
+                │                                                              │
+  Conversation  │   message_received ──► ConversationBuffer ──► SegmentWriter  │
+  Flow          │                                                     │        │
+                │                                           ExtractionTrigger  │
+                │                                                     │        │
+                │                                           extractFacts (LLM) │
+                │                                                     │        │
+                │                                     processExtractedFacts    │
+                │                                          │          │        │
+                │                              fact_relations    SQLite DB      │
+                │                              (graph edges)   (facts, FTS5)   │
+                │                                          │          │        │
+                │                              incrementalConsolidate          │
+                │                              (cluster assignment)            │
+                │                                                              │
+  Deep Sleep    │   cron (3 AM) ──► deepConsolidate ──► decay + merge + refresh│
+                │                                                              │
+  Recall        │   before_prompt_build ──► searchRelevantFacts               │
+                │                           + 1-hop graph traversal ──► inject │
+                └──────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Modules
@@ -53,6 +62,9 @@
 | `src/storage/db.ts` | SQLite database layer (better-sqlite3) |
 | `src/storage/embeddings.ts` | Local embedding engine via node-llama-cpp |
 | `src/storage/schema.ts` | SQLite schema, migrations, row types |
+| `src/consolidation/consolidator.ts` | Incremental consolidation — assigns facts to clusters after extraction |
+| `src/consolidation/deep-consolidator.ts` | Deep "sleep" consolidation — decay, cluster merging, summary refresh |
+| `src/cli/deep-consolidate.ts` | CLI entry point for deep consolidation (cron-compatible) |
 | `src/config.ts` | Plugin configuration with defaults |
 | `src/types.ts` | Shared TypeScript types |
 
@@ -166,9 +178,9 @@ npx tsc --noEmit
 
 ## Fact Migration (Bootstrap from Existing Memory Files)
 
-To bootstrap Memento's knowledge base from existing agent workspace memory files.
+Migration is an **optional, one-time** process to seed Memento from existing agent memory/markdown files. It is user-initiated only — never runs automatically.
 
-> **Tip:** Always run with `--dry-run` first to preview what will be imported without making any writes. Migration reads files from the workspace paths you specify — make sure paths are correct before committing.
+> **Tip:** Always run with `--dry-run` first to preview what will be imported without making any writes. Migration reads **only** the files you explicitly list in the config — it does not scan your filesystem or access anything outside the configured paths.
 
 1. Create `~/.engram/migration-config.json`:
 

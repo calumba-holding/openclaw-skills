@@ -20,7 +20,9 @@ import type { ExtractionConfig } from "../config.js";
 import type { ConversationRow } from "../storage/schema.js";
 import type { PluginLogger } from "../types.js";
 import { extractFacts } from "./extractor.js";
+import type { OpenClawConfig } from "./embedded-runner.js";
 import { processExtractedFacts } from "./deduplicator.js";
+import { incrementalConsolidate } from "../consolidation/consolidator.js";
 
 export class ExtractionTrigger {
   /** How many extractions have fired in the current 60-second window */
@@ -34,6 +36,8 @@ export class ExtractionTrigger {
     /** Full model string, e.g. "anthropic/claude-sonnet-4-6" */
     private readonly extractionModel: string,
     private readonly logger: PluginLogger,
+    /** OpenClaw config passed from plugin api — enables model routing */
+    private readonly openClawConfig?: OpenClawConfig,
   ) {}
 
   /**
@@ -148,6 +152,15 @@ export class ExtractionTrigger {
           `${dedup.factsDeduplicated} deduplicated ` +
           `(agent: ${conversation.agent_id})`,
       );
+
+      // Run incremental consolidation after extraction (cheap, no LLM)
+      try {
+        incrementalConsolidate(this.db, conversation.agent_id, this.logger);
+      } catch (consolErr) {
+        this.logger.warn(
+          `memento: incremental consolidation error after ${conversation.id}: ${String(consolErr)}`,
+        );
+      }
     } catch (err) {
       const errMsg = String(err);
       this.logger.warn(

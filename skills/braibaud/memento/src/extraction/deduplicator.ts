@@ -15,7 +15,7 @@
 import { randomUUID } from "node:crypto";
 import type { ConversationDB } from "../storage/db.js";
 import type { ExtractedFact } from "./extractor.js";
-import type { FactRow } from "../storage/schema.js";
+import type { FactRow, FactRelationRow } from "../storage/schema.js";
 import type { PluginLogger } from "../types.js";
 
 export type DeduplicationResult = {
@@ -41,6 +41,9 @@ export function processExtractedFacts(
 
   for (const fact of facts) {
     try {
+      // Track the final persisted fact ID for relation storage
+      let persistedFactId: string | null = null;
+
       if (fact.duplicate_of && fact.increment_occurrence) {
         // ── Duplicate ─────────────────────────────────────────────────────
         // The LLM identified this as an existing fact seen again.
@@ -52,6 +55,7 @@ export function processExtractedFacts(
           fact.sentiment ?? "neutral",
           now,
         );
+        persistedFactId = fact.duplicate_of;
         factsDeduplicated++;
         logger.debug?.(
           `memento: duplicate of ${fact.duplicate_of}: ${fact.content.slice(0, 60)}`,
@@ -69,6 +73,7 @@ export function processExtractedFacts(
           fact.sentiment ?? "update",
           now,
         );
+        persistedFactId = newFact.id;
         factsUpdated++;
         logger.debug?.(
           `memento: superseded ${fact.supersedes} → ${newFact.id}: ${fact.content.slice(0, 60)}`,
@@ -84,10 +89,40 @@ export function processExtractedFacts(
           fact.sentiment ?? "neutral",
           now,
         );
+        persistedFactId = newFact.id;
         factsExtracted++;
         logger.debug?.(
           `memento: new fact ${newFact.id} [${fact.category}]: ${fact.content.slice(0, 60)}`,
         );
+      }
+
+      // ── Store graph relations ─────────────────────────────────────────
+      if (persistedFactId && fact.relations && fact.relations.length > 0) {
+        const relations: FactRelationRow[] = fact.relations
+          .filter((r) => r.target_id !== persistedFactId) // no self-loops
+          .map((r) => ({
+            id: randomUUID(),
+            source_id: persistedFactId!,
+            target_id: r.target_id,
+            relation_type: r.relation_type,
+            strength: r.strength ?? 0.8,
+            created_at: now,
+            created_by: "extraction",
+            metadata: null,
+          }));
+
+        if (relations.length > 0) {
+          try {
+            db.insertRelationsBatch(relations);
+            logger.debug?.(
+              `memento: stored ${relations.length} relation(s) for fact ${persistedFactId}`,
+            );
+          } catch (relErr) {
+            logger.warn(
+              `memento: failed to store relations for ${persistedFactId}: ${String(relErr)}`,
+            );
+          }
+        }
       }
     } catch (err) {
       logger.warn(

@@ -66,6 +66,7 @@ const mementoPlugin = {
         cfg.extraction,
         cfg.extractionModel,
         api.logger,
+        api.config,  // Pass OpenClaw config for model routing
       );
 
       api.logger.info(

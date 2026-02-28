@@ -26,9 +26,11 @@ export type ScoredFact = FactRow & {
   /** Combined relevance score (higher = more relevant) */
   score: number;
   /** How this fact was found */
-  matchSource: "fts" | "semantic" | "recency" | "frequency" | "category" | "cross_agent";
+  matchSource: "fts" | "semantic" | "recency" | "frequency" | "category" | "cross_agent" | "graph";
   /** Whether this fact came from another agent's shared knowledge */
   isCrossAgent: boolean;
+  /** For graph-sourced facts: summary of the fact that led here */
+  graphParentSummary?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -303,6 +305,49 @@ export function searchRelevantFacts(
       matchSource: "cross_agent",
       isCrossAgent: true,
     });
+  }
+
+  // ── Strategy 4: Knowledge Graph traversal ────────────────────────────
+  // For the top-scoring facts, follow 1-hop graph edges to pull in
+  // semantically related facts that wouldn't match keyword/embedding search.
+  {
+    // Take the top 10 facts so far as graph seeds
+    const sorted = [...results].sort((a, b) => b.score - a.score);
+    const seeds = sorted.slice(0, 10);
+
+    // Determine visibility ceiling for graph traversal
+    // Own-agent: can see up to private; cross-agent: only shared
+    const maxVis: "shared" | "private" | "secret" = "private";
+
+    for (const seed of seeds) {
+      try {
+        const related = db.getRelatedFactsWithVisibility(seed.id, maxVis);
+        for (const relFact of related) {
+          if (seenIds.has(relFact.id)) continue;
+          seenIds.add(relFact.id);
+
+          // Get the relation edge to determine strength
+          const edges = db.getRelationBetween(seed.id, relFact.id);
+          const bestEdge = edges.reduce(
+            (best, e) => (e.strength > best.strength ? e : best),
+            { strength: 0.5, relation_type: "related_to" } as { strength: number; relation_type: string },
+          );
+
+          // Graph-sourced facts score as a fraction of the parent's score
+          const graphScore = seed.score * bestEdge.strength * 0.4;
+
+          results.push({
+            ...relFact,
+            score: graphScore,
+            matchSource: "graph",
+            isCrossAgent: relFact.agent_id !== agentId,
+            graphParentSummary: seed.summary ?? seed.content.slice(0, 80),
+          });
+        }
+      } catch (_err) {
+        // Graph traversal errors are non-fatal
+      }
+    }
   }
 
   // ── Sort by score and cap at maxFacts ───────────────────────────────────

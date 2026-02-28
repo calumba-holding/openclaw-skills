@@ -27,12 +27,23 @@
  */
 
 import { classifyVisibility } from "./classifier.js";
+import { runViaOpenClaw } from "./embedded-runner.js";
+import type { OpenClawConfig } from "./embedded-runner.js";
 import type { FactRow, ConversationRow } from "../storage/schema.js";
 import type { PluginLogger } from "../types.js";
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
+
+export type ExtractedFactRelation = {
+  /** ID of the related existing fact */
+  target_id: string;
+  /** Type of relation */
+  relation_type: string; // 'related_to' | 'elaborates' | 'contradicts' | 'supports' | 'caused_by' | 'part_of'
+  /** Edge strength 0.0–1.0 (default 0.8) */
+  strength: number;
+};
 
 export type ExtractedFact = {
   category: string;
@@ -47,6 +58,8 @@ export type ExtractedFact = {
   duplicate_of?: string;
   /** true when duplicate_of is set and occurrence should be incremented */
   increment_occurrence?: boolean;
+  /** Relations to existing facts identified during extraction */
+  relations?: ExtractedFactRelation[];
 };
 
 export type ExtractionResult = {
@@ -88,6 +101,11 @@ Rules:
 7. For preferences, be specific: "report format: emoji headers, detailed breakdown with costs"
 8. For people, capture relationships: "Alice is the user's best friend; partner is Carol"
 9. For action_items, include who is responsible and the deadline if mentioned
+10. For each extracted fact, identify RELATIONS to existing facts listed above. For each relation, add a "relations" array to the fact with objects containing:
+    - target_id: the ID of the related existing fact
+    - relation_type: one of [related_to, elaborates, contradicts, supports, caused_by, part_of]
+    - strength: 0.0-1.0 how strong the connection is (default 0.8)
+    Only include relations where there is a genuine semantic connection. Do NOT force relations where none exist.
 
 Return a JSON array of fact objects. If there are no meaningful facts to extract, return an empty array [].
 Respond with ONLY the JSON array, no markdown, no explanation.`;
@@ -141,7 +159,7 @@ function detectProvider(model: string): ProviderInfo {
         provider: "anthropic",
         modelName,
         endpoint: "https://api.anthropic.com/v1/messages",
-        apiKeyEnv: "ANTHROPIC_API_KEY",
+        apiKeyEnv: "CLAUDE_CODE_OAUTH_TOKEN",
       };
     case "openai":
       return {
@@ -315,18 +333,8 @@ export async function extractFacts(
   existingFacts: FactRow[],
   model: string,
   logger: PluginLogger,
+  openClawConfig?: OpenClawConfig,
 ): Promise<ExtractionResult> {
-  const info = detectProvider(model);
-  const apiKey = resolveApiKey(info.apiKeyEnv);
-
-  // Ollama doesn't require an API key — all others do
-  if (!apiKey && info.provider !== "ollama") {
-    return {
-      facts: [],
-      modelUsed: model,
-      error: `No API key found for provider "${info.provider}". Set the ${info.apiKeyEnv} environment variable (or MEMENTO_API_KEY as a generic fallback).`,
-    };
-  }
 
   // Model context window budget (leave headroom for response)
   const MODEL_CONTEXT_TOKENS = 180_000;
@@ -334,8 +342,13 @@ export async function extractFacts(
   const PROMPT_TEMPLATE_TOKENS = estimateTokens(EXTRACTION_PROMPT);
   const availableTokens = MODEL_CONTEXT_TOKENS - RESPONSE_HEADROOM_TOKENS - PROMPT_TEMPLATE_TOKENS;
 
-  // Filter out secret-visibility facts from the dedup context.
-  // We must never send sensitive facts (credentials, medical info, etc.) to the API.
+  // SECURITY: Filter out secret-visibility facts from the dedup context.
+  // Secret facts (credentials, medical info, financial details) must NEVER be sent
+  // to external LLM providers. They are excluded from:
+  //   1. Extraction context (here) — never included in prompts to the LLM
+  //   2. Cross-agent recall — never shared between agents (search.ts)
+  //   3. Graph traversal — edges touching secret nodes are filtered (search.ts)
+  // Only "shared" and "private" facts are included in the dedup context below.
   const nonSecretFacts = existingFacts.filter((f) => f.visibility !== "secret");
 
   // Build the existing facts context for dedup (budget: up to 20% of available tokens)
@@ -387,27 +400,68 @@ export async function extractFacts(
     existingFactsJson,
   ).replace("{{conversation}}", conversationText);
 
-  // Dispatch to the appropriate provider
+  // ── Dispatch: try OpenClaw model routing first, fall back to direct API ──
   let responseText: string;
+  let modelUsed = model;
   try {
-    switch (info.provider) {
-      case "anthropic":
-        responseText = await callAnthropic(info, apiKey!, prompt);
-        break;
-      case "ollama":
-        responseText = await callOllama(info, prompt);
-        break;
-      case "openai":
-      case "mistral":
-      case "openai-compat":
-      default:
-        responseText = await callOpenAICompat(info, apiKey, prompt);
-        break;
+    // Strategy 1: Use OpenClaw's embedded runner (preferred — inherits agent model config)
+    if (openClawConfig) {
+      const ocResult = await runViaOpenClaw(prompt, openClawConfig, model);
+      if (ocResult) {
+        responseText = ocResult.text;
+        modelUsed = `${ocResult.provider}/${ocResult.model}`;
+        logger.debug?.(`memento: extraction via OpenClaw model routing (${modelUsed})`);
+      } else {
+        // OpenClaw runner not available — fall through to direct API
+        logger.debug?.("memento: OpenClaw runner unavailable, falling back to direct API");
+        const info = detectProvider(model);
+        const apiKey = resolveApiKey(info.apiKeyEnv);
+        if (!apiKey && info.provider !== "ollama") {
+          return {
+            facts: [],
+            modelUsed: model,
+            error: `No API key found for provider "${info.provider}". Set the ${info.apiKeyEnv} environment variable (or MEMENTO_API_KEY as a generic fallback).`,
+          };
+        }
+        switch (info.provider) {
+          case "anthropic":
+            responseText = await callAnthropic(info, apiKey!, prompt);
+            break;
+          case "ollama":
+            responseText = await callOllama(info, prompt);
+            break;
+          default:
+            responseText = await callOpenAICompat(info, apiKey, prompt);
+            break;
+        }
+      }
+    } else {
+      // Strategy 2: Direct API (CLI mode or no OpenClaw config available)
+      const info = detectProvider(model);
+      const apiKey = resolveApiKey(info.apiKeyEnv);
+      if (!apiKey && info.provider !== "ollama") {
+        return {
+          facts: [],
+          modelUsed: model,
+          error: `No API key found for provider "${info.provider}". Set the ${info.apiKeyEnv} environment variable (or MEMENTO_API_KEY as a generic fallback).`,
+        };
+      }
+      switch (info.provider) {
+        case "anthropic":
+          responseText = await callAnthropic(info, apiKey!, prompt);
+          break;
+        case "ollama":
+          responseText = await callOllama(info, prompt);
+          break;
+        default:
+          responseText = await callOpenAICompat(info, apiKey, prompt);
+          break;
+      }
     }
   } catch (err) {
     return {
       facts: [],
-      modelUsed: model,
+      modelUsed,
       error: `API call failed: ${String(err)}`,
     };
   }
@@ -473,6 +527,28 @@ export async function extractFacts(
     if (typeof raw.duplicate_of === "string" && raw.duplicate_of.trim()) {
       fact.duplicate_of = raw.duplicate_of.trim();
       fact.increment_occurrence = raw.increment_occurrence === true;
+    }
+
+    // Parse relations to existing facts
+    if (Array.isArray(raw.relations) && raw.relations.length > 0) {
+      fact.relations = raw.relations
+        .filter(
+          (r: any) =>
+            typeof r === "object" &&
+            r !== null &&
+            typeof r.target_id === "string" &&
+            r.target_id.trim() &&
+            typeof r.relation_type === "string" &&
+            r.relation_type.trim(),
+        )
+        .map((r: any) => ({
+          target_id: r.target_id.trim(),
+          relation_type: r.relation_type.trim(),
+          strength:
+            typeof r.strength === "number"
+              ? Math.min(1, Math.max(0, r.strength))
+              : 0.8,
+        }));
     }
 
     // Skip low-confidence inferences (threshold matches prompt instruction of 0.6)

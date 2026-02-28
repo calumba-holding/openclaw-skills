@@ -129,7 +129,10 @@ export function buildRecallContext(
       const when = formatRelativeTime(fact.last_seen_at);
       const recurrence = recurrenceTag(fact.occurrence_count);
       const source = fact.isCrossAgent ? ` [via ${agentLabel(fact.agent_id, agentDisplay)}]` : "";
-      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}`;
+      const graphTag = fact.matchSource === "graph" && fact.graphParentSummary
+        ? ` 🔗 _(related to: ${fact.graphParentSummary.slice(0, 60)})_`
+        : "";
+      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}${graphTag}`;
 
       if (totalChars + line.length + 1 > maxChars) break;
       lines.push(line);
@@ -154,7 +157,10 @@ export function buildRecallContext(
       const when = formatRelativeTime(fact.last_seen_at);
       const recurrence = recurrenceTag(fact.occurrence_count);
       const source = fact.isCrossAgent ? ` [via ${agentLabel(fact.agent_id, agentDisplay)}]` : "";
-      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}`;
+      const graphTag = fact.matchSource === "graph" && fact.graphParentSummary
+        ? ` 🔗 _(related to: ${fact.graphParentSummary.slice(0, 60)})_`
+        : "";
+      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}${graphTag}`;
 
       if (totalChars + line.length + 1 > maxChars) break;
       lines.push(line);
