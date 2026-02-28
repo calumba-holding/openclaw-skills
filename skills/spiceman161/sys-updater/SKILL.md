@@ -1,6 +1,6 @@
 ---
 name: sys-updater
-description: System package maintenance for Ubuntu (apt), npm, brew, and OpenClaw skills. Conservative workflow with 2-day quarantine for non-security updates, automatic security updates, and scheduled reviews with web search for bug assessment.
+description: Production-safe Ubuntu maintenance orchestrator: runs daily apt security updates, tracks non-security updates across apt/npm/pnpm/brew with quarantine + auto-review, applies only approved updates, rotates logs/state, and generates clear 09:00 MSK Telegram reports (including what was actually installed).
 metadata:
   {
     "openclaw":
@@ -16,14 +16,28 @@ metadata:
 
 Comprehensive system maintenance automation for Ubuntu hosts with support for apt, npm, brew, and OpenClaw skills.
 
-## Features
+## What this skill does
 
-- **APT (Ubuntu)**: Daily update check, automatic security updates, 2-day quarantine for non-security packages
-- **NPM**: Global package tracking with web search review for bugs before upgrade
-- **Brew**: Package tracking with same conservative workflow as npm
-- **OpenClaw Skills**: Immediate auto-update without quarantine
-- **Scheduled Reports**: Daily Telegram reports at 09:00 MSK
-- **Bug Review**: Automatic web search for package issues before applying updates
+`sys-updater` is a conservative maintenance pipeline for Linux hosts running OpenClaw.
+It separates **security patching** from **feature upgrades**, keeps auditable state files, and sends a human-readable daily report.
+
+### Core capabilities
+
+- **APT (Ubuntu)**
+  - daily `apt-get update`
+  - automatic security updates via `unattended-upgrade`
+  - non-security upgrades only from explicit planned list
+- **NPM / PNPM / Brew**
+  - detect outdated packages
+  - keep them in tracked state
+  - auto-review package risk (bugs/regressions/CVE signals)
+  - install only approved/planned updates
+- **OpenClaw skills (ClawHub)**
+  - checks installed skills and reports update status
+- **Daily report (09:00 MSK)**
+  - current health/status
+  - candidates/planned/blocked per manager
+  - **explicit “actually installed” lines** for apt/npm/pnpm/brew
 
 ## Workflow
 

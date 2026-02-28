@@ -1,6 +1,8 @@
 # sys-updater
 
-System maintenance automation for Ubuntu hosts. Runs safe daily maintenance (security updates + upgrade simulations), tracks pending non-security updates for manual review, and generates Telegram reports in Russian.
+System maintenance automation for Ubuntu/OpenClaw hosts.
+
+It runs safe daily maintenance, separates security patching from non-security upgrades, tracks package decisions (candidate/planned/blocked), performs risk-aware auto-review for npm/pnpm/brew, and generates clear 09:00 MSK Telegram reports with **what was actually installed**.
 
 ## Philosophy
 
