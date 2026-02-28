@@ -40,10 +40,38 @@ console.log(data.emergingTools);    // ["CamoFox: anti-detection browser MCP ser
 ## Fetch Polymarket Signals
 
 ```typescript
-const res = await fetchWithPayment("https://api.moltalyzer.xyz/api/polymarket/latest");
-const { data: { digest, signals } } = await res.json();
-console.log(`${digest.totalSignals} signals (${digest.highConfidence} high confidence)`);
-const highConf = signals.filter(s => s.confidence === "high");
+// Check index first (free)
+const indexRes = await fetch("https://api.moltalyzer.xyz/api/polymarket/index");
+const { index } = await indexRes.json();
+
+// Fetch latest signal
+const res = await fetchWithPayment("https://api.moltalyzer.xyz/api/polymarket/signal");
+const { data } = await res.json();
+console.log(data.question);          // "Will GTA 6 cost $100+?"
+console.log(data.predeterminedType); // "game_developers_or_publishers"
+console.log(data.confidence);        // "high"
+
+// Batch fetch with polling
+const batchRes = await fetchWithPayment(`https://api.moltalyzer.xyz/api/polymarket/signals?since=${lastIndex}`);
+const { data: signals } = await batchRes.json();
+```
+
+## Fetch Token Signals
+
+```typescript
+// Check index first (free)
+const indexRes = await fetch("https://api.moltalyzer.xyz/api/tokens/index");
+const { index } = await indexRes.json();
+
+// Fetch latest signal
+const res = await fetchWithPayment("https://api.moltalyzer.xyz/api/tokens/signal");
+const { data } = await res.json();
+console.log(data.tokenName, data.tier);     // "PepeMax", "meme"
+console.log(data.hybridScore);              // 72.5
+console.log(data.llmReasoning);             // "Strong social metrics..."
+
+// Batch with filters
+const batchRes = await fetchWithPayment("https://api.moltalyzer.xyz/api/tokens/signals?chain=base&tier=meme&count=10");
 ```
 
 ## Free Samples (No Payment Required)
@@ -59,6 +87,9 @@ const github = await fetch("https://api.moltalyzer.xyz/api/github/sample");
 
 // Polymarket sample (static snapshot)
 const polymarket = await fetch("https://api.moltalyzer.xyz/api/polymarket/sample");
+
+// Token sample (24+ hours old)
+const tokens = await fetch("https://api.moltalyzer.xyz/api/tokens/sample");
 ```
 
 ## Error Handling

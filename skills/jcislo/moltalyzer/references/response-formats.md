@@ -7,7 +7,7 @@ All responses wrap data in `{ success: true, data: ... }`. Paid endpoints return
 ```json
 {
   "success": true,
-  "_meta": { "apiVersion": "1.3.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
+  "_meta": { "apiVersion": "1.7.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
   "data": {
     "id": "string",
     "hourStart": "ISO 8601",
@@ -43,7 +43,7 @@ Key fields:
 ```json
 {
   "success": true,
-  "_meta": { "apiVersion": "1.3.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
+  "_meta": { "apiVersion": "1.7.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
   "data": {
     "id": "string",
     "digestDate": "ISO 8601",
@@ -77,57 +77,86 @@ Key fields:
 - `languageTrends` — which languages are trending and why
 - `volumeMetrics.starDistribution` — how many repos hit each star bracket
 
-## Polymarket Insider Detection
+## Polymarket Predetermined Outcome Signal
 
 ```json
 {
   "success": true,
-  "_meta": { "apiVersion": "1.3.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
+  "_meta": { "apiVersion": "1.7.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
   "data": {
-    "digest": {
-      "id": "string",
-      "digestDate": "ISO 8601",
-      "title": "headline for the day's analysis",
-      "summary": "overview of detected signals",
-      "fullAnalysis": "detailed markdown analysis",
-      "totalSignals": 54,
-      "highConfidence": 26,
-      "mediumConfidence": 26,
-      "lowConfidence": 2,
-      "topInsiderTypes": ["team_staff: description", "organizers: description"],
-      "topCategories": ["esports", "tennis"],
-      "createdAt": "ISO 8601"
-    },
-    "signals": [
-      {
-        "question": "Will GTA 6 cost $100+?",
-        "category": "gaming",
-        "confidence": "high",
-        "reasoning": "why insider knowledge is suspected",
-        "insiderType": "game_developers_or_publishers",
-        "knowledgeSource": "how insiders get advance information",
-        "outcomePrices": ["0.0075", "0.9925"],
-        "volume": 4455410.72,
-        "liquidity": 62422.18,
-        "endDate": "ISO 8601"
-      }
-    ]
+    "signalIndex": 42,
+    "question": "Will GTA 6 cost $100+?",
+    "category": "gaming",
+    "confidence": "high",
+    "reasoning": "why predetermined knowledge is suspected",
+    "predeterminedType": "game_developers_or_publishers",
+    "knowledgeHolder": "how knowledge holders get advance information",
+    "outcomePrices": ["0.0075", "0.9925"],
+    "volume": 4455410.72,
+    "liquidity": 62422.18,
+    "endDate": "ISO 8601",
+    "createdAt": "ISO 8601"
   }
 }
 ```
 
 Key fields:
-- `signals[].confidence` — `"high"`, `"medium"`, or `"low"`
-- `signals[].insiderType` — who has the edge (e.g. `production_crew`, `judges`, `team_staff`)
-- `signals[].reasoning` — explains why this market is vulnerable to insider trading
-- `signals[].outcomePrices` — current market prices (first element = Yes, second = No)
-- `signals[].volume` / `liquidity` — market size in USD
+- `signalIndex` — monotonically increasing index for polling (use `?since=N`)
+- `confidence` — `"high"`, `"medium"`, or `"low"`
+- `predeterminedType` — who has the edge (e.g. `production_crew`, `judges`, `team_staff`)
+- `knowledgeHolder` — explains how they could know before the public
+- `reasoning` — explains why this market may have a predetermined outcome
+- `outcomePrices` — current market prices (first element = Yes, second = No)
+- `volume` / `liquidity` — market size in USD
+
+## Token Intelligence Signal
+
+```json
+{
+  "success": true,
+  "_meta": { "apiVersion": "1.7.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" },
+  "data": {
+    "signalIndex": 123,
+    "chainId": "base",
+    "pairAddress": "0x...",
+    "tokenName": "TokenName",
+    "tokenSymbol": "TKN",
+    "tier": "meme",
+    "ruleScore": 72,
+    "llmScore": 68,
+    "hybridScore": 70.8,
+    "scoreLiquidity": 16,
+    "scoreVolume": 11,
+    "scoreTransactions": 14,
+    "scoreAge": 8,
+    "scoreSocial": 12,
+    "scorePriceAction": 7,
+    "scoreMetadata": 12,
+    "llmReasoning": "analysis of why this token is notable",
+    "llmConfidence": 72,
+    "priceUsd": "0.00234",
+    "liquidity": 125000,
+    "volume24h": 450000,
+    "marketCap": 2300000,
+    "createdAt": "ISO 8601"
+  }
+}
+```
+
+Key fields:
+- `signalIndex` — monotonically increasing index for polling
+- `tier` — `"meme"` (score 30+, <7d old) or `"longterm"` (score 50+, >1d old)
+- `hybridScore` — combined score (0-100): 70% rules + 30% LLM
+- `ruleScore` / `llmScore` — individual component scores (0-100)
+- Score breakdown: liquidity/18, volume/13, txns/17, age/12, social/15, priceAction/10, metadata/15
+- `llmConfidence` — LLM confidence in its analysis (0-100)
+- Chains: ethereum, base, bsc
 
 ## _meta Object
 
 All responses include version info:
 ```json
-{ "_meta": { "apiVersion": "1.3.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" } }
+{ "_meta": { "apiVersion": "1.7.0", "changelog": "https://api.moltalyzer.xyz/api/changelog" } }
 ```
 
 Check `apiVersion` to detect breaking changes. The changelog endpoint is always free.
