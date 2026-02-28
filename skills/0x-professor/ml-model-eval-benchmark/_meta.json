@@ -1,0 +1,11 @@
+{
+  "owner": "0x-professor",
+  "slug": "ml-model-eval-benchmark",
+  "displayName": "Ml Model Eval Benchmark",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1772136624524,
+    "commit": null
+  },
+  "history": []
+}
