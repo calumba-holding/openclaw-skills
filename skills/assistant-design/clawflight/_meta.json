@@ -1,0 +1,11 @@
+{
+  "owner": "assistant-design",
+  "slug": "clawflight",
+  "displayName": "ClawFlight",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772322745989,
+    "commit": null
+  },
+  "history": []
+}
