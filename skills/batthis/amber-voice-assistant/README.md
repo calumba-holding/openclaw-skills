@@ -14,11 +14,30 @@ Amber is not a standalone voice agent — it operates as an extension of your Op
 - 🔉 **Inbound call screening** — greeting, message-taking, appointment booking
 - 📞 **Outbound calls** — reservations, inquiries, follow-ups with structured call plans
 - 🧠 **Brain-in-the-loop** — consults your OpenClaw gateway mid-call for calendar, contacts, preferences
+- 👤 **Built-in CRM** — remembers every caller across calls; greets by name, references personal context naturally
 - 📊 **Call log dashboard** — browse history, transcripts, captured messages, follow-up tracking
 - ⚡ **Launch in minutes** — `npm install`, configure `.env`, `npm start`
 - 🔒 **Safety guardrails** — operator approval for outbound calls, payment escalation, consent boundaries
 - 🎛️ **Fully configurable** — assistant name, operator info, org name, voice, screening style
 - 📝 **AGENT.md** — customize all prompts, greetings, booking flow, and personality in a single editable markdown file (no code changes needed)
+
+## 🆕 What's New
+
+### v5.3.1 — Security Scope Hardening (Feb 2026)
+
+Addressed scanner feedback around instruction scope and credential handling:
+
+- Tightened `ask_openclaw` usage rules to **call-critical, least-privilege actions only**
+- Clarified credential hygiene guidance (dedicated Twilio/OpenAI credentials, minimal gateway token scope)
+- Added setup-wizard preflight warnings for native build requirements (`better-sqlite3`) to reduce insecure/failed installs
+
+### v5.3.0 — CRM Skill (Feb 2026)
+
+Amber now has memory. Every call — inbound or outbound — is automatically logged to a local SQLite contact database. Callers are greeted by name. Personal context (pet names, recent events, preferences) is captured post-call by an LLM extraction pass and used to personalize future conversations. No configuration required — it works out of the box.
+
+See [CRM skill docs](#-crm--contact-memory) below for details.
+
+---
 
 ## Quick Start
 
@@ -64,7 +83,23 @@ The watcher checks every 60 seconds and logs to `/tmp/amber-dist-watcher.log`.
 
 Amber ships with a growing library of **Amber Skills** — modular capabilities that plug directly into live voice conversations. Each skill exposes a structured function that Amber can call mid-call, letting you compose powerful voice workflows without touching the bridge code.
 
-Two skills are included out of the box:
+Three skills are included out of the box:
+
+### 👤 CRM — Contact Memory
+
+Amber remembers every caller across calls and uses that memory to make every conversation feel personal.
+
+- **Automatic lookup** — at the start of every inbound and outbound call, the runtime looks up the caller by phone number before Amber speaks a single word
+- **Personalized greeting** — if the caller is known, Amber opens with their name and naturally references any personal context ("Hey Abe, how's Max doing?")
+- **Invisible capture** — during the call, a post-call LLM extraction pass reads the full transcript and enriches the contact record with name, email, company, and `context_notes` — a short running paragraph of personal details worth remembering
+- **Symmetric** — works identically for inbound and outbound calls; the number dialed on outbound is the CRM key
+- **Local SQLite database** — stored at `~/.config/amber/crm.sqlite` (configurable via `AMBER_CRM_DB_PATH`); no cloud dependency. CRM contact data stays on your machine. Note: voice audio and transcripts are processed by OpenAI Realtime (a cloud service) — see [OpenAI's privacy policy](https://openai.com/policies/privacy-policy).
+- **Private number safe** — anonymous/blocked numbers are silently skipped; no record created
+- **Backfill-ready** — point the post-call extractor at old transcripts to prime the CRM from day one
+
+> **Native dependency:** The CRM skill uses `better-sqlite3`, which requires native compilation. On macOS, run `sudo xcodebuild -license accept` before `npm install` if you haven't already accepted the Xcode license. On Linux, ensure `build-essential` and `python3` are installed.
+>
+> **Credential validation scope:** The setup wizard validates credentials only against official provider endpoints (Twilio API and OpenAI API) over HTTPS. It does not send secrets to arbitrary third-party services and does not print full secrets in console output.
 
 ### 📅 Calendar
 

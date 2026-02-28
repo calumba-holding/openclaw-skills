@@ -9,7 +9,7 @@ import OpenAI from 'openai';
 import WebSocket from 'ws';
 import { createProvider } from './providers/index.js';
 import type { IVoiceProvider } from './providers/index.js';
-import { loadSkills, registerSkills, isSkillFunction, getSkillTools, handleSkillCall } from './skills/index.js';
+import { loadSkills, registerSkills, isSkillFunction, getSkillTools, handleSkillCall, callSkillDirectly } from './skills/index.js';
 import type { HandleSkillCallDeps } from './skills/index.js';
 
 // ─── Security Helpers ───
@@ -404,6 +404,7 @@ type OutboundIntent = {
   key: string; // can be twilio CallSid or our bridgeId
   objective: string;
   callPlan?: CallPlan;
+  to?: string; // E.164 number being called — used for CRM lookup on outbound calls
   createdAtMs: number;
 };
 const OUTBOUND_INTENT_RETENTION_MS = 10 * 60 * 1000;
@@ -581,6 +582,7 @@ app.post('/call/outbound', requireAuth, async (req: Request, res: Response) => {
         key: bridgeId,
         objective: objective || callPlanToObjective(callPlan),
         callPlan,
+        to,
         createdAtMs: Date.now()
       });
     }
@@ -751,6 +753,13 @@ const callAccept = {
     // Track this socket so we can reference it later
     activeCallSockets.set(callId, ws);
 
+    // Caller/callee phone — available to both open and close handlers.
+    // For outbound: always use the 'to' number we dialed (bridgeId → intent.to).
+    //   inbound?.from on outbound calls is our own Twilio number (SIP leg quirk) — not the callee.
+    // For inbound: use the caller's number from Twilio.
+    const outboundTo = bridgeId ? (outboundIntentByKey.get(bridgeId)?.to ?? null) : null;
+    const callerPhone = outboundTo ?? inbound?.from ?? null;
+
     ws.on('open', () => {
       writeJsonl({ type: 'ws.open', call_id: callId, received_at: new Date().toISOString() });
 
@@ -785,11 +794,71 @@ const callAccept = {
         writeJsonl({ type: 'c2.tools_registered', call_id: callId, received_at: new Date().toISOString(), toolCount: getAllTools().length });
       }
 
-      const responseCreate = {
-        type: 'response.create',
-        response: { instructions: `Say to the user: ${greeting}` }
-      } as const;
-      ws.send(JSON.stringify(responseCreate));
+      /**
+       * Send the greeting — deferred until after CRM lookup so Amber can greet by name.
+       * CRM lookup is synchronous SQLite (~1ms), so this adds no perceptible delay.
+       * Falls back to default greeting if no phone, private number, or CRM error.
+       */
+      const sendGreeting = (crmContact?: { name?: string; context_notes?: string }) => {
+        let greetingInstruction: string;
+
+        if (crmContact?.name) {
+          // Known contact — give Amber the context and let her improvise a personalized greeting.
+          // Do NOT hardcode the greeting text; let her use the name and context naturally.
+          const contextLine = crmContact.context_notes
+            ? `Personal context you know about them: ${crmContact.context_notes}`
+            : '';
+          const direction = outboundObjective ? 'calling' : 'receiving a call from';
+          greetingInstruction = [
+            `[CRM] You are ${direction} ${crmContact.name}. The person on the line IS ${crmContact.name} — do not refer to them in third person.`,
+            contextLine,
+            `Greet them warmly by name, like you remember them. Be natural — not robotic.`,
+            `If you know something personal (like their dog being sick), you can mention it warmly.`,
+            `Keep it short and let them respond.`,
+          ].filter(Boolean).join(' ');
+        } else {
+          // Unknown caller — use the standard greeting
+          greetingInstruction = `Say to the user: ${greeting}`;
+        }
+
+        const responseCreate = {
+          type: 'response.create',
+          response: { instructions: greetingInstruction }
+        } as const;
+        ws.send(JSON.stringify(responseCreate));
+      };
+
+      // CRM auto-lookup — runs before greeting so name/context is available immediately.
+      // SQLite is synchronous and local so this resolves in <5ms — no caller-perceptible delay.
+      if (callerPhone) {
+        const crmApiDeps = {
+          clawdClient,
+          operatorName: OPERATOR_NAME || '',
+          callId,
+          callerId: callerPhone,
+          transcript: '',
+          writeJsonl,
+        };
+        callSkillDirectly('crm', { action: 'lookup_contact', phone: callerPhone }, crmApiDeps)
+          .then((crmResult) => {
+            writeJsonl({ type: 'c2.crm_lookup', call_id: callId, received_at: new Date().toISOString(), found: !!(crmResult.result?.contact) });
+
+            if (crmResult.skipped) { sendGreeting(); return; } // private number
+
+            const contact = crmResult.result?.contact;
+
+            if (!contact) { sendGreeting(); return; } // new caller
+
+            writeJsonl({ type: 'c2.crm_context_injected', call_id: callId, received_at: new Date().toISOString(), contact_name: contact.name ?? null });
+            sendGreeting(contact.name ? { name: contact.name, context_notes: contact.context_notes ?? undefined } : undefined);
+          })
+          .catch((e) => {
+            writeJsonl({ type: 'c2.crm_lookup_error', call_id: callId, received_at: new Date().toISOString(), error: String(e) });
+            sendGreeting(); // fall back to default greeting on error
+          });
+      } else {
+        sendGreeting(); // no caller phone (e.g. outbound)
+      }
 
       // If the caller is silent, send a single gentle follow-up after ~3 seconds.
       // Cancel the follow-up once we see any user transcript/text.
@@ -962,6 +1031,52 @@ const callAccept = {
       });
       await Promise.all([endStream(jsonlStream), endStream(transcriptStream)]);
       await finalizeSummaryFromTranscript(callId);
+
+      // CRM auto-log — runtime-managed. Read the transcript, upsert contact, log interaction.
+      // This runs regardless of whether Amber called the CRM herself during the call.
+      if (callerPhone) {
+        try {
+          const transcriptText = fs.existsSync(logsTranscriptPath(callId))
+            ? fs.readFileSync(logsTranscriptPath(callId), 'utf8').trim()
+            : '';
+
+          const crmApiDeps = {
+            clawdClient,
+            operatorName: OPERATOR_NAME || '',
+            callId,
+            callerId: callerPhone,
+            transcript: transcriptText,
+            writeJsonl,
+          };
+
+          // Upsert contact — ensures record exists even if caller never said their name
+          await callSkillDirectly('crm', { action: 'upsert_contact', phone: callerPhone }, crmApiDeps);
+
+          // Log the interaction with a basic summary derived from the transcript
+          const direction = outboundObjective ? 'outbound' : 'inbound';
+          const summary = transcriptText
+            ? transcriptText.split('\n').slice(0, 3).join(' ').slice(0, 300)
+            : '(no transcript)';
+
+          await callSkillDirectly('crm', {
+            action: 'log_interaction',
+            phone: callerPhone,
+            summary,
+            outcome: 'other',
+            details: { direction, call_id: callId, auto_logged: true },
+          }, crmApiDeps);
+
+          writeJsonl({ type: 'c2.crm_auto_logged', call_id: callId, received_at: new Date().toISOString(), phone: callerPhone });
+
+          // Pass 2: LLM extraction — enriches name, context_notes, and summary from full transcript
+          // Fire-and-forget so it doesn't block the close handler
+          extractAndUpdateCrmFromTranscript(callId, callerPhone, writeJsonl).catch((e) => {
+            writeJsonl({ type: 'c2.crm_extract_fatal', call_id: callId, error: String(e) });
+          });
+        } catch (e) {
+          writeJsonl({ type: 'c2.crm_auto_log_error', call_id: callId, received_at: new Date().toISOString(), error: String(e) });
+        }
+      }
 
       // Dashboard auto-refresh: the bridge writes a marker file after each call.
       // Use an external file watcher or cron job to trigger process_logs.js when this file changes.
@@ -1888,6 +2003,110 @@ function sanitizeSummaryJson(raw: any): Record<string, unknown> | null {
   if (ts && isISODate(ts)) result.timestamp = ts;
 
   return Object.keys(result).length > 0 ? result : null;
+}
+
+/**
+ * Post-call CRM extraction pass.
+ *
+ * Reads the full call transcript and asks GPT-4o-mini to extract structured
+ * contact info and personal context. Then upserts back to CRM.
+ *
+ * This runs after every call end, guaranteeing CRM data quality regardless of
+ * whether Amber called the CRM herself during the call.
+ */
+async function extractAndUpdateCrmFromTranscript(
+  callId: string,
+  callerPhone: string,
+  writeJsonl: (obj: unknown) => void
+): Promise<void> {
+  try {
+    const transcriptPath = logsTranscriptPath(callId);
+    if (!fs.existsSync(transcriptPath)) return;
+
+    const transcript = (await fs.promises.readFile(transcriptPath, 'utf8')).trim();
+    if (!transcript || transcript.length < 50) return; // too short to extract anything useful
+
+    // Use the OpenAI client directly — lightweight extraction, no tool calls needed
+    const extractionClient = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+    const extractionPrompt = `You are extracting structured CRM data from a voice call transcript.
+
+TRANSCRIPT:
+${transcript.slice(0, 6000)}
+
+Extract the following from the transcript. Return ONLY valid JSON, no explanation:
+{
+  "caller_name": "string or null — the caller's first name or full name if mentioned",
+  "caller_email": "string or null — email if mentioned",
+  "caller_company": "string or null — company/organization if mentioned",
+  "context_notes": "string or null — 2-5 sentence summary of personal context worth remembering: pet names, health issues, preferences, life events, recurring topics, anything that would make a future call feel more personal. Null if nothing notable.",
+  "call_summary": "string — one sentence describing what the call was about",
+  "call_outcome": "one of: message_left, appointment_booked, info_provided, callback_requested, transferred, other"
+}
+
+Rules:
+- caller_name: only set if the caller explicitly stated their name (not if Amber guessed it)
+- context_notes: personal details that would be useful in a FUTURE call (not operational notes)
+- Be conservative — only extract what was actually said, never invent or infer
+- Return null for any field not clearly present in the transcript`;
+
+    const response = await extractionClient.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: extractionPrompt }],
+      response_format: { type: 'json_object' },
+      max_tokens: 500,
+      temperature: 0,
+    });
+
+    const raw = response.choices[0]?.message?.content;
+    if (!raw) return;
+
+    let extracted: any;
+    try {
+      extracted = JSON.parse(raw);
+    } catch {
+      writeJsonl({ type: 'c2.crm_extract_parse_error', call_id: callId, raw });
+      return;
+    }
+
+    writeJsonl({ type: 'c2.crm_extract_result', call_id: callId, received_at: new Date().toISOString(), extracted });
+
+    // Build upsert params — only include fields that were actually extracted
+    const upsertParams: Record<string, any> = { action: 'upsert_contact', phone: callerPhone };
+    if (extracted.caller_name) upsertParams.name = String(extracted.caller_name).slice(0, 200);
+    if (extracted.caller_email) upsertParams.email = String(extracted.caller_email).slice(0, 200);
+    if (extracted.caller_company) upsertParams.company = String(extracted.caller_company).slice(0, 200);
+    if (extracted.context_notes) upsertParams.context_notes = String(extracted.context_notes).slice(0, 1000);
+
+    const crmApiDeps = {
+      clawdClient,
+      operatorName: OPERATOR_NAME || '',
+      callId,
+      callerId: callerPhone,
+      transcript,
+      writeJsonl,
+    };
+
+    // Upsert extracted contact fields
+    await callSkillDirectly('crm', upsertParams, crmApiDeps);
+
+    // Update the interaction summary if we got a better one
+    if (extracted.call_summary || extracted.call_outcome) {
+      // Log a follow-up interaction with the LLM-extracted summary
+      // (overwrites the raw-transcript interaction logged at call end)
+      await callSkillDirectly('crm', {
+        action: 'log_interaction',
+        phone: callerPhone,
+        summary: extracted.call_summary || '(no summary)',
+        outcome: extracted.call_outcome || 'other',
+        details: { source: 'llm_extract', call_id: callId },
+      }, crmApiDeps);
+    }
+
+    writeJsonl({ type: 'c2.crm_extract_done', call_id: callId, received_at: new Date().toISOString(), name: extracted.caller_name, has_context: !!extracted.context_notes });
+  } catch (e) {
+    writeJsonl({ type: 'c2.crm_extract_error', call_id: callId, received_at: new Date().toISOString(), error: String(e) });
+  }
 }
 
 async function finalizeSummaryFromTranscript(callId: string): Promise<void> {

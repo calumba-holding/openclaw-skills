@@ -30,6 +30,9 @@ function contentType(p) {
 const args = parseArgs(process.argv);
 if (args.help) {
   console.log('Usage: node scripts/serve.js [--host 127.0.0.1] [--port 8787]');
+  console.log('');
+  console.log('  The dashboard binds to loopback only (127.0.0.1/::1/localhost).');
+  console.log('  For remote access, use a reverse proxy with authentication.');
   process.exit(0);
 }
 
@@ -107,14 +110,18 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// Warn if binding to a non-loopback address (exposes call logs to the network)
+// Hard-reject non-loopback binding — no override flag exists.
+// Call logs and transcripts contain PII; exposing them without authentication is not permitted.
+// For remote access, place a reverse proxy with authentication in front of this server.
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', 'localhost']);
 if (!LOOPBACK_ADDRESSES.has(args.host)) {
-  console.warn('');
-  console.warn('⚠️  WARNING: Dashboard is binding to a non-loopback address (' + args.host + ').');
-  console.warn('   This exposes call logs and transcripts to the network.');
-  console.warn('   Use --host 127.0.0.1 (default) unless you explicitly need remote access.');
-  console.warn('');
+  console.error('');
+  console.error('ERROR: Dashboard only binds to loopback (127.0.0.1 / ::1 / localhost).');
+  console.error('   Requested: ' + args.host);
+  console.error('   Call logs and transcripts contain PII and must not be exposed to the network without authentication.');
+  console.error('   For remote access, use a reverse proxy (e.g. nginx, caddy) with authentication.');
+  console.error('');
+  process.exit(1);
 }
 
 server.listen(args.port, args.host, () => {
