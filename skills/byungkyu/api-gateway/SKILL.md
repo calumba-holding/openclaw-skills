@@ -1,7 +1,7 @@
 ---
 name: api-gateway
 description: |
-  Connect to 100+ APIs (Google Workspace, Microsoft 365, Notion, Slack, Airtable, HubSpot, etc.) with managed OAuth.
+  Connect to 100+ APIs (Google Workspace, Microsoft 365, GitHub, Notion, Slack, Airtable, HubSpot, etc.) with managed OAuth.
   Use this skill when users want to interact with external services.
   Security: The MATON_API_KEY authenticates with Maton.ai but grants NO access to third-party services by itself. Each service requires explicit OAuth authorization by the user through Maton's connect flow. Access is strictly scoped to connections the user has authorized. Provided by Maton (https://maton.ai).
 compatibility: Requires network access and valid Maton API key
@@ -245,6 +245,7 @@ If omitted, the gateway uses the default (oldest) active connection for that app
 | MailerLite | `mailerlite` | `connect.mailerlite.com` |
 | Mailgun | `mailgun` | `api.mailgun.net` |
 | ManyChat | `manychat` | `api.manychat.com` |
+| Manus | `manus` | `api.manus.ai` |
 | Microsoft Excel | `microsoft-excel` | `graph.microsoft.com` |
 | Microsoft Teams | `microsoft-teams` | `graph.microsoft.com` |
 | Microsoft To Do | `microsoft-to-do` | `graph.microsoft.com` |
@@ -260,6 +261,7 @@ If omitted, the gateway uses the default (oldest) active connection for that app
 | PostHog | `posthog` | `{subdomain}.posthog.com` |
 | QuickBooks | `quickbooks` | `quickbooks.api.intuit.com` |
 | Quo | `quo` | `api.openphone.com` |
+| Reducto | `reducto` | `platform.reducto.ai` |
 | Salesforce | `salesforce` | `{instance}.salesforce.com` |
 | Sentry | `sentry` | `{subdomain}.sentry.io` |
 | SignNow | `signnow` | `api.signnow.com` |
@@ -291,6 +293,7 @@ If omitted, the gateway uses the default (oldest) active connection for that app
 | Zoho Inventory | `zoho-inventory` | `www.zohoapis.com` |
 | Zoho Mail | `zoho-mail` | `mail.zoho.com` |
 | Zoho People | `zoho-people` | `people.zoho.com` |
+| Zoho Projects | `zoho-projects` | `projectsapi.zoho.com` |
 | Zoho Recruit | `zoho-recruit` | `recruit.zoho.com` |
 
 See [references/](references/) for detailed routing guides per provider:
@@ -362,6 +365,7 @@ See [references/](references/) for detailed routing guides per provider:
 - [MailerLite](references/mailerlite.md) - Subscribers, groups, campaigns, automations, forms
 - [Mailgun](references/mailgun.md) - Email sending, domains, routes, templates, mailing lists, suppressions
 - [ManyChat](references/manychat.md) - Subscribers, tags, flows, messaging
+- [Manus](references/manus.md) - AI agent tasks, projects, files, webhooks
 - [Microsoft Excel](references/microsoft-excel.md) - Workbooks, worksheets, ranges, tables, charts
 - [Microsoft Teams](references/microsoft-teams.md) - Teams, channels, messages, members, chats
 - [Microsoft To Do](references/microsoft-to-do.md) - Task lists, tasks, checklist items, linked resources
@@ -377,6 +381,7 @@ See [references/](references/) for detailed routing guides per provider:
 - [PostHog](references/posthog.md) - Product analytics, feature flags, session recordings, experiments, HogQL queries
 - [QuickBooks](references/quickbooks.md) - Customers, invoices, reports
 - [Quo](references/quo.md) - Calls, messages, contacts, conversations, webhooks
+- [Reducto](references/reducto.md) - Document parsing, extraction, splitting, editing
 - [Salesforce](references/salesforce.md) - SOQL, sObjects, CRUD
 - [SignNow](references/signnow.md) - Documents, templates, invites, e-signatures
 - [SendGrid](references/sendgrid.md) - Email sending, contacts, templates, suppressions, statistics
@@ -409,6 +414,7 @@ See [references/](references/) for detailed routing guides per provider:
 - [Zoho Inventory](references/zoho-inventory.md) - Items, sales orders, invoices, purchase orders, bills
 - [Zoho Mail](references/zoho-mail.md) - Messages, folders, labels, attachments
 - [Zoho People](references/zoho-people.md) - Employees, departments, designations, attendance, leave
+- [Zoho Projects](references/zoho-projects.md) - Projects, tasks, milestones, tasklists, comments
 - [Zoho Recruit](references/zoho-recruit.md) - Candidates, job openings, interviews, applications
 
 ## Examples
