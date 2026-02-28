@@ -1,21 +1,8 @@
 #!/usr/bin/env python3
-"""
-scaffold.py — Create a Nova app project from the bundled template.
-
-Usage:
-    python3 scripts/scaffold.py --name my-app --desc "My secure app" --port 8000 --out ./projects
-
-Output:
-    ./projects/my-app/
-    ├── Dockerfile
-    └── enclave/
-        ├── main.py
-        ├── odyn.py
-        └── requirements.txt
-"""
+# scaffold.py v2 — Nova app project generator
+# Writes Dockerfile inline (clawhub cannot package extensionless files)
 
 import argparse
-import os
 import shutil
 import sys
 import textwrap
@@ -24,16 +11,28 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = SKILL_DIR / "assets" / "app-template"
 
+DOCKERFILE_TEMPLATE = (
+    "FROM python:3.11-slim\n\n"
+    "WORKDIR /app\n\n"
+    "COPY enclave/requirements.txt .\n"
+    "RUN pip install --no-cache-dir -r requirements.txt\n\n"
+    "COPY enclave/ .\n\n"
+    "EXPOSE {port}\n\n"
+    'CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port {port}"]\n'
+)
+
 
 def scaffold(name: str, desc: str, port: int, out: Path) -> Path:
     dest = out / name
     if dest.exists():
         print(f"[warn] Directory already exists: {dest} — files will be overwritten")
 
-    # Copy template tree
     shutil.copytree(str(TEMPLATE_DIR), str(dest), dirs_exist_ok=True)
 
-    # Patch main.py: replace placeholder tokens
+    # Write Dockerfile inline — clawhub publish strips extensionless files
+    (dest / "Dockerfile").write_text(DOCKERFILE_TEMPLATE.format(port=port))
+
+    # Patch enclave/main.py placeholders
     main_py = dest / "enclave" / "main.py"
     text = main_py.read_text()
     text = text.replace("{{APP_NAME}}", name)
@@ -41,50 +40,46 @@ def scaffold(name: str, desc: str, port: int, out: Path) -> Path:
     text = text.replace("{{APP_PORT}}", str(port))
     main_py.write_text(text)
 
-    # Patch Dockerfile port
-    dockerfile = dest / "Dockerfile"
-    df_text = dockerfile.read_text()
-    df_text = df_text.replace("{{APP_PORT}}", str(port))
-    dockerfile.write_text(df_text)
-
-    # Print file tree
-    print(f"\n[OK] Scaffolded Nova app → {dest}\n")
+    print(f"\n[OK] Scaffolded Nova app -> {dest}\n")
     for f in sorted(dest.rglob("*")):
         if f.is_file():
-            rel = f.relative_to(dest)
-            print(f"  {rel}")
+            print(f"  {f.relative_to(dest)}")
 
     print(textwrap.dedent(f"""
     Next steps:
-      1. Edit  {dest}/enclave/main.py   ← implement your app logic here
-      2. Edit  {dest}/enclave/requirements.txt  ← add pip packages
+      1. Edit  {dest}/enclave/main.py          <- app logic
+      2. Edit  {dest}/enclave/requirements.txt <- pip packages
       3. Test locally:
            cd {dest}/enclave
            IN_ENCLAVE=false uvicorn main:app --host 0.0.0.0 --port {port} --reload
-      4. When ready:
-           python3 scripts/build_push.py --name {name} --registry <docker.io/username>
+      4. Push to a Git repo
+      5. Deploy:
+           python3 scripts/nova_deploy.py \\
+             --repo https://github.com/you/{name} \\
+             --name "{name}" \\
+             --port {port} \\
+             --api-key YOUR_NOVA_API_KEY
     """))
-
     return dest
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Scaffold a Nova app project")
-    parser.add_argument("--name", required=True, help="App name (kebab-case, e.g. my-oracle)")
-    parser.add_argument("--desc", default="A Nova Platform app", help="One-line description")
-    parser.add_argument("--port", type=int, default=8000, help="App listening port (default: 8000)")
-    parser.add_argument("--out", default=".", help="Output directory (default: current dir)")
-    args = parser.parse_args()
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--name", required=True)
+    p.add_argument("--desc", default="A Nova Platform app")
+    p.add_argument("--port", type=int, default=8000)
+    p.add_argument("--out", default=".")
+    args = p.parse_args()
 
     name = args.name.lower().replace(" ", "-")
-    out_path = Path(args.out).resolve()
-    out_path.mkdir(parents=True, exist_ok=True)
+    out = Path(args.out).resolve()
+    out.mkdir(parents=True, exist_ok=True)
 
     if not TEMPLATE_DIR.exists():
-        print(f"[error] Template not found at {TEMPLATE_DIR}", file=sys.stderr)
+        print(f"[error] Template not found: {TEMPLATE_DIR}", file=sys.stderr)
         sys.exit(1)
 
-    scaffold(name, args.desc, args.port, out_path)
+    scaffold(name, args.desc, args.port, out)
 
 
 if __name__ == "__main__":

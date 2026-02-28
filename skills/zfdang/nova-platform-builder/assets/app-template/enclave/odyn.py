@@ -1,15 +1,21 @@
 """
-odyn.py — Odyn Internal API wrapper.
-Auto-switches between production (localhost:18000) and mock (odyn.sparsity.cloud:18000).
-Copy this file as-is; do not modify the base URL logic.
+odyn.py — Lightweight client for the Odyn Internal API.
+
+In enclave:  http://127.0.0.1:18000
+Local mock:  http://odyn.sparsity.cloud:18000  (set IN_ENCLAVE=false)
+
+Full API reference: skills/nova-app-builder/references/odyn-api.md
 """
-from __future__ import annotations
-import base64, json, os
+
+import base64
+import json
+import os
 from typing import Any
+
 import httpx
 
 IN_ENCLAVE = os.getenv("IN_ENCLAVE", "false").lower() == "true"
-_BASE = "http://localhost:18000" if IN_ENCLAVE else "http://odyn.sparsity.cloud:18000"
+ODYN_BASE = "http://127.0.0.1:18000" if IN_ENCLAVE else "http://odyn.sparsity.cloud:18000"
 
 
 class OdynError(Exception):
@@ -17,78 +23,86 @@ class OdynError(Exception):
 
 
 class Odyn:
-    def __init__(self, timeout: float = 15.0):
-        self._c = httpx.Client(base_url=_BASE, timeout=timeout)
+    def __init__(self, base_url: str = ODYN_BASE, timeout: float = 10.0):
+        self.base = base_url.rstrip("/")
+        self.timeout = timeout
 
-    # ── Identity ───────────────────────────────────────────────────────────────
+    def _get(self, path: str) -> Any:
+        try:
+            r = httpx.get(f"{self.base}{path}", timeout=self.timeout)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            raise OdynError(f"GET {path} failed: {e}") from e
+
+    def _post(self, path: str, body: dict | None = None) -> Any:
+        try:
+            r = httpx.post(f"{self.base}{path}", json=body or {}, timeout=self.timeout)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            raise OdynError(f"POST {path} failed: {e}") from e
+
+    # ── Identity ──────────────────────────────────────────────────────────────
+
     def eth_address(self) -> dict:
+        """Return enclave ETH address and public key."""
         return self._get("/v1/eth/address")
 
-    # ── Signing ────────────────────────────────────────────────────────────────
-    def sign_message(self, payload: dict) -> dict:
-        return self._post("/v1/eth/sign", {"data": json.dumps(payload)})
+    # ── Signing ───────────────────────────────────────────────────────────────
 
-    def sign_transaction(self, tx: dict) -> dict:
-        return self._post("/v1/eth/sign-tx", {"transaction": tx})
+    def sign_message(self, message: Any, include_attestation: bool = False) -> dict:
+        """EIP-191 personal_sign. message can be str or JSON-serialisable object."""
+        if not isinstance(message, str):
+            message = json.dumps(message)
+        return self._post("/v1/eth/sign", {
+            "message": message,
+            "include_attestation": include_attestation,
+        })
 
-    # ── Randomness ─────────────────────────────────────────────────────────────
-    def get_random_bytes(self, length: int = 32) -> bytes:
-        r = self._get(f"/v1/random?length={length}")
-        return base64.b64decode(r["random"])
+    # ── Randomness ────────────────────────────────────────────────────────────
 
-    # ── Attestation ────────────────────────────────────────────────────────────
-    def get_attestation(self, user_data: bytes | None = None) -> dict:
-        body: dict[str, Any] = {}
+    def random_bytes(self) -> str:
+        """Return 32 NSM-seeded random bytes (hex string)."""
+        return self._get("/v1/random")["random_bytes"]
+
+    # ── Attestation ───────────────────────────────────────────────────────────
+
+    def get_attestation(self, nonce: bytes | None = None, user_data: bytes | None = None) -> dict:
+        """
+        Returns attestation document as base64 string under key 'attestation'.
+        Callers serving /.well-known/attestation should base64-decode and return raw CBOR.
+        """
+        body: dict = {}
+        if nonce:
+            body["nonce"] = base64.b64encode(nonce).decode()
         if user_data:
             body["user_data"] = base64.b64encode(user_data).decode()
         return self._post("/v1/attestation", body)
 
-    # ── Encryption ─────────────────────────────────────────────────────────────
-    def encryption_public_key(self) -> dict:
-        return self._get("/v1/encryption/public_key")
+    # ── KMS / App Wallet ──────────────────────────────────────────────────────
 
-    def encrypt(self, plaintext: bytes, client_pubkey: str) -> dict:
-        return self._post("/v1/encryption/encrypt", {
-            "plaintext": base64.b64encode(plaintext).decode(),
-            "client_public_key": client_pubkey,
-        })
+    def app_wallet_address(self) -> dict:
+        """Return the App Wallet ETH address (requires enable_app_wallet=true)."""
+        return self._get("/v1/kms/app-wallet/address")
 
-    def decrypt(self, ciphertext: str, nonce: str, tag: str) -> bytes:
-        r = self._post("/v1/encryption/decrypt", {"ciphertext": ciphertext, "nonce": nonce, "tag": tag})
-        return base64.b64decode(r["plaintext"])
+    def app_wallet_sign(self, message: Any) -> dict:
+        """Sign with the App Wallet key."""
+        if not isinstance(message, str):
+            message = json.dumps(message)
+        return self._post("/v1/kms/app-wallet/sign", {"message": message})
 
-    # ── S3 Storage ─────────────────────────────────────────────────────────────
-    def s3_put(self, key: str, value: bytes) -> dict:
-        return self._post("/v1/s3/put", {"key": key, "value": base64.b64encode(value).decode()})
+    def kms_derive(self, path: str, context: str = "") -> dict:
+        """Derive a secret key via Nova KMS."""
+        return self._post("/v1/kms/derive", {"path": path, "context": context})
 
-    def s3_get(self, key: str) -> bytes:
-        return base64.b64decode(self._post("/v1/s3/get", {"key": key})["value"])
+    # ── S3 Storage ────────────────────────────────────────────────────────────
 
-    def s3_list(self, prefix: str = "") -> list[str]:
-        return self._post("/v1/s3/list", {"prefix": prefix}).get("keys", [])
+    def s3_get(self, key: str) -> dict:
+        return self._post("/v1/s3/get", {"key": key})
+
+    def s3_put(self, key: str, value: str) -> dict:
+        return self._post("/v1/s3/put", {"key": key, "value": value})
 
     def s3_delete(self, key: str) -> dict:
         return self._post("/v1/s3/delete", {"key": key})
-
-    # ── KMS ────────────────────────────────────────────────────────────────────
-    def kms_derive_key(self, app_id: int, context: str) -> dict:
-        return self._post("/v1/kms/derive", {"app_id": app_id, "context": context})
-
-    # ── Internals ──────────────────────────────────────────────────────────────
-    def _get(self, path: str) -> dict:
-        try:
-            r = self._c.get(path)
-        except httpx.RequestError as e:
-            raise OdynError(f"GET {path}: {e}") from e
-        if not r.is_success:
-            raise OdynError(f"GET {path} → {r.status_code}: {r.text[:300]}")
-        return r.json()
-
-    def _post(self, path: str, body: dict) -> dict:
-        try:
-            r = self._c.post(path, json=body)
-        except httpx.RequestError as e:
-            raise OdynError(f"POST {path}: {e}") from e
-        if not r.is_success:
-            raise OdynError(f"POST {path} → {r.status_code}: {r.text[:300]}")
-        return r.json()

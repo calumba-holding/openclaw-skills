@@ -3,13 +3,13 @@
 Odyn is the enclave supervisor (PID 1) inside every AWS Nitro Enclave built by Enclaver.
 It provides signing, attestation, encryption, storage, and KMS via an internal HTTP server.
 
-## API Ports (configured in enclaver.yaml)
+## API Ports
 
-```yaml
-api:
-  listen_port: 18000    # Primary API — full access
-aux_api:
-  listen_port: 18001    # Auxiliary API — restricted subset (defaults to api_port + 1)
+Ports are fixed by the platform (configured via `advanced` at app creation):
+
+```
+Primary API:   http://127.0.0.1:18000   (full access)
+Auxiliary API: http://127.0.0.1:18001   (restricted subset)
 ```
 
 **Inside the enclave**: `http://127.0.0.1:18000`
@@ -136,7 +136,7 @@ Use instead of `os.urandom()` inside the enclave.
 
 ## S3 Storage (persistent, app-isolated)
 
-Requires `storage.s3.enabled=true` in enclaver.yaml. Uses POST for all operations.
+Requires `enable_s3_storage: true` in `advanced` when creating the app. Uses POST for all operations.
 
 **`POST /v1/s3/get`**
 ```json
@@ -170,25 +170,13 @@ Requires `storage.s3.enabled=true` in enclaver.yaml. Uses POST for all operation
 { "success": true }
 ```
 
-**enclaver.yaml requirements for S3:**
-```yaml
-egress:
-  allow:
-    - "169.254.169.254"          # IMDS (required for AWS credentials)
-    - "s3.us-east-1.amazonaws.com"
-
-storage:
-  s3:
-    enabled: true
-    bucket: "my-app-data"
-    prefix: "apps/my-service/"
-    region: "us-east-1"
-    encryption:                  # optional
-      mode: "kms"                # plaintext | kms
-      key_scope: "object"
-      aad_mode: "key"
-      key_version: "v1"
-      accept_plaintext: true
+**Required `advanced` fields for S3** (set at app creation):
+```json
+{
+  "enable_s3_storage": true,
+  "enable_s3_kms_encryption": false,
+  "egress_allow": ["169.254.169.254", "s3.us-east-1.amazonaws.com"]
+}
 ```
 
 State hash pattern (anchor S3 state on-chain):
@@ -289,7 +277,7 @@ resp = httpx.get("https://api.example.com/data", timeout=15)
 ```
 
 ⚠️ **Do NOT use `requests` or `urllib`** for outbound calls in production — they may bypass the egress proxy.
-Add allowed hosts to `enclaver.yaml → egress.allow`.
+Add allowed hosts to `egress_allow` in `advanced` when creating the app.
 
 ---
 
