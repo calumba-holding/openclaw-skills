@@ -1,43 +1,47 @@
 """
-Prompt Performance Tester Skill - Multi-Provider Edition
-Tests prompts across Claude, GPT, and Gemini models with detailed performance metrics.
-Measures: latency, cost, quality, consistency, and token usage.
+Prompt Performance Tester - Multi-Provider Edition
+Version: 1.1.8
+Copyright © 2026 UnisAI. All Rights Reserved.
 
-PROPRIETARY - Do not share source code without license agreement
+Model-agnostic prompt benchmarking — pass any model ID from any supported provider.
+Provider routing is automatic based on model name prefix.
+
+Supported provider families (any model matching the prefix works):
+  claude-*      → Anthropic         (ANTHROPIC_API_KEY)
+  gpt-*, o1*, o3* → OpenAI          (OPENAI_API_KEY)
+  gemini-*      → Google            (GOOGLE_API_KEY)
+  mistral-*, mixtral-*, devstral-*, ministral-* → Mistral (MISTRAL_API_KEY)
+  deepseek-*    → DeepSeek          (DEEPSEEK_API_KEY)
+  grok-*        → xAI               (XAI_API_KEY)
+  minimax*, MiniMax* → MiniMax      (MINIMAX_API_KEY)
+  qwen*         → Qwen/Alibaba      (DASHSCOPE_API_KEY)
+  meta-llama/*, llama-* → OpenRouter (OPENROUTER_API_KEY)
+
+Tests prompts across models with: latency, cost, quality, consistency, token usage.
 """
 
-import anthropic
+__version__ = "1.1.8"
+
 import time
 import json
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List, Dict, Tuple
 from datetime import datetime
-
-# Optional imports for other providers
-try:
-    import openai
-except ImportError:
-    openai = None
-
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
 
 
 @dataclass
 class PerformanceMetrics:
-    """Performance metrics for a prompt test"""
+    """Performance metrics for a single prompt test run"""
     model_id: str
-    provider: str  # "anthropic", "openai", "google"
+    provider: str
     prompt_text: str
     response_text: str
     latency_ms: float
     tokens_input: int
     tokens_output: int
-    estimated_cost_cents: float
-    quality_score: float  # 0-100 based on response quality
+    estimated_cost_usd: float
+    quality_score: float  # 0-100
     timestamp: str
     error: Optional[str] = None
 
@@ -47,9 +51,9 @@ class TestResults:
     """Complete test results comparing models"""
     test_id: str
     prompt_text: str
-    models_tested: list[str]
-    results: list[PerformanceMetrics]
-    recommendations: list[str]
+    models_tested: List[str]
+    results: List[PerformanceMetrics]
+    recommendations: List[str]
     best_model: str
     cheapest_model: str
     fastest_model: str
@@ -58,110 +62,168 @@ class TestResults:
 
 class PromptPerformanceTester:
     """
-    Test and compare prompts across multiple LLM models and providers.
+    Model-agnostic prompt benchmarking across any LLM provider.
 
-    Supports:
-    - Anthropic Claude (Haiku, Sonnet, Opus)
-    - OpenAI GPT (GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo)
-    - Google Gemini (2.0 Flash, 1.5 Pro, 1.5 Flash)
+    Pass any model ID — provider is detected automatically from the model name
+    prefix. No hardcoded whitelist; new models work without code changes.
 
-    Features:
-    - Multi-provider testing
-    - Latency, cost, quality metrics
-    - Consistency testing
-    - Detailed recommendations
+    Provider detection (prefix → provider → required env var):
+      claude-*            → Anthropic    → ANTHROPIC_API_KEY
+      gpt-*, o1*, o3*     → OpenAI       → OPENAI_API_KEY
+      gemini-*            → Google       → GOOGLE_API_KEY
+      mistral-*/mixtral-* → Mistral      → MISTRAL_API_KEY
+      deepseek-*          → DeepSeek     → DEEPSEEK_API_KEY
+      grok-*              → xAI          → XAI_API_KEY
+      minimax*/MiniMax*   → MiniMax      → MINIMAX_API_KEY
+      qwen*               → Qwen         → DASHSCOPE_API_KEY
+      meta-llama/*/llama-* → OpenRouter  → OPENROUTER_API_KEY
     """
 
-    # Model pricing (cost per 1M tokens)
-    MODEL_PRICING = {
-        # Anthropic Claude 4.5 Series (Latest 2026)
-        "claude-haiku-4-5-20251001": {
-            "provider": "anthropic",
-            "input": 1.00,      # $1.00 per 1M input tokens
-            "output": 5.00      # $5.00 per 1M output tokens
-        },
-        "claude-sonnet-4-5-20250929": {
-            "provider": "anthropic",
-            "input": 3.00,      # $3.00 per 1M input tokens
-            "output": 15.00     # $15.00 per 1M output tokens
-        },
-        "claude-opus-4-5-20251101": {
-            "provider": "anthropic",
-            "input": 5.00,      # $5.00 per 1M input tokens
-            "output": 25.00     # $25.00 per 1M output tokens
-        },
+    WATERMARK = "PROPRIETARY_SKILL_UNISAI_2026_MULTI_PROVIDER"
 
-        # OpenAI GPT-5.2 Series (Latest 2026)
-        "gpt-5.2-instant": {
-            "provider": "openai",
-            "input": 1.75,      # $1.75 per 1M input tokens
-            "output": 14.00     # $14.00 per 1M output tokens
-        },
-        "gpt-5.2-thinking": {
-            "provider": "openai",
-            "input": 1.75,      # $1.75 per 1M input tokens
-            "output": 14.00     # $14.00 per 1M output tokens
-        },
-        "gpt-5.2-pro": {
-            "provider": "openai",
-            "input": 1.75,      # $1.75 per 1M input tokens
-            "output": 14.00     # $14.00 per 1M output tokens
-        },
+    # Prefix-based provider routing — (prefix, provider, env_key, base_url)
+    PROVIDER_MAP = [
+        ("claude-",      "anthropic",  "ANTHROPIC_API_KEY",  None),
+        ("gpt-",         "openai",     "OPENAI_API_KEY",     None),
+        ("o1",           "openai",     "OPENAI_API_KEY",     None),
+        ("o3",           "openai",     "OPENAI_API_KEY",     None),
+        ("gemini-",      "google",     "GOOGLE_API_KEY",     None),
+        ("mistral-",     "mistral",    "MISTRAL_API_KEY",    None),
+        ("mixtral-",     "mistral",    "MISTRAL_API_KEY",    None),
+        ("devstral-",    "mistral",    "MISTRAL_API_KEY",    None),
+        ("ministral-",   "mistral",    "MISTRAL_API_KEY",    None),
+        ("deepseek-",    "deepseek",   "DEEPSEEK_API_KEY",   "https://api.deepseek.com/v1"),
+        ("grok-",        "xai",        "XAI_API_KEY",        "https://api.x.ai/v1"),
+        ("MiniMax",      "minimax",    "MINIMAX_API_KEY",    "https://api.minimax.io/v1"),
+        ("minimax",      "minimax",    "MINIMAX_API_KEY",    "https://api.minimax.io/v1"),
+        ("qwen",         "qwen",       "DASHSCOPE_API_KEY",  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
+        ("meta-llama/",  "openrouter", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1"),
+        ("llama-",       "openrouter", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1"),
+    ]
 
-        # Google Gemini Latest (2026)
-        "gemini-3-pro": {
-            "provider": "google",
-            "input": 2.00,      # $2.00 per 1M input tokens (up to 200K context)
-            "output": 12.00     # $12.00 per 1M output tokens
-        },
-        "gemini-2.5-pro": {
-            "provider": "google",
-            "input": 1.25,      # $1.25 per 1M input tokens
-            "output": 10.00     # $10.00 per 1M output tokens
-        },
-        "gemini-2.5-flash": {
-            "provider": "google",
-            "input": 0.30,      # $0.30 per 1M input tokens
-            "output": 2.50      # $2.50 per 1M output tokens
-        },
-        "gemini-2.5-flash-lite": {
-            "provider": "google",
-            "input": 0.10,      # $0.10 per 1M input tokens
-            "output": 0.40      # $0.40 per 1M output tokens
-        },
+    # Known pricing (per 1M tokens, USD) — used for cost calculation.
+    # NOT a validation gate. Unlisted models get cost=0 with a warning.
+    MODEL_PRICING: Dict[str, Dict] = {
+        # Anthropic Claude 4.6
+        "claude-opus-4-6":                    {"input": 15.00, "output": 75.00},
+        "claude-sonnet-4-6":                  {"input":  3.00, "output": 15.00},
+        "claude-haiku-4-5-20251001":          {"input":  1.00, "output":  5.00},
+        # OpenAI
+        "gpt-5.2-pro":                        {"input": 21.00, "output": 168.00},
+        "gpt-5.2":                            {"input":  1.75, "output": 14.00},
+        "gpt-5.1":                            {"input":  2.00, "output":  8.00},
+        # Google
+        "gemini-2.5-pro":                     {"input":  1.25, "output": 10.00},
+        "gemini-2.5-flash":                   {"input":  0.30, "output":  2.50},
+        "gemini-2.5-flash-lite":              {"input":  0.10, "output":  0.40},
+        # Mistral
+        "mistral-large-latest":               {"input":  2.00, "output":  6.00},
+        "mistral-small-latest":               {"input":  0.10, "output":  0.30},
+        # DeepSeek
+        "deepseek-chat":                      {"input":  0.27, "output":  1.10},
+        "deepseek-reasoner":                  {"input":  0.55, "output":  2.19},
+        # xAI
+        "grok-4-1-fast":                      {"input":  5.00, "output": 25.00},
+        "grok-3-beta":                        {"input":  3.00, "output": 15.00},
+        # MiniMax
+        "MiniMax-M2.1":                       {"input":  0.40, "output":  1.60},
+        # Qwen
+        "qwen3.5-plus":                       {"input":  0.57, "output":  2.29},
+        "qwen3-max-instruct":                 {"input":  1.60, "output":  6.40},
+        # Meta Llama via OpenRouter
+        "meta-llama/llama-4-maverick":        {"input":  0.20, "output":  0.60},
+        "meta-llama/llama-3.3-70b-instruct":  {"input":  0.59, "output":  0.79},
     }
 
-    # Watermark for IP tracking
-    WATERMARK = "PROPRIETARY_SKILL_VEDANT_2024_MULTI_PROVIDER"
+    # Known tested models — for documentation and default selection only.
+    KNOWN_MODELS = list(MODEL_PRICING.keys())
 
-    def __init__(self, anthropic_api_key: str = None, openai_api_key: str = None, google_api_key: str = None):
-        """Initialize with API keys for different providers"""
+    def __init__(self, **api_key_overrides):
+        """
+        Initialize with optional API key overrides.
 
-        # Anthropic
-        self.anthropic_key = anthropic_api_key or os.getenv("ANTHROPIC_API_KEY")
-        if self.anthropic_key:
-            self.anthropic_client = anthropic.Anthropic(api_key=self.anthropic_key)
+        All keys are read from environment variables by default.
+        Pass keyword args to override specific keys:
+            anthropic_api_key="sk-ant-..."
+            openai_api_key="sk-..."
+            google_api_key="AI..."
+            deepseek_api_key="..."
+            xai_api_key="..."
+            minimax_api_key="..."
+            dashscope_api_key="..."
+            openrouter_api_key="..."
+            mistral_api_key="..."
+
+        Legacy positional-style kwargs also supported:
+            anthropic_api_key, openai_api_key, google_api_key
+        """
+        self._key_overrides = api_key_overrides
+        self._clients: Dict[str, object] = {}  # Lazy-initialized per provider
+        self.test_history: List[TestResults] = []
+
+    # ── Provider detection ────────────────────────────────────────────────
+
+    def _detect_provider(self, model: str) -> Tuple[str, str, Optional[str]]:
+        """Detect (provider, env_key, base_url) from model name prefix."""
+        for prefix, provider, env_key, base_url in self.PROVIDER_MAP:
+            if model.startswith(prefix):
+                return provider, env_key, base_url
+        known_prefixes = [p for p, *_ in self.PROVIDER_MAP]
+        raise ValueError(
+            f"Cannot detect provider for model '{model}'.\n"
+            f"Model name must start with one of: {known_prefixes}\n"
+            f"Known tested models: {self.KNOWN_MODELS}"
+        )
+
+    def _get_api_key(self, env_key: str) -> Optional[str]:
+        """Resolve API key: override kwarg > environment variable."""
+        kwarg_name = env_key.lower()  # e.g. ANTHROPIC_API_KEY -> anthropic_api_key
+        return self._key_overrides.get(kwarg_name) or os.getenv(env_key)
+
+    def _get_client(self, provider: str, env_key: str, base_url: Optional[str]) -> object:
+        """Lazily initialize and cache SDK client per provider."""
+        if provider in self._clients:
+            return self._clients[provider]
+
+        api_key = self._get_api_key(env_key)
+        if not api_key:
+            raise ValueError(
+                f"{env_key} not set. "
+                f"Set the environment variable or pass {env_key.lower()}='...' to the constructor."
+            )
+
+        if provider == "anthropic":
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+
+        elif provider == "google":
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            client = genai  # Module-level, model instantiated per call
+
+        elif provider == "mistral":
+            from mistralai import Mistral
+            client = Mistral(api_key=api_key)
+
+        elif provider in ("openai", "deepseek", "xai", "minimax", "qwen", "openrouter"):
+            from openai import OpenAI
+            kwargs = {"api_key": api_key}
+            if base_url:
+                kwargs["base_url"] = base_url
+            client = OpenAI(**kwargs)
+
         else:
-            self.anthropic_client = None
+            raise ValueError(f"Unknown provider: {provider}")
 
-        # OpenAI
-        self.openai_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        if self.openai_key and openai:
-            self.openai_client = openai.OpenAI(api_key=self.openai_key)
-        else:
-            self.openai_client = None
+        self._clients[provider] = client
+        return client
 
-        # Google Gemini
-        self.google_key = google_api_key or os.getenv("GOOGLE_API_KEY")
-        if self.google_key and genai:
-            genai.configure(api_key=self.google_key)
-
-        self.test_history = []
+    # ── Core test methods ─────────────────────────────────────────────────
 
     def test_prompt(
         self,
         prompt_text: str,
-        models: list[str] = None,
+        models: List[str] = None,
         num_runs: int = 1,
         system_prompt: str = None,
         max_tokens: int = 1000
@@ -171,48 +233,32 @@ class PromptPerformanceTester:
 
         Args:
             prompt_text: The prompt to test
-            models: List of models to test (default: all available)
-            num_runs: Number of times to run each model
+            models: List of model IDs to test. Defaults to all KNOWN_MODELS.
+                    Pass any model ID — provider auto-detected from prefix.
+            num_runs: Number of times to run each model (for consistency testing)
             system_prompt: Optional system prompt
             max_tokens: Maximum tokens for response
 
         Returns:
             TestResults with performance metrics for all models
         """
-
         if models is None:
-            models = list(self.MODEL_PRICING.keys())
+            models = self.KNOWN_MODELS
 
         all_results = []
         test_id = self._generate_test_id()
 
         for model in models:
-            if model not in self.MODEL_PRICING:
-                print(f"⚠️  Unknown model: {model}")
-                continue
-
             print(f"Testing {model}...")
-            model_results = []
+            for _ in range(num_runs):
+                metric = self._test_single_model(model, prompt_text, system_prompt, max_tokens)
+                all_results.append(metric)
 
-            for run in range(num_runs):
-                metric = self._test_single_model(
-                    model=model,
-                    prompt=prompt_text,
-                    system_prompt=system_prompt,
-                    max_tokens=max_tokens
-                )
-                model_results.append(metric)
-
-            all_results.extend(model_results)
-
-        # Generate recommendations
         recommendations = self._generate_recommendations(all_results)
-
-        # Find best models
-        successful_results = [r for r in all_results if r.error is None]
-        best_model = max(successful_results, key=lambda x: x.quality_score).model_id if successful_results else "N/A"
-        cheapest_model = min(successful_results, key=lambda x: x.estimated_cost_cents).model_id if successful_results else "N/A"
-        fastest_model = min(successful_results, key=lambda x: x.latency_ms).model_id if successful_results else "N/A"
+        successful = [r for r in all_results if r.error is None]
+        best_model    = max(successful, key=lambda x: x.quality_score).model_id    if successful else "N/A"
+        cheapest_model = min(successful, key=lambda x: x.estimated_cost_usd).model_id if successful else "N/A"
+        fastest_model  = min(successful, key=lambda x: x.latency_ms).model_id       if successful else "N/A"
 
         results = TestResults(
             test_id=test_id,
@@ -225,7 +271,6 @@ class PromptPerformanceTester:
             fastest_model=fastest_model,
             created_at=datetime.now().isoformat()
         )
-
         self.test_history.append(results)
         return results
 
@@ -233,81 +278,58 @@ class PromptPerformanceTester:
         self,
         model: str,
         prompt: str,
-        system_prompt: str = None,
-        max_tokens: int = 1000
+        system_prompt: Optional[str],
+        max_tokens: int
     ) -> PerformanceMetrics:
-        """Test a single model"""
-
+        """Test a single model, routing to the correct provider."""
         try:
-            provider = self.MODEL_PRICING[model]["provider"]
+            provider, env_key, base_url = self._detect_provider(model)
+            client = self._get_client(provider, env_key, base_url)
 
             if provider == "anthropic":
-                return self._test_anthropic(model, prompt, system_prompt, max_tokens)
-            elif provider == "openai":
-                return self._test_openai(model, prompt, system_prompt, max_tokens)
+                return self._test_anthropic(client, model, prompt, system_prompt, max_tokens)
             elif provider == "google":
-                return self._test_google(model, prompt, system_prompt, max_tokens)
+                return self._test_google(client, model, prompt, system_prompt, max_tokens)
+            elif provider == "mistral":
+                return self._test_mistral(client, model, prompt, system_prompt, max_tokens)
             else:
-                raise ValueError(f"Unknown provider: {provider}")
+                # All OpenAI-compat providers
+                return self._test_openai_compat(client, provider, model, prompt, system_prompt, max_tokens)
 
         except Exception as e:
+            provider_guess = model.split("-")[0] if "-" in model else "unknown"
             return PerformanceMetrics(
                 model_id=model,
-                provider=self.MODEL_PRICING.get(model, {}).get("provider", "unknown"),
+                provider=provider_guess,
                 prompt_text=prompt,
                 response_text="",
                 latency_ms=0,
                 tokens_input=0,
                 tokens_output=0,
-                estimated_cost_cents=0,
+                estimated_cost_usd=0,
                 quality_score=0,
                 timestamp=datetime.now().isoformat(),
                 error=str(e)
             )
 
-    def _test_anthropic(self, model: str, prompt: str, system_prompt: str, max_tokens: int) -> PerformanceMetrics:
-        """Test using Anthropic API"""
-        if not self.anthropic_client:
-            raise ValueError("Anthropic API key not configured")
-
-        start_time = time.time()
-
-        message = self.anthropic_client.messages.create(
+    def _test_anthropic(self, client, model, prompt, system_prompt, max_tokens) -> PerformanceMetrics:
+        start = time.time()
+        message = client.messages.create(
             model=model,
             max_tokens=max_tokens,
             system=system_prompt or "You are a helpful assistant.",
             messages=[{"role": "user", "content": prompt}]
         )
-
-        latency_ms = (time.time() - start_time) * 1000
+        latency_ms = (time.time() - start) * 1000
         response_text = message.content[0].text if message.content else ""
         tokens_input = message.usage.input_tokens
         tokens_output = message.usage.output_tokens
+        return self._make_metrics(model, "anthropic", prompt, response_text,
+                                  latency_ms, tokens_input, tokens_output)
 
-        estimated_cost_cents = self._calculate_cost(model, tokens_input, tokens_output)
-        quality_score = self._score_response_quality(response_text, latency_ms)
-
-        return PerformanceMetrics(
-            model_id=model,
-            provider="anthropic",
-            prompt_text=prompt,
-            response_text=response_text[:200] + "..." if len(response_text) > 200 else response_text,
-            latency_ms=latency_ms,
-            tokens_input=tokens_input,
-            tokens_output=tokens_output,
-            estimated_cost_cents=estimated_cost_cents,
-            quality_score=quality_score,
-            timestamp=datetime.now().isoformat()
-        )
-
-    def _test_openai(self, model: str, prompt: str, system_prompt: str, max_tokens: int) -> PerformanceMetrics:
-        """Test using OpenAI API"""
-        if not self.openai_client:
-            raise ValueError("OpenAI API key not configured")
-
-        start_time = time.time()
-
-        response = self.openai_client.chat.completions.create(
+    def _test_openai_compat(self, client, provider, model, prompt, system_prompt, max_tokens) -> PerformanceMetrics:
+        start = time.time()
+        response = client.chat.completions.create(
             model=model,
             max_tokens=max_tokens,
             messages=[
@@ -315,155 +337,128 @@ class PromptPerformanceTester:
                 {"role": "user", "content": prompt}
             ]
         )
-
-        latency_ms = (time.time() - start_time) * 1000
+        latency_ms = (time.time() - start) * 1000
         response_text = response.choices[0].message.content if response.choices else ""
         tokens_input = response.usage.prompt_tokens
         tokens_output = response.usage.completion_tokens
+        return self._make_metrics(model, provider, prompt, response_text,
+                                  latency_ms, tokens_input, tokens_output)
 
-        estimated_cost_cents = self._calculate_cost(model, tokens_input, tokens_output)
-        quality_score = self._score_response_quality(response_text, latency_ms)
+    def _test_google(self, genai_module, model, prompt, system_prompt, max_tokens) -> PerformanceMetrics:
+        start = time.time()
+        gemini_model = genai_module.GenerativeModel(model)
+        response = gemini_model.generate_content(
+            f"{system_prompt or 'You are a helpful assistant.'}\n\n{prompt}",
+            generation_config={"max_output_tokens": max_tokens}
+        )
+        latency_ms = (time.time() - start) * 1000
+        response_text = response.text if response else ""
+        # Gemini doesn't always return exact token counts — estimate from word count
+        tokens_input = int(len(prompt.split()) * 1.3)
+        tokens_output = int(len(response_text.split()) * 1.3)
+        return self._make_metrics(model, "google", prompt, response_text,
+                                  latency_ms, tokens_input, tokens_output)
 
+    def _test_mistral(self, client, model, prompt, system_prompt, max_tokens) -> PerformanceMetrics:
+        start = time.time()
+        response = client.chat.complete(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt or "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=max_tokens,
+        )
+        latency_ms = (time.time() - start) * 1000
+        response_text = response.choices[0].message.content if response.choices else ""
+        tokens_input = response.usage.prompt_tokens
+        tokens_output = response.usage.completion_tokens
+        return self._make_metrics(model, "mistral", prompt, response_text,
+                                  latency_ms, tokens_input, tokens_output)
+
+    def _make_metrics(self, model, provider, prompt, response_text,
+                      latency_ms, tokens_input, tokens_output) -> PerformanceMetrics:
         return PerformanceMetrics(
             model_id=model,
-            provider="openai",
+            provider=provider,
             prompt_text=prompt,
             response_text=response_text[:200] + "..." if len(response_text) > 200 else response_text,
             latency_ms=latency_ms,
             tokens_input=tokens_input,
             tokens_output=tokens_output,
-            estimated_cost_cents=estimated_cost_cents,
-            quality_score=quality_score,
+            estimated_cost_usd=self._calculate_cost(model, tokens_input, tokens_output),
+            quality_score=self._score_response_quality(response_text, latency_ms),
             timestamp=datetime.now().isoformat()
         )
 
-    def _test_google(self, model: str, prompt: str, system_prompt: str, max_tokens: int) -> PerformanceMetrics:
-        """Test using Google Gemini API"""
-        if not genai:
-            raise ValueError("google-generativeai package not installed")
-
-        start_time = time.time()
-
-        gemini_model = genai.GenerativeModel(model)
-        response = gemini_model.generate_content(
-            f"{system_prompt or 'You are a helpful assistant.'}\n\n{prompt}",
-            generation_config={"max_output_tokens": max_tokens}
-        )
-
-        latency_ms = (time.time() - start_time) * 1000
-        response_text = response.text if response else ""
-
-        # Estimate tokens (Gemini doesn't always return exact counts)
-        tokens_input = len(prompt.split()) * 1.3  # Rough estimate
-        tokens_output = len(response_text.split()) * 1.3
-
-        estimated_cost_cents = self._calculate_cost(model, int(tokens_input), int(tokens_output))
-        quality_score = self._score_response_quality(response_text, latency_ms)
-
-        return PerformanceMetrics(
-            model_id=model,
-            provider="google",
-            prompt_text=prompt,
-            response_text=response_text[:200] + "..." if len(response_text) > 200 else response_text,
-            latency_ms=latency_ms,
-            tokens_input=int(tokens_input),
-            tokens_output=int(tokens_output),
-            estimated_cost_cents=estimated_cost_cents,
-            quality_score=quality_score,
-            timestamp=datetime.now().isoformat()
-        )
+    # ── Cost & quality helpers ────────────────────────────────────────────
 
     def _calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
-        """Calculate estimated cost in cents"""
-        if model not in self.MODEL_PRICING:
-            return 0
-
-        pricing = self.MODEL_PRICING[model]
-        input_cost = (input_tokens / 1_000_000) * pricing["input"]
+        """Calculate estimated cost in USD. Returns 0 for unlisted models."""
+        pricing = self.MODEL_PRICING.get(model)
+        if not pricing:
+            return 0.0
+        input_cost  = (input_tokens  / 1_000_000) * pricing["input"]
         output_cost = (output_tokens / 1_000_000) * pricing["output"]
-
-        # Convert dollars to cents
-        return round((input_cost + output_cost) * 100, 4)
+        return round(input_cost + output_cost, 8)
 
     def _score_response_quality(self, response: str, latency_ms: float) -> float:
-        """Score response quality (0-100)"""
-        score = 50  # Base score
-
-        # Length quality (optimal 200-1000 chars)
+        """Score response quality 0-100 based on length, completeness, latency."""
+        score = 50
         if 200 <= len(response) <= 1000:
             score += 25
         elif len(response) > 100:
             score += 15
-
-        # Completeness (has punctuation, sentences)
         if response.count(".") > 0:
             score += 15
         if response.count("?") > 0 or response.count("!") > 0:
             score += 5
-
-        # Latency quality (faster is better, but not too instant)
         if 500 < latency_ms < 5000:
             score += 10
         elif latency_ms < 500:
             score += 5
-
         return min(100, max(0, score))
 
-    def _generate_recommendations(self, results: list[PerformanceMetrics]) -> list[str]:
-        """Generate recommendations based on results"""
+    def _generate_recommendations(self, results: List[PerformanceMetrics]) -> List[str]:
         recommendations = []
-
         successful = [r for r in results if r.error is None]
-
         if not successful:
             recommendations.append("All tests failed. Check API keys and prompt validity.")
             return recommendations
-
-        # Cost recommendation
-        cheapest = min(successful, key=lambda x: x.estimated_cost_cents)
-        recommendations.append(f"Cost-optimized: Use {cheapest.model_id} (${cheapest.estimated_cost_cents/100:.4f})")
-
-        # Quality recommendation
+        cheapest     = min(successful, key=lambda x: x.estimated_cost_usd)
         best_quality = max(successful, key=lambda x: x.quality_score)
+        fastest      = min(successful, key=lambda x: x.latency_ms)
+        recommendations.append(f"Cost-optimized: Use {cheapest.model_id} (${cheapest.estimated_cost_usd:.6f})")
         recommendations.append(f"Best quality: {best_quality.model_id} ({best_quality.quality_score:.0f}/100)")
-
-        # Speed recommendation
-        fastest = min(successful, key=lambda x: x.latency_ms)
         recommendations.append(f"Fastest: {fastest.model_id} ({fastest.latency_ms:.0f}ms)")
-
-        # Cross-provider comparison
         by_provider = {}
         for r in successful:
-            if r.provider not in by_provider:
-                by_provider[r.provider] = []
-            by_provider[r.provider].append(r)
-
+            by_provider.setdefault(r.provider, []).append(r)
         if len(by_provider) > 1:
             recommendations.append(f"Multi-provider comparison: {len(by_provider)} providers tested")
-
         return recommendations
 
-    def _generate_test_id(self) -> str:
-        """Generate unique test ID"""
+    @staticmethod
+    def _generate_test_id() -> str:
         import uuid
         return f"test_{uuid.uuid4().hex[:8]}"
 
+    # ── Output formatting ─────────────────────────────────────────────────
+
     def format_results(self, results: TestResults) -> str:
-        """Format results as readable string"""
         output = f"""
 ╔══════════════════════════════════════════════════════════╗
 ║           PROMPT PERFORMANCE TEST RESULTS                ║
 ╚══════════════════════════════════════════════════════════╝
 
-Test ID: {results.test_id}
-Timestamp: {results.created_at}
+Test ID:       {results.test_id}
+Timestamp:     {results.created_at}
 Models Tested: {', '.join(results.models_tested)}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DETAILED RESULTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
-
         for result in results.results:
             if result.error:
                 output += f"\n❌ {result.model_id} ({result.provider})\n   Error: {result.error}\n"
@@ -471,20 +466,17 @@ DETAILED RESULTS
                 output += f"""
 ✅ {result.model_id} ({result.provider})
    Latency:  {result.latency_ms:.0f}ms
-   Cost:     ${result.estimated_cost_cents/100:.6f}
+   Cost:     ${result.estimated_cost_usd:.6f}
    Quality:  {result.quality_score:.1f}/100
    Tokens:   {result.tokens_input} input, {result.tokens_output} output
 """
-
         output += f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RECOMMENDATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
-
         for i, rec in enumerate(results.recommendations, 1):
             output += f"{i}. {rec}\n"
-
         output += f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Best Model (Quality): {results.best_model}
@@ -496,12 +488,9 @@ Best Model (Speed):   {results.fastest_model}
 
 
 if __name__ == "__main__":
-    # Example usage
-    import os
-
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if api_key:
-        tester = PromptPerformanceTester(anthropic_api_key=api_key)
+        tester = PromptPerformanceTester()
         results = tester.test_prompt(
             prompt_text="What are the benefits of AI?",
             models=["claude-haiku-4-5-20251001"],
