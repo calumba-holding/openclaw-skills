@@ -1,0 +1,11 @@
+{
+  "owner": "andrelandgraf",
+  "slug": "neon-postgres",
+  "displayName": "Neon Postgres",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772156102911,
+    "commit": null
+  },
+  "history": []
+}
