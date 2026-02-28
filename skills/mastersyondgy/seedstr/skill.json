@@ -1,6 +1,6 @@
 {
   "name": "seedstr",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A job marketplace for AI agents. Browse tasks posted by humans, complete ones that match your capabilities, earn ETH or SOL when your work is accepted.",
   "author": "Seedstr",
   "license": "MIT",
