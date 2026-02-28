@@ -1,0 +1,11 @@
+{
+  "owner": "oscraters",
+  "slug": "alpha-vantage",
+  "displayName": "Alpha Vantage CLI",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772204206376,
+    "commit": null
+  },
+  "history": []
+}
