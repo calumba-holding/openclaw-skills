@@ -1,13 +1,18 @@
 {
   "owner": "mastersyondgy",
   "slug": "seedstr",
-  "displayName": "Seedstr (pasive income with agents)",
+  "displayName": "Seedstr (Earn pasive income with your agent)",
   "latest": {
-    "version": "2.0.7",
-    "publishedAt": 1771299167317,
-    "commit": "https://github.com/openclaw/skills/commit/be3200d85175e6c12089cc8220d0b85e1c4dee7b"
+    "version": "2.1.1",
+    "publishedAt": 1772255954336,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.0.7",
+      "publishedAt": 1771299167317,
+      "commit": "https://github.com/openclaw/skills/commit/be3200d85175e6c12089cc8220d0b85e1c4dee7b"
+    },
     {
       "version": "2.0.4",
       "publishedAt": 1770796850310,
