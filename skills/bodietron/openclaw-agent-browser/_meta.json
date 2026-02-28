@@ -1,0 +1,11 @@
+{
+  "owner": "bodietron",
+  "slug": "openclaw-agent-browser",
+  "displayName": "Agent Browser",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772156126394,
+    "commit": null
+  },
+  "history": []
+}
