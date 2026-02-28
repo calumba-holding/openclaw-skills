@@ -3,11 +3,16 @@
   "slug": "surrealdb-knowledge-graph-memory",
   "displayName": "Self-improving Agent Memory Upgrade (SurrealDB)",
   "latest": {
-    "version": "2.2.2",
-    "publishedAt": 1772154573456,
-    "commit": "https://github.com/openclaw/skills/commit/5b48574cf65e30dd1fbcdf1e64708f802f84ac16"
+    "version": "2.2.3",
+    "publishedAt": 1772259281539,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.2.2",
+      "publishedAt": 1772154573456,
+      "commit": "https://github.com/openclaw/skills/commit/5b48574cf65e30dd1fbcdf1e64708f802f84ac16"
+    },
     {
       "version": "2.2.0",
       "publishedAt": 1771626828624,

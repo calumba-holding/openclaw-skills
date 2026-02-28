@@ -89,6 +89,24 @@ This is the core concept: **every agent equipped with this skill improves itself
 - Result: isolated facts become a **connected knowledge web** — the agent can now traverse relationships, not just keyword-match
 - Over time, the graph evolves from a flat list into a rich semantic network
 
+#### Job 3 — Deduplication (daily at 4 AM)
+**Script:** `scripts/extract-knowledge.py dedupe --threshold 0.92`
+
+- Compares all facts using vector similarity (cosine distance)
+- Facts above the threshold (92% similar) are flagged as duplicates
+- Keeps the higher-confidence fact, removes the duplicate
+- Prevents extraction from creating bloat over time
+- Result: a clean, non-redundant knowledge base
+
+#### Job 4 — Reconciliation (weekly, Sundays at 5 AM)
+**Script:** `scripts/extract-knowledge.py reconcile --verbose`
+
+- Applies time-based confidence decay to aging facts
+- Prunes facts that have decayed below minimum confidence
+- Cleans orphaned entities with no linked facts
+- Consolidates near-duplicate entities
+- Result: the knowledge graph stays healthy, relevant, and pruned of stale information
+
 ### Why This Makes Agents Self-Improving
 
 When auto-injection is enabled, every new conversation starts with the most relevant slice of the accumulated knowledge graph. As the agent:
@@ -99,21 +117,59 @@ When auto-injection is enabled, every new conversation starts with the most rele
 
 ...the agent effectively gets smarter with every cycle. It learns from its own outputs, grounds future responses in its accumulated history, and avoids repeating mistakes (via episodic memory and outcome calibration).
 
-### OpenClaw Cron Jobs (as configured)
+### OpenClaw Cron Jobs (Required)
 
-These jobs are registered in OpenClaw and run automatically:
+The skill requires **5 cron jobs** for full self-improving operation. All run as isolated background sessions with no delivery:
 
-| Job Name | Cron ID | Schedule | What it runs |
-|----------|---------|----------|--------------|
-| Memory Knowledge Extraction | `b9936b69-c652-4683-9eae-876cd02128c7` | Every 6 hours (`0 */6 * * *`) | `python3 scripts/extract-knowledge.py extract` |
-| Memory Relation Discovery | `2a3dd973-5d4d-46cf-848d-0cf31ab53fa1` | Daily at 3 AM (`0 3 * * *`) | `python3 scripts/extract-knowledge.py discover-relations` |
+| Job Name | Schedule | What it runs |
+|----------|----------|--------------|
+| Memory Knowledge Extraction | Every 6 hours (`0 */6 * * *`) | `extract-knowledge.py extract` — extracts facts from memory files |
+| Memory Relation Discovery | Daily at 3 AM (`0 3 * * *`) | `extract-knowledge.py discover-relations` — AI-powered relationship finding |
+| Memory Deduplication | Daily at 4 AM (`0 4 * * *`) | `extract-knowledge.py dedupe --threshold 0.92` — removes duplicate/near-duplicate facts |
+| Memory Reconciliation | Weekly Sun 5 AM (`0 5 * * 0`) | `extract-knowledge.py reconcile --verbose` — prunes stale facts, applies confidence decay, cleans orphans |
 
-> **Updated 2026-02-26:** Both jobs now use `sessionTarget: "isolated"` with `agentTurn` payload and `delivery: none`. They run in fully isolated background sessions and **never fire into the main agent session** — no main-session context is consumed and your active chat is not affected. A bottom-right corner toast notification appears in the Control UI when each job starts and completes (auto-dismisses after 4 seconds).
+> All jobs use `sessionTarget: "isolated"` with `delivery: none`. They run in fully isolated background sessions and **never fire into the main agent session**. A bottom-right corner toast notification appears in the Control UI when each job starts and completes.
 
-To check job status at any time:
+**Setup commands** (run after installation):
+
 ```bash
-# Via OpenClaw cron list (in Koda's chat)
-# Or via CLI:
+# 1. Knowledge Extraction — every 6 hours
+openclaw cron add \
+  --name "Memory Knowledge Extraction" \
+  --cron "0 */6 * * *" \
+  --agent main --session isolated --no-deliver \
+  --timeout-seconds 300 \
+  --message "Run memory knowledge extraction. Execute: cd SKILL_DIR && source .venv/bin/activate && python3 scripts/extract-knowledge.py extract"
+
+# 2. Relation Discovery — daily at 3 AM
+openclaw cron add \
+  --name "Memory Relation Discovery" \
+  --cron "0 3 * * *" --exact \
+  --agent main --session isolated --no-deliver \
+  --timeout-seconds 300 \
+  --message "Run memory relation discovery. Execute: cd SKILL_DIR && source .venv/bin/activate && python3 scripts/extract-knowledge.py discover-relations"
+
+# 3. Deduplication — daily at 4 AM
+openclaw cron add \
+  --name "Memory Deduplication" \
+  --cron "0 4 * * *" --exact \
+  --agent main --session isolated --no-deliver \
+  --timeout-seconds 120 \
+  --message "Run knowledge graph deduplication. Execute: cd SKILL_DIR && source .venv/bin/activate && python3 scripts/extract-knowledge.py dedupe --threshold 0.92"
+
+# 4. Reconciliation — weekly on Sundays at 5 AM
+openclaw cron add \
+  --name "Memory Reconciliation" \
+  --cron "0 5 * * 0" --exact \
+  --agent main --session isolated --no-deliver \
+  --timeout-seconds 180 \
+  --message "Run knowledge graph reconciliation. Execute: cd SKILL_DIR && source .venv/bin/activate && python3 scripts/extract-knowledge.py reconcile --verbose"
+```
+
+> Replace `SKILL_DIR` with your actual skill path.
+
+To check job status:
+```bash
 openclaw cron list
 ```
 
@@ -428,29 +484,29 @@ Effective confidence is calculated from:
 
 ### Automated — OpenClaw Cron (as deployed)
 
-The self-improving loop runs via two registered OpenClaw cron jobs:
+The self-improving loop runs via **4 registered OpenClaw cron jobs**:
 
 ```
-Every 6h  → python3 scripts/extract-knowledge.py extract
-             (reads memory files, extracts facts into the graph)
-
-Daily 3AM → python3 scripts/extract-knowledge.py discover-relations
-             (finds semantic relationships between existing facts)
+Every 6h     → extract-knowledge.py extract            (extract facts from memory files)
+Daily 3 AM   → extract-knowledge.py discover-relations  (find relationships between facts)
+Daily 4 AM   → extract-knowledge.py dedupe              (remove duplicate facts)
+Weekly Sun   → extract-knowledge.py reconcile            (prune stale, decay, clean orphans)
 ```
 
-These jobs are pre-registered in OpenClaw. To verify they're active:
+See the "OpenClaw Cron Jobs (Required)" section above for setup commands.
+
+To verify they're active:
 ```bash
 openclaw cron list
-# or ask Koda: "list cron jobs"
 ```
 
-To manually trigger extraction:
+To manually trigger any job:
 ```bash
-# From the Memory dashboard UI: click "Extract Changes" or "Find Relations"
-# Or via CLI:
-cd ~/openclaw/skills/surrealdb-memory && source .venv/bin/activate
+cd SKILL_DIR && source .venv/bin/activate
 python3 scripts/extract-knowledge.py extract
 python3 scripts/extract-knowledge.py discover-relations
+python3 scripts/extract-knowledge.py dedupe --threshold 0.92
+python3 scripts/extract-knowledge.py reconcile --verbose
 ```
 
 ### Manual (UI)
