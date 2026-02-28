@@ -1,0 +1,11 @@
+{
+  "owner": "snowzlm",
+  "slug": "system-health-monitor",
+  "displayName": "System Health Monitor",
+  "latest": {
+    "version": "1.1.1",
+    "publishedAt": 1772298158646,
+    "commit": null
+  },
+  "history": []
+}
