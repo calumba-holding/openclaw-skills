@@ -1,4 +1,4 @@
-// @elvatis/openclaw-rss-feeds — NVD CVE API v2.0 fetcher
+// @elvatis/openclaw-rss-feeds - NVD CVE API v2.0 fetcher
 import type { CveEntry } from './types';
 
 const NVD_API_BASE = 'https://services.nvd.nist.gov/rest/json/cves/2.0';

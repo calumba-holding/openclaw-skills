@@ -1,4 +1,4 @@
-// @elvatis/openclaw-rss-feeds — Channel notifier via openclaw CLI subprocess
+// @elvatis/openclaw-rss-feeds - Channel notifier via openclaw CLI subprocess
 import { execFileSync } from 'child_process';
 
 /**

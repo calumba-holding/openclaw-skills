@@ -1,18 +1,28 @@
 {
   "name": "@elvatis_com/openclaw-rss-feeds",
-  "version": "0.1.2",
-  "description": "OpenClaw plugin — RSS/Atom feed digest with CVE enrichment and Ghost CMS drafts",
+  "version": "0.2.0",
+  "description": "OpenClaw plugin - RSS/Atom feed digest with CVE enrichment and Ghost CMS drafts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "openclaw.plugin.json"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": ["openclaw", "openclaw-plugin", "rss", "feeds", "cve", "security", "digest", "ghost"],
   "author": "Elvatis <hello@example.invalid>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elvatis/openclaw-rss-feeds.git"
+  },
   "openclaw": {
     "extensions": ["./dist/index.js"]
   },

@@ -1,4 +1,4 @@
-// @elvatis/openclaw-rss-feeds — HTML digest builder
+// @elvatis/openclaw-rss-feeds - HTML digest builder
 import type { FeedResult, CveEntry, FirmwareEntry } from './types';
 
 interface DigestMetadata {
@@ -41,7 +41,7 @@ function formatCveDescription(desc: string, productHighlightPattern?: string): s
       const re = new RegExp(`\\b(${productHighlightPattern})\\b`, 'g');
       result = result.replace(re, '<strong>$1</strong>');
     } catch {
-      // Invalid regex — skip highlighting
+      // Invalid regex - skip highlighting
     }
   }
 
@@ -86,7 +86,7 @@ function buildFirmwareSection(firmware: FirmwareEntry[], feedName: string): stri
 
       const docsCell = fw.docsUrl
         ? `<a href="${escapeHtml(fw.docsUrl)}" target="_blank" style="color:#1976d2;text-decoration:none;">Documentation</a>`
-        : `<span style="color:#aaa;">—</span>`;
+        : `<span style="color:#aaa;">-</span>`;
 
       return `<tr style="border-bottom:1px solid #eee;">
   <td style="padding:8px;vertical-align:middle;"><strong>${escapeHtml(fw.product)}</strong></td>
@@ -234,7 +234,7 @@ export function formatDigest(
   // Global CVE summary (if multiple feeds had CVEs)
   if (feedResults.length > 1 && allCves.length > 0) {
     html += `<div style="margin-top:40px;padding-top:20px;border-top:2px solid #eee;">
-<h2 style="color:#333;">🔐 All CVEs — Combined View</h2>
+<h2 style="color:#333;">🔐 All CVEs - Combined View</h2>
 <p style="color:#666;font-size:0.9em;">All CVEs from all feeds above the CVSS threshold (${cvssThreshold}), sorted by severity:</p>
 ${buildCveSection(allCves, cvssThreshold)}
 </div>`;
@@ -263,7 +263,7 @@ export function formatDigestBody(
 
   if (feedResults.length > 1 && allCves.length > 0) {
     html += `<div style="margin-top:40px;padding-top:20px;border-top:2px solid #eee;">
-<h2 style="color:#333;">🔐 All CVEs — Combined View</h2>
+<h2 style="color:#333;">🔐 All CVEs - Combined View</h2>
 ${buildCveSection(allCves, cvssThreshold)}
 </div>`;
   }

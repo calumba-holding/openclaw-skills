@@ -2,19 +2,38 @@
 
 OpenClaw plugin for RSS and Atom security digests with optional NVD CVE enrichment, Ghost CMS draft publishing, and channel notifications.
 
-## Installation
+## Quick Start
 
 ```bash
 npm install @elvatis_com/openclaw-rss-feeds
 ```
 
-Then enable the plugin in your OpenClaw plugin config.
+Minimal config - add to your OpenClaw plugin config:
+
+```json
+{
+  "plugins": {
+    "openclaw-rss-feeds": {
+      "feeds": [
+        {
+          "id": "cert-bund",
+          "name": "BSI CERT-Bund",
+          "url": "https://wid.cert-bund.de/portal/wid/securityadvisory?rss",
+          "keywords": ["critical", "cve"]
+        }
+      ]
+    }
+  }
+}
+```
+
+See [`examples/minimal-config.json`](examples/minimal-config.json) for the minimal setup and [`examples/full-config.json`](examples/full-config.json) for all options.
 
 ## Configuration
 
 The plugin schema is defined in `openclaw.plugin.json`.
 
-Example with all supported options:
+Full example with all supported options:
 
 ```json
 {
@@ -68,7 +87,12 @@ Example with all supported options:
         "whatsapp:<phone>",
         "telegram:123456789"
       ],
-      "nvdApiKey": "<nvd-api-key-optional>"
+      "nvdApiKey": "<nvd-api-key-optional>",
+      "retry": {
+        "maxRetries": 3,
+        "initialDelayMs": 1000,
+        "backoffMultiplier": 2
+      }
     }
   }
 }
@@ -93,6 +117,20 @@ You can trigger digest generation manually with the registered tool:
 - Optional parameter: `dryRun: true`
 
 `dryRun` fetches and formats the digest but skips Ghost publishing and notifications.
+
+## Retry / Backoff
+
+Feed fetches use exponential backoff by default. If a feed request fails (network error, timeout, etc.), the plugin retries with increasing delays before giving up.
+
+Default behavior (no config needed):
+
+| Setting | Default | Description |
+|---|---|---|
+| `maxRetries` | 3 | Maximum retry attempts per feed |
+| `initialDelayMs` | 1000 | Delay before the first retry (ms) |
+| `backoffMultiplier` | 2 | Multiplier applied to the delay after each retry |
+
+With the defaults, the retry delays are: 1s, 2s, 4s (then fail). Set `maxRetries` to 0 to disable retries entirely.
 
 ## CVE Enrichment
 
@@ -131,6 +169,16 @@ Example targets:
 - `whatsapp:<phone>`
 - `telegram:123456789`
 - `discord:#security`
+
+## Community Catalog
+
+This plugin is listed in the [OpenClaw Community Catalog](https://github.com/openclaw/community-catalog). The catalog entry is defined in [`catalog.yaml`](catalog.yaml).
+
+To register via the CLI:
+
+```bash
+openclaw catalog submit --from ./catalog.yaml
+```
 
 ## Development
 

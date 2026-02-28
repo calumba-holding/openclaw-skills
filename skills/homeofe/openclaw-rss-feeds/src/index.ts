@@ -1,4 +1,4 @@
-// @elvatis/openclaw-rss-feeds — Plugin entry point
+// @elvatis/openclaw-rss-feeds - Plugin entry point
 import cron from 'node-cron';
 import { fetchFeed } from './fetcher';
 import { fetchCves } from './cveFetcher';
@@ -54,7 +54,7 @@ async function runDigest(api: PluginApi): Promise<DigestResult> {
 
     // Fetch RSS/Atom items
     try {
-      const { items, firmware } = await fetchFeed(feedConfig, startDate, endDate);
+      const { items, firmware } = await fetchFeed(feedConfig, startDate, endDate, config.retry);
       feedResult.items = items;
       feedResult.firmware = firmware;
       api.logger.info(
@@ -64,7 +64,7 @@ async function runDigest(api: PluginApi): Promise<DigestResult> {
       const errMsg = err instanceof Error ? err.message : String(err);
       api.logger.error(`[rss-feeds] Feed "${feedConfig.name}" fetch failed: ${errMsg}`);
       feedResult.error = errMsg;
-      // Continue to next feed — don't abort the whole digest
+      // Continue to next feed - don't abort the whole digest
     }
 
     // Optionally enrich with CVE data
@@ -107,7 +107,7 @@ async function runDigest(api: PluginApi): Promise<DigestResult> {
   const period = `${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
   const feedNames = feeds.map(f => f.name).join(' & ');
   const titlePrefix = feedNames || 'Configured Feeds';
-  const title = `🛡️ ${titlePrefix} — Security & Firmware Digest | ${period}`;
+  const title = `🛡️ ${titlePrefix} - Security & Firmware Digest | ${period}`;
 
   let ghostUrl: string | undefined;
   let ghostError: string | undefined;
@@ -142,7 +142,7 @@ async function runDigest(api: PluginApi): Promise<DigestResult> {
       api.logger.error(`[rss-feeds] Ghost publish crashed: ${ghostError}`);
     }
   } else {
-    api.logger.info('[rss-feeds] No Ghost config — skipping draft creation');
+    api.logger.info('[rss-feeds] No Ghost config - skipping draft creation');
   }
 
   // Send notifications (if configured)
@@ -228,7 +228,7 @@ export default function (api: PluginApi): void {
       },
     });
   } else {
-    api.logger.info('[rss-feeds] No schedule configured — manual trigger only');
+    api.logger.info('[rss-feeds] No schedule configured - manual trigger only');
   }
 
   // Register manual tool trigger
@@ -269,7 +269,7 @@ export default function (api: PluginApi): void {
         return {
           ...result,
           dryRun: true,
-          message: 'Dry run complete — digest generated but not published or notified.',
+          message: 'Dry run complete - digest generated but not published or notified.',
         };
       }
 

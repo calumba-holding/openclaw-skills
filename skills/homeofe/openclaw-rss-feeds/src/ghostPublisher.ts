@@ -1,4 +1,4 @@
-// @elvatis/openclaw-rss-feeds — Ghost Admin API draft publisher
+// @elvatis/openclaw-rss-feeds - Ghost Admin API draft publisher
 import jwt from 'jsonwebtoken';
 import type { GhostConfig } from './types';
 

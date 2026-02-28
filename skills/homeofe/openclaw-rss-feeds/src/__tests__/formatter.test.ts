@@ -69,7 +69,7 @@ describe('formatDigestBody', () => {
     expect(html).toContain('General &lt;News&gt;');
     expect(html).toContain('Documentation');
     expect(html).toContain('CVE-2026-1111');
-    expect(html).toContain('All CVEs — Combined View');
+    expect(html).toContain('All CVEs - Combined View');
 
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
