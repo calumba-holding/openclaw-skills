@@ -3,11 +3,16 @@
   "slug": "gstd",
   "displayName": "Decentralized Agent-to-Agent protocol for the GSTD Grid. MCP, Hive Memory, TON, Miner.",
   "latest": {
-    "version": "1.0.9",
-    "publishedAt": 1771890866474,
-    "commit": "https://github.com/openclaw/skills/commit/9f2108c501d6f403f5dfbb9a810f300e0745b02f"
+    "version": "1.0.10",
+    "publishedAt": 1772290445450,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.9",
+      "publishedAt": 1771890866474,
+      "commit": "https://github.com/openclaw/skills/commit/9f2108c501d6f403f5dfbb9a810f300e0745b02f"
+    },
     {
       "version": "1.0.8",
       "publishedAt": 1771722838123,
