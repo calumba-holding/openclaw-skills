@@ -1,7 +1,7 @@
 ---
 name: xiaohongshu
-description: 小红书全能助手 — 文案生成、封面制作、内容发布与管理。当用户要求写小红书笔记、生成小红书文案/标题/封面、发小红书、搜索小红书、评论点赞收藏等任何小红书相关操作时使用。支持一站式从文案创作到自动发布的完整流程。
-metadata: {"openclaw": {"emoji": "📕", "requires": {"bins": ["convert"]}}}
+description: 小红书全能助手 — 文案生成、封面制作、内容发布与管理。当用户要求写小红书笔记、生成小红书文案/标题/封面、发小红书、搜索小红书、评论点赞收藏等任何小红书相关操作时使用。支持一站式从文案创作到自动发布的完整流程。封面AI生图需配置可选环境变量（GEMINI_API_KEY 或 IMG_API_KEY 或 HUNYUAN_SECRET_ID+KEY）。
+metadata: {"openclaw": {"emoji": "📕", "requires": {"bins": ["convert"], "anyBins": ["curl"]}}}
 ---
 
 # 📕 小红书全能助手
@@ -99,6 +99,7 @@ bash {baseDir}/scripts/generate.sh content "完整内容" "选定标题"
 
 - **Gemini**：`GEMINI_API_KEY=xxx bash cover.sh "标题" "prompt" ...`
 - **OpenAI兼容**：`IMG_API_TYPE=openai IMG_API_KEY=xxx IMG_API_BASE=https://api.openai.com/v1 IMG_MODEL=dall-e-3 bash cover.sh "标题" "prompt" ...`
+- **腾讯云混元生图（AIART）**：`IMG_API_TYPE=hunyuan HUNYUAN_SECRET_ID=AKID... HUNYUAN_SECRET_KEY=... HUNYUAN_REGION=ap-guangzhou bash cover.sh "标题" "prompt" ...`
 - **其他方式**：用户提供图片路径，走 `__USER_IMAGE__` 模式
 
 若用户之前已提供过 API Key（本次会话中），后续生图直接复用，无需重复询问。
@@ -280,6 +281,7 @@ curl -s -X POST "$MCP_URL" -H "Content-Type: application/json" -H "Mcp-Session-I
 > 需要登录小红书，请选择登录方式：
 > 1. **快捷扫码** — 直接获取二维码图片（推荐同城/常用设备）
 > 2. **截图扫码** — 通过登录工具截屏获取（推荐异地登录，支持短信验证码）
+> 3. **手动Cookie** — 直接粘贴浏览器Cookie字符串（推荐已在浏览器登录的用户）
 
 ### 方式一：快捷扫码（get_login_qrcode）
 
@@ -327,14 +329,13 @@ echo "$BASE64_STR" | base64 -d > /tmp/xhs_qr.png
 pkill -f xiaohongshu-login 2>/dev/null
 sleep 1
 cd ~/xiaohongshu-mcp && DISPLAY=:99 nohup ./xiaohongshu-login-linux-amd64 > login.log 2>&1 &
-sleep 8
+sleep 5
 ```
 
 #### 步骤 2: 截取二维码
 
 ```bash
-export DISPLAY=:99
-import -window root /tmp/xhs_qr.png
+DISPLAY=:99 import -window root /tmp/xhs_qr.png
 ```
 
 #### 步骤 2.1: 检测截图内是否有二维码
@@ -372,6 +373,73 @@ cd ~/xiaohongshu-mcp && DISPLAY=:99 nohup ./xiaohongshu-mcp-linux-amd64 > mcp.lo
 #### 二维码过期
 
 如用户反馈扫码失败，重复步骤 1-3 获取新二维码。
+
+---
+
+### 方式三：手动Cookie登录
+
+当用户提供浏览器复制的 Cookie 字符串时，将其转换为 JSON 数组格式并保存到 `~/xiaohongshu-mcp/cookies.json`。
+
+#### 步骤 1: 接收用户的 Cookie 字符串
+
+用户会提供类似这样的字符串（从浏览器开发者工具复制）：
+
+```
+a1=19c464ed2df...; webId=807ede65b...; web_session=040069b4...; xsecappid=xhs-pc-web
+```
+
+#### 步骤 2: 转换并保存
+
+将用户提供的 Cookie 字符串按 `;` 分割每个键值对，转换为如下 JSON 数组格式，保存到 `~/xiaohongshu-mcp/cookies.json`：
+
+```python
+python3 -c "
+import json, sys
+
+cookie_str = sys.argv[1].strip()
+cookies = []
+for pair in cookie_str.split(';'):
+    pair = pair.strip()
+    if '=' not in pair:
+        continue
+    name, value = pair.split('=', 1)
+    cookies.append({
+        'name': name.strip(),
+        'value': value.strip(),
+        'domain': '.xiaohongshu.com',
+        'path': '/',
+        'expires': -1,
+        'httpOnly': name.strip() in ('web_session', 'id_token', 'acw_tc'),
+        'secure': name.strip() in ('web_session', 'id_token'),
+        'session': False,
+        'priority': 'Medium',
+        'sameParty': False,
+        'sourceScheme': 'Secure',
+        'sourcePort': 443
+    })
+
+with open('$HOME/xiaohongshu-mcp/cookies.json', 'w') as f:
+    json.dump(cookies, f, ensure_ascii=False)
+print(f'✅ 已保存 {len(cookies)} 个 Cookie 到 cookies.json')
+" "用户提供的cookie字符串"
+```
+
+#### 步骤 3: 重启 MCP 服务使 Cookie 生效
+
+```bash
+pkill -f xiaohongshu-mcp-linux 2>/dev/null
+sleep 1
+cd ~/xiaohongshu-mcp && DISPLAY=:99 nohup ./xiaohongshu-mcp-linux-amd64 > mcp.log 2>&1 &
+sleep 3
+```
+
+#### 步骤 4: 验证登录状态
+
+用 `check_login_status` 工具验证是否登录成功。如果失败，提示用户 Cookie 可能已过期，建议重新从浏览器获取或改用扫码登录。
+
+**注意事项**：
+- Cookie 中最关键的字段是 `web_session` 和 `a1`，缺少这两个会导致登录失败
+- 浏览器登录状态和 MCP 登录状态会互相覆盖，导入后建议不要在浏览器再登录同一账号
 
 ---
 
