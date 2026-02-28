@@ -2,7 +2,9 @@
 const { execSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const logger = require('./utils/logger'); // New logger
+const logger = require('./utils/logger');
+
+const IS_WIN = process.platform === 'win32';
 
 const WRAPPER_INDEX = path.join(__dirname, 'index.js');
 const PID_FILE = path.resolve(__dirname, '../../memory/evolver_wrapper.pid');
@@ -94,7 +96,7 @@ function startDaemon() {
     // Optimization: avoid double-wrapper execution by direct spawn
     // Use child_process.spawn for better control than exec
     const child = spawn(process.execPath, [__filename, 'daemon-loop'], {
-        detached: true,
+        detached: !IS_WIN,
         stdio: ['ignore', out, err],
         cwd: __dirname,
         windowsHide: true
@@ -185,7 +187,7 @@ function daemonLoop() {
 
             // Use spawn instead of spawnSync to avoid blocking the daemon loop and reducing CPU/wait time
             const child = require('child_process').spawn(process.execPath, [__filename, 'ensure', '--json', '--daemon-check'], {
-                detached: true,
+                detached: !IS_WIN,
                 stdio: 'ignore',
                 cwd: __dirname,
                 windowsHide: true
@@ -412,7 +414,7 @@ function start(args) {
   const err = fs.openSync(path.resolve(__dirname, '../../logs/wrapper_err.log'), 'a');
 
   const child = spawn('node', [WRAPPER_INDEX, ...args], {
-    detached: true,
+    detached: !IS_WIN,
     stdio: ['ignore', out, err],
     cwd: __dirname,
     windowsHide: true

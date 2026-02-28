@@ -3,11 +3,16 @@
   "slug": "feishu-evolver-wrapper",
   "displayName": "Feishu Evolver Wrapper",
   "latest": {
-    "version": "1.7.0",
-    "publishedAt": 1772169758504,
-    "commit": "https://github.com/openclaw/skills/commit/5b18dc49a62b61a65e60b2de729c2f6b6ea4c82b"
+    "version": "1.7.1",
+    "publishedAt": 1772181696760,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.7.0",
+      "publishedAt": 1772169758504,
+      "commit": "https://github.com/openclaw/skills/commit/5b18dc49a62b61a65e60b2de729c2f6b6ea4c82b"
+    },
     {
       "version": "1.6.1",
       "publishedAt": 1771169237506,

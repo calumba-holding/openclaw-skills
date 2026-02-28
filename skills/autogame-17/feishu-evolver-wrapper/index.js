@@ -901,18 +901,17 @@ async function run() {
     function extractJsEntryFromCmd(cmdFilePath) {
         try {
             const content = fs.readFileSync(cmdFilePath, 'utf8');
-            const patterns = [
-                /"%~dp0\\([^"]+\.js)"/,
-                /"%~dp0\/([^"]+\.js)"/,
-                /"([^"]*node_modules[^"]*\.js)"/,
-                /"([^"]*openclaw[^"]*\.js)"/,
-            ];
-            for (const re of patterns) {
-                const m = content.match(re);
-                if (m) {
-                    let jsRel = m[1];
-                    const jsAbs = path.resolve(path.dirname(cmdFilePath), jsRel);
-                    if (fs.existsSync(jsAbs)) return jsAbs;
+            const cmdDir = path.dirname(cmdFilePath);
+            const jsRe = /"([^"]*\.js)"/g;
+            let m;
+            while ((m = jsRe.exec(content)) !== null) {
+                let raw = m[1];
+                raw = raw.replace(/%~?dp0%?\\/g, '').replace(/%~?dp0%?\//g, '');
+                if (!raw || raw.includes('%')) continue;
+                const abs = path.resolve(cmdDir, raw);
+                if (fs.existsSync(abs)) {
+                    console.log('[Wrapper] Parsed .cmd entry: ' + abs);
+                    return abs;
                 }
             }
         } catch (e) {}
