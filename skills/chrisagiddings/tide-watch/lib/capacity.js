@@ -502,11 +502,12 @@ function updateSessionRegistry(sessionDir, sessionId, action) {
 function formatTableRow(session) {
   const sessionId = session.sessionId.substring(0, 8);
   const channel = session.channel.padEnd(12);
+  const model = (session.model || 'unknown').substring(0, 25).padEnd(25);
   const capacity = `${session.percentage.toFixed(1)}%`.padStart(6);
   const tokens = `${session.tokensUsed.toLocaleString()}/${session.tokensMax.toLocaleString()}`.padStart(20);
   const status = session.status.padEnd(15);
   
-  return `${sessionId}  ${channel}  ${capacity}  ${tokens}  ${status}`;
+  return `${sessionId}  ${channel}  ${model}  ${capacity}  ${tokens}  ${status}`;
 }
 
 /**
@@ -515,7 +516,7 @@ function formatTableRow(session) {
  * @returns {string} Formatted table
  */
 function formatTable(sessions) {
-  const header = 'Session   Channel       Cap %              Tokens  Status';
+  const header = 'Session   Channel       Model                      Cap %              Tokens  Status';
   const separator = '-'.repeat(header.length);
   
   const rows = sessions.map(formatTableRow);
@@ -679,31 +680,75 @@ function parseTimeString(timeStr) {
 /**
  * Format sessions as a dashboard
  * @param {Array} sessions - Array of session objects
+ * @param {Map} changes - Optional map of sessionId -> change info (for watch mode)
  * @returns {string} Formatted dashboard
  */
-function formatDashboard(sessions) {
+function formatDashboard(sessions, changes = null) {
   const sorted = sortByCapacity(sessions);
+  const gatewayStatus = checkGatewayStatus();
+  
+  // ANSI color codes
+  const colors = {
+    reset: '\x1b[0m',
+    red: '\x1b[31m',      // Capacity increasing (bad)
+    green: '\x1b[32m',    // Capacity decreasing (good)
+    yellow: '\x1b[33m',   // New session
+    dim: '\x1b[2m',       // Unchanged
+  };
   
   const lines = [];
   lines.push('');
   lines.push('TIDE WATCH DASHBOARD 🌊');
-  lines.push('─'.repeat(95));
-  lines.push('Session ID  Channel/Label     Capacity                    Tokens        Last Active');
-  lines.push('─'.repeat(95));
+  lines.push(`Gateway Status: ${gatewayStatus.emoji} ${gatewayStatus.status}`);
+  lines.push('─'.repeat(135));
+  
+  // Add Trend column header if we have changes
+  const header = changes 
+    ? 'Session ID  Channel/Label     Model                      Capacity                    Tokens        Last Active  Trend'
+    : 'Session ID  Channel/Label     Model                      Capacity                    Tokens        Last Active';
+  lines.push(header);
+  lines.push('─'.repeat(135));
   
   sorted.forEach(session => {
     const id = session.sessionId.substring(0, 10).padEnd(10);
     const channelLabel = formatChannelLabel(session.channel, session.label).substring(0, 16).padEnd(16);
+    const model = (session.model || 'unknown').substring(0, 25).padEnd(25);
     const emoji = getCapacityEmoji(session.percentage);
     const bar = getCapacityBar(session.percentage, 10);
     const pct = `${session.percentage.toFixed(1)}%`.padStart(6);
     const tokens = `${session.tokensUsed.toLocaleString()}/${session.tokensMax.toLocaleString()}`.padStart(13);
     const lastActive = formatRelativeTime(session.lastActivity).padStart(10);
     
-    lines.push(`${id}  ${channelLabel}  ${emoji} ${bar} ${pct}  ${tokens}  ${lastActive}`);
+    let line = `${id}  ${channelLabel}  ${model}  ${emoji} ${bar} ${pct}  ${tokens}  ${lastActive}`;
+    
+    // Add trend information if we have changes
+    if (changes && changes.has(session.sessionId)) {
+      const change = changes.get(session.sessionId);
+      let trend = '';
+      
+      if (change.type === 'new') {
+        trend = `${colors.yellow}NEW${colors.reset}`;
+      } else if (change.type === 'increased') {
+        const arrow = '↑';
+        const delta = `+${change.delta.toFixed(1)}%`;
+        trend = `${colors.red}${arrow} ${delta}${colors.reset}`;
+      } else if (change.type === 'decreased') {
+        const arrow = '↓';
+        const delta = `-${change.delta.toFixed(1)}%`;
+        trend = `${colors.green}${arrow} ${delta}${colors.reset}`;
+      } else {
+        trend = `${colors.dim}─${colors.reset}`;
+      }
+      
+      line += `  ${trend}`;
+    }
+    
+    lines.push(line);
   });
   
-  lines.push('─'.repeat(95));
+  // Match separator to header length
+  const separatorLength = changes ? 135 : 120;
+  lines.push('─'.repeat(separatorLength));
   
   // Summary
   const critical = sorted.filter(s => s.percentage >= 95).length;
@@ -736,6 +781,92 @@ function formatDashboard(sessions) {
   return lines.join('\n');
 }
 
+// Gateway status cache (async, non-blocking)
+let gatewayStatusCache = null;
+let lastGatewayCheck = 0;
+let gatewayCheckInProgress = false;
+// Configurable gateway check parameters (can be updated via setConfig)
+let GATEWAY_REFRESH_INTERVAL = 30000; // Check every 30 seconds (default)
+let GATEWAY_TIMEOUT = 3000; // 3 seconds (default)
+
+/**
+ * Check OpenClaw gateway status (fully async, never blocks)
+ * @returns {Object} Gateway status { online: boolean, status: string, emoji: string }
+ */
+function checkGatewayStatus() {
+  const now = Date.now();
+  
+  // Start background check if cache is stale and no check in progress
+  if (!gatewayCheckInProgress && 
+      (!gatewayStatusCache || (now - lastGatewayCheck > GATEWAY_REFRESH_INTERVAL))) {
+    startBackgroundGatewayCheck();
+  }
+  
+  // ALWAYS return immediately (never block)
+  return gatewayStatusCache || {
+    online: false,
+    status: 'Checking...',
+    emoji: '⏳'
+  };
+}
+
+/**
+ * Start background gateway status check (async, non-blocking)
+ */
+function startBackgroundGatewayCheck() {
+  gatewayCheckInProgress = true;
+  
+  const { exec } = require('child_process');
+  
+  // Async, non-blocking check
+  exec('openclaw gateway status', { 
+    timeout: GATEWAY_TIMEOUT,  // Configurable timeout (default 3s)
+    encoding: 'utf8' 
+  }, (error, stdout) => {
+    // Callback runs when check completes (doesn't block dashboard)
+    if (!error && stdout) {
+      const isRunning = stdout.toLowerCase().includes('online') || 
+                        stdout.toLowerCase().includes('running') ||
+                        stdout.toLowerCase().includes('active');
+      
+      gatewayStatusCache = {
+        online: isRunning,
+        status: isRunning ? 'Online' : 'Offline',
+        emoji: isRunning ? '🟢' : '🔴',
+        lastUpdated: Date.now()
+      };
+      lastGatewayCheck = Date.now();
+    } else if (!gatewayStatusCache) {
+      // First check failed, set to unknown
+      gatewayStatusCache = {
+        online: false,
+        status: 'Unknown',
+        emoji: '❓',
+        error: error?.message
+      };
+      lastGatewayCheck = Date.now();
+    }
+    // If check fails but we have cache, keep existing cache
+    
+    gatewayCheckInProgress = false;
+  });
+}
+
+/**
+ * Update configuration values (for gateway check intervals/timeout)
+ * @param {Object} config - Configuration object
+ * @param {number} config.gatewayInterval - Gateway check interval in seconds
+ * @param {number} config.gatewayTimeout - Gateway command timeout in seconds
+ */
+function setConfig(config) {
+  if (config.gatewayInterval) {
+    GATEWAY_REFRESH_INTERVAL = config.gatewayInterval * 1000; // Convert seconds to milliseconds
+  }
+  if (config.gatewayTimeout) {
+    GATEWAY_TIMEOUT = config.gatewayTimeout * 1000; // Convert seconds to milliseconds
+  }
+}
+
 module.exports = {
   loadSessionRegistry,
   parseSession,
@@ -757,5 +888,7 @@ module.exports = {
   getRecommendations,
   getCapacityEmoji,
   getCapacityBar,
+  checkGatewayStatus,
+  setConfig,
   DEFAULT_SESSION_DIR
 };

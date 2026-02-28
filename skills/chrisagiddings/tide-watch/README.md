@@ -19,6 +19,20 @@ Get warned **before** your session context fills up:
 - 🔴 **90%** — "Session will lock soon!"
 - 🚨 **95%** — "CRITICAL: Save to memory NOW"
 
+## 💻 Requirements
+
+**Runtime:**
+- Node.js 14+ (for CLI tools mode)
+- ANSI-compatible terminal for live dashboard (most modern terminals)
+  - ✅ macOS: Terminal.app, iTerm2
+  - ✅ Linux: Most terminal emulators
+  - ✅ Windows: Windows Terminal, PowerShell 7+, Windows 10+ CMD
+  - ⚠️ Older terminals (pre-Windows 10 CMD) may not display colors
+
+**Directives-Only Mode:**
+- No Node.js required
+- Works through OpenClaw's built-in tools
+
 ## 📦 Installation
 
 ### Via ClawHub (Recommended)
@@ -313,6 +327,107 @@ Tide Watch dynamically reads your `AGENTS.md` configuration every time it checks
 - ✅ **Flexible formats** (accommodates different threshold counts)
 
 **Detailed parsing documentation:** See [PARSING.md](PARSING.md) for validation rules, fallback behavior, and troubleshooting.
+
+### CLI Configuration (v1.1.6+)
+
+**Customize refresh intervals and timeouts** for the CLI tools (dashboard watch mode, gateway status).
+
+**Configuration options:**
+- `refreshInterval` — Dashboard watch mode refresh (seconds, default: 10)
+- `gatewayInterval` — Gateway status background check (seconds, default: 30)
+- `gatewayTimeout` — Gateway command timeout (seconds, default: 3)
+
+**Configuration precedence** (highest to lowest):
+1. **CLI flags** (explicit user intent)
+2. **Environment variables** (session override)
+3. **Config file** (persistent preferences)
+4. **Defaults** (safe fallback)
+
+#### Option 1: CLI Flags (Per-Invocation)
+
+```bash
+tide-watch dashboard --watch \
+  --refresh-interval 5 \
+  --gateway-interval 60 \
+  --gateway-timeout 5
+```
+
+**Use when:** Quick experiment, one-time override
+
+#### Option 2: Environment Variables (Session Override)
+
+```bash
+export TIDE_WATCH_REFRESH_INTERVAL=5
+export TIDE_WATCH_GATEWAY_INTERVAL=60
+export TIDE_WATCH_GATEWAY_TIMEOUT=5
+tide-watch dashboard --watch
+```
+
+**Use when:** Temporary session-specific settings, shell profile integration
+
+#### Option 3: Config File (Persistent Preferences)
+
+**Create config file:**
+```bash
+mkdir -p ~/.config/tide-watch
+cat > ~/.config/tide-watch/config.json << EOF
+{
+  "refreshInterval": 5,
+  "gatewayInterval": 60,
+  "gatewayTimeout": 5
+}
+EOF
+```
+
+**Use when:** Permanent custom defaults, consistent across all invocations
+
+**File permissions:** Config file is automatically created with `0600` (user-only access). Config directory uses `0700` (user-only access).
+
+#### Validation Rules
+
+All configuration sources are validated:
+
+| Setting | Min | Max | Default | Description |
+|---------|-----|-----|---------|-------------|
+| `refreshInterval` | 1 | 300 | 10 | Dashboard refresh (watch mode) |
+| `gatewayInterval` | 5 | 600 | 30 | Gateway status check interval |
+| `gatewayTimeout` | 1 | 30 | 3 | Gateway command timeout |
+
+**Invalid values are rejected with clear error messages.**
+
+**Example validation error:**
+```bash
+$ tide-watch dashboard --refresh-interval 500
+❌ Configuration error: Invalid refreshInterval: must be between 1 and 300 seconds (Dashboard refresh interval)
+```
+
+#### Configuration Examples
+
+**Fast refresh, high responsiveness:**
+```bash
+# Config file
+{
+  "refreshInterval": 5,
+  "gatewayInterval": 15,
+  "gatewayTimeout": 5
+}
+```
+
+**Battery-conscious, minimal overhead:**
+```bash
+# Config file
+{
+  "refreshInterval": 30,
+  "gatewayInterval": 120,
+  "gatewayTimeout": 2
+}
+```
+
+**Slow/remote gateway, more lenient timeout:**
+```bash
+# CLI override
+tide-watch dashboard --watch --gateway-timeout 10
+```
 
 ## 🎭 Real-World Example
 
