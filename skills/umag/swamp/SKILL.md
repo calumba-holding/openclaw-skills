@@ -1,7 +1,7 @@
 ---
 name: swamp
 description: Model any API with Swamp, test it, and enrich *Claw with new capabilities — full lifecycle from idea to working integration
-version: 0.1.0
+version: 0.2.0
 metadata:
   openclaw:
     requires:
@@ -149,6 +149,77 @@ swamp data get <model_name> <data_name>
 swamp data search <query>
 ```
 
+## Swamp-Club Authentication
+
+Swamp-club is the community registry and collaboration layer. Authenticate to push/pull extensions and share work:
+
+```bash
+swamp auth login
+swamp auth login --server <url>
+swamp auth whoami
+swamp auth logout
+```
+
+- `swamp auth login` opens a browser-based login flow by default
+- Use `--no-browser` with `--username` and `--password` for headless/CI environments
+- Set `SWAMP_CLUB_URL` env var to target a custom server
+- Always verify identity with `swamp auth whoami` after login
+
+Authentication is required before pushing extensions to the registry.
+
+## Extensions
+
+Extensions expand Swamp's model types and capabilities. Use the extension registry to share and reuse custom models:
+
+### Pull an Extension
+
+Install a community or team extension from the registry:
+
+```bash
+swamp extension pull <extension_name>
+swamp extension pull <extension_name> --force
+```
+
+Use `--force` to overwrite existing files without prompting.
+
+### List Installed Extensions
+
+See what extensions are currently installed:
+
+```bash
+swamp extension list
+```
+
+### Push an Extension
+
+Publish your own extension to the swamp registry (requires `swamp auth login` first):
+
+```bash
+swamp extension push <manifest-path>
+swamp extension push <manifest-path> --dry-run
+```
+
+Use `--dry-run` to build the archive locally and verify it without actually publishing. Use `-y` to skip confirmation prompts.
+
+### Remove an Extension
+
+Uninstall a pulled extension and clean up its files:
+
+```bash
+swamp extension remove <extension_name>
+```
+
+### Extension Workflow
+
+The typical flow for extending Swamp with new model types:
+
+1. Create custom TypeScript model definitions in `extensions/models/`
+2. Test locally with `swamp model create <your-type> <name>`
+3. Package with a manifest file
+4. Dry-run: `swamp extension push ./manifest.yaml --dry-run`
+5. Publish: `swamp extension push ./manifest.yaml`
+6. Others install: `swamp extension pull <your-extension>`
+
 ## Enriching *Claw with New Capabilities
 
 Once a Swamp model is validated and working, turn it into a standalone *Claw skill:
@@ -163,6 +234,16 @@ The generated skill should:
 - Reference the swamp repo and model by name
 - Map each model method to a clear agent instruction
 - Include examples of typical invocations
+
+### Sharing via Extensions
+
+For reusable model types (not just individual models), publish as a Swamp extension:
+
+1. Build the custom model type in `extensions/models/`
+2. Push to the Swamp registry: `swamp extension push ./manifest.yaml`
+3. Create a *Claw skill that pulls the extension and uses it: `swamp extension pull <name>`
+
+This creates a two-layer sharing model: extensions for model types (Swamp registry), skills for agent workflows (ClawHub).
 
 ## Examples
 
@@ -200,6 +281,15 @@ The generated skill should:
 2. Create a new `SKILL.md` wrapping the weather model commands
 3. `clawhub publish ./weather-skill`
 
+### Share a Custom Extension
+
+> "Publish my custom Stripe model type so the team can use it"
+
+1. `swamp auth login` to authenticate with swamp-club
+2. `swamp extension push ./stripe-models/manifest.yaml --dry-run` to verify
+3. `swamp extension push ./stripe-models/manifest.yaml` to publish
+4. Team members install: `swamp extension pull stripe-models`
+
 ## Important Notes
 
 - Always use `--json` flag when you need to parse Swamp output programmatically
@@ -207,3 +297,6 @@ The generated skill should:
 - Store all credentials in vaults, never in model definitions
 - Use `-v` (verbose) flag when debugging unexpected behavior
 - All Swamp operations run locally — credentials stay on the user's machine
+- Authenticate with `swamp auth login` before pushing extensions to the registry
+- Use `swamp extension push --dry-run` to verify an extension before publishing
+- Use `swamp auth whoami` to confirm your identity before registry operations
