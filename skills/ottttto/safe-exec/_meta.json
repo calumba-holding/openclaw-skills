@@ -1,13 +1,18 @@
 {
   "owner": "ottttto",
   "slug": "safe-exec",
-  "displayName": "Safe Exec Repo",
+  "displayName": "Safe Exec",
   "latest": {
-    "version": "0.3.3",
-    "publishedAt": 1772119881887,
-    "commit": "https://github.com/openclaw/skills/commit/946e8a01bf984b362de7b8f9b86789d626ae232e"
+    "version": "0.3.4",
+    "publishedAt": 1772167761091,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.3.3",
+      "publishedAt": 1772119881887,
+      "commit": "https://github.com/openclaw/skills/commit/946e8a01bf984b362de7b8f9b86789d626ae232e"
+    },
     {
       "version": "0.3.2",
       "publishedAt": 1769952725688,
