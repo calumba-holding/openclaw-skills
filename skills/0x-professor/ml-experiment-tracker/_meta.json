@@ -1,0 +1,11 @@
+{
+  "owner": "0x-professor",
+  "slug": "ml-experiment-tracker",
+  "displayName": "Ml Experiment Tracker",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1772136555876,
+    "commit": null
+  },
+  "history": []
+}
