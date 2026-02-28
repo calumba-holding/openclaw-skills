@@ -1,43 +1,46 @@
 ---
 name: search-cluster
-description: Unified search aggregator for Google, Wikipedia, Reddit, NewsAPI, and RSS feeds with optional Redis caching. Supports parallel querying and structured JSON output.
-metadata: {"openclaw":{"requires":{"bins":["python3"],"env":["GOOGLE_CSE_KEY","GOOGLE_CSE_ID","NEWSAPI_KEY"]},"install":[{"id":"pip-deps","kind":"exec","command":"pip install redis"}]}}
+description: Aggregated search aggregator using Google CSE, GNews RSS, Wikipedia, Reddit, and Scrapling.
 ---
 
-# Search Cluster
+# Search Cluster (Industrial Standard v3.1)
 
-Unified search system for multi-source information gathering.
+A multi-provider search aggregator designed for high-availability and security.
 
-## Prerequisites
-- **Binary**: `python3` must be installed.
-- **Google Search**: Requires `GOOGLE_CSE_KEY` and `GOOGLE_CSE_ID`.
-- **NewsAPI**: Requires `NEWSAPI_KEY`.
-- **Cache (Optional)**: Active Redis instance (defaults to localhost:6379).
+## Installation
+The scrapling provider requires a dedicated virtual environment.
+1. Create a venv: python3 -m venv venv/scrapling
+2. Install scrapling: venv/scrapling/bin/pip install scrapling
+3. Provide the path to the venv binary in SCRAPLING_PYTHON_PATH.
 
-## Setup
-1. Define API keys in your environment or a local `.env` file.
-2. Install optional Redis client: `pip install redis`.
+## Security Posture
+- Subprocess Isolation: Query inputs are passed as arguments to stealth_fetch.py.
+- Strict TLS: Mandatory SSL verification on all providers.
+- Sanitization: Integrated native internal scrubber (Path Neutral).
 
-## Core Workflows
+## Requirements and Environment
+Declare these variables in your environment or vault:
 
-### 1. Single Source Search
-Query a specific engine for targeted results.
-- **Usage**: `python3 $WORKSPACE/skills/search-cluster/scripts/search-cluster.py <source> "<query>"`
-- **Sources**: `google`, `wiki`, `reddit`, `newsapi`.
+| Variable | Requirement | Description |
+|---|---|---|
+| GOOGLE_API_KEY | Optional | API Key for Google Custom Search. |
+| GOOGLE_CSE_ID | Optional | Search Engine ID for Google CSE. |
+| SCRAPLING_PYTHON_PATH | Optional | Path to the scrapling venv python binary. |
+| REDIS_HOST | Optional | Host for result caching. |
+| REDIS_PORT | Optional | Port for result caching (Default: 6379). |
+| SEARCH_USER_AGENT | Optional | Custom User-Agent string. |
 
-### 2. Aggregated Search
-Query all supported engines in parallel and aggregate results.
-- **Usage**: `python3 $WORKSPACE/skills/search-cluster/scripts/search-cluster.py all "<query>"`
+## Providers
+- google: Official Google Custom Search.
+- wiki: Wikipedia OpenSearch API.
+- reddit: Reddit JSON search API.
+- gnews: Google News RSS aggregator.
+- scrapling: Headless stealth scraping (via DuckDuckGo).
 
-### 3. RSS/Feed Fetching
-Retrieve and parse standard RSS or Atom feeds.
-- **Usage**: `python3 $WORKSPACE/skills/search-cluster/scripts/search-cluster.py rss "<url>"`
+## Included Scripts
+- scripts/search-cluster.py: Main entry point.
+- scripts/stealth_fetch.py: Scrapling fetcher (REQUIRED for scrapling provider).
 
-## Reliability & Security
-- **Secure Networking**: Enforces strict SSL/TLS verification for all API and feed requests. No unverified fallback is permitted.
-- **Namespace Isolation**: Cache keys are prefixed with `search:` to avoid collisions.
-- **Local Preference**: Redis connectivity defaults to `localhost`. Users must explicitly set `REDIS_HOST` for remote instances.
-- **User Agent**: Uses a standardized `SearchClusterBot` agent to comply with site policies.
-
-## Reference
-- **API Setup**: See [references/search-apis.md](references/search-apis.md).
+## Workflow
+1. Execute: scripts/search-cluster.py all "<query>"
+2. Output is structured JSON with source, title, link, and sanitized snippet.

@@ -3,11 +3,16 @@
   "slug": "search-cluster",
   "displayName": "Search Cluster",
   "latest": {
-    "version": "1.1.2",
-    "publishedAt": 1771268412924,
-    "commit": "https://github.com/openclaw/skills/commit/db0595e3730cbd2813c154c39eb29792af9f85e8"
+    "version": "3.5.1",
+    "publishedAt": 1772278645029,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.2",
+      "publishedAt": 1771268412924,
+      "commit": "https://github.com/openclaw/skills/commit/db0595e3730cbd2813c154c39eb29792af9f85e8"
+    },
     {
       "version": "1.1.1",
       "publishedAt": 1770995547460,

@@ -1,25 +1,25 @@
-# Search API Configuration
+# Search APIs Reference (Standard v3.0)
 
-## Redis Caching Strategy
-- **Key Prefix**: `mema:search:cache:<query_hash>`
-- **TTL**: 24 hours (default)
-- **Serialization**: JSON
+## Google Custom Search API
+- **Endpoint**: `https://www.googleapis.com/customsearch/v1`
+- **Requires**: `GOOGLE_API_KEY`, `GOOGLE_CSE_ID`
+- **Purpose**: Official, high-quality search results.
 
-## Supported Engines
-1.  **Google Custom Search (CSE)**
-    - Limit: 100 queries/day (Free Tier)
-    - Params: `cx`, `key`, `q`, `num`
-    - Good for: General knowledge, news.
+## Wikipedia OpenSearch API
+- **Endpoint**: `https://en.wikipedia.org/w/api.php`
+- **Parameters**: `action=opensearch`, `format=json`, `namespace=0`
+- **Purpose**: Fast, structured encyclopedia lookups.
 
-2.  **Wikipedia API**
-    - Endpoint: `https://en.wikipedia.org/w/api.php`
-    - Action: `query`, `prop=extracts`
-    - Good for: Entities, history, definitions.
+## Reddit Search API
+- **Endpoint**: `https://www.reddit.com/search.json`
+- **Requires**: Proper `User-Agent` (handled by script).
+- **Purpose**: Community discussions and real-time sentiment.
 
-3.  **Reddit (PRAW/JSON)**
-    - Endpoint: `https://www.reddit.com/search.json`
-    - Good for: Opinions, troubleshooting, recent trends.
+## Google News (GNews) RSS
+- **Endpoint**: `https://news.google.com/rss/search`
+- **Purpose**: Latest news headlines and tracking current events.
 
-4.  **RSS/Atom Feeds**
-    - Library: `feedparser`
-    - Good for: Blogs, news sites.
+## DuckDuckGo Stealth (Scrapling)
+- **Endpoint**: `https://duckduckgo.com/html/`
+- **Requires**: `scrapling` package in a dedicated venv.
+- **Purpose**: Privacy-respecting scraping for anti-bot bypass.
