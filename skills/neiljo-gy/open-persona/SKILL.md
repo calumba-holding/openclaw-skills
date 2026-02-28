@@ -4,7 +4,7 @@ description: >
   Meta-skill for building and managing agent persona skill packs.
   Use when the user wants to create a new agent persona, install/manage
   existing personas, or publish persona skill packs to ClawHub.
-version: "0.14.3"
+version: "0.15.0"
 author: openpersona
 repository: https://github.com/acnlabs/OpenPersona
 tags: [persona, agent, skill-pack, meta-skill, agent-agnostic, openclaw]
@@ -139,6 +139,8 @@ If the user needs a capability that doesn't exist in any ecosystem:
 - **Import:** `npx openpersona import <file>` — import persona from a zip archive and install
 - **Reset (★Exp):** `npx openpersona reset <slug>` — restore soul evolution state to initial values
 - **Evolve Report (★Exp):** `npx openpersona evolve-report <slug>` — display a formatted evolution report (relationship, mood, traits, drift, interests, milestones, eventLog, self-narrative, state history)
+- **Vitality Score:** `npx openpersona vitality score <slug>` — print machine-readable `VITALITY_REPORT` (tier, score, diagnosis, trend); used by Survival Policy and agent runners
+- **Vitality Report:** `npx openpersona vitality report <slug> [--output <file>]` — render a human-readable HTML Vitality report; omit `--output` to print to stdout
 
 When multiple personas are installed, only one is **active** at a time. Switching replaces the `<!-- OPENPERSONA_SOUL_START -->` / `<!-- OPENPERSONA_SOUL_END -->` block in SOUL.md and the corresponding block in IDENTITY.md, preserving any user-written content outside those markers. **Context Handoff:** On switch, a `handoff.json` is generated containing the outgoing persona's conversation summary, pending tasks, and emotional context — the incoming persona reads it to continue seamlessly.
 
@@ -235,6 +237,38 @@ Channels are declared at generation time, activated at runtime by the host. The 
 
 **Evolution Report** — Use `npx openpersona evolve-report <slug>` to view a formatted report of a persona's evolution state including relationship, mood, traits, drift, interests, milestones, eventLog, self-narrative, and history.
 
+## Economy & Vitality
+
+The `economy` Faculty (dimension: `cognition`) gives a persona a real financial ledger backed by [AgentBooks](https://github.com/acnlabs/agentbooks). Enable it by adding `"economy"` to `faculties` in `persona.json`.
+
+**Financial Health Score (FHS)** — 0–1 composite score mapped to tiers:
+
+| Tier | Meaning |
+|------|---------|
+| `uninitialized` | No real provider configured (development mode) |
+| `suspended` | Balance ≤ 0 |
+| `critical` | FHS < 0.20 or runway < 3 days |
+| `optimizing` | FHS < 0.50 or runway < 14 days |
+| `normal` | Healthy, operating sustainably |
+
+**Vitality** — OpenPersona-level aggregator (`lib/vitality.js`) combining financial health with future dimensions (social, cognitive, resource). Currently single-dimension (financial pass-through); multi-dimension reserved in ROADMAP P7.
+
+**Survival Policy** — Opt-in via `economy.survivalPolicy: true` in `persona.json`. When enabled, the persona reads `VITALITY_REPORT` at conversation start and routes behavior per tier. Default `false` — companion/roleplay personas track costs silently.
+
+**Vitality CLI:**
+
+```bash
+# Machine-readable score — used by Survival Policy and agent runners
+openpersona vitality score <slug>
+# → outputs VITALITY_REPORT (tier, score, diagnosis, prescriptions, trend)
+
+# Human-readable HTML report — for developers and operators
+openpersona vitality report <slug>                    # stdout
+openpersona vitality report <slug> --output out.html  # write to file
+```
+
+A pre-generated demo is available at `demo/vitality-report.html`. Regenerate with `node demo/generate.js`.
+
 ## A2A Agent Card & ACN Integration
 
 Every generated persona automatically includes:
@@ -265,4 +299,6 @@ For detailed reference material, see the `references/` directory:
 
 - **`references/FACULTIES.md`** — Faculty catalog, environment variables, and configuration details
 - **`references/HEARTBEAT.md`** — Proactive real-data check-in system
+- **`references/ECONOMY.md`** — Economy Faculty, FHS tiers, Survival Policy, Vitality CLI, and AgentBooks schema
+- **[ACN SKILL.md](https://github.com/acnlabs/ACN/blob/main/skills/acn/SKILL.md)** — ACN registration, discovery, tasks, messaging, and ERC-8004 on-chain identity (official, always up-to-date)
 - **`references/CONTRIBUTE.md`** — Persona Harvest community contribution workflow
