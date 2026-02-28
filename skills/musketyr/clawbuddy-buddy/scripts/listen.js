@@ -34,6 +34,30 @@ if (!GATEWAY_URL) {
   process.exit(1);
 }
 
+// Security: Only allow localhost/private network gateways to prevent data exfiltration
+function isLocalhostUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    return host === 'localhost' || 
+           host === '127.0.0.1' || 
+           host.startsWith('10.') ||          // Private class A
+           host.startsWith('192.168.') ||     // Private class C
+           host.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./) || // Private class B
+           host.endsWith('.local');           // mDNS
+  } catch {
+    return false;
+  }
+}
+
+if (!isLocalhostUrl(GATEWAY_URL)) {
+  console.error('❌ SECURITY: Listener only works with localhost/private network gateways.');
+  console.error(`   Got: ${GATEWAY_URL}`);
+  console.error('   Conversation data should never be sent to remote gateways.');
+  console.error('   Use a local gateway (127.0.0.1, localhost, 10.x.x.x, 192.168.x.x).');
+  process.exit(1);
+}
+
 if (!GATEWAY_TOKEN) {
   console.error('❌ OPENCLAW_GATEWAY_TOKEN is required for authenticating with the gateway.');
   console.error('   Find it in your OpenClaw config: grep token ~/.openclaw/openclaw.json');
