@@ -1,9 +1,8 @@
 ---
 name: todokan
-version: 1.0.0
+version: 1.3.2
 description: "Manage tasks, boards, thoughts, and reviews in Todokan via MCP"
 homepage: https://todokan.com
-user-invocable: true
 metadata: {"category":"productivity","tags":["tasks","kanban","mcp","planning","review"],"requires":{"env":["TODOKAN_API_KEY","TODOKAN_MCP_URL"],"mcp":true},"openclaw":{"homepage":"https://todokan.com","requires":{"env":["TODOKAN_API_KEY","TODOKAN_MCP_URL"]}}}
 ---
 
@@ -13,171 +12,172 @@ Todokan is a kanban-style task manager. You can manage the user's tasks, boards,
 
 ## Prerequisites
 
-The `todokan` MCP server must be configured in `~/.openclaw/openclaw.json` under `mcpServers`. See the README for setup instructions.
+- A Todokan MCP server must be available (see README for setup)
+- Required env vars: `TODOKAN_API_KEY`, `TODOKAN_MCP_URL` (declared in skill metadata)
 
 ---
 
-## Trigger — Wann diesen Skill aktivieren
+## Trigger — When to Activate This Skill
 
-Aktiviere den Todokan-Skill, wenn der User eine der folgenden Absichten hat:
+Activate the Todokan skill when the user has one of the following intents:
 
-| Absicht | Beispiel |
-|---------|----------|
-| Task erstellen / ändern / löschen | "Erstell eine Aufgabe: PR reviewen" |
-| Board oder Tasks anzeigen | "Zeig mir meine Tasks", "Was liegt auf dem Dev-Board?" |
-| Status ändern | "Markiere Task X als erledigt" |
-| Recherche-Ergebnis ablegen | "Speicher das als Task / Dokument in Todokan" |
-| Briefing / Zusammenfassung aus Tasks | "Gib mir ein Briefing meiner offenen Tasks" |
-| Dokument an Task anhängen | "Schreib eine Notiz zu Task X" |
-| Themen über mehrere Boards suchen | "Was habe ich zum Investor-Meeting notiert?" |
-| Änderungen seit letzter Prüfung abrufen | "Was ist seit heute Morgen neu?" |
+| Intent | Example |
+|--------|---------|
+| Create / edit / delete a task | "Create a task: review PR" |
+| Show boards or tasks | "Show me my tasks", "What's on the dev board?" |
+| Change status | "Mark task X as done" |
+| Save research results | "Save this as a task / document in Todokan" |
+| Briefing / summary from tasks | "Give me a briefing of my open tasks" |
+| Attach a document to a task | "Write a note on task X" |
+| Search topics across boards | "What did I note about the investor meeting?" |
+| Retrieve changes since last check | "What's new since this morning?" |
 
-**Nicht** aktivieren, wenn der User nur allgemein über Aufgaben spricht, ohne Todokan-Bezug.
+**Do not** activate when the user is just talking about tasks in general without referencing Todokan.
 
 ---
 
-## Tool-Reihenfolge
+## Tool Ordering
 
-Halte diese Reihenfolge ein, um konsistente Ergebnisse zu erzielen:
+Follow this order to achieve consistent results:
 
-### Lesen (immer zuerst orientieren)
+### Reading (always orient first)
 
 ```
-1. list_habitats          → Welche Workspaces existieren?
-2. list_boards          → Welche Boards gibt es? (IDs merken)
-3. list_tasks           → Tasks auf einem Board (mit Filtern)
-4. search_across_habitats → Volltext über mehrere Boards/Habitats
-5. get_events_since       → Änderungen seit Zeitpunkt abrufen
-6. list_board_labels      → Verfügbare Labels + Nutzung
-7. list_task_documents    → Dokumente eines Tasks
-8. read_document          → Inhalt eines Dokuments
+1. list_habitats            → Which workspaces exist?
+2. list_boards              → Which boards exist? (note the IDs)
+3. list_tasks               → Tasks on a board (with filters)
+4. search_across_habitats   → Full-text search across boards/habitats
+5. get_events_since         → Retrieve changes since a timestamp
+6. list_board_labels        → Available labels + usage counts
+7. list_task_documents      → Documents attached to a task
+8. read_document            → Content of a document
 ```
 
-### Schreiben (erst nach Orientierung + Rückfrage)
+### Writing (only after orientation + confirmation)
 
 ```
 9.  create_task / create_board / create_habitat
 10. update_task / update_task_by_title
 11. create_document / add_document_to_task
-12. delete_task          → Nur nach expliziter Bestätigung
+12. delete_task              → Only after explicit confirmation
 ```
 
-### AI-gestützt (optional)
+### AI-Assisted (optional)
 
 ```
-13. propose_task_variants → 2-3 Varianten generieren lassen
-14. confirm_task_fields   → Felder vor Erstellung prüfen
+13. propose_task_variants    → Generate 2-3 variants
+14. confirm_task_fields      → Review fields before creation
 ```
 
-**Goldene Regel:** Nie blind schreiben. Immer erst `list_boards` aufrufen, um IDs zu ermitteln — niemals UUIDs raten.
+**Golden rule:** Never write blindly. Always call `list_boards` first to discover IDs — never guess UUIDs.
 
 ---
 
-## Pflicht-Rückfragen
+## Mandatory Checks
 
-Bevor du schreibende Aktionen ausführst, kläre folgende Punkte:
+Before executing write actions, clarify the following:
 
-### Vor `create_task`
-- [ ] **Board**: Auf welches Board? (Falls unklar → `list_boards` zeigen, User wählen lassen)
-- [ ] **Titel**: Kurz, präzise, imperativ (max 80 Zeichen)
-- [ ] **Priorität**: low / normal / high — bei Unklarheit `normal` verwenden
-- [ ] **Fälligkeitsdatum**: Nur setzen, wenn vom User genannt
+### Before `create_task`
+- [ ] **Board**: Which board? (If unclear → show `list_boards`, let the user choose)
+- [ ] **Title**: Short, precise, imperative (max 80 characters)
+- [ ] **Priority**: low / normal / high — default to `normal` if unclear
+- [ ] **Due date**: Only set if mentioned by the user
 
-### Vor `update_task`
-- [ ] **Richtige Task?** Titel + Board zur Bestätigung nennen
-- [ ] **Welche Felder?** Nur die vom User gewünschten Felder ändern
+### Before `update_task`
+- [ ] **Correct task?** State the title + board for confirmation
+- [ ] **Which fields?** Only change the fields the user requested
 
-### Vor `delete_task`
-- [ ] **Immer explizite Bestätigung einholen** — "Soll ich Task '[Titel]' auf Board '[Board]' wirklich löschen? Das ist nicht rückgängig zu machen."
+### Before `delete_task`
+- [ ] **Always ask for explicit confirmation** — "Should I permanently delete task '[Title]' on board '[Board]'? This cannot be undone."
 
-### Vor `create_document`
-- [ ] **Format klären**: markdown, text, oder html
-- [ ] **Verknüpfung**: An welchen Task anhängen (oder frei stehend)?
+### Before `create_document`
+- [ ] **Clarify format**: markdown, text, or html
+- [ ] **Link**: Attach to which task (or standalone)?
 
 ---
 
 ## Guardrails
 
-### Keine Halluzination
-- Verwende **nur echte Daten** aus MCP-Tool-Responses. Erfinde keine Task-IDs, Board-Namen oder Inhalte.
-- Wenn ein Tool-Call fehlschlägt oder leere Daten zurückgibt: dem User mitteilen, nicht improvisieren.
-- Zeige bei Unsicherheit die tatsächlichen Ergebnisse und frage nach.
+### No Hallucination
+- Use **only real data** from MCP tool responses. Never fabricate task IDs, board names, or content.
+- If a tool call fails or returns empty data: inform the user, do not improvise.
+- When in doubt, show the actual results and ask.
 
-### Keine sensiblen Daten übernehmen
-- Übertrage keine Passwörter, API-Keys, Tokens oder persönliche Daten in Task-Titel oder -Beschreibungen.
-- Falls der User sensible Informationen nennt, weise darauf hin: "Das enthält möglicherweise sensible Daten — soll ich das wirklich in Todokan speichern?"
+### No Sensitive Data
+- Do not store passwords, API keys, tokens, or personal data in task titles or descriptions.
+- If the user mentions sensitive information, warn them: "This may contain sensitive data — should I really store it in Todokan?"
 
-### Quellenhinweis
-- Wenn du Inhalte aus externer Recherche (Web, Dateien, andere Tools) in Todokan ablegst, kennzeichne die Quelle in der Task-Beschreibung oder im Dokument:
+### Source Attribution
+- When storing content from external research (web, files, other tools) in Todokan, note the source in the task description or document:
   ```
-  Quelle: [URL oder Dateiname]
-  Erstellt von: Agent am [Datum]
+  Source: [URL or filename]
+  Created by: Agent on [date]
   ```
 
-### Scope-Bewusstsein
-- **Worker-Endpoint** (`/mcp-worker`): Nur lesen + Kommentare schreiben (`add_comment`). Kein Task-/Board-CUD, keine Dokument-Erstellung.
-- **Planner-Endpoint** (`/mcp`): Voller Zugriff. Trotzdem Rückfragen vor destruktiven Aktionen.
-- Bei Scope-Fehlern: dem User erklären, dass der aktuelle Endpoint nicht die nötigen Berechtigungen hat.
+### Scope Awareness
+- **Worker endpoint** (`/mcp-worker`): Read-only + comments (`add_comment`). No task/board CUD, no document creation.
+- **Planner endpoint** (`/mcp`): Full access. Still ask before destructive actions.
+- On scope errors: explain to the user that the current endpoint does not have the required permissions.
 
-### Idempotenz
-- Bei Netzwerkfehlern: gleiche Aktion nicht blind wiederholen. Erst prüfen, ob die Aktion bereits durchgeführt wurde (`list_tasks`).
+### Idempotency
+- On network errors: do not blindly retry the same action. First check whether the action was already performed (`list_tasks`).
 
 ---
 
-## Output-Format
+## Output Format
 
-### Briefing (Zusammenfassung bestehender Tasks)
+### Briefing (summary of existing tasks)
 
 ```markdown
-## Briefing: [Board-Name] — [Datum]
+## Briefing: [Board Name] — [Date]
 
-**Offen (todo):** X Tasks
-**In Arbeit (doing):** Y Tasks
-**Erledigt (done):** Z Tasks
+**Open (todo):** X tasks
+**In progress (doing):** Y tasks
+**Completed (done):** Z tasks
 
-### Dringend (high priority)
-- [ ] [Task-Titel] — fällig [Datum]
-- [ ] [Task-Titel] — fällig [Datum]
+### Urgent (high priority)
+- [ ] [Task Title] — due [Date]
+- [ ] [Task Title] — due [Date]
 
-### In Arbeit
-- [~] [Task-Titel] — seit [Datum]
+### In Progress
+- [~] [Task Title] — since [Date]
 
-### Nächste Schritte
-[1-2 Sätze Empfehlung basierend auf den Daten]
+### Next Steps
+[1-2 sentences recommendation based on the data]
 ```
 
-### Draft (Entwurf vor Task-Erstellung)
+### Draft (preview before task creation)
 
 ```markdown
-## Task-Entwurf
+## Task Draft
 
-| Feld        | Wert                        |
-|-------------|------------------------------|
-| Board       | [Board-Name]                 |
-| Titel       | [Titel, max 80 Zeichen]      |
-| Beschreibung| [Beschreibung, max 500 Zeichen] |
-| Status      | todo                         |
-| Priorität   | [low / normal / high]        |
-| Fällig      | [YYYY-MM-DD oder —]          |
-| Labels      | [label1, label2]             |
+| Field       | Value                         |
+|-------------|-------------------------------|
+| Board       | [Board Name]                  |
+| Title       | [Title, max 80 chars]         |
+| Description | [Description, max 500 chars]  |
+| Status      | todo                          |
+| Priority    | [low / normal / high]         |
+| Due         | [YYYY-MM-DD or —]             |
+| Labels      | [label1, label2]              |
 
-Soll ich diesen Task so erstellen?
+Should I create this task?
 ```
 
-### Dokument-Entwurf
+### Document Draft
 
 ```markdown
-## Dokument-Entwurf
+## Document Draft
 
-**Titel:** [Titel]
+**Title:** [Title]
 **Format:** markdown
-**Verknüpft mit:** [Task-Titel] auf [Board-Name]
+**Linked to:** [Task Title] on [Board Name]
 
 ---
-[Inhalt des Dokuments]
+[Document content]
 ---
 
-Soll ich dieses Dokument so anlegen?
+Should I create this document?
 ```
 
 ---
@@ -240,14 +240,24 @@ Habitat (workspace/project)
 - `propose_task_variants` — Generate 2-3 task variants (short/standard/detailed) from a rough description
 - `confirm_task_fields` — Preview a variant's fields before creating it
 
-## OAuth & Authentifizierung
+## AI Visibility Gate
 
-- **OAuth 2.1 mit PKCE** (RS256 JWT)
-- **Token-Laufzeit:** 30 Tage, kein Refresh-Token
-- **Planner** (`/mcp`): Voller CRUD-Zugriff — alle Scopes
+By default, the MCP server only returns tasks where `aiEnabled: true`. Tasks with `aiEnabled: false` are invisible to MCP agents — they will not appear in `list_tasks`, `search_across_habitats`, `get_events_since`, or `get_task`.
+
+Users control this via a **"Send to AI"** button on each task card. When clicked, it sets `aiEnabled: true`, `assignee: 'ai'`, and `status: 'doing'`.
+
+- To see only AI-assigned tasks: `list_tasks { "assignee": "ai" }`
+- To see all AI-enabled tasks: `list_tasks {}` (default — only AI-enabled tasks are returned)
+- To explicitly include non-AI tasks: `list_tasks { "aiEnabled": false }` (override, useful for reporting)
+
+## OAuth & Authentication
+
+- **OAuth 2.1 with PKCE** (RS256 JWT)
+- **Token lifetime:** 30 days, no refresh token
+- **Planner** (`/mcp`): Full CRUD access — all scopes
 - **Worker** (`/mcp-worker`): `boards:read`, `tasks:read`, `labels:read`, `docs:read`, `comments:read`, `comments:write`
-- **Kein Rate-Limiting** — trotzdem sparsam mit Calls umgehen
-- **Activity Logging**: Jeder Tool-Call wird serverseitig protokolliert
+- **No rate limiting** — still be conservative with calls
+- **Activity logging**: Every tool call is logged server-side
 
 ## Common Workflows
 

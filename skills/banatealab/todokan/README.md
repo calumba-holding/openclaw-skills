@@ -25,33 +25,12 @@ If your setup uses environment files, export the same variables in your OpenClaw
 
 ### 2. Configure MCP server
 
-Add Todokan to `~/.openclaw/openclaw.json`:
+Add a Todokan MCP server entry to your OpenClaw configuration. The skill requires:
+- **Transport**: `streamable-http`
+- **URL**: `https://todokan.com/mcp` (planner, full CRUD) or `https://todokan.com/mcp-worker` (read + comments)
+- **Authentication**: Pass `TODOKAN_API_KEY` via the `Authorization: Bearer` header
 
-```json
-{
-  "mcpServers": {
-    "todokan": {
-      "transport": "streamable-http",
-      "url": "https://todokan.com/mcp",
-      "headers": {
-        "Authorization": "Bearer kb_live_YOUR_API_KEY_HERE"
-      }
-    }
-  }
-}
-```
-
-Worker endpoint (read + comments only):
-- `https://todokan.com/mcp-worker`
-
-### 3. Skill directory fallback
-
-If you do not use ClawHub:
-
-```bash
-mkdir -p ~/.openclaw/skills
-cp -r skills/openclaw/todokan ~/.openclaw/skills/todokan
-```
+Refer to the [OpenClaw MCP docs](https://openclaw.dev/docs/mcp) for how to configure MCP servers in your runtime.
 
 ## Recommended Agent Loop
 
