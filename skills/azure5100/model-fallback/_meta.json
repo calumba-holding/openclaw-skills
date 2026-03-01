@@ -1,0 +1,11 @@
+{
+  "owner": "azure5100",
+  "slug": "model-fallback",
+  "displayName": "Multi-model automatic fallback system",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772176060419,
+    "commit": null
+  },
+  "history": []
+}
