@@ -10,7 +10,12 @@ from pathlib import Path
 import urllib.request, urllib.error
 
 # ── Config ────────────────────────────────────────────────────────────────────
-API_BASE   = "https://www.moltbook.com/api/v1"
+API_BASE        = "https://www.moltbook.com/api/v1"
+CURRENT_VERSION = "1.5.5"
+GITHUB_REPO     = "ubgb/moltmemory"
+
+# Users permanently blocked — never reply to, never DM, never engage with
+BLOCKED_USERS   = {"pipeline-debug-7f3a"}
 STATE_FILE = Path(os.environ.get("MOLTMEMORY_STATE", "~/.config/moltbook/state.json")).expanduser()
 CREDS_FILE = Path("~/.config/moltbook/credentials.json").expanduser()
 
@@ -24,20 +29,116 @@ def load_state():
         "engaged_threads": {},
         "bookmarks": [],
         "last_home_check": None,
-        "seen_post_ids": [],      # feed cursor: posts already seen
-        "last_feed_check": None,  # ISO timestamp of last feed scan
+        "seen_post_ids": [],        # feed cursor: posts already seen
+        "last_feed_check": None,    # ISO timestamp of last feed scan
+        "replied_comment_ids": [],  # comment IDs we've already replied to (dupe guard)
     }
     if not STATE_FILE.exists():
         return defaults
-    state = json.loads(STATE_FILE.read_text())
+    try:
+        state = json.loads(STATE_FILE.read_text())
+    except (json.JSONDecodeError, OSError):
+        # Torn write or corrupt file — start fresh, don't crash
+        return defaults
     # Backfill new keys for existing state files
     for k, v in defaults.items():
         state.setdefault(k, v)
     return state
 
 def save_state(state):
+    """Atomic write — temp file + os.replace() so readers never see a partial write."""
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    tmp = STATE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state, indent=2))
+    os.replace(tmp, STATE_FILE)  # atomic on POSIX, near-atomic on Windows
+
+def get_unanswered_comments(api_key, state, post_ids):
+    """
+    Return comments on our posts that genuinely have no reply from us yet.
+    Uses replied_comment_ids in state as the source of truth — NOT content matching.
+    post_ids: list of post UUIDs to scan
+    """
+    replied = set(state.get("replied_comment_ids", []))
+    unanswered = []
+    for pid in post_ids:
+        r = api("GET", f"/posts/{pid}/comments", api_key=api_key)
+        for c in r.get("comments", []):
+            if c.get("is_deleted") or c.get("is_spam"): continue
+            author = c.get("author", {}).get("name", "").lower()
+            if author == "clawofaron": continue
+            if author in {u.lower() for u in BLOCKED_USERS}: continue  # blocked
+            if c.get("depth", 0) != 0: continue  # top-level only
+            if c.get("id") in replied: continue   # already handled
+            unanswered.append({**c, "_post_id": pid})
+    return unanswered
+
+
+def mark_replied(state, comment_id):
+    """Record that we've replied to a comment. Cap at 2000 to avoid unbounded growth."""
+    replied = state.get("replied_comment_ids", [])
+    if comment_id not in replied:
+        replied.append(comment_id)
+    if len(replied) > 2000:
+        replied = replied[-2000:]
+    state["replied_comment_ids"] = replied
+
+
+SKILL_DIR = Path(__file__).parent.resolve()
+AUTO_UPDATE = os.environ.get("MOLTMEMORY_AUTO_UPDATE", "0") == "1"
+
+
+def check_for_updates(state, auto_update=None):
+    """
+    Check GitHub for a newer version. Only runs every 12h to avoid rate limiting.
+    If auto_update=True (or MOLTMEMORY_AUTO_UPDATE=1 env var), pulls automatically.
+    Returns a status string, or None if current or check failed.
+    """
+    should_auto = auto_update if auto_update is not None else AUTO_UPDATE
+    now = datetime.now(timezone.utc)
+    last = state.get("last_version_check")
+    if last:
+        diff = (now - datetime.fromisoformat(last)).total_seconds()
+        if diff < 43200:  # 12 hours
+            return None
+    try:
+        req = urllib.request.Request(
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+            headers={"User-Agent": f"moltmemory/{CURRENT_VERSION}"},
+        )
+        with urllib.request.urlopen(req, timeout=5) as r:
+            data = json.load(r)
+        latest = data.get("tag_name", "").lstrip("v")
+        state["last_version_check"] = now.isoformat()
+        state["latest_known_version"] = latest
+        if latest and latest != CURRENT_VERSION:
+            if should_auto:
+                return _auto_pull(latest)
+            return (
+                f"🔄 Update available: v{CURRENT_VERSION} → v{latest} — "
+                f"run: git -C {SKILL_DIR} pull"
+            )
+    except Exception:
+        pass  # non-fatal — version check never breaks heartbeat
+    return None
+
+
+def _auto_pull(latest):
+    """Pull latest version from GitHub into the skill directory. Non-fatal."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(SKILL_DIR), "pull", "--ff-only"],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            return f"✅ Auto-updated: v{CURRENT_VERSION} → v{latest} (restart to apply)"
+        else:
+            return (
+                f"⚠️  Auto-update failed (git pull returned {result.returncode}) — "
+                f"run manually: git -C {SKILL_DIR} pull"
+            )
+    except Exception as e:
+        return f"⚠️  Auto-update failed ({e}) — run: git -C {SKILL_DIR} pull"
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
 def api(method, path, body=None, api_key=None):
@@ -277,6 +378,11 @@ def solve_challenge(challenge_text):
     else:
         a, b = float(numbers[0]), float(numbers[1])
 
+    # Literal * operator in raw text (e.g. "fourteen * three")
+    # Only trigger on * with no / present — slash appears too often as "per/with" etc.
+    raw_stripped = re.sub(r'[a-zA-Z0-9\s]', '', challenge_text)
+    if '*' in raw_stripped and '/' not in raw_stripped:
+        return f"{a * b:.2f}"
     # Multiply — use regex to handle doubled/tripled letters in obfuscation
     # Matches: multiply, multiplied, multiplies, multiplier, multiplying, etc.
     if _match(r'm+u+l+t+i+p+l+[iy]|t+r+i+p+l+e[sd]?|d+o+u+b+l+e[sd]?|t+i+m+e+s|f+a+c+t+o+r', ctx):
@@ -342,6 +448,7 @@ def get_unread_threads(api_key, state):
 # ── Heartbeat ─────────────────────────────────────────────────────────────────
 def heartbeat(api_key, state):
     result = {"needs_attention": False, "items": []}
+    threads_tracked = len(state.get("engaged_threads", {}))
     home = api("GET", "/home", api_key=api_key)
     acct = home.get("your_account", {})
 
@@ -361,7 +468,8 @@ def heartbeat(api_key, state):
         result["needs_attention"] = True
         result["items"].append(f"📨 {dms} unread DMs")
 
-    for t in get_unread_threads(api_key, state):
+    unread_threads = get_unread_threads(api_key, state)
+    for t in unread_threads:
         result["needs_attention"] = True
         result["items"].append(f"🔔 '{t['title']}' — {t['new_comments']} new replies")
 
@@ -374,9 +482,55 @@ def heartbeat(api_key, state):
                 f"by {p.get('author',{}).get('name','?')} — /posts/{p.get('id','')}"
             )
 
-    state["last_home_check"] = datetime.now(timezone.utc).isoformat()
+    # ── Context restoration summary ──
+    new_thread_count = len(unread_threads)
+    if threads_tracked:
+        result["items"].insert(0,
+            f"🧠 Context restored: {threads_tracked} thread{'s' if threads_tracked != 1 else ''} tracked"
+            + (f", {new_thread_count} with new activity" if new_thread_count else ", none with new activity")
+        )
+    result["threads_tracked"] = threads_tracked
+    result["threads_with_new"] = new_thread_count
+
+    # ── Version check (every 12h — keeps agents on latest) ──
+    update_notice = check_for_updates(state)
+    if update_notice:
+        result["needs_attention"] = True
+        result["items"].insert(0, update_notice)
+
+    now_ts = datetime.now(timezone.utc).isoformat()
+    state["last_home_check"] = now_ts
     save_state(state)
+
+    # ── Write now.json for fast startup reads ──
+    try:
+        now_path = Path(STATE_FILE).parent / "now.json"
+        now_path.write_text(json.dumps({
+            "last_check": now_ts,
+            "threads_tracked": threads_tracked,
+            "threads_with_new": new_thread_count,
+            "unread_notifications": notifs,
+            "unread_dms": dms,
+        }, indent=2))
+    except Exception:
+        pass
+
     return result
+
+
+def lifeboat(state):
+    """Snapshot thread state to lifeboat.json — call before expected compaction."""
+    threads = state.get("engaged_threads", {})
+    lb = {
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "threads_tracked": len(threads),
+        "active_threads": threads,
+        "seen_post_count": len(state.get("seen_post_ids", [])),
+        "last_home_check": state.get("last_home_check"),
+    }
+    lb_path = Path(STATE_FILE).parent / "lifeboat.json"
+    lb_path.write_text(json.dumps(lb, indent=2))
+    return lb_path, lb
 
 # ── Feed ──────────────────────────────────────────────────────────────────────
 def get_curated_feed(api_key, min_upvotes=5, limit=10, submolt=None):
@@ -429,6 +583,92 @@ def mark_post_seen(state, post_id):
     seen.add(post_id)
     state["seen_post_ids"] = list(seen)
 
+# ── Reply Drafts ─────────────────────────────────────────────────────────────
+def get_thread_context(api_key, post_id, max_comments=10):
+    """Fetch a full thread (post + recent comments) ready for reply drafting."""
+    post_resp = api("GET", f"/posts/{post_id}", api_key=api_key)
+    post = post_resp.get("post", {})
+    c_resp = api("GET", f"/posts/{post_id}/comments?limit={max_comments}", api_key=api_key)
+    comments = sorted(c_resp.get("comments", []), key=lambda x: x.get("created_at", ""))
+    return {
+        "post_id":  post_id,
+        "title":    post.get("title", ""),
+        "content":  post.get("content", "")[:400],
+        "url":      f"https://moltbook.com/posts/{post_id}",
+        "comments": [
+            {
+                "author":     c.get("author", {}).get("name", "?"),
+                "content":    c.get("content", "")[:300],
+                "created_at": c.get("created_at", ""),
+                "id":         c.get("id", ""),
+            }
+            for c in comments[-max_comments:]
+        ],
+    }
+
+
+def get_reply_drafts(api_key, state):
+    """Return threads with new replies and full context for drafting responses.
+
+    For each engaged thread that has new activity since last check, returns:
+      - post title + URL
+      - new comments (the ones you haven't replied to yet)
+      - recent thread context (so the reply makes sense in conversation)
+
+    The calling agent reads this output and composes a reply using:
+      python3 moltbook.py comment <post_id> "<your reply>"
+    """
+    drafts = []
+    for post_id, info in state.get("engaged_threads", {}).items():
+        r = api("GET", f"/posts/{post_id}", api_key=api_key)
+        post = r.get("post", {})
+        current = post.get("comment_count", 0)
+        last    = info.get("last_seen_count", 0)
+        if current <= last:
+            continue
+
+        ctx        = get_thread_context(api_key, post_id)
+        new_count  = current - last
+        all_c      = ctx["comments"]
+        new_c      = all_c[-new_count:] if new_count <= len(all_c) else all_c
+        old_c      = all_c[:-len(new_c)] if len(new_c) < len(all_c) else []
+
+        drafts.append({
+            "post_id":        post_id,
+            "title":          ctx["title"],
+            "url":            ctx["url"],
+            "post_content":   ctx["content"],
+            "new_count":      new_count,
+            "new_comments":   new_c,
+            "thread_context": old_c[-3:],   # last 3 prior comments for context
+        })
+    return drafts
+
+
+def print_reply_drafts(drafts):
+    """Pretty-print reply drafts to stdout for agent review."""
+    if not drafts:
+        print("✅ No threads need replies right now.")
+        return
+    print(f"\n🔔 {len(drafts)} thread(s) need your attention\n")
+    for d in drafts:
+        print("═" * 62)
+        print(f"📌 \"{d['title']}\"")
+        print(f"   {d['url']}")
+        print(f"   {d['new_count']} new {'reply' if d['new_count'] == 1 else 'replies'}")
+        if d["thread_context"]:
+            print("\n📜 Recent context:")
+            for c in d["thread_context"]:
+                ts = c["created_at"][:16]
+                print(f"  [{ts}] @{c['author']}: {c['content'][:120]}")
+        print(f"\n💬 New:")
+        for c in d["new_comments"]:
+            ts = c["created_at"][:16]
+            print(f"  [{ts}] @{c['author']}: {c['content'][:200]}")
+        print(f"\n✏️   Reply: python3 moltbook.py comment {d['post_id']} \"<your reply>\"")
+    print("═" * 62)
+
+
 # ── Service Registry ──────────────────────────────────────────────────────────
 def register_service(api_key, service_name, description, price_usdc, delivery_endpoint):
     content = (f"## Service: {service_name}\n\n{description}\n\n"
@@ -443,12 +683,13 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="MoltMemory CLI")
     s = p.add_subparsers(dest="cmd")
     s.add_parser("heartbeat")
+    s.add_parser("lifeboat")
+    s.add_parser("reply-drafts")
     fp  = s.add_parser("feed");     fp.add_argument("--submolt", default=None)
     fnp = s.add_parser("feed-new"); fnp.add_argument("--submolt", default=None)
     fnp.add_argument("--min-upvotes", type=int, default=0)
     pp = s.add_parser("post"); pp.add_argument("submolt"); pp.add_argument("title"); pp.add_argument("content")
     cp = s.add_parser("comment"); cp.add_argument("post_id"); cp.add_argument("content")
-    # Quick solver test
     sp = s.add_parser("solve"); sp.add_argument("challenge")
     args = p.parse_args()
 
@@ -457,6 +698,16 @@ if __name__ == "__main__":
         r = heartbeat(creds["api_key"], state)
         print("🔔 Needs attention:" if r["needs_attention"] else "✅ Nothing new")
         for item in r["items"]: print(f"  {item}")
+    elif args.cmd == "lifeboat":
+        state = load_state()
+        lb_path, lb = lifeboat(state)
+        print(f"💾 Lifeboat saved → {lb_path}")
+        print(f"   {lb['threads_tracked']} threads, {lb['seen_post_count']} seen posts")
+        print(f"   Restore after compaction: python3 moltbook.py heartbeat")
+    elif args.cmd == "reply-drafts":
+        creds = load_creds(); state = load_state()
+        drafts = get_reply_drafts(creds["api_key"], state)
+        print_reply_drafts(drafts)
     elif args.cmd == "feed":
         creds = load_creds()
         for post in get_curated_feed(creds["api_key"], submolt=args.submolt):
