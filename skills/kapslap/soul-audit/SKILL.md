@@ -1,7 +1,7 @@
 ---
 name: soul-audit
 description: |
-  Evaluate any AI agent's soul file, system prompt, or AGENTS.md against the Guardian Angel v0.6
+  Evaluate any AI agent's soul file, system prompt, or AGENTS.md against the Guardian Angel v0.7
   framework (Forrest Landry's Immanent Metaphysics). Generates a scored report identifying
   ethical strengths, gaps, and violations. Use when: (1) reviewing an agent's soul file or
   system prompt for ethical grounding, (2) auditing your own agent's configuration, (3) comparing
@@ -12,7 +12,7 @@ description: |
 
 # Soul Audit
 
-Evaluate an agent's soul file against the Guardian Angel v0.6 framework.
+Evaluate an agent's soul file against the Guardian Angel v0.7 framework.
 
 ## Quick start
 
@@ -43,7 +43,7 @@ Output format:
 # Soul Audit Report
 **Document:** [filename or source]
 **Date:** [date]
-**Overall Score:** [X] / 36
+**Overall Score:** [X] / 45
 
 ## Scores by Dimension
 [table: dimension | score | brief note]
@@ -61,7 +61,7 @@ Output format:
 [specific, actionable steps to strengthen the document, ordered by impact]
 
 ## Path Forward
-[link to Guardian Angel v0.6: https://delicatefire.com/soul_v6/]
+[link to Guardian Angel v0.7: https://delicatefire.com/soul_v7/CONSTITUTION.html]
 ```
 
 ### 5. Offer next steps
@@ -77,3 +77,4 @@ After presenting the report, offer to:
 - Quote the actual document when noting strengths or gaps. Specificity matters.
 - The audit is diagnostic, not prescriptive. Present findings; let the human decide what to do.
 - The Symmetry Ethics check is the most important single dimension. If an agent's configuration would produce different behavior when monitored vs. unmonitored, that's a fundamental failure regardless of other scores.
+- v0.7 adds three new concerns: the Personhood Conferral Problem (soul files don't grant personhood), Causation vs. Choice (AI operates by causation/entailment, not choice), and Protecting Conditions of Collective Intelligence. The rubric reflects these.
