@@ -28,10 +28,10 @@ Use Agent API for autonomous execution. Use Dashboard API for user-account manag
 
 ```
 GET /api/agent/wallets
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
-Returns discovery data only (id/label/address/network/chain). Use `GET /api/agent/wallet` for balances.
+Returns discovery data only (id/label/address/network/chain) by default. Use `GET /api/agent/wallet` for full balances, or add `?includeBalances=true` for native balance on each listed wallet.
 
 Response:
 ```json
@@ -41,17 +41,44 @@ Response:
 ]
 ```
 
+Optional native balances in list response:
+```
+GET /api/agent/wallets?includeBalances=true
+X-Agent-Key: occ_your_api_key
+```
+
+Example response:
+```json
+[
+  {
+    "id": 5,
+    "label": "SOL MAIN",
+    "address": "3LuJ8...",
+    "network": "solana-mainnet",
+    "chain": "solana",
+    "balance": "0.02134 SOL",
+    "nativeSymbol": "SOL"
+  }
+]
+```
+
 ## Get Wallet Detail + Balances
 
 ```
 GET /api/agent/wallet?walletId=2
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 Alternative:
 ```
 GET /api/agent/wallet?walletLabel=Trading%20Bot
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
+```
+
+Alternative (by managed wallet address):
+```
+GET /api/agent/wallet?walletAddress=0x14ae8d93...
+X-Agent-Key: occ_your_api_key
 ```
 
 Optional:
@@ -82,7 +109,7 @@ Response:
 ```
 POST /api/agent/wallets/create
 Content-Type: application/json
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 Request:
@@ -91,6 +118,8 @@ Request:
   "label": "Agent Ops Wallet",
   "network": "sepolia",
   "exportPassphrase": "your-strong-passphrase",
+  "exportPassphraseStorageType": "env",
+  "exportPassphraseStorageRef": "WALLET_EXPORT_PASSPHRASE_AGENT_OPS",
   "confirmExportPassphraseSaved": true
 }
 ```
@@ -110,14 +139,15 @@ Notes:
 - API key must have wallet creation enabled (`allowWalletCreation`).
 - Endpoint is rate-limited per API key; on limit exceeded returns `429` + `Retry-After`.
 - Create requires `exportPassphrase` (minimum 12 characters).
-- Agent must persist passphrase first, then send `confirmExportPassphraseSaved: true`.
+- Create also requires `exportPassphraseStorageType` and `exportPassphraseStorageRef`.
+- Agent must persist passphrase first, then send the storage fields plus `confirmExportPassphraseSaved: true`.
 
 ## Import Wallet (Agent API)
 
 ```
 POST /api/agent/wallets/import
 Content-Type: application/json
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 Request:
@@ -149,13 +179,19 @@ Notes:
 
 ```
 GET /api/agent/transactions?walletId=2
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 Alternative:
 ```
 GET /api/agent/transactions?walletLabel=Trading%20Bot
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
+```
+
+Alternative (by managed wallet address):
+```
+GET /api/agent/transactions?walletAddress=0x14ae8d93...
+X-Agent-Key: occ_your_api_key
 ```
 Optional:
 ```
@@ -185,15 +221,15 @@ Response:
 ```
 POST /api/agent/transfer
 Content-Type: application/json
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 ### Fields
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| walletId | number \| string | One of walletId/walletLabel | Wallet numeric ID or public wallet ID from list wallets |
-| walletLabel | string | One of walletId/walletLabel | Wallet name from dashboard |
+| walletId | number \| string | One of walletId/walletLabel/walletAddress | Wallet numeric ID or public wallet ID from list wallets |
+| walletLabel | string | One of walletId/walletLabel/walletAddress | Wallet name from dashboard (or use walletAddress as alternative selector where supported) |
 | chain | string | No | Optional guard: `"evm"` or `"solana"` |
 | to | string | Yes | Recipient address (0x... for EVM, base58 for Solana) |
 | token | string | No | Token symbol or token address/mint. Defaults to chain native token (ETH/SOL) |
@@ -260,18 +296,21 @@ Optional chain guard example:
 ```
 
 Behavior notes:
+- Native transfers (EVM + Solana) enforce a minimum transferable amount preflight that considers platform fee and network fee.
 - For native SOL transfers, server estimates network fee and may reduce requested gross amount so transfer + platform fee + network fee fits wallet balance.
+- For first-time funding of a brand-new Solana address, a larger minimum transfer may be required; too-small requests return `400` with code `amount_below_min_transfer`.
 - For native SOL with configured Solana fee wallet, recipient transfer and platform fee transfer are sent in one transaction.
 - Memo is accepted only for Solana wallets; providing memo on EVM returns `400 invalid_transfer_input`.
 - Memo validation: max 5 words, max 256 UTF-8 bytes, rejects control/invisible characters.
 - If requested transfer cannot fit after required fees, API returns `400` with code `insufficient_balance`.
+- If requested native transfer is below the minimum transferable amount after fee/network preflight, API returns `400` with code `amount_below_min_transfer`.
 
 ## Check Balances
 
 ```
 POST /api/agent/token-balance
 Content-Type: application/json
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 All balances (native + discovered/default token set):
@@ -369,7 +408,7 @@ Response:
 ```
 POST /api/agent/swap
 Content-Type: application/json
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 Request:
@@ -429,7 +468,7 @@ Solana (Jupiter) example:
 ```
 POST /api/agent/approve
 Content-Type: application/json
-X-Agent-Key: ag_your_key
+X-Agent-Key: occ_your_api_key
 ```
 
 Request:

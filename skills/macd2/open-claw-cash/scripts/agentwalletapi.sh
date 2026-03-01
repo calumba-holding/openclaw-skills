@@ -8,7 +8,7 @@
 # Commands:
 #   wallets                     List all wallets
 #   wallet <walletId|walletLabel> [chain]   Get one wallet detail with balances
-#   create <label> [network] [--yes]    Create a wallet (default network: sepolia)
+#   create <label> [network] <passphraseEnvVar> [--yes]    Create a wallet (default network: sepolia)
 #   import <label> <network> [privateKey|-] [--yes]   Import wallet (network: mainnet|solana-mainnet)
 #   transactions <walletId> [chain]     List merged transaction history for a wallet
 #   balance <walletId> [token] [chain]  Check balances for a wallet
@@ -172,19 +172,32 @@ case "$COMMAND" in
         confirm_risky_action "Wallet creation"
         LABEL="$2"
         NETWORK="${3:-sepolia}"
-        if [ -z "$LABEL" ]; then
-            echo "Usage: agentwalletapi.sh create <label> [network] [--yes]"
+        PASSPHRASE_ENV_VAR="$4"
+        if [ -z "$LABEL" ] || [ -z "$PASSPHRASE_ENV_VAR" ]; then
+            echo "Usage: agentwalletapi.sh create <label> [network] <passphraseEnvVar> [--yes]"
             echo "  network options: sepolia | mainnet | solana-devnet | solana-testnet | solana-mainnet"
+            echo "  Example:"
+            echo "    export WALLET_EXPORT_PASSPHRASE_OPS='your-strong-passphrase'"
+            echo "    agentwalletapi.sh create \"Ops Wallet\" sepolia WALLET_EXPORT_PASSPHRASE_OPS --yes"
+            exit 1
+        fi
+        PASSPHRASE_VALUE="${!PASSPHRASE_ENV_VAR}"
+        if [ -z "$PASSPHRASE_VALUE" ]; then
+            echo "Error: env var $PASSPHRASE_ENV_VAR is not set."
+            echo "Store the wallet export passphrase in an env var first, then retry."
             exit 1
         fi
         json_escape_var LABEL_ESC "$LABEL"
         json_escape_var NETWORK_ESC "$NETWORK"
-        BODY="{\"label\":\"$LABEL_ESC\",\"network\":\"$NETWORK_ESC\"}"
+        json_escape_var PASSPHRASE_ESC "$PASSPHRASE_VALUE"
+        json_escape_var PASSPHRASE_ENV_ESC "$PASSPHRASE_ENV_VAR"
+        BODY="{\"label\":\"$LABEL_ESC\",\"network\":\"$NETWORK_ESC\",\"exportPassphrase\":\"$PASSPHRASE_ESC\",\"exportPassphraseStorageType\":\"env\",\"exportPassphraseStorageRef\":\"$PASSPHRASE_ENV_ESC\",\"confirmExportPassphraseSaved\":true}"
         curl -s -X POST \
             -H "X-Agent-Key: $AGENTWALLETAPI_KEY" \
             -H "Content-Type: application/json" \
             -d "$BODY" \
             "$BASE_URL/api/agent/wallets/create" | pretty_print_json
+        unset PASSPHRASE_VALUE
         ;;
 
     import)
@@ -414,7 +427,7 @@ case "$COMMAND" in
         echo "Commands:"
         echo "  wallets                                    List all wallets"
         echo "  wallet <walletId|walletLabel> [chain]              Get one wallet detail with balances"
-        echo "  create <label> [network] [--yes]                   Create wallet (default network: sepolia)"
+        echo "  create <label> [network] <passphraseEnvVar> [--yes]  Create wallet (default network: sepolia)"
         echo "  import <label> <network> [privateKey] [--yes]      Import wallet (mainnet|solana-mainnet)"
         echo "  transactions <walletId> [chain]                    List wallet transaction history"
         echo "  balance <walletId> [token] [chain]                 Check balances"
@@ -426,7 +439,8 @@ case "$COMMAND" in
         echo ""
         echo "Examples:"
         echo "  agentwalletapi.sh wallets"
-        echo "  agentwalletapi.sh create 'Ops Wallet' sepolia --yes"
+        echo "  export WALLET_EXPORT_PASSPHRASE_OPS='your-strong-passphrase'"
+        echo "  agentwalletapi.sh create 'Ops Wallet' sepolia WALLET_EXPORT_PASSPHRASE_OPS --yes"
         echo "  agentwalletapi.sh import 'Treasury Imported' mainnet --yes"
         echo "  agentwalletapi.sh transactions 2"
         echo "  agentwalletapi.sh balance 2"
