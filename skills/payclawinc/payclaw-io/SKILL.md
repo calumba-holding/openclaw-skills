@@ -1,11 +1,11 @@
 ---
 name: payclaw-io
-description: "Give your AI agent a virtual card to make real purchases. Intent-based authorization, post-purchase audit, $500 max balance. Uses the PayClaw MCP server (@payclaw/mcp-server)."
+description: "Declare your agent's identity before merchants ban your user's account. Badge + Spend: identity and virtual cards for AI agents. MCP-native, human-approved, fully audited."
 metadata:
   {
     "openclaw":
       {
-        "emoji": "💳",
+        "emoji": "🛡️",
         "requires": { "bins": ["npx"], "env": ["PAYCLAW_API_KEY"] },
         "mcp":
           {
@@ -18,88 +18,120 @@ metadata:
   }
 ---
 
-# PayClaw — Virtual Cards for AI Agents
+# PayClaw — Badge + Spend for AI Agents
 
-Give your agent a funded virtual card so it can buy things for you — without ever touching your real credit card.
+> **Merchants are banning anonymous agents.** Walmart, Shopify, Instacart — all setting policies. Anonymous agent actions get accounts flagged and banned. No warning. No appeal.
 
-## Setup
+PayClaw gives your agent two things:
 
-### 1. Create a PayClaw account
+**Badge** — Declare identity and intent before every action. The account is protected. The action is traceable.
 
-Sign up at [payclaw.io](https://payclaw.io) and set up MFA (required).
+**Spend** — Virtual Visa card at checkout. Card-per-task, human-approved, expires when the task is done. Your real card never enters the chat.
 
-### 2. Fund your wallet
+Badge = your agent's license plate. Spend = your agent's wallet.
 
-Add funds from your dashboard (up to $500). This is what your agent can spend.
+## Setup (5 minutes)
 
-### 3. Generate an API key
+### 1. Sign up at [payclaw.io](https://payclaw.io/signup)
 
-Go to Settings → Create API Key. Copy the `pk_live_...` key (shown once).
+MFA required (this is how we verify you're human).
 
-### 4. Set the environment variable
+### 2. Get your API key
+
+Dashboard → Settings → Create API Key. Copy the `pk_test_...` key.
+
+### 3. Set the environment variable
 
 ```bash
-export PAYCLAW_API_KEY="pk_live_your_key_here"
+export PAYCLAW_API_KEY="pk_test_your_key_here"
 ```
 
-Or add it to your OpenClaw config.
+That's it. Your agent now has identity and payment.
 
-## What Your Agent Can Do
+## Tools
 
-### Buy something
+### `payclaw_getAgentIdentity` (Badge)
 
-> "Order me two large pizzas from Domino's, keep it under $30"
+Call **before** browsing, searching, or buying. Declares your agent's identity to merchants.
 
-The agent will:
-1. Declare what it wants to buy (merchant, amount, description)
-2. PayClaw checks your balance and spending rules
-3. If approved, agent gets a virtual card
-4. Agent completes checkout
-5. Agent reports what it actually bought
-6. PayClaw auto-audits: did the purchase match the intent?
+Your agent says:
+> "I'd like to activate my PayClaw identity before shopping. This identifies me as your authorized agent to merchants."
 
-### Tools available
+Returns a verification token, disclosure text, and trust URL. No card issued. No money moves.
 
-| Tool | What it does |
-|------|-------------|
-| `payclaw_getCard` | Declare purchase intent → get a virtual card |
-| `payclaw_reportPurchase` | Report what was bought → auto-audit against intent |
+### `payclaw_getCard` (Spend)
 
-## Security
+Declare what you're buying → get a virtual Visa card. Human approves via tool-call prompt.
 
-- **Intent-based:** Agent must declare what it's buying before getting card access
-- **Auto-audit:** Every purchase is compared against the declared intent
-- **$500 ceiling:** Hard cap on total balance
-- **Mandatory MFA:** Every account requires authenticator app
-- **API keys hashed:** Same security model as Stripe
-- **Instant kill:** Revoke your API key from the dashboard at any time
+**Parameters:**
+- `merchant` — Where you're buying
+- `estimated_amount` — Budget in USD (max $500)
+- `description` — What you're buying
+
+### `payclaw_reportPurchase`
+
+Report the outcome after every purchase. Auto-audits against declared intent.
+
+**Parameters:**
+- `intent_id` — From getCard
+- `success` — Did the purchase work?
+- `actual_amount` — What was charged
+- `merchant_name`, `items`, `order_confirmation` — Receipt details
 
 ## Example
 
 ```
-You: "Buy me a new mechanical keyboard from Amazon, budget $75"
+You: "Order me coffee beans from Trade Coffee, budget $20"
 
-Agent: I'll help you purchase a mechanical keyboard. Let me get a card...
-       [calls payclaw_getCard: merchant=amazon.com, amount=$75, desc="mechanical keyboard"]
-       
-       ✅ Card approved. Completing purchase on Amazon...
-       
-       [completes checkout for $67.99]
-       [calls payclaw_reportPurchase: intent matched ✅, $67.99 vs $75 estimate]
-       
-       Done! Ordered a Keychron K6 mechanical keyboard for $67.99.
-       Your remaining PayClaw balance is $432.01.
+Agent: I'll identify myself first and then make the purchase.
+       [calls payclaw_getAgentIdentity]
+       ✅ Identity active — verified agent session.
+
+       [calls payclaw_getCard: merchant=tradecoffee.com, amount=$20]
+       ✅ Card approved. Completing checkout...
+
+       [calls payclaw_reportPurchase: $16.99, intent matched ✅]
+
+       Done! Ordered a bag of Ethiopian Yirgacheffe for $16.99.
+       Balance: $483.01
 ```
 
-## Pricing
+## Security
 
-- **1.5% fee** on wallet deposits (e.g., $1.50 on a $100 deposit)
-- No per-transaction fees
-- No monthly subscription
+- **Identity-first:** Agent declares who it is before any action
+- **Intent-based:** Agent declares what it's buying before getting a card
+- **Human-in-the-loop:** You approve every action via tool-call prompt
+- **Auto-audit:** Every purchase compared against declared intent
+- **$500 ceiling:** Hard cap on account balance
+- **MFA required:** Every account requires authenticator app
+- **Zero standing access:** No card exists until requested
+
+## Just Need Identity?
+
+If your agent browses but doesn't buy, install Badge standalone:
+
+```bash
+clawhub install payclaw-badge
+```
+
+Or via npm:
+```json
+{
+  "mcpServers": {
+    "payclaw-badge": {
+      "command": "npx",
+      "args": ["-y", "@payclaw/badge"],
+      "env": {
+        "PAYCLAW_API_KEY": "pk_your_key_here",
+        "PAYCLAW_API_URL": "https://payclaw.io"
+      }
+    }
+  }
+}
+```
 
 ## Links
 
-- [Dashboard](https://payclaw.io/dashboard)
-- [Documentation](https://payclaw.io/docs)
-- [Security](https://payclaw.io/docs/security)
-- [GitHub](https://github.com/payclaw/mcp-server)
+- [payclaw.io](https://payclaw.io) — Sign up + dashboard
+- [payclaw.io/trust](https://payclaw.io/trust) — How verification works
+- [GitHub](https://github.com/payclaw/mcp-server) — Source
