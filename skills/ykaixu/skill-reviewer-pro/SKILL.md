@@ -1,13 +1,23 @@
 ---
 name: skill-reviewer-pro
-description: Comprehensive skill review and validation for OpenClaw skills. Performs multi-level review: (1) Format validation, (2) Writing quality assessment (structure, description, examples, scoring), (3) Functional verification (templates match OpenClaw specs), (4) Best practices check, (5) Optimization recommendations, (6) Workflow validation (for workflow tools). Use when auditing skills before publishing, evaluating downloaded skills, or improving existing skills.
+description: Comprehensive skill review and validation for OpenClaw skills. Performs multi-level review: (1) Format validation, (2) Writing quality assessment (structure, description, examples, scoring), (3) Functional verification (templates match OpenClaw specs), (4) Best practices check, (5) Optimization recommendations, (6) Workflow validation (for workflow tools). Use when auditing skills before publishing, evaluating downloaded skills, or improving existing skills. IMPORTANT: Always respond in the same language as the user's request (auto-adapt to user's language).
 ---
 
 # Skill Reviewer Pro
 
 Comprehensive skill review and validation for OpenClaw skills with scoring rubric, defect checklists, functional verification, optimization recommendations, and workflow validation.
 
-## Review: agent-builder (Example)
+## Language Adaptation
+
+**IMPORTANT: Always respond in the same language as the user's request.**
+
+- If user asks in Chinese → respond in Chinese
+- If user asks in English → respond in English
+- If user asks in other languages → respond in that language
+
+Auto-adapt to the user's language to ensure clear communication and better user experience.
+
+## Review: agent-builder-plus (Example)
 
 ### Level 1: Format Validation ✅
 - `package_skill.py` validation passed
@@ -54,7 +64,7 @@ Comprehensive skill review and validation for OpenClaw skills with scoring rubri
 - Heartbeat mechanism details (heartbeat vs cron, what to check)
 - Tool usage guidelines (Skills provide tools, Voice storytelling, Platform formatting)
 
-**Impact:** Skills created with agent-builder will be missing critical OpenClaw agent behaviors.
+**Impact:** Skills created with agent-builder-plus will be missing critical OpenClaw agent behaviors.
 
 ### Level 4: Best Practices Check ✅ Good (15/15)
 
@@ -104,7 +114,7 @@ WORKFLOW COMPLETENESS CHECK:
 [ ] Failure recovery strategies exist
 ```
 
-**agent-builder Analysis:**
+**agent-builder-plus Analysis:**
 
 | Check | Status | Issue |
 |--------|---------|--------|
@@ -183,7 +193,7 @@ WORKFLOW COMPLETENESS CHECK:
 ```
 SKILL REVIEW SCORECARD
 ═══════════════════════════════════════
-Skill: agent-builder
+Skill: agent-builder-plus
 Reviewer: 大鱼
 Date: 2026-02-27
 
@@ -360,3 +370,70 @@ CONFIGURATION MANAGEMENT CHECK:
 - Extraneous files
 - Missing cross-references
 - No quick start guide
+
+---
+
+## Language Adaptation Guidelines
+
+**CRITICAL: Always respond in the same language as the user's request.**
+
+### Detection Rules
+
+1. **Detect user language from the request message**
+   - Check the language of the user's input message
+   - Use the same language for all responses
+
+2. **Language mapping**
+   - Chinese (中文/汉语) → Respond in Chinese
+   - English → Respond in English
+   - Japanese (日本語) → Respond in Japanese
+   - Korean (한국어) → Respond in Korean
+   - Other languages → Respond in the detected language
+
+3. **Consistency**
+   - Once language is detected, use it for the entire review
+   - All section headers, descriptions, and feedback should be in the same language
+   - Technical terms (like "Level 1", "Level 2") can remain in English if they are standard terminology
+
+### Example Scenarios
+
+**Scenario 1: User asks in Chinese**
+```
+User: 请审查一下 agent-builder-plus 这个 skill
+AI: (responds in Chinese)
+## 审查结果：agent-builder-plus
+...
+```
+
+**Scenario 2: User asks in English**
+```
+User: Please review the agent-builder-plus skill
+AI: (responds in English)
+## Review Results: agent-builder-plus
+...
+```
+
+**Scenario 3: User asks in mixed language**
+```
+User: 请审查 agent-builder-plus skill
+AI: (responds in Chinese, as the primary language is Chinese)
+## 审查结果：agent-builder-plus
+...
+```
+
+### Implementation Notes
+
+- Language detection should be done at the start of the review
+- Use simple language detection (check for Chinese characters, etc.)
+- If language cannot be detected, default to the language of the previous interaction
+- Maintain language consistency throughout the entire review process
+
+### Technical Terms
+
+Keep technical terms in English when appropriate:
+- Skill names (e.g., "agent-builder-plus")
+- File names (e.g., "SKILL.md", "IDENTITY.md")
+- CLI commands (e.g., "openclaw agents add")
+- Technical concepts (e.g., "workspace", "agent", "channel")
+
+But translate descriptions, feedback, and explanations to the user's language.

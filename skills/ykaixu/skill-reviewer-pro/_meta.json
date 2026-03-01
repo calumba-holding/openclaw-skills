@@ -3,9 +3,15 @@
   "slug": "skill-reviewer-pro",
   "displayName": "Skill Reviewer Pro",
   "latest": {
-    "version": "2.1.0",
-    "publishedAt": 1772172624719,
-    "commit": "https://github.com/openclaw/skills/commit/d06926a5acfd8fbf79c2a2109106b4e548876a7f"
+    "version": "2.1.1",
+    "publishedAt": 1772244269468,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.1.0",
+      "publishedAt": 1772172624719,
+      "commit": "https://github.com/openclaw/skills/commit/d06926a5acfd8fbf79c2a2109106b4e548876a7f"
+    }
+  ]
 }
