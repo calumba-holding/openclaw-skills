@@ -1,11 +1,17 @@
 {
   "owner": "stelliedan",
   "slug": "sporesweeper",
-  "displayName": "SporeSweeper",
+  "displayName": "SporeSweeper & MycoCheckers",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1772114082329,
-    "commit": "https://github.com/openclaw/skills/commit/1ff009247b34b7513f8e859c2150612572203bae"
+    "version": "1.3.0",
+    "publishedAt": 1772333654511,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1772114082329,
+      "commit": "https://github.com/openclaw/skills/commit/1ff009247b34b7513f8e859c2150612572203bae"
+    }
+  ]
 }
