@@ -70,6 +70,21 @@ Track these after each release:
 3. **Kickoff-only failure rate**: runs ended without final outputs
 4. **Revenue-proxy conversion**: CTA links added / clicked / downstream paid actions
 
+## Monetization packaging checklist (for ClawHub page)
+
+Before each publish, ensure listing copy includes:
+1. Immediate business outcome (faster shipping / fewer dropped tasks)
+2. Clear operator steps (start/progress/finish format)
+3. KPI proof points to measure value in 24h
+4. Best-fit use cases (paid content, release windows, conversion funnels)
+
+## Discord reporting rule (for cron execution runs)
+
+If a cron task explicitly requires Discord reporting:
+1. include `executed/result/next` KPI in one compact completion block,
+2. attach evidence pointers (URL/path/command output),
+3. if direct sending is delegated by runtime, clearly note destination channel and message body draft.
+
 ## Postmortem rule
 
 If a delay occurs, immediately:
