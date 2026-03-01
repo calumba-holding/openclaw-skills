@@ -21,7 +21,7 @@ if [[ "${1:-}" == "setup-default" ]]; then
   openclaw cron add \
     --every 5m \
     --name "stop-loss-tp" \
-    --prompt "Load the kryptogo-meme-trader skill. Source .env. Call /agent/portfolio with the agent wallet.
+    --message "Load the kryptogo-meme-trader skill. Source .env. Call /agent/portfolio with the agent wallet.
 For each open position:
 - If unrealized PnL <= -stop_loss_pct -> sell entire position (stop-loss).
 - If unrealized PnL >= +take_profit_pct -> sell entire position (take-profit).
@@ -33,7 +33,8 @@ Report every executed trade to the user. If no action taken, stay silent."
   openclaw cron add \
     --every 30m \
     --name "discovery-scan" \
-    --prompt "Load the kryptogo-meme-trader skill. Source .env. Execute the full discovery workflow:
+    --timeout-seconds 900 \
+    --message "Load the kryptogo-meme-trader skill. Source .env. Execute the full discovery workflow:
 1. Read memory/trading-preferences.json for current parameters.
 2. Read memory/trading-lessons.md (if exists) to avoid known bad patterns.
 3. Check open positions count — skip buying if at max_open_positions.
@@ -103,7 +104,7 @@ echo ""
 # openclaw cron add \
 #   --cron "0 1 * * *" \
 #   --name "daily-portfolio-summary" \
-#   --prompt "Load the kryptogo-meme-trader skill. Call /agent/portfolio with the agent wallet address from .env. Send me a daily summary including: all open positions with current PnL (% and USD), total portfolio value, any positions that hit stop-loss or take-profit thresholds overnight. Format as a clean summary, not raw JSON."
+#   --message "Load the kryptogo-meme-trader skill. Call /agent/portfolio with the agent wallet address from .env. Send me a daily summary including: all open positions with current PnL (% and USD), total portfolio value, any positions that hit stop-loss or take-profit thresholds overnight. Format as a clean summary, not raw JSON."
 
 # ============================================================================
 # STRATEGY 3: Active Scanner (15-min scan interval)
@@ -113,7 +114,7 @@ echo ""
 # openclaw cron add \
 #   --every 15m \
 #   --name "trading-scan-15m" \
-#   --prompt "Load the kryptogo-meme-trader skill. Execute the full scan workflow:
+#   --message "Load the kryptogo-meme-trader skill. Execute the full scan workflow:
 # 1. Check portfolio — execute any triggered stop-loss or take-profit.
 # 2. If Pro/Alpha tier: call /signal-dashboard (sort_by=signal_count, page_size=10) for curated accumulation signals. Otherwise: call /agent/trending-tokens with user preferences.
 # 3. Run qualifying tokens through the 7-step analysis pipeline.
@@ -128,7 +129,7 @@ echo ""
 # openclaw cron add \
 #   --every 10m \
 #   --name "signal-monitor" \
-#   --prompt "Load the kryptogo-meme-trader skill. Call /signal-dashboard with sort_by=signal_count and page_size=5. For each token with new accumulation signals in the last 10 minutes, run the full analysis pipeline. If any token passes all criteria, execute the trade and report. Skip tokens already in portfolio."
+#   --message "Load the kryptogo-meme-trader skill. Call /signal-dashboard with sort_by=signal_count and page_size=5. For each token with new accumulation signals in the last 10 minutes, run the full analysis pipeline. If any token passes all criteria, execute the trade and report. Skip tokens already in portfolio."
 
 # ============================================================================
 # STRATEGY 5: Conservative (ask before trading)
@@ -138,7 +139,7 @@ echo ""
 # openclaw cron add \
 #   --every 30m \
 #   --name "conservative-scan" \
-#   --prompt "Load the kryptogo-meme-trader skill. Scan trending tokens and run analysis. Do NOT execute any trades. Instead, if you find tokens that pass the bullish checklist, send me a summary with your recommendation and ask for confirmation before trading."
+#   --message "Load the kryptogo-meme-trader skill. Scan trending tokens and run analysis. Do NOT execute any trades. Instead, if you find tokens that pass the bullish checklist, send me a summary with your recommendation and ask for confirmation before trading."
 
 # ============================================================================
 # UTILITY COMMANDS

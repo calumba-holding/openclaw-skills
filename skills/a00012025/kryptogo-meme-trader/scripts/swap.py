@@ -36,6 +36,8 @@ import base64
 import json
 import os
 import sys
+import time
+import datetime
 
 import requests
 from dotenv import load_dotenv
@@ -97,32 +99,34 @@ args = parser.parse_args()
 # Step 1: Build swap transaction
 # ---------------------------------------------------------------------------
 
+# Fetch token info for journal
+token_info = {}
+try:
+    resp = requests.get(
+        f"{API_BASE}/token-overview",
+        params={"address": args.token_mint},
+        headers=HEADERS,
+        timeout=5
+    )
+    if resp.status_code == 200:
+        token_info = resp.json()
+except Exception as e:
+    print(f"Warning: Could not fetch token info: {e}")
+
+token_symbol = token_info.get("symbol", "UNKNOWN")
+decimals = token_info.get("decimals", 6)
+current_price = token_info.get("price", 0)
+
 if args.sell:
     input_mint = args.token_mint
     output_mint = SOL_MINT
-    # Need to fetch decimals to convert UI amount to raw units
-    try:
-        token_overview_resp = requests.get(
-            f"{API_BASE}/token-overview",
-            params={"address": args.token_mint},
-            headers=HEADERS
-        )
-        if token_overview_resp.status_code == 200:
-            decimals = token_overview_resp.json().get("decimals", 6)
-        else:
-            print(f"Warning: Could not fetch decimals (HTTP {token_overview_resp.status_code}). Defaulting to 6.")
-            decimals = 6
-    except Exception as e:
-        print(f"Warning: Error fetching decimals: {e}. Defaulting to 6.")
-        decimals = 6
-        
     amount = int(args.amount * (10 ** decimals))
-    print(f"=== SELL: {args.amount} {args.token_mint[:8]}... ({amount} raw units, decimals={decimals}) → SOL ===")
+    print(f"=== SELL: {args.amount} {token_symbol} ({amount} raw units) → SOL ===")
 else:
     input_mint = SOL_MINT
     output_mint = args.token_mint
     amount = int(args.amount * 1_000_000_000)  # SOL → lamports
-    print(f"=== BUY: {args.amount} SOL → {args.token_mint[:8]}... ===")
+    print(f"=== BUY: {args.amount} SOL → {token_symbol} (price: ${current_price}) ===")
 
 print("\nStep 1: Building swap transaction...")
 swap_resp = requests.post(
@@ -153,10 +157,21 @@ if fee_payer and fee_payer != WALLET:
     sys.exit(f"ABORT: Fee payer mismatch! Expected {WALLET}, got {fee_payer}")
 
 # Check price impact
-if price_impact > args.max_impact:
+if abs(price_impact) > args.max_impact:
     sys.exit(f"ABORT: Price impact {price_impact}% exceeds max {args.max_impact}%")
-elif price_impact > 5:
+elif abs(price_impact) > 5:
     print(f"  ⚠ WARNING: Price impact {price_impact}% is high (>5%)")
+
+# Extract estimated output amount for journal
+estimated_out_amount = 0
+try:
+    quote = swap_data.get("quote", {})
+    # Look for outAmount in quote (structure varies, usually outAmount or amount_out)
+    raw_out = quote.get("outAmount") or quote.get("amount_out") or quote.get("out_amount")
+    if raw_out:
+        estimated_out_amount = float(raw_out) / (10 ** decimals)
+except Exception:
+    pass
 
 # ---------------------------------------------------------------------------
 # Step 2: Sign locally
@@ -192,3 +207,80 @@ tx_hash = result.get("tx_hash", result.get("signature", "?"))
 print(f"\n  Status: {result.get('status', '?')}")
 print(f"  Tx Hash: {tx_hash}")
 print(f"  Explorer: https://solscan.io/tx/{tx_hash}")
+
+# ---------------------------------------------------------------------------
+# Step 4: Persist to Trading Journal
+# ---------------------------------------------------------------------------
+
+journal_path = os.path.expanduser("~/.openclaw/workspace/memory/trading-journal.json")
+
+# Ensure directory exists
+os.makedirs(os.path.dirname(journal_path), exist_ok=True)
+
+# Load existing journal
+try:
+    if os.path.exists(journal_path):
+        with open(journal_path, "r") as f:
+            journal_data = json.load(f)
+    else:
+        journal_data = {"trades": []}
+except Exception as e:
+    print(f"Warning: Could not read journal file: {e}. Creating new.")
+    journal_data = {"trades": []}
+
+# Construct log entry
+timestamp_ms = int(time.time() * 1000)
+iso_time = datetime.datetime.now().isoformat()
+
+if not args.sell:
+    # BUY -> Create OPEN position
+    
+    # Calculate effective entry price in SOL (not USD)
+    # If we spent 0.1 SOL and got 1000 tokens, price = 0.1 / 1000 = 0.0001 SOL
+    entry_price_sol = 0
+    if estimated_out_amount > 0:
+        entry_price_sol = args.amount / estimated_out_amount
+        
+    new_trade = {
+        "id": f"{iso_time}_{token_symbol}",
+        "token_mint": args.token_mint,
+        "symbol": token_symbol,
+        "chain_id": "501", # Default Solana
+        "action": "BUY",
+        "amount_sol": args.amount,
+        "token_amount": estimated_out_amount,
+        "price_at_entry": entry_price_sol,
+        "tx_hash": tx_hash,
+        "status": "OPEN",
+        "timestamp": iso_time,
+        "timestamp_ms": timestamp_ms
+    }
+    journal_data["trades"].append(new_trade)
+    print(f"\nLogged BUY trade to journal: {new_trade['id']} (Entry Price: {entry_price_sol:.9f} SOL)")
+
+else:
+    # SELL -> Find open position and close it (or just log sell event)
+    # Simple logic: Log a separate SELL entry. Advanced logic: Update corresponding BUY.
+    # For now, append a SELL entry so humans can see it.
+    sell_entry = {
+        "id": f"{iso_time}_{token_symbol}_SELL",
+        "token_mint": args.token_mint,
+        "symbol": token_symbol,
+        "chain_id": "501",
+        "action": "SELL",
+        "amount_sol": 0, # Unknown without price at exit
+        "tx_hash": tx_hash,
+        "status": "CLOSED",
+        "timestamp": iso_time,
+        "timestamp_ms": timestamp_ms
+    }
+    journal_data["trades"].append(sell_entry)
+    print(f"\nLogged SELL trade to journal: {sell_entry['id']}")
+
+# Save journal
+try:
+    with open(journal_path, "w") as f:
+        json.dump(journal_data, f, indent=2)
+    print(f"Journal updated at {journal_path}")
+except Exception as e:
+    print(f"ERROR: Failed to write journal: {e}")

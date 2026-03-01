@@ -1,6 +1,6 @@
 ---
 name: kryptogo-meme-trader
-version: 2.4.1
+version: "2.4.2"
 description: Analyze and trade meme coins using KryptoGO's on-chain cluster analysis platform. Covers wallet clustering, address labels, accumulation/distribution detection, and automated swap execution via the Agent Trading API.
 author: KryptoGO
 license: MIT
@@ -188,6 +188,14 @@ This makes `KRYPTOGO_API_KEY`, `SOLANA_PRIVATE_KEY`, and `SOLANA_WALLET_ADDRESS`
 - After each trade: summarize analysis result + trade details to the user (concise text, not raw JSON)
 - After each scan: brief summary of tokens scanned, why they passed/failed
 - On errors: report the issue and suggest next steps
+
+### Persistence (CRITICAL)
+
+**IMMEDIATELY after submitting a transaction, the agent MUST:**
+1. **Write the trade details to `memory/trading-journal.json`** with `status: "OPEN"`.
+   - Include: `token_symbol`, `token_address`, `entry_price`, `position_size_sol`, `tx_hash`, `timestamp`.
+   - **Do not wait for confirmation** — write it as soon as `tx_hash` is obtained.
+2. If this step is skipped, the Stop-Loss cron job will NOT see the position and will fail to manage it.
 
 ### User Preferences
 
@@ -519,12 +527,16 @@ A token with these characteristics is a reasonable entry with `max_position_size
 
 ### Step 7: Execute Trade
 
-If all checks pass:
+**CRITICAL: Use `python3 scripts/swap.py` for execution whenever possible.**
+It automatically handles `wallet_address` injection, error checking, and **mandatory journal logging**.
+
+If you must implement custom logic:
 1. `POST /agent/swap` with `wallet_address` set to your agent's `SOLANA_WALLET_ADDRESS` — builds an unsigned transaction with that address as fee payer / signer
 2. **Verify before signing:** decode the unsigned tx and confirm `fee_payer` in the response matches your wallet
 3. Sign locally with `solders` (private key never sent to server)
 4. `POST /agent/submit` — submit signed transaction
 5. Verify via explorer URL
+6. **IMMEDIATELY write to trading journal** (see Persistence section).
 
 > **Important:** Always pass `wallet_address` in the swap request. Without it, the API uses the wallet associated with your API key (which may differ from your agent's trading wallet), causing a signer mismatch when you try to sign locally.
 
