@@ -4,9 +4,9 @@ WiseOCR CLI - Convert PDF to Markdown (powered by WiseDiag)
 
 Usage:
     1. Set API key: export WISEDIAG_API_KEY=your_api_key
-    2. Run: python3 wiseocr.py -i input.pdf [-n original_name]
+    2. Run: python wiseocr.py -i input.pdf
 
-Get API key: https://console.wisediag.com/apiKeyManage
+Get API key: https://console.wisediag.com/apiKeyManage (or https://s.wisediag.com/xsu9x0jq)
 """
 
 import argparse
@@ -34,7 +34,7 @@ def get_api_key():
 
 To use this tool, you need a WiseOCR API key (from WiseDiag):
 
-1. Visit: https://console.wisediag.com/apiKeyManage
+1. Visit: https://s.wisediag.com/xsu9x0jq
 2. Sign up/Login and create an API key
 3. Set the environment variable:
    
@@ -92,7 +92,7 @@ def _upload_with_retry(endpoint, input_path, headers, params, max_retries=MAX_RE
             # Auth error — no point retrying
             if resp.status_code == 401:
                 print(f"\n[!] Authentication failed. Please check your API key.")
-                print(f"    Get a valid key at: https://console.wisediag.com/apiKeyManage")
+                print(f"    Get a valid key at: https://s.wisediag.com/xsu9x0jq")
                 return None
 
             # Success
@@ -142,12 +142,12 @@ def _upload_with_retry(endpoint, input_path, headers, params, max_retries=MAX_RE
     return None
 
 
-def process_pdf(input_path, output_dir=None, dpi=DEFAULT_DPI, name=None):
+def process_pdf(input_path, output_dir=None, service_url=DEFAULT_SERVICE_URL, dpi=DEFAULT_DPI, name=None):
     """Process a PDF file via the WiseOCR API (powered by WiseDiag)."""
     input_path = Path(input_path)
 
     if output_dir is None:
-        output_dir = Path.home() / ".openclaw" / "workspace" / "WiseOCR"
+        output_dir = Path.cwd() / "WiseOCR"
     else:
         output_dir = Path(output_dir)
 
@@ -160,7 +160,7 @@ def process_pdf(input_path, output_dir=None, dpi=DEFAULT_DPI, name=None):
     print(f"[*] Processing: {input_path.name} ({file_size_mb:.1f} MB)")
     print(f"[*] DPI: {dpi}")
 
-    endpoint = f"{DEFAULT_SERVICE_URL}/v1/ocr/pdf"
+    endpoint = f"{service_url}/v1/ocr/pdf"
     headers = {"Authorization": f"Bearer {api_key}"}
     params = {"dpi": dpi}
 
@@ -185,15 +185,14 @@ def process_pdf(input_path, output_dir=None, dpi=DEFAULT_DPI, name=None):
     # Print usage info
     usage = data.get("usage")
     if usage:
-        print(f"[*] Usage: prompt_tokens={usage.get('prompt_tokens')}, "
-              f"completion_tokens={usage.get('completion_tokens')}, "
+        print(f"[*] Usage: completion_tokens={usage.get('completion_tokens')}, "
               f"ocr_pic_size={usage.get('ocr_pic_size')}, "
               f"total_tokens={usage.get('total_tokens')}")
 
-    # Save combined markdown — use -n name if provided, otherwise input filename
+    # Save combined markdown — use original filename if provided, else input PDF filename
     markdown = data.get("markdown", "")
-    output_name = name if name else input_path.stem
-    output_path = output_dir / f"{output_name}.md"
+    stem = name if name else input_path.stem
+    output_path = output_dir / f"{stem}.md"
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(markdown)
     print(f"[+] Markdown saved: {output_path}")
@@ -208,8 +207,9 @@ def main():
     parser.add_argument("-i", "--input", required=True, help="Input PDF file path")
     parser.add_argument("-o", "--output", help="Output directory")
     parser.add_argument(
-        "-n", "--name",
-        help="Original filename (without extension) for output. Use this when the input file has been renamed/copied.",
+        "--service-url",
+        default=DEFAULT_SERVICE_URL,
+        help=f"WiseOCR API URL (default: {DEFAULT_SERVICE_URL})",
     )
     parser.add_argument(
         "--dpi",
@@ -217,6 +217,12 @@ def main():
         default=DEFAULT_DPI,
         help=f"PDF rendering DPI (default: {DEFAULT_DPI})",
     )
+    parser.add_argument(
+        "-n", "--name",
+        help="Original filename (without extension) for the output file. "
+             "Use this when the input file has been renamed (e.g. by OpenClaw).",
+    )
+
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
@@ -227,7 +233,7 @@ def main():
         print(f"[!] Only PDF files are supported: {args.input}")
         return
 
-    process_pdf(args.input, args.output, args.dpi, args.name)
+    process_pdf(args.input, args.output, args.service_url, args.dpi, args.name)
 
 
 if __name__ == "__main__":

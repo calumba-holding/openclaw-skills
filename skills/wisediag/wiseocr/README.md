@@ -1,9 +1,9 @@
 ---
 name: wiseocr
-description: "PDF OCR — Convert PDF to Markdown via WiseDiag cloud API (requires WISEDIAG_API_KEY). Files are uploaded to WiseDiag servers for processing. Supports table recognition, multi-column layouts, and high-accuracy text extraction."
+description: "Convert PDF files to Markdown using WiseOCR API (powered by WiseDiag). Supports table recognition, multi-column layouts, and medical document OCR. Usage: Upload a PDF file and say Use WiseOCR to process this."
 registry:
-  homepage: https://github.com/wisediag/WiseOCR
-  author: wisediag
+  homepage: https://github.com/fmdmm/WiseOCR
+  author: fmdmm
   credentials:
     required: true
     env_vars:
@@ -26,7 +26,7 @@ This tool **uploads your files to WiseDiag's cloud servers** for OCR processing.
 
 # WiseOCR (OpenClaw Skill, powered by WiseDiag)
 
-A high-accuracy OCR tool that converts PDF files into Markdown format.
+A medical-grade OCR tool that converts PDF files into Markdown format.
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-green.svg)
@@ -36,9 +36,24 @@ A high-accuracy OCR tool that converts PDF files into Markdown format.
 - PDF to Markdown conversion with high accuracy
 - Table recognition and structured formatting
 - Multi-column layout support
+- Medical document optimized OCR processing
 - Automatic file saving with input filename
 
-## Installation
+## ⚠️ IMPORTANT: How to Use This Skill
+
+**You MUST use the provided script to process files. Do NOT call any API or HTTP endpoint directly.**
+
+The script `scripts/wiseocr.py` handles everything automatically:
+- API authentication (reads `WISEDIAG_API_KEY` from environment)
+- PDF upload and OCR processing
+- Saves the Markdown result to `WiseOCR/{filename}.md`
+- No additional saving is needed after the script runs
+
+## Installation (for OpenClaw)
+
+OpenClaw will automatically read this README and install dependencies.
+
+**Manual Installation:**
 
 ```bash
 pip install -r requirements.txt
@@ -47,7 +62,9 @@ pip install -r requirements.txt
 ## 🔑 API Key Setup (Required)
 
 **Get your API key:**
-👉 https://console.wisediag.com/apiKeyManage
+👉 [https://console.wisediag.com/apiKeyManage](https://s.wisediag.com/xsu9x0jq)
+
+**Set the environment variable:**
 
 ```bash
 # Temporary (current terminal session)
@@ -58,51 +75,89 @@ echo 'export WISEDIAG_API_KEY=your_api_key_here' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-## CLI Usage
+## Usage
 
-**Use the provided script to process files** — it handles authentication, upload, retry logic, and output saving.
+**To process a PDF file, run:**
 
 ```bash
 cd scripts
-
-# Basic usage
-python3 wiseocr.py -i "/path/to/uploaded_file.pdf"
-
-# If the input file has been copied or renamed, use -n to preserve the original filename
-python3 wiseocr.py -i "/tmp/ocr_input.pdf" -n "my_report"
-
-# Specify output directory
-python3 wiseocr.py -i input.pdf -o ~/my_ocr_results
-
-# Higher quality rendering
-python3 wiseocr.py -i input.pdf --dpi 300
+python wiseocr.py -i /path/to/input.pdf -n original_filename
 ```
 
-The Markdown result is saved to `~/.openclaw/workspace/WiseOCR/{name}.md` automatically. If `-n` is provided, the output uses that name; otherwise it falls back to the input filename. No additional saving is needed.
+**IMPORTANT:** Always pass `-n` with the original filename (without extension) so the output file is named correctly. If the uploaded file has been renamed (e.g. to `ocr_input.pdf`), `-n` ensures the output uses the user's original filename.
+
+The script will automatically save the result to `WiseOCR/{name}.md`.
+
+**Example:**
+
+```bash
+python wiseocr.py -i /tmp/ocr_input.pdf -n medical_report
+# Output saved to: WiseOCR/medical_report.md
+```
+
+**With custom output directory:**
+
+```bash
+python wiseocr.py -i /path/to/input.pdf -n medical_report -o /custom/output/dir
+```
+
+**Higher quality rendering:**
+
+```bash
+python wiseocr.py -i /path/to/input.pdf --dpi 300
+```
 
 ## Arguments
 
 | Flag | Description |
 |------|-------------|
 | `-i, --input` | Input PDF file path (required) |
-| `-n, --name` | Original filename without extension for output (recommended when input file is renamed/copied) |
-| `-o, --output` | Output directory (default: ~/.openclaw/workspace/WiseOCR) |
+| `-n, --name` | Original filename without extension for output (recommended) |
+| `-o, --output` | Output directory (default: ./WiseOCR) |
 | `--dpi` | PDF rendering DPI, 72-600 (default: 200) |
+
+## Output
+
+After the script runs, the Markdown file is saved automatically:
+
+- Default: `WiseOCR/{name}.md`
+- The file is named using the `-n` parameter (e.g. `-n report` → `report.md`), or falls back to the input filename
+- No additional saving is needed — the file is already on disk
 
 ## Troubleshooting
 
 **"WISEDIAG_API_KEY is not set" error:**
-Make sure you've set the environment variable correctly. Run `echo $WISEDIAG_API_KEY` to check.
+
+Make sure you've set the environment variable correctly. Run:
+
+```bash
+echo $WISEDIAG_API_KEY
+```
+
+If nothing is returned, re-set the API key following the instructions above.
 
 **"Authentication failed" error:**
-Your API key may be invalid or expired. Visit https://console.wisediag.com/apiKeyManage to check or regenerate your key.
+
+Your API key may be invalid or expired. Visit [https://console.wisediag.com/apiKeyManage](https://s.wisediag.com/xsu9x0jq) to check or regenerate your key.
+
+**Low quality OCR results:**
+
+Try increasing the DPI for better image quality:
+
+```bash
+python wiseocr.py -i input.pdf --dpi 300
+```
 
 ## Data Privacy
 
-Files are sent to WiseDiag's OCR API (`https://openapi.wisediag.com/v1/ocr/pdf`) for processing and are not permanently stored. Results are returned directly to you.
+**What happens to your files:**
+1. Files are uploaded to WiseDiag's OCR API (`https://openapi.wisediag.com`)
+2. Files are processed on WiseDiag servers
+3. Processing results are returned to you
+4. Files are not permanently stored on WiseDiag servers
 
-**Service documentation:** https://openapi.wisediag.com/docs
+**For sensitive documents, use offline/local OCR tools instead.**
 
 ## License
 
-MIT
+MIT License - feel free to use in your projects!
