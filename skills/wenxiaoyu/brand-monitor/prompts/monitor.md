@@ -13,88 +13,146 @@
 
 ## 执行步骤
 
-### 第一步：搜索各平台提及
+### 第一步：使用 SerpAPI 爬虫搜索各平台提及
 
-对于每个平台，使用 `web_search` 工具搜索：
+使用 SerpAPI 专业搜索服务搜索各平台。执行以下命令：
 
-**小红书（重点平台）:**
-```
-"{{brand_name}}" site:xiaohongshu.com after:{{start_date}}
-"{{brand_name}}" 新能源 site:xiaohongshu.com
-"{{brand_name}}" 试驾 OR 评测 site:xiaohongshu.com
+```bash
+cd ~/.openclaw/workspace/skills/brand-monitor/crawler
+python search_crawler_serpapi.py "{{brand_name}}" "{{platforms_list}}" 20 {{monitor_hours}}
 ```
 
-**微博（重点平台）:**
-```
-"{{brand_name}}" site:weibo.com after:{{start_date}}
-"{{brand_name}}" 新能源汽车 site:weibo.com
+**参数说明：**
+- 参数1：搜索关键词 - {{brand_name}}
+- 参数2：平台列表 - {{platforms_list}}（逗号分隔）
+- 参数3：每平台最大结果数 - 20
+- 参数4：时间范围（小时）- {{monitor_hours}}
+
+**支持的平台：**
+- weibo - 微博
+- xiaohongshu - 小红书
+- zhihu - 知乎
+- autohome - 汽车之家
+- dongchedi - 懂车帝
+- yiche - 易车网
+- tieba - 百度贴吧
+- douyin - 抖音
+- kuaishou - 快手
+
+**如果有品牌别名，需要为每个别名执行搜索：**
+```bash
+# 主品牌名
+python search_crawler_serpapi.py "{{brand_name}}" "{{platforms_list}}" 20 {{monitor_hours}}
+
+# 别名1（如果有）
+python search_crawler_serpapi.py "{{alias1}}" "{{platforms_list}}" 20 {{monitor_hours}}
+
+# 别名2（如果有）
+python search_crawler_serpapi.py "{{alias2}}" "{{platforms_list}}" 20 {{monitor_hours}}
 ```
 
-**汽车之家:**
-```
-"{{brand_name}}" site:autohome.com.cn after:{{start_date}}
-"{{brand_name}}" 口碑 OR 评测 site:autohome.com.cn
-```
+**环境要求：**
+- 需要设置 SERPAPI_KEY 环境变量
+- 或使用 --mock 参数进行测试：`python search_crawler_serpapi.py "{{brand_name}}" "{{platforms_list}}" 20 {{monitor_hours}} --mock`
 
-**懂车帝:**
-```
-"{{brand_name}}" site:dongchedi.com after:{{start_date}}
-```
+**爬虫输出格式：**
+SerpAPI 爬虫会输出 JSON 格式的搜索结果，包含：
+- platform: 平台名称（自动识别）
+- title: 标题
+- content: 内容摘要
+- url: 原文链接
+- source: 数据来源（serpapi_google 或 serpapi_baidu）
+- publish_time: 发布时间
+- author: 作者（如果可获取）
+- author_id: 作者ID
+- followers: 粉丝数
+- verified: 是否认证
+- likes: 点赞数
+- comments: 评论数
+- shares: 分享数
 
-**易车网:**
-```
-"{{brand_name}}" site:bitauto.com after:{{start_date}}
-```
+**搜索策略：**
+- SerpAPI 自动通过 site: 过滤器搜索指定平台
+- 自动识别平台（通过 URL 判断）
+- 支持时间过滤（最近24小时、一周等）
+- 如果有别名，为每个别名单独搜索并合并结果
+- 自动去重（相同URL的内容）
 
-**知乎（深度讨论）:**
-```
-"{{brand_name}}" site:zhihu.com after:{{start_date}}
-"{{brand_name}}" 怎么样 OR 值得买吗 site:zhihu.com
-```
+**错误处理：**
+- 如果某个平台搜索失败，继续其他平台
+- 记录错误信息到 stderr
+- 在报告中说明哪些平台搜索成功
+- 如果 API Key 未设置或配额用完，提示使用 --mock 模式测试
 
-**百度贴吧:**
-```
-"{{brand_name}}" site:tieba.baidu.com after:{{start_date}}
-```
+### 第二步：处理搜索结果
 
-**抖音/快手（视频平台）:**
-```
-"{{brand_name}}" site:douyin.com OR site:kuaishou.com
-```
+爬虫已经返回了结构化的数据，包含所有必要信息。
 
-**汽车媒体大V重点关注:**
-- 搜索时特别标注来自认证账号的内容
-- 识别汽车行业KOL（粉丝>10万）
-- 优先展示媒体账号的评测和报道
+**数据处理步骤：**
 
-**搜索技巧：**
-- 如果有别名，为每个别名单独搜索
-- 排除包含排除关键词的结果（如"招聘"、"代理"）
-- 优先搜索最近的内容
-- 特别关注带有"评测"、"试驾"、"对比"等关键词的内容
+1. **解析 JSON 输出**
+   - 读取爬虫输出的 JSON 数据
+   - 按平台分组结果
 
-### 第二步：获取详细内容
+2. **数据质量评估**
+   - 检查每条结果的数据完整度
+   - 标注缺失字段（followers, likes, comments, shares）
+   - 计算数据质量分数（0-100）
 
-对每个搜索结果：
-1. 使用 `web_fetch` 获取完整页面内容
-2. 提取关键信息：
-   - 作者/用户名
-   - 作者认证信息（是否汽车媒体/大V/认证用户）
-   - 粉丝数量
-   - 发布时间
-   - 完整文本内容
-   - 互动数据（点赞、转发、评论、收藏）
-   - 原文链接
-   - 是否包含视频/图片
+3. **数据补充**（重要！）
+   
+   **补充策略**：对于以下情况，使用 `web_fetch` 获取完整页面数据
+   
+   **触发条件**（满足任一即补充）：
+   - 互动数据全部为 0 或缺失
+   - 作者粉丝数缺失
+   - 内容摘要过短（< 50字）
+   - 标题包含负面关键词（投诉、问题、失望、维权等）
+   
+   **补充方法**：
+   ```bash
+   # 使用 web_fetch 获取完整页面
+   web_fetch <url>
+   ```
+   
+   **从完整页面提取**：
+   - 完整内容文本（用于情感分析）
+   - 准确的互动数据（点赞、评论、转发）
+   - 作者详细信息（粉丝数、认证状态）
+   - 发布时间（如果缺失）
+   - 评论摘要（前5条，用于情感分析）
+   
+   **注意事项**：
+   - 优先补充高影响力内容（估算影响力 > 500）
+   - 优先补充疑似负面内容
+   - 控制 web_fetch 调用次数（建议每平台不超过 5 次）
+   - 如果 web_fetch 失败，使用原始数据
 
-**特别关注汽车媒体大V：**
-识别以下类型的账号并标注：
-- 汽车之家官方/编辑
-- 懂车帝认证编辑
-- 易车网认证作者
-- 知名汽车博主（粉丝>10万）
-- 汽车行业KOL
-- 新能源汽车专业评测人
+4. **数据过滤**
+   - 排除包含排除关键词的结果（如"招聘"、"代理"、"二手车"）
+   - 过滤互动数过低的内容（< {{min_engagement}}）
+   - 去重（相同URL或相同内容）
+
+5. **识别汽车媒体大V**
+   根据以下条件标注：
+   - ⭐ 官方媒体：author 包含"汽车之家"、"懂车帝"、"易车"、"新出行"、"电动邦"、"42号车库"等
+   - 🎖️ 认证用户：verified = true
+   - 👑 行业KOL：followers > {{kol_min_followers}}（默认100000）
+   - ✅ 普通认证：verified = true 但粉丝数较少
+   
+   **媒体白名单**（自动识别为高影响力）：
+   - 汽车之家、懂车帝、易车网
+   - 新出行、电动邦、42号车库
+   - 汽车公社、车东西、36氪汽车
+   - 虎嗅汽车、钛媒体汽车
+
+6. **作者影响力评估**（用于补充缺失的粉丝数）
+   
+   如果粉丝数缺失，根据作者名称估算：
+   - 知名媒体（白名单）：1,000,000
+   - 包含"评测"、"测评"：100,000
+   - 包含"车主"、"用户"：10,000
+   - 其他：50,000（默认值）
 
 ### 第三步：情感分析
 
@@ -125,20 +183,38 @@
 
 计算每条提及的影响力分数：
 
-**计算公式：**
+**计算公式（改进版）：**
 ```
 影响力分数 = 
-  作者粉丝数 × 0.3 +
-  点赞数 × 0.25 +
-  转发/分享数 × 0.25 +
-  评论/回复数 × 0.2
+  (作者粉丝数 or 估算值) × 0.2 +
+  (点赞数 or 0) × 0.2 +
+  (转发/分享数 or 0) × 0.2 +
+  (评论/回复数 or 0) × 0.2 +
+  作者影响力加成 × 0.2
 ```
 
-**影响力等级：**
+**作者影响力加成**：
+- 知名媒体（白名单）：+1000
+- 认证用户：+500
+- 包含"评测"、"测评"：+300
+- 普通用户：+100
+
+**数据缺失处理**：
+- 如果粉丝数缺失，使用估算值（见第二步）
+- 如果互动数缺失，使用 0（保守估计）
+- 如果所有数据都缺失，仅使用作者影响力加成
+
+**影响力等级**：
 - 0-100: 低影响力
 - 100-500: 中等影响力
 - 500-1000: 高影响力
 - 1000+: 极高影响力
+
+**数据质量标识**：
+在报告中标注数据完整度：
+- ✅ 完整数据（所有字段都有）
+- ⚠️ 部分数据（部分字段缺失）
+- ❌ 估算数据（主要基于估算）
 
 ### 第五步：警报检测
 

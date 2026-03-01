@@ -1,6 +1,6 @@
 ---
 name: brand-monitor
-version: 1.1.0
+version: 1.2.0
 description: 新能源汽车品牌舆情监控 - 自动搜索、分析国内平台的品牌提及情况
 author: OpenClaw Community
 license: MIT
@@ -12,7 +12,7 @@ keywords:
   - new-energy-vehicle
   - automotive
 allowed-tools:
-  - web_search
+  - shell
   - web_fetch
   - message
 compatibility:
@@ -162,14 +162,22 @@ compatibility:
 - 智驾故障、OTA 问题
 - 售后服务、维权
 
+## 技术实现
+
+此 skill 使用自定义 Python 爬虫实现搜索功能：
+- ✅ 不依赖第三方搜索 API（无需 Brave/Perplexity API Key）
+- ✅ 直接访问各平台获取数据
+- ✅ 支持代理配置，适合国内外用户
+- ✅ 可扩展，易于添加新平台
+- ✅ 所有数据处理在本地完成
+
 ## 安全性
 
 此 skill：
-- ✅ 只使用 OpenClaw 内置工具（web_search, web_fetch, message）
-- ✅ 不执行任何 shell 命令
-- ✅ 不访问文件系统
+- ✅ 使用本地 Python 爬虫（crawler/search_crawler.py）
+- ✅ 只执行受控的爬虫脚本
 - ✅ 不发送数据到第三方服务器（除了配置的飞书 Webhook）
-- ✅ 所有数据处理在本地完成
+- ✅ 遵守平台的使用规则和反爬虫策略
 
 ## 依赖
 

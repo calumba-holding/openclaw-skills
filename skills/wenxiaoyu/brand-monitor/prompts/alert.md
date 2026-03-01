@@ -10,50 +10,30 @@
 
 ### 第一步：快速搜索
 
-搜索过去 {{alert_hours}} 小时的最新提及：
+使用 SerpAPI 爬虫快速搜索最新提及（过去 {{alert_hours}} 小时）：
 
-**微博（最优先 - 传播最快）:**
-```
-"{{brand_name}}" site:weibo.com after:{timestamp}
-"{{brand_name}}" 新能源 site:weibo.com
-```
-
-**小红书（用户真实反馈）:**
-```
-"{{brand_name}}" site:xiaohongshu.com after:{timestamp}
+```bash
+cd ~/.openclaw/workspace/skills/brand-monitor/crawler
+python search_crawler_serpapi.py "{{brand_name}}" "weibo,xiaohongshu,autohome,zhihu" 10 {{alert_hours}}
 ```
 
-**汽车之家（专业讨论）:**
-```
-"{{brand_name}}" site:autohome.com.cn after:{timestamp}
-```
+**参数说明：**
+- 参数1：搜索关键词 - {{brand_name}}
+- 参数2：平台列表 - weibo,xiaohongshu,autohome,zhihu
+- 参数3：每平台最大结果数 - 10（快速模式）
+- 参数4：时间范围（小时）- {{alert_hours}}
 
-**懂车帝（视频评测）:**
-```
-"{{brand_name}}" site:dongchedi.com after:{timestamp}
-```
+**搜索优先级（按传播速度和影响力）：**
+1. weibo - 微博（传播最快，影响力最大）
+2. xiaohongshu - 小红书（用户真实体验）
+3. autohome - 汽车之家（专业讨论）
+4. zhihu - 知乎（深度分析）
 
-**知乎（深度讨论）:**
-```
-"{{brand_name}}" site:zhihu.com after:{timestamp}
-```
-
-**百度贴吧（车友交流）:**
-```
-"{{brand_name}}" site:tieba.baidu.com after:{timestamp}
-```
-
-**抖音/快手（短视频）:**
-```
-"{{brand_name}}" site:douyin.com OR site:kuaishou.com
-```
-
-**搜索优先级：**
-1. 微博（传播最快，影响力最大）
-2. 小红书（用户真实体验）
-3. 汽车之家（专业讨论）
-4. 知乎（深度分析）
-5. 其他平台
+**快速模式特点：**
+- 每平台只获取最新 10 条
+- 时间范围：{{alert_hours}} 小时
+- SerpAPI 自动按时间排序
+- 优先返回最新内容
 
 ### 第二步：快速筛选
 
