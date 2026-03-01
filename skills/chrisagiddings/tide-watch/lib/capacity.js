@@ -144,14 +144,90 @@ function parseSession(sessionPath, registry = null) {
 }
 
 /**
- * Get maximum tokens for a model
+ * Get context limit from OpenClaw CLI (primary method)
  * @param {string} model - Model identifier
- * @returns {number} Max tokens
+ * @returns {number|null} Context limit or null if not found
  */
-function getModelMaxTokens(model) {
-  // Common model context windows
+function getContextFromCLI(model) {
+  const { execSync } = require('child_process');
+  
+  try {
+    const output = execSync('openclaw models list', { 
+      encoding: 'utf8',
+      timeout: 5000,
+      stdio: ['ignore', 'pipe', 'ignore'] // Suppress stderr
+    });
+    
+    // Parse table format:
+    // Model                          Input      Ctx      Local
+    // anthropic/claude-sonnet-4-5    text+image 195k     no
+    
+    const lines = output.split('\n');
+    for (const line of lines) {
+      // Check if line contains the model (handle both full and partial matches)
+      if (line.includes(model)) {
+        // Extract context window: look for pattern like "195k" or "1000k"
+        const match = line.match(/\s+(\d+)k\s+/);
+        if (match) {
+          return parseInt(match[1]) * 1000;
+        }
+      }
+    }
+  } catch (error) {
+    // CLI not available or command failed - fall through to next method
+  }
+  
+  return null;
+}
+
+/**
+ * Get context limit from OpenClaw config file (secondary method)
+ * @param {string} model - Model identifier
+ * @returns {number|null} Context limit or null if not found
+ */
+function getContextFromConfig(model) {
+  const configPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
+  
+  try {
+    if (!fs.existsSync(configPath)) {
+      return null;
+    }
+    
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const providers = config.models?.providers || {};
+    
+    // Search all providers for matching model
+    for (const provider of Object.values(providers)) {
+      const models = provider.models || [];
+      for (const modelDef of models) {
+        // Match by exact ID or partial match
+        const modelId = modelDef.id || '';
+        if (modelId === model || 
+            modelId.includes(model) || 
+            model.includes(modelId)) {
+          if (modelDef.contextWindow) {
+            return modelDef.contextWindow;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    // Config file missing or parse error - fall through to defaults
+  }
+  
+  return null;
+}
+
+/**
+ * Get context limit from hardcoded defaults (tertiary fallback)
+ * @param {string} model - Model identifier
+ * @returns {number} Context limit (never null, always returns a value)
+ */
+function getContextFromDefaults(model) {
+  // Common model context windows (fallback only)
   const modelLimits = {
     'anthropic/claude-sonnet-4-5': 200000,
+    'anthropic/claude-sonnet-4-6': 200000,
     'anthropic/claude-opus-4-5': 200000,
     'anthropic/claude-opus-4-6': 200000,
     'anthropic/claude-haiku-4-5': 200000,
@@ -159,7 +235,14 @@ function getModelMaxTokens(model) {
     'openai/gpt-4-turbo': 128000,
     'openai/gpt-5.2': 200000,
     'openai/o1': 200000,
+    'google/gemini-2.5-flash': 1000000,
+    'google/gemini-3.1-pro': 2000000,
+    'gemini-2.5-flash': 1000000,
+    'gemini-3.1-pro': 2000000,
+    'gemini-3.1-pro-preview': 2000000,
     'deepseek/deepseek-chat': 64000,
+    'ollama/llama3.2': 128000,
+    'ollama/qwen2.5:14b': 128000,
   };
   
   // Check exact match
@@ -174,8 +257,68 @@ function getModelMaxTokens(model) {
     }
   }
   
-  // Default to 200k for unknown models
+  // Conservative default for unknown models
   return 200000;
+}
+
+/**
+ * Get maximum tokens for a model (three-tier fallback)
+ * @param {string} model - Model identifier
+ * @returns {number} Max tokens
+ */
+function getModelMaxTokens(model) {
+  // Tier 1: Try OpenClaw CLI (most reliable, includes all configured models)
+  const cliLimit = getContextFromCLI(model);
+  if (cliLimit !== null) {
+    return cliLimit;
+  }
+  
+  // Tier 2: Try config file (works offline, structured data)
+  const configLimit = getContextFromConfig(model);
+  if (configLimit !== null) {
+    return configLimit;
+  }
+  
+  // Tier 3: Hardcoded defaults (graceful fallback)
+  return getContextFromDefaults(model);
+}
+
+/**
+ * Format a number as human-readable size (k/M notation)
+ * @param {number} num - Number to format
+ * @returns {string} Formatted size (e.g., "18.7k", "1.0M", "171k")
+ */
+function formatSize(num) {
+  if (num >= 1000000) {
+    // 1M+ -> show as M with one decimal
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 100000) {
+    // 100k+ -> show as k without decimal
+    return Math.round(num / 1000) + 'k';
+  } else if (num >= 1000) {
+    // 1k-100k -> show as k with one decimal
+    return (num / 1000).toFixed(1) + 'k';
+  } else {
+    // < 1k -> show raw number
+    return num.toString();
+  }
+}
+
+/**
+ * Format token count for display
+ * @param {number} used - Tokens used
+ * @param {number} max - Maximum tokens
+ * @param {boolean} rawSize - If true, show exact numbers with commas
+ * @returns {string} Formatted token string (e.g., "171k/195k" or "171,030/195,000")
+ */
+function formatTokens(used, max, rawSize = false) {
+  if (rawSize) {
+    // Raw mode: full precision with commas
+    return `${used.toLocaleString()}/${max.toLocaleString()}`;
+  }
+  
+  // Relative mode: human-readable
+  return `${formatSize(used)}/${formatSize(max)}`;
 }
 
 /**
@@ -192,14 +335,101 @@ function getStatus(percentage) {
 }
 
 /**
- * Get all sessions from the OpenClaw sessions directory
+ * Discover all configured agents from OpenClaw config
+ * @returns {Array} List of agent configs with session directories
+ */
+function discoverAgents() {
+  const configPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
+  
+  // Graceful degradation if config doesn't exist
+  if (!fs.existsSync(configPath)) {
+    return [{
+      id: 'main',
+      name: 'main',
+      sessionDir: DEFAULT_SESSION_DIR
+    }];
+  }
+  
+  try {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const agentsList = config.agents?.list || [];
+    
+    if (agentsList.length === 0) {
+      // Fallback to main agent if no agents defined
+      return [{
+        id: 'main',
+        name: 'main',
+        sessionDir: DEFAULT_SESSION_DIR
+      }];
+    }
+    
+    return agentsList.map(agent => ({
+      id: agent.id,
+      name: agent.name || agent.id,
+      identity: agent.identity || {},
+      sessionDir: resolveSessionDir(agent)
+    }));
+  } catch (error) {
+    console.warn(`Warning: Could not load OpenClaw config: ${error.message}`);
+    // Fallback to main agent
+    return [{
+      id: 'main',
+      name: 'main',
+      sessionDir: DEFAULT_SESSION_DIR
+    }];
+  }
+}
+
+/**
+ * Resolve session directory for an agent
+ * @param {Object} agent - Agent configuration object
+ * @returns {string} Path to agent's session directory
+ */
+function resolveSessionDir(agent) {
+  const agentsBase = path.join(os.homedir(), '.openclaw', 'agents');
+  
+  // Try multiple possible locations
+  const possiblePaths = [];
+  
+  // 1. agentDir/sessions (if agentDir is specified)
+  if (agent.agentDir) {
+    possiblePaths.push(path.join(agent.agentDir, 'sessions'));
+  }
+  
+  // 2. Parent of agentDir if agentDir ends with /agent
+  if (agent.agentDir && agent.agentDir.endsWith('/agent')) {
+    const parentDir = path.dirname(agent.agentDir);
+    possiblePaths.push(path.join(parentDir, 'sessions'));
+  }
+  
+  // 3. Standard location: ~/.openclaw/agents/{agentId}/sessions
+  possiblePaths.push(path.join(agentsBase, agent.id, 'sessions'));
+  
+  // Return first path that exists
+  for (const dir of possiblePaths) {
+    try {
+      if (fs.existsSync(dir)) {
+        return fs.realpathSync(dir);
+      }
+    } catch {
+      // Continue to next path
+    }
+  }
+  
+  // None exist, return the most likely default
+  return possiblePaths[possiblePaths.length - 1];
+}
+
+/**
+ * Get sessions from a specific directory
  * @param {string} sessionDir - Path to sessions directory
+ * @param {string} agentId - Optional agent ID for metadata
+ * @param {string} agentName - Optional agent name for metadata
  * @returns {Array} Array of session objects
  */
-function getAllSessions(sessionDir = DEFAULT_SESSION_DIR) {
+function getSessionsFromDir(sessionDir, agentId = null, agentName = null) {
   try {
     if (!fs.existsSync(sessionDir)) {
-      console.error(`Session directory not found: ${sessionDir}`);
       return [];
     }
 
@@ -214,6 +444,13 @@ function getAllSessions(sessionDir = DEFAULT_SESSION_DIR) {
         const sessionPath = path.join(sessionDir, file);
         const session = parseSession(sessionPath, registry);
         if (session) {
+          // Annotate with agent metadata if provided
+          if (agentId) {
+            session.agentId = agentId;
+            session.agentName = agentName || agentId;
+          }
+          // IMPORTANT: Track source directory for archiving
+          session.sessionDir = sessionDir;
           sessions.push(session);
         }
       }
@@ -221,9 +458,44 @@ function getAllSessions(sessionDir = DEFAULT_SESSION_DIR) {
 
     return sessions;
   } catch (error) {
-    console.error('Error reading sessions:', error.message);
+    console.error(`Error reading sessions from ${sessionDir}:`, error.message);
     return [];
   }
+}
+
+/**
+ * Get all sessions from the OpenClaw sessions directory
+ * @param {string} sessionDir - Path to sessions directory (explicit override)
+ * @param {boolean} multiAgent - Enable multi-agent discovery (default: true)
+ * @param {Array} excludeAgents - Agent IDs to exclude
+ * @returns {Array} Array of session objects
+ */
+function getAllSessions(sessionDir = null, multiAgent = true, excludeAgents = []) {
+  // Explicit directory override (backward compatible)
+  if (sessionDir) {
+    return getSessionsFromDir(sessionDir);
+  }
+  
+  // Single-agent mode (opt-out)
+  if (!multiAgent) {
+    return getSessionsFromDir(DEFAULT_SESSION_DIR, 'main', 'main');
+  }
+  
+  // Multi-agent discovery (new default)
+  const agents = discoverAgents();
+  const allSessions = [];
+  
+  for (const agent of agents) {
+    // Skip excluded agents
+    if (excludeAgents.includes(agent.id)) {
+      continue;
+    }
+    
+    const sessions = getSessionsFromDir(agent.sessionDir, agent.id, agent.name);
+    allSessions.push(...sessions);
+  }
+  
+  return allSessions;
 }
 
 /**
@@ -392,69 +664,90 @@ function getSessionsOlderThan(sessions, hours) {
  * @param {boolean} dryRun - If true, don't actually move files
  * @returns {Object} Archive results
  */
-function archiveSessions(sessions, sessionDir = DEFAULT_SESSION_DIR, dryRun = false) {
-  const archiveDir = path.join(sessionDir, 'archive', new Date().toISOString().split('T')[0]);
-  
+function archiveSessions(sessions, sessionDir = null, dryRun = false) {
   const results = {
     archived: [],
     failed: [],
     dryRun
   };
   
-  if (!dryRun) {
-    // Create archive directory
-    try {
-      fs.mkdirSync(archiveDir, { recursive: true });
-    } catch (error) {
-      console.error(`Failed to create archive directory: ${error.message}`);
-      return results;
-    }
-  }
+  // Group sessions by their source directory (for multi-agent support)
+  const sessionsByDir = new Map();
   
   for (const session of sessions) {
-    const sourcePath = path.join(sessionDir, `${session.sessionId}.jsonl`);
-    const targetPath = path.join(archiveDir, `${session.sessionId}.jsonl`);
-    
-    if (!fs.existsSync(sourcePath)) {
-      results.failed.push({
-        sessionId: session.sessionId,
-        reason: 'File not found'
-      });
-      continue;
+    // Use session's own sessionDir if available, otherwise fall back to provided sessionDir
+    const dir = session.sessionDir || sessionDir || DEFAULT_SESSION_DIR;
+    if (!sessionsByDir.has(dir)) {
+      sessionsByDir.set(dir, []);
     }
+    sessionsByDir.get(dir).push(session);
+  }
+  
+  // Archive each group to its respective directory
+  for (const [dir, dirSessions] of sessionsByDir) {
+    const archiveDir = path.join(dir, 'archive', new Date().toISOString().split('T')[0]);
     
     if (!dryRun) {
+      // Create archive directory
       try {
-        // Move file to archive
-        fs.renameSync(sourcePath, targetPath);
-        
-        // Update sessions.json registry
-        updateSessionRegistry(sessionDir, session.sessionId, 'remove');
-        
+        fs.mkdirSync(archiveDir, { recursive: true });
+      } catch (error) {
+        console.error(`Failed to create archive directory ${archiveDir}: ${error.message}`);
+        dirSessions.forEach(session => {
+          results.failed.push({
+            sessionId: session.sessionId,
+            reason: `Failed to create archive directory: ${error.message}`
+          });
+        });
+        continue;
+      }
+    }
+    
+    for (const session of dirSessions) {
+      const sourcePath = path.join(dir, `${session.sessionId}.jsonl`);
+      const targetPath = path.join(archiveDir, `${session.sessionId}.jsonl`);
+      
+      if (!fs.existsSync(sourcePath)) {
+        results.failed.push({
+          sessionId: session.sessionId,
+          reason: 'File not found'
+        });
+        continue;
+      }
+      
+      if (!dryRun) {
+        try {
+          // Move file to archive
+          fs.renameSync(sourcePath, targetPath);
+          
+          // Update sessions.json registry
+          updateSessionRegistry(dir, session.sessionId, 'remove');
+          
+          results.archived.push({
+            sessionId: session.sessionId,
+            channel: session.channel,
+            label: session.label,
+            lastActivity: session.lastActivity,
+            capacity: session.percentage,
+            archivedTo: targetPath
+          });
+        } catch (error) {
+          results.failed.push({
+            sessionId: session.sessionId,
+            reason: error.message
+          });
+        }
+      } else {
+        // Dry run - just record what would happen
         results.archived.push({
           sessionId: session.sessionId,
           channel: session.channel,
           label: session.label,
           lastActivity: session.lastActivity,
           capacity: session.percentage,
-          archivedTo: targetPath
-        });
-      } catch (error) {
-        results.failed.push({
-          sessionId: session.sessionId,
-          reason: error.message
+          wouldArchiveTo: targetPath
         });
       }
-    } else {
-      // Dry run - just record what would happen
-      results.archived.push({
-        sessionId: session.sessionId,
-        channel: session.channel,
-        label: session.label,
-        lastActivity: session.lastActivity,
-        capacity: session.percentage,
-        wouldArchiveTo: targetPath
-      });
     }
   }
   
@@ -497,14 +790,15 @@ function updateSessionRegistry(sessionDir, sessionId, action) {
 /**
  * Format session data as a table row
  * @param {Object} session - Session object
+ * @param {boolean} rawSize - If true, show exact token counts
  * @returns {string} Formatted table row
  */
-function formatTableRow(session) {
+function formatTableRow(session, rawSize = false) {
   const sessionId = session.sessionId.substring(0, 8);
   const channel = session.channel.padEnd(12);
   const model = (session.model || 'unknown').substring(0, 25).padEnd(25);
   const capacity = `${session.percentage.toFixed(1)}%`.padStart(6);
-  const tokens = `${session.tokensUsed.toLocaleString()}/${session.tokensMax.toLocaleString()}`.padStart(20);
+  const tokens = formatTokens(session.tokensUsed, session.tokensMax, rawSize).padStart(rawSize ? 20 : 13);
   const status = session.status.padEnd(15);
   
   return `${sessionId}  ${channel}  ${model}  ${capacity}  ${tokens}  ${status}`;
@@ -513,13 +807,14 @@ function formatTableRow(session) {
 /**
  * Format sessions as a table
  * @param {Array} sessions - Array of session objects
+ * @param {boolean} rawSize - If true, show exact token counts
  * @returns {string} Formatted table
  */
-function formatTable(sessions) {
+function formatTable(sessions, rawSize = false) {
   const header = 'Session   Channel       Model                      Cap %              Tokens  Status';
   const separator = '-'.repeat(header.length);
   
-  const rows = sessions.map(formatTableRow);
+  const rows = sessions.map(s => formatTableRow(s, rawSize));
   
   return [header, separator, ...rows].join('\n');
 }
@@ -683,11 +978,14 @@ function parseTimeString(timeStr) {
  * @param {Map} changes - Optional map of sessionId -> change info (for watch mode)
  * @returns {string} Formatted dashboard
  */
-function formatDashboard(sessions, changes = null) {
+function formatDashboard(sessions, changes = null, rawSize = false) {
   const sorted = sortByCapacity(sessions);
   const gatewayStatus = checkGatewayStatus();
   
-  // ANSI color codes
+  // Check if we have multi-agent sessions
+  const hasMultiAgent = sorted.some(s => s.agentName && s.agentName !== 'main');
+  
+  // ANSL color codes
   const colors = {
     reset: '\x1b[0m',
     red: '\x1b[31m',      // Capacity increasing (bad)
@@ -700,26 +998,39 @@ function formatDashboard(sessions, changes = null) {
   lines.push('');
   lines.push('TIDE WATCH DASHBOARD 🌊');
   lines.push(`Gateway Status: ${gatewayStatus.emoji} ${gatewayStatus.status}`);
-  lines.push('─'.repeat(135));
   
-  // Add Trend column header if we have changes
-  const header = changes 
-    ? 'Session ID  Channel/Label     Model                      Capacity                    Tokens        Last Active  Trend'
-    : 'Session ID  Channel/Label     Model                      Capacity                    Tokens        Last Active';
+  // Adjust layout for multi-agent mode
+  let separatorLength, header;
+  if (hasMultiAgent) {
+    separatorLength = changes ? 155 : 140;
+    header = changes 
+      ? 'Session ID  Agent        Channel/Label     Model                      Capacity                    Tokens        Last Active  Trend'
+      : 'Session ID  Agent        Channel/Label     Model                      Capacity                    Tokens        Last Active';
+  } else {
+    separatorLength = changes ? 135 : 120;
+    header = changes 
+      ? 'Session ID  Channel/Label     Model                      Capacity                    Tokens        Last Active  Trend'
+      : 'Session ID  Channel/Label     Model                      Capacity                    Tokens        Last Active';
+  }
+  
+  lines.push('─'.repeat(separatorLength));
   lines.push(header);
-  lines.push('─'.repeat(135));
+  lines.push('─'.repeat(separatorLength));
   
   sorted.forEach(session => {
     const id = session.sessionId.substring(0, 10).padEnd(10);
+    const agentName = hasMultiAgent ? (session.agentName || 'main').substring(0, 11).padEnd(11) : '';
     const channelLabel = formatChannelLabel(session.channel, session.label).substring(0, 16).padEnd(16);
     const model = (session.model || 'unknown').substring(0, 25).padEnd(25);
     const emoji = getCapacityEmoji(session.percentage);
     const bar = getCapacityBar(session.percentage, 10);
     const pct = `${session.percentage.toFixed(1)}%`.padStart(6);
-    const tokens = `${session.tokensUsed.toLocaleString()}/${session.tokensMax.toLocaleString()}`.padStart(13);
+    const tokens = formatTokens(session.tokensUsed, session.tokensMax, rawSize).padStart(rawSize ? 20 : 13);
     const lastActive = formatRelativeTime(session.lastActivity).padStart(10);
     
-    let line = `${id}  ${channelLabel}  ${model}  ${emoji} ${bar} ${pct}  ${tokens}  ${lastActive}`;
+    let line = hasMultiAgent 
+      ? `${id}  ${agentName}  ${channelLabel}  ${model}  ${emoji} ${bar} ${pct}  ${tokens}  ${lastActive}`
+      : `${id}  ${channelLabel}  ${model}  ${emoji} ${bar} ${pct}  ${tokens}  ${lastActive}`;
     
     // Add trend information if we have changes
     if (changes && changes.has(session.sessionId)) {
@@ -746,8 +1057,7 @@ function formatDashboard(sessions, changes = null) {
     lines.push(line);
   });
   
-  // Match separator to header length
-  const separatorLength = changes ? 135 : 120;
+  // Match separator to header length (already defined above)
   lines.push('─'.repeat(separatorLength));
   
   // Summary
@@ -766,6 +1076,36 @@ function formatDashboard(sessions, changes = null) {
     lines.push(`⚠️  ${summary.join(', ')}`);
   } else {
     lines.push('✅ All sessions healthy');
+  }
+  
+  // Multi-agent summary
+  if (hasMultiAgent) {
+    lines.push('');
+    lines.push('Summary by Agent:');
+    
+    // Group sessions by agent
+    const byAgent = new Map();
+    sorted.forEach(session => {
+      const agentName = session.agentName || 'main';
+      if (!byAgent.has(agentName)) {
+        byAgent.set(agentName, []);
+      }
+      byAgent.get(agentName).push(session);
+    });
+    
+    // Display per-agent stats
+    for (const [agentName, agentSessions] of byAgent) {
+      const count = agentSessions.length;
+      const avgCapacity = agentSessions.reduce((sum, s) => sum + s.percentage, 0) / count;
+      const maxCapacity = Math.max(...agentSessions.map(s => s.percentage));
+      
+      const agentDisplay = agentName.padEnd(10);
+      const countDisplay = `${count} session${count !== 1 ? 's' : ''}`.padEnd(12);
+      const avgDisplay = `avg ${avgCapacity.toFixed(1)}%`.padEnd(10);
+      const maxDisplay = `max ${maxCapacity.toFixed(1)}%`;
+      
+      lines.push(`  ${agentDisplay} ${countDisplay} ${avgDisplay} ${maxDisplay}`);
+    }
   }
   
   lines.push('');
@@ -871,6 +1211,9 @@ module.exports = {
   loadSessionRegistry,
   parseSession,
   getAllSessions,
+  getSessionsFromDir,
+  discoverAgents,
+  resolveSessionDir,
   getSession,
   resolveSessionId,
   filterByThreshold,
@@ -880,6 +1223,7 @@ module.exports = {
   formatTable,
   formatJSON,
   formatDashboard,
+  formatTokens,
   formatChannelLabel,
   formatRelativeTime,
   parseTimeString,

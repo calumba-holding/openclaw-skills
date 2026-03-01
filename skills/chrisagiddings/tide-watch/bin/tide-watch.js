@@ -16,11 +16,14 @@ const {
   formatTable,
   formatJSON,
   formatDashboard,
+  formatTokens,
   formatRelativeTime,
   parseTimeString,
   archiveSessions,
   DEFAULT_SESSION_DIR
 } = require('../lib/capacity');
+
+const path = require('path');
 
 const USAGE = `
 Tide Watch 🌊 - OpenClaw Session Capacity Monitor
@@ -29,7 +32,8 @@ USAGE:
   tide-watch check [--session <key>]     Check current or specific session
   tide-watch report [--all]               List all sessions (or above threshold)
   tide-watch dashboard                    Visual dashboard with recommendations
-  tide-watch archive --older-than <time>  Archive old sessions
+  tide-watch archive --older-than <time>  Archive old sessions (time-based)
+  tide-watch archive --session <id>       Archive specific session(s)
   tide-watch resume-prompt <action>      Manage session resumption prompts
   tide-watch status                       Quick status summary
   tide-watch help                         Show this help
@@ -37,6 +41,7 @@ USAGE:
 OPTIONS:
   --session <key>      Target a specific session (ID, label, channel, or combo)
                        Examples: abc123, "#navi-code-yatta", discord, "discord/#channel"
+                       For archive: can be specified multiple times to archive several sessions
   --all                Show all sessions regardless of capacity
   --threshold <num>    Filter sessions above this percentage (default: 75)
   --active <hours>     Only show sessions active within N hours (e.g., --active 24)
@@ -49,6 +54,12 @@ OPTIONS:
   --watch              Live updates (dashboard only, refreshes every 10s)
   --session-dir <path> Custom session directory (default: ~/.openclaw/agents/main/sessions)
   
+MULTI-AGENT:
+  --all-agents              Multi-agent discovery mode (default, auto-discovers from OpenClaw config)
+  --single-agent-only       Single-agent mode (main agent only, disables auto-discovery)
+  --agent <id>              Filter to specific agent
+  --exclude-agent <id>      Exclude specific agent (can be used multiple times)
+
 CONFIGURATION:
   --refresh-interval <seconds>   Dashboard refresh interval (default: 10, min: 1, max: 300)
   --gateway-interval <seconds>   Gateway status check interval (default: 30, min: 5, max: 600)
@@ -70,6 +81,9 @@ EXAMPLES:
   tide-watch archive --older-than 4d --dry-run    # Preview archiving sessions older than 4 days
   tide-watch archive --older-than 2w              # Archive sessions older than 2 weeks
   tide-watch archive --older-than 1mo --exclude-channel discord  # Archive but keep Discord
+  tide-watch archive --session abc123             # Archive specific session by ID
+  tide-watch archive --session "#navi-code"       # Archive specific session by label
+  tide-watch archive --session abc123 --session def456  # Archive multiple sessions
   tide-watch resume-prompt edit                  # Edit resumption prompt for current session
   tide-watch resume-prompt show                  # Show current resumption prompt
   tide-watch resume-prompt list                  # List all resumption prompts
@@ -100,6 +114,7 @@ function parseArgs() {
   const options = {
     command: args[0] || 'help',
     session: null,
+    sessions: [],  // For archive command: multiple sessions
     all: false,
     threshold: 75,
     activeHours: null,
@@ -110,18 +125,31 @@ function parseArgs() {
     json: false,
     pretty: false,
     watch: false,
-    sessionDir: DEFAULT_SESSION_DIR,
+    sessionDir: null,  // null = auto-discover (not DEFAULT_SESSION_DIR)
+    // Multi-agent options
+    multiAgent: true,
+    singleAgentOnly: false,
+    agent: null,
+    excludeAgents: [],
     // Config overrides (CLI flags)
     refreshInterval: null,
     gatewayInterval: null,
-    gatewayTimeout: null
+    gatewayTimeout: null,
+    // Display options
+    rawSize: false
   };
 
   for (let i = 1; i < args.length; i++) {
     const arg = args[i];
     
     if (arg === '--session' && i + 1 < args.length) {
-      options.session = args[++i];
+      const sessionValue = args[++i];
+      // For archive command: support multiple --session flags
+      if (options.command === 'archive') {
+        options.sessions.push(sessionValue);
+      }
+      // For other commands: single session only
+      options.session = sessionValue;
     } else if (arg === '--all') {
       options.all = true;
     } else if (arg === '--threshold' && i + 1 < args.length) {
@@ -150,6 +178,18 @@ function parseArgs() {
       options.gatewayInterval = parseInt(args[++i], 10);
     } else if (arg === '--gateway-timeout' && i + 1 < args.length) {
       options.gatewayTimeout = parseInt(args[++i], 10);
+    } else if (arg === '--single-agent-only') {
+      options.singleAgentOnly = true;
+      options.multiAgent = false;
+    } else if (arg === '--all-agents') {
+      options.multiAgent = true;
+      options.singleAgentOnly = false;
+    } else if (arg === '--agent' && i + 1 < args.length) {
+      options.agent = args[++i];
+    } else if (arg === '--exclude-agent' && i + 1 < args.length) {
+      options.excludeAgents.push(args[++i]);
+    } else if (arg === '--raw-size') {
+      options.rawSize = true;
     }
   }
 
@@ -186,7 +226,7 @@ function checkCommand(options) {
       console.log(`Model:   ${session.model}`);
       console.log(`Status:  ${session.status}`);
       console.log(`\nCapacity: ${session.percentage}%`);
-      console.log(`Tokens:   ${session.tokensUsed.toLocaleString()} / ${session.tokensMax.toLocaleString()}`);
+      console.log(`Tokens:   ${formatTokens(session.tokensUsed, session.tokensMax, options.rawSize)}`);
       console.log(`Messages: ${session.messageCount}`);
       console.log(`Last Activity: ${new Date(session.lastActivity).toLocaleString()}\n`);
       
@@ -216,7 +256,12 @@ function checkCommand(options) {
  * Report command: List all sessions with capacity info
  */
 function reportCommand(options) {
-  let sessions = getAllSessions(options.sessionDir);
+  let sessions = getAllSessions(options.sessionDir, options.multiAgent, options.excludeAgents);
+  
+  // Filter by agent if specified
+  if (options.agent) {
+    sessions = sessions.filter(s => s.agentId === options.agent || s.agentName === options.agent);
+  }
   
   if (sessions.length === 0) {
     console.log('No sessions found.');
@@ -248,7 +293,7 @@ function reportCommand(options) {
     console.log(formatJSON(sessions, options.pretty));
   } else {
     console.log(`\nTide Watch Report 🌊\n`);
-    console.log(formatTable(sessions));
+    console.log(formatTable(sessions, options.rawSize));
     const filterDesc = options.activeHours ? ` (active in last ${options.activeHours}h)` : '';
     console.log(`\nTotal: ${sessions.length} session(s)${!options.all ? ` above ${options.threshold}%` : ''}${filterDesc}\n`);
   }
@@ -258,7 +303,12 @@ function reportCommand(options) {
  * Status command: Quick summary
  */
 function statusCommand(options) {
-  const sessions = getAllSessions(options.sessionDir);
+  let sessions = getAllSessions(options.sessionDir, options.multiAgent, options.excludeAgents);
+  
+  // Filter by agent if specified
+  if (options.agent) {
+    sessions = sessions.filter(s => s.agentId === options.agent || s.agentName === options.agent);
+  }
   
   if (sessions.length === 0) {
     console.log('No active sessions.');
@@ -297,7 +347,12 @@ function dashboardCommand(options) {
   let previousSessions = new Map();
   
   const showDashboard = () => {
-    let sessions = getAllSessions(options.sessionDir);
+    let sessions = getAllSessions(options.sessionDir, options.multiAgent, options.excludeAgents);
+    
+    // Filter by agent if specified
+    if (options.agent) {
+      sessions = sessions.filter(s => s.agentId === options.agent || s.agentName === options.agent);
+    }
     
     if (sessions.length === 0) {
       console.log('\nNo active sessions found.\n');
@@ -344,7 +399,7 @@ function dashboardCommand(options) {
       }
       
       // Visual dashboard with change highlighting (if available)
-      console.log(formatDashboard(sessions, changes));
+      console.log(formatDashboard(sessions, changes, options.rawSize));
       
       // Show filter info if active
       if (options.activeHours) {
@@ -416,36 +471,110 @@ function computeChanges(previous, current) {
  * Archive command: Move old sessions to archive directory
  */
 function archiveCommand(options) {
-  // Validate required options
-  if (!options.olderThan) {
-    console.error('❌ --older-than <time> is required for archive command');
-    console.error('   Example: tide-watch archive --older-than 4d');
+  // Validate: need either --older-than OR --session (not both, not neither)
+  const hasOlderThan = !!options.olderThan;
+  const hasSessions = options.sessions && options.sessions.length > 0;
+  
+  if (!hasOlderThan && !hasSessions) {
+    console.error('❌ Either --older-than <time> OR --session <id> is required');
+    console.error('   Examples:');
+    console.error('     tide-watch archive --older-than 4d');
+    console.error('     tide-watch archive --session abc123');
+    console.error('     tide-watch archive --session abc123 --session def456');
     process.exit(1);
   }
-
-  // Parse time string
-  let hours;
-  try {
-    hours = parseTimeString(options.olderThan);
-  } catch (error) {
-    console.error(`❌ ${error.message}`);
+  
+  if (hasOlderThan && hasSessions) {
+    console.error('❌ Cannot use --session with --older-than (conflicting criteria)');
+    console.error('   Use one or the other, not both');
     process.exit(1);
   }
-
-  // Get all sessions
-  let sessions = getAllSessions(options.sessionDir);
   
-  if (sessions.length === 0) {
-    console.log('No sessions found.');
-    return;
+  let sessions;
+  
+  // Mode 1: Session-specific archiving
+  if (hasSessions) {
+    // Get all sessions first (needed for multi-agent support)
+    const allSessions = getAllSessions(options.sessionDir, options.multiAgent, options.excludeAgents);
+    
+    sessions = [];
+    
+    for (const sessionInput of options.sessions) {
+      let session = null;
+      
+      // Try direct UUID match first (full ID)
+      session = allSessions.find(s => s.sessionId === sessionInput);
+      
+      // Try partial UUID match (starts with input)
+      if (!session && /^[0-9a-f-]+$/.test(sessionInput)) {
+        const matches = allSessions.filter(s => s.sessionId.startsWith(sessionInput));
+        if (matches.length === 1) {
+          session = matches[0];
+        } else if (matches.length > 1) {
+          console.error(`❌ Ambiguous session ID: ${sessionInput} matches ${matches.length} sessions:`);
+          matches.slice(0, 5).forEach(m => {
+            console.error(`   ${m.sessionId} (${m.channel}${m.label ? '/' + m.label : ''})`);
+          });
+          if (matches.length > 5) {
+            console.error(`   ... and ${matches.length - 5} more`);
+          }
+          process.exit(1);
+        }
+      }
+      
+      // Try resolving by label/channel if not a UUID pattern
+      if (!session) {
+        const resolvedId = resolveSessionInput(sessionInput, options.sessionDir);
+        if (resolvedId) {
+          session = allSessions.find(s => s.sessionId === resolvedId);
+        }
+      }
+      
+      if (!session) {
+        console.error(`❌ Session not found: ${sessionInput}`);
+        process.exit(1);
+      }
+      
+      sessions.push(session);
+    }
+    
+    if (sessions.length === 0) {
+      console.log('No sessions to archive.');
+      return;
+    }
   }
-
-  // Filter to sessions older than threshold
-  sessions = getSessionsOlderThan(sessions, hours);
   
-  if (sessions.length === 0) {
-    console.log(`No sessions older than ${options.olderThan}.`);
-    return;
+  // Mode 2: Time-based archiving (existing behavior)
+  else if (hasOlderThan) {
+    // Parse time string
+    let hours;
+    try {
+      hours = parseTimeString(options.olderThan);
+    } catch (error) {
+      console.error(`❌ ${error.message}`);
+      process.exit(1);
+    }
+
+    // Get all sessions (multi-agent support)
+    sessions = getAllSessions(options.sessionDir, options.multiAgent, options.excludeAgents);
+    
+    // Filter by agent if specified
+    if (options.agent) {
+      sessions = sessions.filter(s => s.agentId === options.agent || s.agentName === options.agent);
+    }
+    
+    if (sessions.length === 0) {
+      console.log('No sessions found.');
+      return;
+    }
+
+    // Filter to sessions older than threshold
+    sessions = getSessionsOlderThan(sessions, hours);
+    
+    if (sessions.length === 0) {
+      console.log(`No sessions older than ${options.olderThan}.`);
+      return;
+    }
   }
 
   // Apply exclusion filters
@@ -463,10 +592,19 @@ function archiveCommand(options) {
   }
 
   // Show what will be/was archived
-  if (options.dryRun) {
-    console.log(`\n${options.dryRun ? 'Would archive' : 'Archiving'} ${sessions.length} session(s) older than ${options.olderThan}:\n`);
+  let archiveDescription;
+  if (hasSessions) {
+    archiveDescription = sessions.length === 1 
+      ? 'specified session' 
+      : `${sessions.length} specified session(s)`;
   } else {
-    console.log(`\nArchiving ${sessions.length} session(s) older than ${options.olderThan}...\n`);
+    archiveDescription = `${sessions.length} session(s) older than ${options.olderThan}`;
+  }
+  
+  if (options.dryRun) {
+    console.log(`\nWould archive ${archiveDescription}:\n`);
+  } else {
+    console.log(`\nArchiving ${archiveDescription}...\n`);
   }
 
   // Display table of sessions to archive
@@ -498,7 +636,24 @@ function archiveCommand(options) {
   // Show results
   if (results.archived.length > 0) {
     console.log(`✅ Archived ${results.archived.length} session(s)`);
-    console.log(`   Location: ${options.sessionDir}/archive/${new Date().toISOString().split('T')[0]}/\n`);
+    
+    // Show archive locations (may be multiple in multi-agent mode)
+    const archiveDirs = new Set();
+    results.archived.forEach(archived => {
+      if (archived.archivedTo) {
+        archiveDirs.add(path.dirname(archived.archivedTo));
+      }
+    });
+    
+    if (archiveDirs.size === 1) {
+      console.log(`   Location: ${archiveDirs.values().next().value}/\n`);
+    } else if (archiveDirs.size > 1) {
+      console.log(`   Locations:`);
+      archiveDirs.forEach(dir => {
+        console.log(`     ${dir}/`);
+      });
+      console.log('');
+    }
   }
 
   if (results.failed.length > 0) {

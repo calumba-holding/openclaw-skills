@@ -5,6 +5,171 @@ All notable changes to Tide Watch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-02-28
+
+### Added
+- **Session-specific archiving** (Fixes #34)
+  - Archive specific sessions by ID: `tide-watch archive --session abc123`
+  - Archive multiple sessions: `tide-watch archive --session abc123 --session def456`
+  - Partial ID matching: `--session 595765f8-c` matches full UUID
+  - Works with labels: `--session "#navi-code-yatta"`
+  - Works with channels: `--session discord`
+  - Supports `--dry-run` for preview
+
+### Changed
+- **Archive command now supports two modes:**
+  - Time-based: `--older-than <time>` (existing behavior)
+  - Session-specific: `--session <id>` (new)
+  - Mutually exclusive: cannot use both together
+  - One is required: must specify either `--older-than` OR `--session`
+
+### Technical
+- Enhanced session resolution with partial UUID matching
+- Validates conflicting flags (--session + --older-than)
+- Multi-agent support for session-specific archiving
+- Updated help text and examples
+
+### Impact
+- Selective archiving after saving specific sessions to memory
+- Archive completed project sessions regardless of age
+- More control over which sessions to archive
+
+---
+
+## [1.3.2] - 2026-02-28
+
+### Added
+- **Human-readable token sizing** (Fixes #33)
+  - Default: Relative sizing (18.7k/128k, 20.6k/1M, 19.3k/2M)
+  - Much easier to scan than comma-separated full numbers
+  - Especially helpful for Gemini (1M-2M contexts)
+  
+- **Optional `--raw-size` flag**
+  - Shows full precision with commas: `18,713/128,000`
+  - Works for one-time output: `tide-watch dashboard --raw-size`
+  - Works for live dashboard: `tide-watch dashboard --watch --raw-size`
+  - NOT persisted (ephemeral, command-line only)
+
+### Changed
+- **Token display format:**
+  - Default: `18.7k/128k` (clear, scannable)
+  - Raw mode: `18,713/128,000` (exact, opt-in)
+  - Formatting rules:
+    - < 1k: raw number (850)
+    - 1k-100k: k with decimal (18.7k)
+    - 100k-1M: k without decimal (171k)
+    - 1M+: M with decimal (1.0M, 2.0M)
+
+### Technical
+- New functions: `formatSize()`, `formatTokens()`
+- Updated: `formatDashboard()`, `formatTable()`, `formatTableRow()`
+- Added `--raw-size` CLI flag parsing
+- Exported `formatTokens` for reuse
+
+### Impact
+- Faster visual scanning of capacity percentages
+- Reduces cognitive load when viewing dashboard
+- Precision available when needed via flag
+
+---
+
+## [1.3.1] - 2026-02-28
+
+### Fixed
+- Display name metadata (ClawHub publication)
+  - Corrected display name to "Tide Watch" (was incorrectly inferred as "OpenClaw Tide Watch")
+  - No code changes, metadata-only republication
+
+---
+
+## [1.3.0] - 2026-02-28
+
+### Added
+- **Dynamic context limit detection** (Fixes #32)
+  - Three-tier fallback: OpenClaw CLI → Config file → Hardcoded defaults
+  - Automatically detects context limits from `openclaw models list`
+  - Falls back to `~/.openclaw/openclaw.json` models.providers
+  - Enhanced hardcoded defaults for Gemini and Ollama models
+  - Future-proof: automatically picks up new models from OpenClaw
+
+### Changed
+- **Accurate capacity percentages for all models:**
+  - Gemini 2.5 Flash: Now shows 2.1% (was 10.3% - 5x improvement)
+  - Gemini 3.1 Pro: Now shows ~1% (was ~10% - 10x improvement)
+  - qwen2.5:14b: Now shows 14.6% (was 9.4% - now accurate)
+  - Claude Sonnet: Uses actual 195k from OpenClaw (was hardcoded 200k)
+
+### Technical
+- New functions: `getContextFromCLI()`, `getContextFromConfig()`, `getContextFromDefaults()`
+- Enhanced `getModelMaxTokens()` with dynamic detection
+- Hardcoded defaults now include Gemini and Ollama variants
+- Graceful degradation when OpenClaw CLI unavailable
+
+### Impact
+- Users with Gemini models see accurate capacity (not false warnings)
+- Users with Ollama models see correct context limits per model
+- Warnings trigger at correct thresholds for all models
+- No more premature session resets for high-context models
+
+---
+
+## [1.2.1] - 2026-02-28
+
+### Fixed
+- Archive command crash with multi-agent sessions (Fixes #31)
+  - Sessions now track their source directory (`session.sessionDir`)
+  - Archive groups sessions by source directory
+  - Each agent's sessions archived to correct agent directory
+  - Handles multiple archive locations properly
+- Missing `path` import in archive command output display
+  - Added `const path = require('path');` to bin/tide-watch.js
+  - Fixed crash after successful archiving
+
+### Technical
+- All 113 tests pass
+- Verified with 19-session multi-agent archive test
+- SECURITY-ASSESSMENT-v1.2.1.md: BENIGN
+
+## [1.2.0] - 2026-02-28
+
+### Added
+- **Multi-agent session discovery** (Fixes #30)
+  - Auto-discovers all configured agents from `~/.openclaw/openclaw.json`
+  - Unified dashboard showing sessions from all agents
+  - Agent column displays agent name/identity for each session
+  - Per-agent summary with counts and average capacity
+  - Zero configuration needed - auto-discovers from OpenClaw setup
+  - Backward compatible - single-agent users see no change
+
+- **Agent filtering and control**
+  - `--all-agents` flag: Multi-agent mode (default)
+  - `--single-agent-only` flag: Legacy single-agent mode (main agent only)
+  - `--agent <id>` flag: Filter dashboard to specific agent
+  - `--exclude-agent <id>` flag: Exclude specific agent (repeatable)
+
+- **Enhanced dashboard formatting**
+  - Agent column when multi-agent sessions detected
+  - Per-agent summary section with stats
+  - Automatic layout adjustment for multi-agent vs single-agent
+  - Agent metadata display (name, identity)
+
+### Changed
+- `getAllSessions()` now auto-discovers multi-agent setups by default
+- Dashboard adapts layout based on agent detection (backward compatible)
+- Session directory resolution improved to handle multiple path conventions
+
+### Fixed
+- Session directory resolution for agents with `agentDir` ending in `/agent`
+- Handles OpenClaw config path variations gracefully
+- Graceful fallback to main agent if config doesn't exist
+
+### Techincal
+- New functions: `discoverAgents()`, `resolveSessionDir()`, `getSessionsFromDir()`
+- Enhanced `formatDashboard()` with multi-agent layout
+- Robust path resolution with multiple fallback locations
+- All 113 tests pass
+- Zero new dependencies
+
 ## [1.1.6] - 2026-02-28
 
 ### Added
