@@ -1,6 +1,7 @@
 import http from "node:http";
 import https from "node:https";
 import { URL } from "node:url";
+import { ISPConfigError, classifyApiMessage } from "./errors";
 import { ISPConfigApiEnvelope, ISPConfigPluginConfig, JsonMap } from "./types";
 
 export class ISPConfigClient {
@@ -33,7 +34,7 @@ export class ISPConfigClient {
       }, true);
 
       if (!res || typeof res !== "string") {
-        throw new Error("ISPConfig login failed: no session_id returned");
+        throw new ISPConfigError("auth_error", "ISPConfig login failed: no session_id returned");
       }
 
       this.sessionId = res;
@@ -71,6 +72,9 @@ export class ISPConfigClient {
   }
 
   private shouldRetrySession(error: unknown): boolean {
+    if (error instanceof ISPConfigError) {
+      return error.code === "auth_error" && error.retryable;
+    }
     if (!(error instanceof Error)) {
       return false;
     }
@@ -104,8 +108,15 @@ export class ISPConfigClient {
         res.on("data", (chunk: Buffer) => chunks.push(chunk));
         res.on("end", () => {
           const txt = Buffer.concat(chunks).toString("utf8");
-          if ((res.statusCode ?? 500) >= 400) {
-            reject(new Error(`ISPConfig HTTP ${res.statusCode}: ${txt}`));
+          const status = res.statusCode ?? 500;
+          if (status >= 400) {
+            const code = status === 401 ? "auth_error"
+              : status === 403 ? "permission_denied"
+              : "api_error";
+            reject(new ISPConfigError(code, `ISPConfig HTTP ${status}: ${txt}`, {
+              statusCode: status,
+              retryable: status >= 500 || status === 401,
+            }));
             return;
           }
           resolve(txt);
@@ -113,10 +124,22 @@ export class ISPConfigClient {
       });
 
       req.on("timeout", () => {
-        req.destroy(new Error(`ISPConfig request timeout after ${this.timeoutMs}ms`));
+        req.destroy(new ISPConfigError("network_error",
+          `ISPConfig request timeout after ${this.timeoutMs}ms`,
+          { retryable: true },
+        ));
       });
 
-      req.on("error", reject);
+      req.on("error", (err) => {
+        if (err instanceof ISPConfigError) {
+          reject(err);
+        } else {
+          reject(new ISPConfigError("network_error", err.message, {
+            retryable: true,
+            cause: err,
+          }));
+        }
+      });
       req.write(payload);
       req.end();
     });
@@ -125,7 +148,8 @@ export class ISPConfigClient {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      throw new Error(`ISPConfig returned non-JSON response: ${raw}`);
+      throw new ISPConfigError("parse_error",
+        `ISPConfig returned non-JSON response: ${raw}`);
     }
 
     if (!unwrapEnvelope) {
@@ -135,7 +159,11 @@ export class ISPConfigClient {
     const envelope = parsed as ISPConfigApiEnvelope<T>;
 
     if (envelope.code && envelope.code !== "ok") {
-      throw new Error(`ISPConfig API ${envelope.code}: ${envelope.message ?? "Unknown error"}`);
+      const msg = `ISPConfig API ${envelope.code}: ${envelope.message ?? "Unknown error"}`;
+      const errorCode = classifyApiMessage(msg);
+      throw new ISPConfigError(errorCode, msg, {
+        retryable: errorCode === "auth_error",
+      });
     }
 
     if (Object.prototype.hasOwnProperty.call(envelope, "response")) {

@@ -1,3 +1,4 @@
+import { ISPConfigError } from "./errors";
 import { ISPConfigPluginConfig } from "./types";
 
 export const WRITE_TOOLS = new Set<string>([
@@ -21,10 +22,16 @@ export const WRITE_TOOLS = new Set<string>([
 export function assertToolAllowed(config: ISPConfigPluginConfig, toolName: string): void {
   const allowed = config.allowedOperations ?? [];
   if (allowed.length > 0 && !allowed.includes(toolName)) {
-    throw new Error(`Tool ${toolName} is blocked by allowedOperations policy`);
+    throw new ISPConfigError("permission_denied",
+      `Tool ${toolName} is blocked by allowedOperations policy`,
+      { statusCode: 403 },
+    );
   }
 
   if ((config.readOnly ?? false) && WRITE_TOOLS.has(toolName)) {
-    throw new Error(`Tool ${toolName} is blocked because readOnly=true`);
+    throw new ISPConfigError("permission_denied",
+      `Tool ${toolName} is blocked because readOnly=true`,
+      { statusCode: 403 },
+    );
   }
 }

@@ -1,4 +1,5 @@
 import pluginManifest from "../openclaw.plugin.json";
+export { ISPConfigError, ISPConfigErrorCode, normalizeError } from "./errors";
 import { createTools } from "./tools";
 import { ISPConfigPluginConfig, JsonMap } from "./types";
 

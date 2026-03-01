@@ -22,6 +22,14 @@ This plugin uses the JSON endpoint format:
 
 ## Installation
 
+### ClawHub
+
+```bash
+clawhub install openclaw-ispconfig
+```
+
+### npm
+
 ```bash
 npm install @elvatis_com/openclaw-ispconfig
 ```

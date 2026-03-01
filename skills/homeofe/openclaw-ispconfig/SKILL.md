@@ -1,31 +1,22 @@
 ---
 name: openclaw-ispconfig
+slug: openclaw-ispconfig
 description: "Manage ISPConfig servers: automated site provisioning, domains, mailboxes, DNS, databases, SSL, backups, and more."
 ---
 
-# @elvatis_com/openclaw-ispconfig
+# openclaw-ispconfig
 
-OpenClaw plugin to manage ISPConfig via the Remote JSON API.
+OpenClaw plugin to manage ISPConfig via the Remote JSON API. 31 tools for sites, DNS, mail, databases, cron, and one-command provisioning.
 
-## Features
+## Install
 
-- Session-based API client with auto-reconnect
-- 31 tools for read, write, and one-command provisioning
-- Safety guards via `readOnly` and `allowedOperations`
-- Live integration tests against a real ISPConfig host (read-only)
+### ClawHub
 
-## ISPConfig API format
+```bash
+clawhub install openclaw-ispconfig
+```
 
-This plugin uses the JSON endpoint format:
-
-- URL: `https://server:8080/remote/json.php?method_name`
-- Method is passed as query string, not in JSON body
-- Body format:
-  - login: `{ "username": "...", "password": "..." }`
-  - normal calls: `{ "session_id": "...", ...params }`
-  - logout: `{ "session_id": "..." }`
-
-## Installation
+### npm
 
 ```bash
 npm install @elvatis_com/openclaw-ispconfig
