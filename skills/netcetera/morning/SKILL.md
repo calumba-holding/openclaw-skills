@@ -2,7 +2,7 @@
 name: morning
 description: "Daily journaling, reflection, and planning. Use when user says 'morning', 'let's plan the day', 'journal', or similar. Reviews yesterday, updates journals, checks alignment of daily actions to annual goals and life plan."
 user-invocable: true
-allowed-tools: Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion
+allowed-tools: Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion, mcp__claude_ai_Actions_Team__listActions, mcp__claude_ai_Actions_Team__listProjects
 ---
 
 # Morning Journaling, Reflection & Planning
@@ -13,25 +13,6 @@ This skill ensures daily activities ladder up to annual goals, which ladder up t
 
 ---
 
-## Setup
-
-This skill expects the following file structure (relative to your workspace root):
-
-```
-workspace/
-├── journal/
-│   └── YYYY/
-│       ├── goals.md          # Annual goals checklist
-│       └── MM/
-│           └── YYYY-MM-DD.md # Daily journal entries
-├── plan.md                   # Long-term life / career plan (optional)
-└── inbox.md                  # Quick capture list
-```
-
-The skill lives at `~/.claude/skills/morning/`. All paths below use `../../` which resolves two levels up from the skill directory. Adjust if your structure differs.
-
----
-
 ## Step 1: Load Context
 
 Read these files in parallel — don't summarize them yet, just load them:
@@ -39,9 +20,10 @@ Read these files in parallel — don't summarize them yet, just load them:
 1. **Yesterday's journal:** `../../journal/YYYY/MM/YYYY-MM-DD.md` (calculate yesterday's date). If it doesn't exist, look back up to 7 days for the most recent entry.
 2. **Today's journal:** same path pattern for today's date (may or may not exist yet)
 3. **Annual goals:** `../../journal/YYYY/goals.md`
-4. **Life plan:** `../../plan.md`
-5. **Inbox:** `../../inbox.md`
-6. **Active decisions:** Scan `./decisions/` for any decision documents with status "Open" or "Active". Read the most recent or most relevant ones.
+4. **Inbox:** `../../inbox.md`
+5. **Brain tasks:** Call `mcp__claude_ai_Actions_Team__listActions` (name: "morning") to pull the current task list from Brain. Note what's open, in-progress, or overdue.
+6. **Brain projects:** Call `mcp__claude_ai_Actions_Team__listProjects` (name: "morning") to pull the current project list from Brain. Note active vs stalled projects.
+7. **Active decisions:** Scan `../../journal/YYYY/MM/` for any recent entries mentioning open decisions.
 
 ---
 
@@ -55,9 +37,9 @@ Let them talk. Ask follow-up questions. Push back if something sounds like narra
 
 **Watch for emotional signals.** Don't ask "how are you feeling?" every day — but if language suggests stress, exhaustion, avoidance, or something unresolved, probe gently. Surface them when you notice them, not as a checkbox.
 
-**Update yesterday's journal** with reflections:
+**Update yesterday's journal file** with reflections:
 - Fill in the Log section with what actually happened
-- Add an Evening/Reflections section if it's missing
+- Add a Reflections section if it's missing
 - Mark completed to-dos as done
 - Keep the user's voice — use their language, not polished summaries
 
@@ -69,11 +51,13 @@ Read today's journal file (or create one from the template if it doesn't exist).
 
 **Clean it up:**
 - Remove stale carried-over items that are no longer relevant
-- Update Active Projects and Active Decisions to reflect current state
+- Update Active Projects to reflect current state
 
 **Check inbox** (`../../inbox.md`) for items that should be promoted to today.
 
-Present the landscape: carried-over to-dos and any inbox items worth surfacing.
+**Surface Brain tasks and projects:** From the Brain data loaded in Step 1, flag tasks that are open, overdue, or relevant today, and note any projects that are active or stalled. Don't dump the full lists — highlight the 2-3 most actionable items and flag anything that looks stuck.
+
+Present the landscape: carried-over to-dos, Brain tasks worth acting on today, and any inbox items worth surfacing.
 
 **Ask what to focus on today.** Offer 2-4 options based on what you see, but let the user override.
 
@@ -81,13 +65,11 @@ Present the landscape: carried-over to-dos and any inbox items worth surfacing.
 
 ## Step 4: Alignment Check
 
-This is the critical step. Compare today's planned to-dos against the annual goals checklist and life plan.
+This is the critical step. Compare today's planned to-dos against the annual goals checklist.
 
 ### 4a: Review active decisions
 
-Check any open decision documents loaded in Step 1. Are there action items due this week? Has anything changed since the last update? Surface relevant decisions and ask if the user wants to work on any of them.
-
-Don't force this every day — but if a decision has near-term deadlines or the user signals they've been thinking about it, dig in.
+Check any recent journal entries mentioning open decisions. Are there action items due this week? Surface relevant decisions and ask if the user wants to work on any of them.
 
 ### 4b: Do today's to-dos ladder up?
 
@@ -95,19 +77,13 @@ For each to-do, ask: does this connect to one of the annual goals? If not, flag 
 
 It's fine to have some tactical items (pay a bill, respond to an email) that don't connect to big goals — but the **majority of the day's key outcomes should be traceable** to something in the annual goals.
 
-If they don't align, ask about it using AskUserQuestion. Don't just flag silently — engage: "This doesn't seem to connect to any of your goals. Is this important for a reason I'm missing, or is it noise?"
+If they don't align, engage: "This doesn't seem to connect to any of your goals. Is this important for a reason I'm missing, or is it noise?"
 
 ### 4c: Are there annual goals with no to-dos?
 
-Look at the annual goals checklist. Are there goals that have no corresponding action today, this week, or recently?
+Look at the annual goals. Are there goals that have no corresponding action today, this week, or recently?
 
 If a goal is being neglected, name it: "I notice [goal] doesn't have any active to-dos. Is that intentional, or should we add something?"
-
-Don't be annoying about this — some goals are seasonal or blocked. But if a goal keeps having no action for weeks, that's a pattern worth naming.
-
-### 4d: Do the annual goals still ladder up to the life plan?
-
-This doesn't need to happen every day. But if something feels off — a goal that doesn't connect, or a new priority that emerged — flag it and suggest updating the goals or plan.
 
 ---
 
@@ -118,7 +94,7 @@ Write/update today's journal file with:
 ```markdown
 # YYYY-MM-DD
 
-## Morning (Franklin: "What good shall I do this day?")
+## Morning
 - [ ] Key outcome 1 (connects to: [annual goal])
 - [ ] Key outcome 2
 - [ ] Key outcome 3
