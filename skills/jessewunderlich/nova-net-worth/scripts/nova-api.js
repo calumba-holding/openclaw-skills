@@ -35,7 +35,7 @@ const https = require('https');
 const http = require('http');
 
 const API_KEY = process.env.NOVA_API_KEY;
-const BASE_URL = process.env.NOVA_API_URL || 'https://app.novanetworth.com';
+const BASE_URL = process.env.NOVA_API_URL || 'https://api.novanetworth.com';
 
 if (!API_KEY) {
   console.error(JSON.stringify({
@@ -106,6 +106,15 @@ const ENDPOINTS = {
     return `/api/v1/agent/net-worth/history?days=${days}`;
   },
   health: '/api/v1/agent/health-score',
+  holdings: () => {
+    const params = new URLSearchParams();
+    const account = parseFlag('--account', null);
+    const summary = args.includes('--summary');
+    if (account) params.set('accountId', account);
+    if (summary) params.set('summary', 'true');
+    const qs = params.toString();
+    return `/api/holdings${qs ? '?' + qs : ''}`;
+  },
 };
 
 if (!command || !ENDPOINTS[command]) {
@@ -121,14 +130,16 @@ Commands:
   insights             AI-generated financial insights
   history [--days]     Net worth trend over time (default: 30)
   health               Financial health score breakdown
+  holdings             Investment holdings with positions and gain/loss
 
 Options:
   --months N           Months of spending data (1-12)
   --days N             Days of history/transactions (1-365/90)
   --limit N            Max transactions to return (1-100, default: 50)
   --category CAT       Filter transactions by Plaid category
-  --account ID         Filter transactions by account ID
+  --account ID         Filter transactions/holdings by account ID
   --since ISO_DATE     Only transactions after this date
+  --summary            Holdings: aggregate by ticker across accounts
   --pretty             Human-readable output
   --json               Raw JSON output (default)`);
   process.exit(1);
@@ -261,6 +272,53 @@ function prettyHealth(data) {
   return lines.join('\n');
 }
 
+function prettyHoldings(data) {
+  const lines = [];
+  const holdings = data.holdings || [];
+  if (holdings.length === 0) {
+    return '📊 No investment holdings found.';
+  }
+
+  // Group by account
+  const byAcct = {};
+  for (const h of holdings) {
+    const acct = h.accountName || 'Unknown';
+    if (!byAcct[acct]) byAcct[acct] = [];
+    byAcct[acct].push(h);
+  }
+
+  lines.push(`📊 Investment Holdings — ${holdings.length} positions\n`);
+
+  for (const [acct, positions] of Object.entries(byAcct)) {
+    const acctTotal = positions.reduce((s, p) => s + (p.value || 0), 0);
+    lines.push(`═══ ${acct} (${centsToMoney(acctTotal)}) ═══`);
+    for (const p of positions) {
+      const sym = (p.symbol || '???').padEnd(8);
+      const qty = Number(p.quantity).toFixed(1).padStart(9);
+      const val = centsToMoney(p.value || 0).padStart(10);
+      let gainStr = '';
+      if (p.costBasis && p.costBasis > 0) {
+        const gain = p.value - p.costBasis;
+        const pct = ((gain / p.costBasis) * 100).toFixed(1);
+        gainStr = `  ${gain >= 0 ? '+' : ''}${centsToMoney(gain)} (${gain >= 0 ? '+' : ''}${pct}%)`;
+      }
+      lines.push(`  ${sym} ${qty} shares ${val}${gainStr}`);
+    }
+    lines.push('');
+  }
+
+  if (data.summary) {
+    lines.push('─'.repeat(40));
+    lines.push(`Total Value:     ${centsToMoney(data.summary.totalValue)}`);
+    if (data.summary.totalCostBasis) {
+      lines.push(`Total Cost:      ${centsToMoney(data.summary.totalCostBasis)}`);
+      lines.push(`Total Gain/Loss: ${signedMoney(data.summary.totalGainLoss)} (${data.summary.totalGainLossPercent >= 0 ? '+' : ''}${data.summary.totalGainLossPercent.toFixed(1)}%)`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 const PRETTY_FORMATTERS = {
   briefing: prettyBriefing,
   summary: prettySummary,
@@ -268,6 +326,7 @@ const PRETTY_FORMATTERS = {
   transactions: prettyTransactions,
   spending: prettySpending,
   health: prettyHealth,
+  holdings: prettyHoldings,
 };
 
 // ---- Request ----

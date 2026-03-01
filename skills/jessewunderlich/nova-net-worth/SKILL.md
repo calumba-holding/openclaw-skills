@@ -1,6 +1,6 @@
 ---
 name: nova-net-worth
-description: Query your Nova Net Worth financial data — net worth, accounts, goals, spending, transactions, AI insights, and health score. Use when the user asks about their finances, money, net worth, account balances, financial goals, spending habits, budget, savings, investments, debt, transactions, or financial health. Requires NOVA_API_KEY environment variable (API key from app.novanetworth.com → Settings → Integrations).
+description: Query your Nova Net Worth financial data — net worth, accounts, holdings, goals, spending, transactions, AI insights, and health score. Use when the user asks about their finances, money, net worth, account balances, investment holdings, portfolio, stocks, financial goals, spending habits, budget, savings, investments, debt, transactions, or financial health. Requires NOVA_API_KEY environment variable (API key from app.novanetworth.com → Settings → Integrations).
 metadata:
   openclaw:
     requires:
@@ -67,6 +67,12 @@ node scripts/nova-api.js history --days 90
 
 # Financial health score breakdown
 node scripts/nova-api.js health
+
+# Investment holdings and positions
+node scripts/nova-api.js holdings                    # All holdings
+node scripts/nova-api.js holdings --pretty           # Human-readable with gain/loss
+node scripts/nova-api.js holdings --account acct_123 # Filter by account
+node scripts/nova-api.js holdings --summary          # Aggregate by ticker across accounts
 ```
 
 All commands support `--pretty` for human-readable output or `--json` (default) for raw JSON.
@@ -84,6 +90,8 @@ All commands support `--pretty` for human-readable output or `--json` (default) 
 | "Any financial insights?" | `insights` | AI recommendations |
 | "Net worth trend this year" | `history --days 365` | Historical snapshots |
 | "How's my financial health?" | `health` | Score with recommendations |
+| "What stocks do I own?" / "Show my portfolio" | `holdings --pretty` | Positions with gain/loss |
+| "Total exposure by ticker" | `holdings --summary` | Aggregated across accounts |
 
 ## Response Format
 
@@ -113,10 +121,10 @@ This returns only new transactions since that time, minimizing data transfer.
 ## Environment
 
 - `NOVA_API_KEY` (required) — Your Nova API key starting with `nova_`. Generate at app.novanetworth.com → Settings → Integrations.
-- `NOVA_API_URL` (optional) — API base URL, defaults to `https://app.novanetworth.com`
+- `NOVA_API_URL` (optional) — API base URL, defaults to `https://api.novanetworth.com`
 
 ## API Documentation
 
-- OpenAPI spec: https://app.novanetworth.com/api-docs/openapi.yaml
+- OpenAPI spec: https://api.novanetworth.com/api-docs/openapi.yaml
 - Interactive docs: https://novanetworth.com/api-docs
 - AI plugin: https://novanetworth.com/.well-known/ai-plugin.json

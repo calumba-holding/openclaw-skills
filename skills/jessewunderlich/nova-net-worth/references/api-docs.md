@@ -1,7 +1,7 @@
 # Nova Net Worth Public API v1 — Reference
 
 ## Base URL
-`https://app.novanetworth.com/api/v1/agent`
+`https://api.novanetworth.com/api/v1/agent`
 
 ## Authentication
 All requests require an API key in the Authorization header:
