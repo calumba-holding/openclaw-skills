@@ -1,0 +1,11 @@
+{
+  "owner": "guanyang",
+  "slug": "toutiao-publisher",
+  "displayName": "Publish articles to Toutiao (Today's Headlines). Handles persistent authentication (login once) and session management. Opens browser for interactive publishing.",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772349638142,
+    "commit": null
+  },
+  "history": []
+}
