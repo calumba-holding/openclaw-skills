@@ -18,7 +18,7 @@ EffortList AI is a sophisticated life-management platform that merges advanced G
 ## 🚀 Setup & Authentication
 
 1. **Subscription:** Requires a developer subscription ($5/month) at [effortlist.io](https://www.effortlist.io).
-2. **API Key:** Generate a **Persistent API Key** in Developer Settings.
+2. **API Key:** Human user must generate a **Persistent API Key** in Developer Settings.
 3. **Storage:** Provide the key via the `EFFORTLIST_API_KEY` environment variable or OpenClaw internal config (`openclaw config set skills.entries.effortlist-ai.env.EFFORTLIST_API_KEY "your_key"`).
 
 ## 📐 Mental Model (Data Hierarchy)
@@ -32,29 +32,29 @@ EffortList AI operates on a strictly nested hierarchy:
 
 ## 🤖 Intelligence & Mapping (For Agents)
 
-| User Intent      | Agent Workflow                     | Endpoint Goal                                              |
-| :--------------- | :--------------------------------- | :--------------------------------------------------------- |
-| "Plan a project" | Create Folder -> Tasks -> Todos    | `POST /folders`, `POST /tasks`, `POST /todos`              |
-| "Fix my mistake" | Fetch History -> Target ID -> Undo | `GET /api/v1/undo`, `POST /api/v1/undo?id=...`             |
-| "Show my day"    | Fetch Todos by Date Range          | `GET /api/v1/todos?from=...&to=...`                        |
-| "Surgical Edit"  | Patch update a specific record     | `PATCH /api/v1/{type}?id=...`                              |
+| User Intent      | Agent Workflow                     | Endpoint Goal                                  |
+| :--------------- | :--------------------------------- | :--------------------------------------------- |
+| "Plan a project" | Create Folder -> Tasks -> Todos    | `POST /folders`, `POST /tasks`, `POST /todos`  |
+| "Fix my mistake" | Fetch History -> Target ID -> Undo | `GET /api/v1/undo`, `POST /api/v1/undo?id=...` |
+| "Show my day"    | Fetch Todos by Date Range          | `GET /api/v1/todos?from=...&to=...`            |
+| "Surgical Edit"  | Patch update a specific record     | `PATCH /api/v1/{type}?id=...`                  |
 
 ## 🛠️ Execution Logic (The "Omni" Way)
 
-1. **Surgical Patching:** When updating a record (e.g., adding a description or marking complete), always use the `PATCH` method with the record `?id=`. This is more efficient than a full replacement.
-2. **Contextual Awareness:** If a task is "orphaned" (no folder), proactively check `GET /api/v1/folders` and suggest an existing one if it seems relevant before creating a new one.
-3. **Cascading Safety:** Always remind the user that deleting a Folder or Task is an **Atomic Purge** that cleans up all sub-records.
-4. **Reminders vs. Todos:** Reminders (`isReminder: true`) are notifications; Todos (`false`) are actionable work that occupies time slots and can be "overdue."
+1. **Surgical Extraction & Patching:** Always prefer fetching a specific record by its ID (`GET ?id=...`) over broad list fetches. When updating, use `PATCH` with the record `?id=`.
+2. **Phase-Aware Scheduling:** Be mindful of the 5-phase Omni processing loop (Temporal Resolution, Decomposition, Parallel Reasoning, Synthesis, and Break Validation). Proactively flag events with `isProtectedTime: true` to trigger the server-side safety net.
+3. **Cascading Safety:** Be aware that deleting a Folder or Task is an **Atomic Purge**. However, the engine protects items that are simultaneously being updated from accidental deletion.
+4. **Human Factors:** When proposing schedules, apply "Gap-First Placement" and "Human Factor" rules (e.g., leaving space for transitions).
 
 ## 🔒 Security & Privacy (Zero Trust)
 
 - **Data Isolation:** Strict row-level security; users only see their own data.
-- **Encryption:** AES-256 at rest; TLS 1.3 in transit.
 - **AI Privacy:** Your personal data is **never** used to train models.
 
 ## 📖 Deep References
 
-- **Full API Reference:** [API Enpoints Docs](https://www.effortlist.io/docs)
-- **Security Audit Docs:** [Security](https://www.effortlist.io/security)
+- **Full API Reference:** [API DOCs](https://www.effortlist.io/docs)
+- **Omni Architecture:** (Located in references/architecture.md)
+- **Security Audit Docs:** [SECURITY](https://www.effortlist.io/security)
 
-**Project Version:** 1.7.1
+**Project Version:** 1.7.5
