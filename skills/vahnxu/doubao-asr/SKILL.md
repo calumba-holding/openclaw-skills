@@ -15,7 +15,7 @@ metadata:
               {
                 "required": true,
                 "description": "豆包 ASR API Key (UUID format). 从火山引擎语音控制台获取 / Get from Volcengine Speech console",
-                "howToGet": "1. 打开 https://console.volcengine.com/speech/new/（确认进入的是新版「豆包语音」控制台）\n2. 左侧菜单 →「语音识别」\n3. 点击「开通模型」，开通「录音文件识别模型」\n4. 点击页面右上角「API 调用」\n5. 在 Step 1「获取 API Key」中，点击创建 API Key\n6. 复制生成的 UUID 格式 Key（如 57e620a4-179c-4b3d-bd8d-990bd1f9a1e2）\n\n1. Open https://console.volcengine.com/speech/new/ (make sure you are in the new 'Doubao Speech' console)\n2. Left sidebar → 'Speech Recognition'\n3. Click 'Activate Model', activate 'Audio File Recognition Model'\n4. Click 'API Call' button at the top-right of the page\n5. In Step 1 'Get API Key', click to create an API Key\n6. Copy the generated UUID-format key (e.g. 57e620a4-179c-4b3d-bd8d-990bd1f9a1e2)",
+                "howToGet": "1. 打开 https://console.volcengine.com/speech/new/（确认进入的是新版「豆包语音」控制台）\n2. 左侧菜单 →「语音识别」\n3. 点击「开通模型」，开通「录音文件识别2.0」\n4. 点击页面右上角「API 调用」\n5. 在 Step 1「获取 API Key」中，点击创建 API Key\n6. 复制生成的 UUID 格式 Key（如 57e620a4-179c-4b3d-bd8d-990bd1f9a1e2）\n\n1. Open https://console.volcengine.com/speech/new/ (make sure you are in the new 'Doubao Speech' console)\n2. Left sidebar → 'Speech Recognition'\n3. Click 'Activate Model', activate 'Audio File Recognition 2.0'\n4. Click 'API Call' button at the top-right of the page\n5. In Step 1 'Get API Key', click to create an API Key\n6. Copy the generated UUID-format key (e.g. 57e620a4-179c-4b3d-bd8d-990bd1f9a1e2)",
                 "url": "https://console.volcengine.com/speech/new/",
               },
             "VOLCENGINE_ACCESS_KEY_ID":
@@ -115,7 +115,7 @@ python3 {baseDir}/scripts/transcribe.py https://your-bucket.tos.volces.com/audio
 
 1. 打开 https://console.volcengine.com/speech/new/（确认进入的是新版「豆包语音」控制台）
 2. 左侧菜单 →「语音识别」
-3. 点击「开通模型」，开通「录音文件识别模型」
+3. 点击「开通模型」，开通「录音文件识别2.0」
 4. 点击页面右上角「API 调用」
 5. 在 Step 1「获取 API Key」中，点击创建 API Key
 6. 复制生成的 UUID 格式 Key
