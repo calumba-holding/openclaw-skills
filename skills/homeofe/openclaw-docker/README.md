@@ -40,7 +40,7 @@ npm install @elvatis_com/openclaw-docker
     "openclaw-docker": {
       "socketPath": "/var/run/docker.sock",
       "readOnly": false,
-      "allowedOperations": ["ps", "logs", "inspect", "start", "stop", "restart", "compose_up", "compose_down"],
+      "allowedOperations": ["ps", "logs", "inspect", "start", "stop", "restart", "compose_up", "compose_down", "compose_ps"],
       "composeProjects": [
         { "name": "aegis", "path": "/opt/aegis" }
       ],
@@ -81,18 +81,32 @@ npm install @elvatis_com/openclaw-docker
 - `docker_restart`
 - `docker_compose_up`
 - `docker_compose_down`
+- `docker_compose_ps`
 
 ## Usage Examples
 
 - "List all running containers"
 - "Show the last 200 lines from api-gateway logs"
+- "Follow api-gateway logs for 30 seconds"
 - "Inspect redis container"
 - "Restart identity-service"
 - "Bring aegis compose project up"
+- "Show status of aegis compose services"
+
+### Follow mode (docker_logs)
+
+The `docker_logs` tool supports real-time log streaming via `follow: true`. Logs are collected for a bounded duration and returned as a single result.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `containerId` | string | (required) | Container name or ID |
+| `tail` | number | 100 | Number of existing lines to include |
+| `follow` | boolean | false | Enable real-time log streaming |
+| `followDurationMs` | number | 10000 | How long to follow (ms), capped by `timeoutMs` |
 
 ## Safety and Permissions
 
-- `readOnly: true` allows only `ps`, `logs`, and `inspect`
+- `readOnly: true` allows only `ps`, `logs`, `inspect`, and `compose_ps`
 - `allowedOperations` limits which tools can be executed
 - Compose operations are limited to projects in `composeProjects`
 - Commands use timeout protection via `timeoutMs`
@@ -102,8 +116,14 @@ npm install @elvatis_com/openclaw-docker
 ```bash
 npm install
 npm run build
-npm test
+npm test                # unit tests (mocked Docker client)
+npm run test:integration # integration tests (requires running Docker daemon)
+npm run test:all         # both unit and integration tests
 ```
+
+### CI
+
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs unit tests on every push and pull request to `main`, followed by integration tests against the real Docker daemon available on the CI runner.
 
 ## License
 
