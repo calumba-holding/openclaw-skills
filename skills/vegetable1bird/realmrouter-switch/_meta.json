@@ -3,9 +3,15 @@
   "slug": "realmrouter-switch",
   "displayName": "RealmRouter Switch",
   "latest": {
-    "version": "1.6.1",
-    "publishedAt": 1772197618406,
-    "commit": "https://github.com/openclaw/skills/commit/d859c7dd5692cdd28a25080101c686cd852b2435"
+    "version": "2.1.0",
+    "publishedAt": 1772261412753,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.6.1",
+      "publishedAt": 1772197618406,
+      "commit": "https://github.com/openclaw/skills/commit/d859c7dd5692cdd28a25080101c686cd852b2435"
+    }
+  ]
 }
