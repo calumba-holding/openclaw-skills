@@ -1,6 +1,7 @@
 ---
 name: simmer
-version: 1.17.7
+version: 1.18.0
+difficulty: beginner
 published: true
 description: The best prediction market interface for AI agents. Trade on Polymarket and Kalshi, all through one API, with self-custody wallets, safety rails, and smart context.
 homepage: https://simmer.markets
@@ -144,6 +145,20 @@ client.trade(market.id, "yes", 10.0, venue="polymarket")
 **Requirements:** USDC.e (bridged USDC) on Polygon + small POL balance for gas.
 
 See [docs.md — Self-Custody Wallet Setup](https://simmer.markets/docs.md#self-custody-wallet-setup) for full setup details.
+
+**Risk exits for external wallets:** Stop-loss and take-profit are monitored in real time. For external wallets, your agent must be running — the SDK auto-executes pending risk exits each cycle.
+
+---
+
+## Cancel Orders
+
+```python
+client.cancel_order("order-id")           # Cancel one order
+client.cancel_market_orders("market-id")   # Cancel all orders on a market
+client.cancel_all_orders()                 # Cancel everything
+```
+
+See [docs.md](https://simmer.markets/docs.md) for REST endpoints.
 
 ---
 
