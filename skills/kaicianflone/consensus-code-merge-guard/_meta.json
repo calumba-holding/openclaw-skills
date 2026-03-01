@@ -3,9 +3,15 @@
   "slug": "consensus-code-merge-guard",
   "displayName": "consensus-code-merge-guard",
   "latest": {
-    "version": "1.1.4",
-    "publishedAt": 1772156352319,
-    "commit": "https://github.com/openclaw/skills/commit/a2937418078f8dcefebd75d57676b2c21d3bbf62"
+    "version": "1.1.9",
+    "publishedAt": 1772343198543,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.4",
+      "publishedAt": 1772156352319,
+      "commit": "https://github.com/openclaw/skills/commit/a2937418078f8dcefebd75d57676b2c21d3bbf62"
+    }
+  ]
 }

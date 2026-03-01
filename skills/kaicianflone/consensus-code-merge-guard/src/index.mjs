@@ -1,6 +1,5 @@
 import crypto from 'node:crypto';
-import { handler as personaGen } from 'consensus-persona-generator/src/index.mjs';
-import { rejectUnknown, getLatest, getPersonaSet, getDecisionByKey, writeArtifact, aggregateVotes, updateReputations, makeIdempotencyKey, resolveStatePath } from 'consensus-guard-core/src/index.mjs';
+import { rejectUnknown, getLatest, getPersonaSet, getDecisionByKey, writeArtifact, aggregateVotes, makeIdempotencyKey, resolveStatePath } from 'consensus-guard-core/src/index.mjs';
 
 const TOP = new Set(['board_id','change_summary','constraints','persona_set_id','mode','external_votes']);
 const CHG = new Set(['repo','pr_id','title','diff_summary','ci_status','tests_passed']);
@@ -27,20 +26,19 @@ export async function handler(input, opts={}) {
     const prior=await getDecisionByKey(board_id,idem,statePath); if(prior?.response) return prior.response;
 
     let ps=externalMode ? null : (input.persona_set_id?await getPersonaSet(board_id,input.persona_set_id,statePath):await getLatest(board_id,'persona_set',statePath));
-    if(!ps && !externalMode){ const g=await personaGen({board_id,task_context:{goal:'code merge guard',audience:'engineering',risk_tolerance:'medium',constraints:[],domain:'code'},n_personas:5,persona_pack:'security'},{statePath}); if(g.error) return err(board_id,'PERSONA_GENERATION_FAILED',g.error.message); ps={persona_set_id:g.persona_set_id,personas:g.personas}; }
+    if(!ps && !externalMode){ ps={ persona_set_id:null, personas:[1,2,3,4,5].map((n)=>({persona_id:`default-${n}`,name:`Default Persona ${n}`,reputation:0.5})) }; }
 
     const votes=externalMode ? input.external_votes : makeVotes(ps,input.change_summary,input.constraints||{});
     const ag=aggregateVotes(votes,{method:'WEIGHTED_APPROVAL_VOTE',approve_threshold:0.7});
     const final_decision=mapDecision(ag.final_decision);
     const decision_id=crypto.randomUUID(); const timestamp=new Date().toISOString();
     const required_actions = final_decision==='BLOCK'||final_decision==='REVISE' ? ['Address failing checks before merge'] : [];
-    const rep = externalMode ? { personas: [], updates: [] } : updateReputations(ps.personas,votes, ag.final_decision);
+    const rep = { personas: [], updates: [] };
     const personas = rep.personas; const updates = rep.updates;
 
     const response={board_id,decision_id,timestamp,persona_set_id:ps?.persona_set_id || input.persona_set_id || null,votes,aggregation:{method:ag.method,weighted_yes:ag.weighted_yes,weighted_no:ag.weighted_no,weighted_rewrite:ag.weighted_rewrite,hard_block:ag.hard_block,rationale:ag.rationale},final_decision,required_actions,board_writes:[],persona_updates:updates};
     const d=await writeArtifact(board_id,'decision',{idempotency_key:idem,decision_id,final_decision,votes,aggregation:ag,response},statePath);
-    const p=externalMode ? null : await writeArtifact(board_id,'persona_set',{...ps,persona_set_id:crypto.randomUUID(),updated_at:timestamp,lineage:{parent_persona_set_id:ps?.persona_set_id || input.persona_set_id || null},personas},statePath);
-    response.board_writes=[{type:'decision',success:true,ref:d.ref}, ...(p ? [{type:'persona_set',success:true,ref:p.ref}] : [])];
+    response.board_writes=[{type:'decision',success:true,ref:d.ref}, ];
     return response;
   } catch(e){ return err(board_id||'','CODE_MERGE_GUARD_FAILED',e.message||'unknown'); }
 }
