@@ -12,8 +12,14 @@ source "$SKILL_DIR/scripts/_compat.sh"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$(cd "$SKILL_DIR/../.." && pwd)}"
 MEMORY_DIR="${MEMORY_DIR:-$WORKSPACE/memory}"
 SESSIONS_DIR="${SESSIONS_DIR:-$HOME/.openclaw/agents/main/sessions}"
-OBSERVER_MODEL="${OBSERVER_MODEL:-google/gemini-2.5-flash}"
-OBSERVER_FALLBACK_MODEL="${OBSERVER_FALLBACK_MODEL:-google/gemini-2.0-flash-001}"
+
+# LLM provider configuration (OpenAI-compatible APIs)
+LLM_BASE_URL="${LLM_BASE_URL:-https://openrouter.ai/api/v1}"
+LLM_API_KEY="${LLM_API_KEY:-${OPENROUTER_API_KEY:-}}"
+LLM_MODEL="${LLM_MODEL:-deepseek/deepseek-v3.2}"
+
+OBSERVER_MODEL="${OBSERVER_MODEL:-$LLM_MODEL}"
+OBSERVER_FALLBACK_MODEL="${OBSERVER_FALLBACK_MODEL:-google/gemini-2.5-flash}"
 OBSERVER_LOOKBACK_MIN="${OBSERVER_LOOKBACK_MIN:-15}"
 OBSERVER_MORNING_LOOKBACK_MIN="${OBSERVER_MORNING_LOOKBACK_MIN:-480}"
 REFLECTOR_WORD_THRESHOLD="${REFLECTOR_WORD_THRESHOLD:-8000}"
@@ -28,10 +34,16 @@ LOCK_FILE="/tmp/total-recall-reflector-$(id -u).lock"
 # Source env if available (grep-guard: only export KEY=VALUE lines)
 if [ -f "$WORKSPACE/.env" ]; then
   set -a
-  # Only load OPENROUTER_API_KEY (minimal credential exposure)
-  eval "$(grep -E '^OPENROUTER_API_KEY=' "$WORKSPACE/.env" 2>/dev/null)" || true
+  # Load provider config + backward compatible OPENROUTER key
+  eval "$(grep -E '^(LLM_BASE_URL|LLM_API_KEY|LLM_MODEL|OPENROUTER_API_KEY)=' "$WORKSPACE/.env" 2>/dev/null)" || true
   set +a
 fi
+
+# Re-apply defaults after env load
+LLM_BASE_URL="${LLM_BASE_URL:-https://openrouter.ai/api/v1}"
+LLM_API_KEY="${LLM_API_KEY:-${OPENROUTER_API_KEY:-}}"
+LLM_MODEL="${LLM_MODEL:-deepseek/deepseek-v3.2}"
+OBSERVER_MODEL="${OBSERVER_MODEL:-$LLM_MODEL}"
 
 mkdir -p "$WORKSPACE/logs" "$MEMORY_DIR"
 
@@ -182,19 +194,30 @@ fi
 log "Found $LINE_COUNT lines to compress (hash: ${CURRENT_HASH:0:8})"
 
 # --- Validate API key ---
-if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-  log "ERROR: OPENROUTER_API_KEY not set"
+if [ -z "${LLM_API_KEY:-}" ]; then
+  log "ERROR: LLM_API_KEY not set (or OPENROUTER_API_KEY for backward compatibility)"
   echo "ERROR_NO_API_KEY"
   exit 1
 fi
 
-# --- Call LLM ---
+# --- Call LLM (with existing observations context for dedup) ---
 SYSTEM_PROMPT=$(cat "$OBSERVER_PROMPT")
 TODAY=$(date '+%Y-%m-%d')
 
+# Feed last 30 lines of existing observations so LLM avoids repeating them
+EXISTING_TAIL=""
+if [ -f "$OBSERVATIONS_FILE" ]; then
+  EXISTING_TAIL=$(tail -80 "$OBSERVATIONS_FILE" | grep -E '^\s*-\s*[🔴🟡🟢]' | tail -40)
+fi
+
+DEDUP_CONTEXT=""
+if [ -n "$EXISTING_TAIL" ]; then
+  DEDUP_CONTEXT="\n\n## Already Recorded (DO NOT repeat these — they are already in memory)\n$EXISTING_TAIL"
+fi
+
 PAYLOAD=$(jq -n \
   --arg system "$SYSTEM_PROMPT" \
-  --arg messages "Today is $TODAY. Compress these recent messages into observations:\n\n$RECENT_MESSAGES" \
+  --arg messages "Today is $TODAY. Compress these recent messages into observations:\n\n$RECENT_MESSAGES$DEDUP_CONTEXT" \
   '{
     model: "placeholder",
     messages: [
@@ -205,16 +228,21 @@ PAYLOAD=$(jq -n \
     temperature: 0.3
   }')
 
+log "DEBUG: LLM_MODEL is $LLM_MODEL"
+log "DEBUG: OBSERVER_MODEL is $OBSERVER_MODEL"
 MODELS=("$OBSERVER_MODEL" "$OBSERVER_FALLBACK_MODEL")
 OBSERVATION=""
 for ATTEMPT in 1 2; do
   MODEL="${MODELS[$((ATTEMPT-1))]}"
   ATTEMPT_PAYLOAD=$(echo "$PAYLOAD" | jq --arg m "$MODEL" '.model = $m')
   
-  RESPONSE=$(curl -s --max-time 60 "https://openrouter.ai/api/v1/chat/completions" \
-    -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+  log "DEBUG: Making LLM call with model: $MODEL, attempt: $ATTEMPT"
+  RESPONSE=$(curl -s --max-time 60 "$LLM_BASE_URL/chat/completions" \
+    -H "Authorization: Bearer $LLM_API_KEY" \
     -H "Content-Type: application/json" \
-    -d "$ATTEMPT_PAYLOAD" 2>/dev/null)
+    -d "$ATTEMPT_PAYLOAD")
+  log "DEBUG: LLM Response (first 500 chars): ${RESPONSE:0:500}"
+
 
   OBSERVATION=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
 
@@ -234,6 +262,46 @@ if [ -z "$OBSERVATION" ] || echo "$OBSERVATION" | grep -qi "NO_OBSERVATIONS"; th
   date +%s > "$MARKER_FILE"
   echo "NO_OBSERVATIONS"
   exit 0
+fi
+
+# --- Post-LLM dedup: remove lines whose key content already exists ---
+if [ -f "$OBSERVATIONS_FILE" ]; then
+  # Build fingerprints: strip bullets/emoji/timestamps/markdown, take first 40 chars
+  # LC_ALL=C ensures cut operates on bytes consistently across locales
+  # Use first 80 chars and normalise dates/day-names for better dedup matching
+  EXISTING_FP=$(grep -E '^\s*-\s*[🔴🟡🟢]' "$OBSERVATIONS_FILE" | sed 's/^[[:space:]]*-[[:space:]]*[🔴🟡🟢][[:space:]]*[0-9:]*[[:space:]]*//' | sed 's/\*\*//g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}//g; s/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)//gi; s/  +/ /g' | LC_ALL=C cut -c1-80 | sort -u)
+
+  # Guard: if no existing fingerprints, skip dedup entirely (prevents empty grep matching everything)
+  if [ -z "$EXISTING_FP" ]; then
+    log "No existing observation fingerprints — skipping post-LLM dedup"
+  else
+
+  DEDUPED=""
+  while IFS= read -r line; do
+    if echo "$line" | grep -qE '^\s*-\s*[🔴🟡🟢]'; then
+      # Extract the content fingerprint (strip bullet, emoji, timestamp, markdown bold)
+      FP=$(echo "$line" | sed 's/^[[:space:]]*-[[:space:]]*[🔴🟡🟢][[:space:]]*[0-9:]*[[:space:]]*//' | sed 's/\*\*//g' | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}//g; s/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)//gi; s/  +/ /g' | LC_ALL=C cut -c1-80)
+      # Skip empty fingerprints (would match everything)
+      if [ -n "$FP" ] && echo "$EXISTING_FP" | grep -qF "$FP"; then
+        log "Dedup: skipping duplicate line: ${FP:0:40}..."
+        continue
+      fi
+    fi
+    DEDUPED+="$line"$'\n'
+  done <<< "$OBSERVATION"
+
+  OBSERVATION=$(echo "$DEDUPED" | sed '/^$/N;/^\n$/d')
+
+  # If everything was deduped, nothing to write
+  if [ -z "$(echo "$OBSERVATION" | grep -E '[🔴🟡🟢]')" ]; then
+    log "All observations were duplicates — nothing new to write"
+    echo "$CURRENT_HASH" > "$HASH_FILE"
+    date +%s > "$MARKER_FILE"
+    echo "NO_OBSERVATIONS"
+    exit 0
+  fi
+
+  fi # end of EXISTING_FP guard
 fi
 
 # --- Append to observations file ---
