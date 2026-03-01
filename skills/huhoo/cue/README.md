@@ -1,143 +1,155 @@
-# Cue v1.0.3 - 最终部署包 / Deployment Package
+# Cue v1.0.4 - Node.js 重构版
 
-## 📦 完整文件清单 / File Structure
+## 📦 架构概述
+
+Cue v1.0.4 是基于 **Node.js + ES Module** 重构的深度研究工具，采用模块化设计，提供更好的可维护性和跨平台支持。
+
+### 技术栈
+- **Runtime**: Node.js >= 18.0.0
+- **Module**: ES Module (type: "module")
+- **CLI**: Commander.js
+- **Dependencies**: 10+ npm 包 (chalk, ora, inquirer, node-cron, fs-extra 等)
+
+## 📂 文件结构
 
 ```
 cue/
-├── manifest.json              # 技能清单（tags 定义，确保与 SKILL.md 一致）
+├── manifest.json              # 技能清单
 ├── SKILL.md                   # 技能描述（双语）
+├── SECURITY.md                # 安全说明
+├── README.md                  # 本文件
 ├── package.json               # npm 配置
-├── crontab.txt               # 监控调度配置
-├── UPDATE_GUIDE.md           # 更新说明
-├── PUBLISH_CHECKLIST.md      # 发布检查清单
-├── README.md                 # 本文件
-└── scripts/
-    ├── cue.sh                # 主入口（智能路由、欢迎引导）
-    ├── research.sh           # 研究执行（60分钟超时）
-    ├── notifier.sh           # 完成通知（分享链接提取）
-    ├── cuecue-client.js      # 内置 API 客户端
-    ├── create-monitor.sh     # 监控项创建
-    ├── monitor-daemon.sh     # 监控守护进程
-    ├── monitor-notify.sh     # 监控触发通知
-    ├── executor/
-    │   ├── monitor-engine.sh   # 监控执行主控
-    │   ├── search-executor.sh  # 搜索执行器
-    │   └── browser-executor.sh # 浏览器执行器
-    └── dev/                  # 开发用脚本（不在发布包中）
-        ├── publish-check.sh  # 发布前检查
-        └── test.sh           # 集成测试
+├── src/                       # 源代码目录
+│   ├── index.js              # 主入口（模块导出）
+│   ├── cli.js                # CLI 入口（Commander）
+│   ├── core/                 # 核心业务逻辑
+│   │   ├── logger.js         # 统一日志系统
+│   │   ├── userState.js      # 用户状态管理
+│   │   ├── taskManager.js    # 任务管理
+│   │   └── monitorManager.js # 监控管理
+│   ├── api/
+│   │   └── cuecueClient.js   # API 客户端
+│   ├── commands/             # 命令处理器
+│   ├── utils/                # 工具函数
+│   │   ├── fileUtils.js      # 文件操作
+│   │   ├── envUtils.js       # 环境变量（安全存储）
+│   │   └── validators.js     # 验证工具
+│   └── executors/            # 执行引擎
+├── tests/                    # 测试文件
+└── backups/                  # 旧版本备份
+    └── scripts-v1.0.3/       # v1.0.3 Bash 脚本备份
 ```
 
-## 🎯 核心功能 / Core Features
+## 🚀 部署步骤
 
-### 1. 深度研究 / Deep Research
-- 40-60 分钟生成专业分析报告 / Generate professional analysis report in 40-60 minutes
-- 支持多种研究视角 / Support multiple research perspectives (advisor/researcher/fund-manager)
-- 60 分钟超时保护 / 60-minute timeout protection
+### 步骤 1：环境要求
 
-### 2. 智能监控 / Smart Monitoring
-```
-研究完成
-    ↓
-AI 分析生成监控建议
-    ↓
-回复 Y 创建监控项
-    ↓
-监控守护进程每30分钟执行
-    ↓
-Search → Browser 级联获取数据
-    ↓
-条件评估 → 触发通知
-```
-
-### 3. 用户体验优化 / UX Enhancements
-- 🎉 **首次欢迎 / First-time Welcome**：自动识别新用户，发送欢迎消息 / Auto-detect new users and send welcome message
-- 📋 **注册引导 / Onboarding**：3步骤 API Key 配置引导 / 3-step API Key configuration guide
-- 📊 **详细进度 / Detailed Progress**：4阶段进度说明 / 4-stage progress (0-10/10-30/30-50/50-60 min)
-- 🔔 **简化通知 / Simplified Notification**：核心信息 + 监控建议 / Core info + monitoring suggestions
-- 🔒 **数据隔离 / Data Isolation**：多用户时数据安全隔离 / Secure data isolation for multi-user
-
-## 🚀 部署步骤 / Deployment Steps
-
-### 步骤 1：安装技能 / Step 1: Install Skill
+**必需**: Node.js >= 18.0.0
 
 ```bash
-# 通过 clawhub 安装（推荐）
-clawhub install cue
+# 检查 Node.js 版本
+node --version  # 应 >= v18.0.0
 
-# 或手动复制到系统路径
-cp -r cue /usr/lib/node_modules/openclaw/skills/
+# 如未安装，请访问 https://nodejs.org/
 ```
 
-### 步骤 2：配置环境变量 / Step 2: Configure Environment Variables
+### 步骤 2：安装依赖
 
-必需 / Required：
+```bash
+cd cue
+npm install
+```
+
+**依赖列表**:
+- `commander` - CLI 框架
+- `chalk` - 终端颜色
+- `ora` - 加载动画
+- `inquirer` - 交互提示
+- `node-cron` - 定时任务（不修改系统 crontab）
+- `fs-extra` - 增强文件操作
+
+### 步骤 3：配置环境变量
+
+**必需**:
 ```bash
 export CUECUE_API_KEY="your-cuecue-api-key"
 ```
 
-通知配置（复用 OpenClaw 环境）/ Notification (Reuse OpenClaw Env)：
+**可选**:
 ```bash
-# Skill 会自动使用你已配置的 OpenClaw Channel 设置
-# 如需修改通知渠道，请配置 OpenClaw 环境变量：
-# https://docs.openclaw.ai/configuration/channels
+export TAVILY_API_KEY="your-tavily-api-key"  # 用于监控功能
+export CHAT_ID="your-chat-id"                # 通知目标
 ```
 
-### 步骤 3：设置调度（监控功能必需）/ Step 3: Setup Scheduling (Required for Monitoring)
+**安全说明**: API Key 存储在 `~/.cuecue/.env.secure`，权限 600
+
+### 步骤 4：启动
 
 ```bash
-# 添加 crontab
-cat cue/crontab.txt | crontab -
+# CLI 模式
+npm run cli
 
-# 验证
-crontab -l
+# 或直接使用
+node src/cli.js
 ```
 
-### 步骤 4：检查依赖
+## 🎯 核心功能
 
-```bash
-# 必需
-which jq || apt-get install -y jq
-which curl || apt-get install -y curl
+### 1. 深度研究 / Deep Research
+- **常见耗时**: 5-30 分钟
+- **超时**: 3600 秒（60分钟）
+- **进度推送**: 每 5 分钟
 
-# 可选（用于提取分享链接）
-npm install -g @playwright/test
-npx playwright install chromium
+```javascript
+// 启动研究
+await handleCue(['宁德时代2024财报']);
 ```
 
-### 步骤 5：重启 OpenClaw
+### 2. 研究视角模式
 
-```bash
-openclaw restart
+| 模式 | 自动匹配关键词 | 框架 |
+|------|--------------|------|
+| trader | 龙虎榜、涨停、游资 | Timeline Reconstruction |
+| fund-manager | 财报、估值、ROE | 基本面分析 |
+| researcher | 产业链、竞争格局 | Peer Benchmarking |
+| advisor | 投资建议、资产配置 | 风险收益评估 |
+
+### 3. 智能监控
+
+**后台调度**: 使用 `node-cron` 内部调度，**不修改系统 crontab**
+
+```javascript
+// 监控守护进程（每30分钟）
+cron.schedule('*/30 * * * *', async () => {
+  await checkMonitors();
+});
 ```
+
+## 📋 可用命令
+
+| 命令 | 功能 | 耗时 |
+|------|------|------|
+| `/cue <主题>` | 智能调研 | 40-60 分钟 |
+| `/ct` | 查看任务状态 | 即时 |
+| `/cm` | 查看监控项 | 即时 |
+| `/cn [天数]` | 查看监控通知 | 即时 |
+| `/key <api-key>` | 配置 API Key | 即时 |
+| `/ch` | 显示帮助 | 即时 |
 
 ## ✅ 功能验证
 
-### 基础功能测试
 ```bash
-# 1. 首次使用（应显示欢迎消息）
-/cue
+# 1. 检查 Node.js 版本
+node --version
 
-# 2. 启动研究
-/cue 宁德时代2024财报
+# 2. 安装依赖
+npm install
 
-# 3. 查看任务
-/ct
+# 3. 运行测试
+npm test
 
-# 4. 查看任务详情
-/cs <task_id>
-```
-
-### 监控功能测试
-```bash
-# 1. 研究完成后回复 Y（应创建监控项）
-Y
-
-# 2. 手动执行监控检查
-./scripts/monitor-daemon.sh
-
-# 3. 查看监控日志
-tail ~/.cuecue/logs/monitor-daemon.log
+# 4. CLI 测试
+npm run cli cue "测试主题"
 ```
 
 ## 🔧 关键配置
@@ -145,79 +157,68 @@ tail ~/.cuecue/logs/monitor-daemon.log
 ### 核心参数
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| 研究超时 | 3600秒 (60分钟) | 深度研究时间上限 |
-| 进度推送 | 300秒 (5分钟) | 进度更新频率 |
-| 监控调度 | 30分钟 | 监控检查频率 |
-| BASE_URL | https://cuecue.cn | 硬编码，无需配置 |
+| 研究超时 | 3600秒 | 60分钟上限 |
+| 进度推送 | 300秒 | 每5分钟更新 |
+| 监控调度 | */30 * * * * | 每30分钟检查 |
+| BASE_URL | https://cuecue.cn | 硬编码 |
 
-### 数据存储结构
+### 数据存储
 ```
 ~/.cuecue/
 ├── users/
 │   └── ${chat_id}/
 │       ├── .initialized
-│       ├── tasks/           # 用户专属任务
-│       └── monitors/        # 用户专属监控
-└── logs/
-    ├── cue-YYYYMMDD.log
-    ├── research-YYYYMMDD.log
-    └── monitor-daemon.log
+│       ├── tasks/           # 任务数据
+│       └── monitors/        # 监控配置
+├── logs/
+│   ├── cue-YYYYMMDD.log
+│   ├── error-YYYYMM.log
+│   └── info-YYYYMM.log
+└── .env.secure              # API Key (权限 600)
 ```
 
-## 📋 故障排查
+## 🆚 v1.0.4 vs v1.0.3
 
-| 问题 | 可能原因 | 解决方案 |
-|------|---------|---------|
-| 脚本无权限 | 未设置可执行 | `chmod +x scripts/*.sh scripts/executor/*.sh` |
-| jq 未找到 | 缺少依赖 | `apt-get install -y jq` |
-| 通知未发送 | Token 未配置 | 检查 FEISHU_BOT_TOKEN 等环境变量 |
-| 监控不执行 | crontab 未设置 | 执行 `crontab crontab.txt` |
-| 数据不隔离 | 旧版本数据 | 清理 ~/.cuecue/ 重新初始化 |
-
-## 🔄 版本对比
-
-### v1.0.3 vs v1.0.1
-
-| 功能 | v1.0.1 | v1.0.3 |
-|------|--------|--------|
-| 产品名称 | 投研搭子 | **调研助理** |
-| 首次欢迎 | ❌ | ✅ |
-| API Key 引导 | ❌ | ✅ |
-| 详细进度 | ❌ | ✅ |
-| 数据隔离 | ❌ | ✅ |
-| 监控执行引擎 | ✅ | ✅ |
-| Y/N 自动创建 | ✅ | ✅ |
-| 分享链接提取 | 部分 | ✅ 完整 |
+| 维度 | v1.0.3 (Bash) | v1.0.4 (Node.js) |
+|------|---------------|------------------|
+| 架构 | Bash 脚本 | Node.js ES Module |
+| 文件数 | 11 个 .sh | 10 个 .js 模块 |
+| 依赖 | 系统工具 (jq, curl) | npm 包 |
+| 调度 | 系统 crontab | node-cron (内部) |
+| 可维护性 | 中 | 高 |
+| 跨平台 | Linux/Mac | Windows/Mac/Linux |
+| 启动速度 | 快 | 稍慢 |
+| 扩展性 | 低 | 高 |
 
 ## 📝 更新日志
 
-### v1.0.3 (2026-02-24)
+### v1.0.4 (2026-02-25)
 
-**Bug 修复：**
-- 🔧 修复 API 调用错误（使用内置 cuecue-client.js）
-- 🔧 修复 PID 获取污染问题（nohup + pgrep）
-- 🔧 修复输出文件分离导致的 notifier 错误
-- 🔧 修复退出码标记格式不一致
-- 🔧 修复 JSON_RESULT 输出问题
+**架构重构**:
+- ✨ 全面迁移到 Node.js ES Module
+- ✨ 模块化设计 (core/api/commands/utils)
+- ✨ 使用 npm 依赖管理
+- ✨ 内部定时任务调度（不修改系统 crontab）
 
-**新增组件：**
-- ✨ 内置 Node.js API 客户端（无额外依赖）
+**安全改进**:
+- 🔒 隔离存储 `~/.cuecue/.env.secure` (权限 600)
+- 🔒 目录权限 700
+- 🔒 最小权限原则
 
-### v1.0.1 (2026-02-24)
+**开发体验**:
+- 🧪 Jest 测试框架
+- 📝 JSDoc 类型注解
+- 🔄 nodemon 热重载
 
-**新增功能：**
-- ✨ 产品定位：投研搭子 → 调研助理
-- 🎉 首次欢迎消息和 API Key 注册引导
-- 📊 4阶段详细进度描述
-- 🔒 多用户数据隔离
-- 🏷️ Tags 优化：7个核心标签
+## 🔍 故障排查
 
-**优化改进：**
-- ⏱️ 超时：30min → 60min
-- 📢 进度推送：新增每5分钟推送
-- 🔔 通知格式：简化信息展示
-- 🔗 分享链接：Playwright + fallback
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| `Cannot find module` | 未安装依赖 | `npm install` |
+| `node: bad option` | Node.js 版本过低 | 升级到 >= 18 |
+| `Permission denied` | 文件权限 | `chmod 600 ~/.cuecue/.env.secure` |
+| `API Key not found` | 未配置 | `export CUECUE_API_KEY=xxx` |
 
 ---
 
-*Cue v1.0.3 - 让 AI 成为你的调研助理 (Powered by CueCue)*
+*Cue v1.0.4 - Node.js 重构版 - 让 AI 成为你的调研助理*

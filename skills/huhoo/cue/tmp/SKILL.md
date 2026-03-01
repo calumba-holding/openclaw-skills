@@ -268,31 +268,23 @@ CUECUE_API_KEY      # CueCue API 密钥（必需）/ API Key (Required)
 - 支持 Cron 表达式自定义频率
 - 自动清理7天前的旧日志
 
-### 代码结构 / Code Structure
+### 脚本说明 / Script Descriptions
 
-**v1.0.4 Node.js 架构 / Node.js Architecture:**
+**核心脚本 / Core Scripts:**
+- `scripts/cue.sh` - 主入口脚本，智能路由 / Main entry, intelligent routing
+- `scripts/research.sh` - 深度研究执行（60分钟超时）/ Deep research execution (60min timeout)
+- `scripts/notifier.sh` - 完成通知（含分享链接提取）/ Completion notification (with share link extraction)
+- `scripts/cuecue-client.js` - 内置 API 客户端（Node.js，无额外依赖）/ Built-in API client (Node.js, no external deps)
 
-```
-src/
-├── index.js              # 主入口（模块导出）/ Main entry (module exports)
-├── cli.js                # CLI 入口（Commander）/ CLI entry (Commander)
-├── core/                 # 核心业务逻辑 / Core business logic
-│   ├── logger.js         # 统一日志系统 / Unified logging
-│   ├── userState.js      # 用户状态管理 / User state management
-│   ├── taskManager.js    # 任务管理 / Task management
-│   └── monitorManager.js # 监控管理 / Monitor management
-├── api/
-│   └── cuecueClient.js   # API 客户端 / API client
-├── commands/             # 命令处理器 / Command handlers
-├── utils/                # 工具函数 / Utilities
-│   ├── fileUtils.js      # 文件操作 / File operations
-│   ├── envUtils.js       # 环境变量（安全存储）/ Environment (secure storage)
-│   └── validators.js     # 验证工具 / Validators
-└── executors/            # 执行引擎 / Execution engines
-```
+**监控相关 / Monitoring:**
+- `scripts/create-monitor.sh` - 监控项创建 / Monitor item creation
+- `scripts/monitor-daemon.sh` - 监控守护进程（调度执行）/ Monitor daemon (scheduling)
+- `scripts/monitor-notify.sh` - 监控触发通知 / Monitor trigger notification
 
-**旧版备份 / Legacy Backup:**
-- `backups/scripts-v1.0.3/` - v1.0.3 Bash 脚本备份 / v1.0.3 Bash scripts backup
+**执行引擎 / Execution Engine:**
+- `scripts/executor/monitor-engine.sh` - 监控执行主控 / Monitor execution controller
+- `scripts/executor/search-executor.sh` - 搜索执行器 / Search executor
+- `scripts/executor/browser-executor.sh` - 浏览器执行器 / Browser executor
 
 ---
 
