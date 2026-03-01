@@ -131,6 +131,8 @@ node bin/morelogin.js browser list --page 1 --page-size 20
 
 # Start a profile
 node bin/morelogin.js browser start --env-id abc123def
+# Note: start may occasionally timeout at 10s while profile still launches.
+# Always re-check with status before retrying.
 
 # View running status (debugPort can be used directly for CDP connection when present)
 node bin/morelogin.js browser status --env-id abc123def
@@ -161,25 +163,11 @@ node bin/morelogin.js cloudphone stop --id <cloudPhoneId>
 # Get details (includes ADB info)
 node bin/morelogin.js cloudphone info --id <cloudPhoneId>
 
-# Execute cloud phone command
-node bin/morelogin.js cloudphone exec --id <cloudPhoneId> --command "ls /sdcard"
-
 # Query ADB connection info (for identifying connection method)
 node bin/morelogin.js cloudphone adb-info --id <cloudPhoneId>
 
 # Enable ADB (official fields: ids + enableAdb)
 node bin/morelogin.js cloudphone update-adb --id <cloudPhoneId> --enable true
-
-# Auto-connect ADB by device model:
-# - Android 12 / 15: Direct connect to adbIp:adbPort
-# - Android 13 / 14 / 15A: Auto-create SSH tunnel, then connect to localhost:adbPort
-node bin/morelogin.js cloudphone adb-connect --id <cloudPhoneId> --wait-seconds 90
-
-# View current ADB devices
-node bin/morelogin.js cloudphone adb-devices
-
-# Disconnect ADB (including tunnel cleanup)
-node bin/morelogin.js cloudphone adb-disconnect --id <cloudPhoneId>
 ```
 
 ### Proxy: Proxy Management
@@ -239,10 +227,10 @@ node bin/morelogin.js tag delete --ids "<tagId1>,<tagId2>"
 After Morelogin starts, the following endpoints are exposed:
 
 ```
-HTTP:  http://localhost:<port>/json/version
-HTTP:  http://localhost:<port>/json/list
-WS:    ws://localhost:<port>/devtools/browser/<browser_id>
-WS:    ws://localhost:<port>/devtools/page/<page_id>
+HTTP:  http://127.0.0.1:<debugPort>/json/version
+HTTP:  http://127.0.0.1:<debugPort>/json/list
+WS:    ws://127.0.0.1:<debugPort>/devtools/browser/<browser_id>
+WS:    ws://127.0.0.1:<debugPort>/devtools/page/<page_id>
 ```
 
 ### Using Chrome DevTools
@@ -257,8 +245,10 @@ WS:    ws://localhost:<port>/devtools/page/<page_id>
 ```javascript
 const puppeteer = require('puppeteer-core');
 
+// Get debugPort from:
+// node bin/morelogin.js browser status --env-id <envId>
 const browser = await puppeteer.connect({
-  browserURL: 'http://localhost:9222',
+  browserURL: 'http://127.0.0.1:<debugPort>',
   defaultViewport: null
 });
 
@@ -272,7 +262,9 @@ await page.goto('https://example.com');
 ```javascript
 const { chromium } = require('playwright');
 
-const browser = await chromium.connectOverCDP('http://localhost:9222');
+// Get debugPort from:
+// node bin/morelogin.js browser status --env-id <envId>
+const browser = await chromium.connectOverCDP('http://127.0.0.1:<debugPort>');
 const context = browser.contexts()[0];
 const page = context.pages()[0];
 await page.goto('https://example.com');
@@ -283,7 +275,7 @@ await page.goto('https://example.com');
 ```javascript
 const WebSocket = require('ws');
 
-const ws = new WebSocket('ws://localhost:9222/devtools/browser/abc123');
+const ws = new WebSocket('ws://127.0.0.1:<debugPort>/devtools/browser/<browser_id>');
 
 ws.on('open', () => {
   ws.send(JSON.stringify({
@@ -309,8 +301,10 @@ ws.on('message', (data) => {
 const puppeteer = require('puppeteer-core');
 
 async function main() {
+  // Get debugPort from:
+  // node bin/morelogin.js browser status --env-id <envId>
   const browser = await puppeteer.connect({
-    browserURL: 'http://localhost:9222'
+    browserURL: 'http://127.0.0.1:<debugPort>'
   });
   
   const page = await browser.newPage();
@@ -338,8 +332,10 @@ main();
 const puppeteer = require('puppeteer-core');
 
 async function main() {
+  // Get debugPort from:
+  // node bin/morelogin.js browser status --env-id <envId>
   const browser = await puppeteer.connect({
-    browserURL: 'http://localhost:9222'
+    browserURL: 'http://127.0.0.1:<debugPort>'
   });
   
   const page = await browser.newPage();
@@ -373,8 +369,10 @@ const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 
 async function main() {
+  // Get debugPort from:
+  // node bin/morelogin.js browser status --env-id <envId>
   const browser = await puppeteer.connect({
-    browserURL: 'http://localhost:9222'
+    browserURL: 'http://127.0.0.1:<debugPort>'
   });
   
   const page = await browser.newPage();
@@ -406,8 +404,10 @@ main();
 const puppeteer = require('puppeteer-core');
 
 async function main() {
+  // Get debugPort from:
+  // node bin/morelogin.js browser status --env-id <envId>
   const browser = await puppeteer.connect({
-    browserURL: 'http://localhost:9222'
+    browserURL: 'http://127.0.0.1:<debugPort>'
   });
   
   // Open multiple tabs
@@ -438,7 +438,9 @@ main();
 const { chromium } = require('playwright');
 
 async function main() {
-  const browser = await chromium.connectOverCDP('http://localhost:9222');
+  // Get debugPort from:
+  // node bin/morelogin.js browser status --env-id <envId>
+  const browser = await chromium.connectOverCDP('http://127.0.0.1:<debugPort>');
   const context = browser.contexts()[0];
   const page = context.pages()[0] || await context.newPage();
   
@@ -486,8 +488,9 @@ main();
 **Solutions**:
 1. Check if Morelogin is logged in
 2. Verify the profile ID is correct
-3. Check Morelogin log files
-4. Try restarting the Morelogin app
+3. If `browser start` times out at 10s, run `browser status` to confirm actual running state
+4. Check Morelogin log files
+5. Try restarting the Morelogin app
 
 ### Q4: Automation Script Runs Slowly
 
@@ -541,7 +544,7 @@ openclaw morelogin proxy list --page 1 --page-size 20
 const profileIds = ['id1', 'id2', 'id3'];
 
 for (const id of profileIds) {
-  await spawn('node', ['bin/morelogin.js', 'browser', 'start', '--env-id', id]);
+  await callApi('/api/env/start', { envId: id });
   await sleep(2000); // Wait 2 seconds
 }
 ```
@@ -550,7 +553,7 @@ for (const id of profileIds) {
 
 ```javascript
 const browser = await puppeteer.connect({
-  browserURL: 'http://localhost:9222'
+  browserURL: 'http://127.0.0.1:<debugPort>'
 });
 
 const client = await browser.target().createCDPSession();
@@ -572,7 +575,7 @@ await client.send('Emulation.setDeviceMetricsOverride', {
 
 ```javascript
 const browser = await puppeteer.connect({
-  browserURL: 'http://localhost:9222'
+  browserURL: 'http://127.0.0.1:<debugPort>'
 });
 
 const page = await browser.newPage();
@@ -591,7 +594,7 @@ await page.setViewport({ width: 1920, height: 1080 });
 
 ```javascript
 const browser = await puppeteer.connect({
-  browserURL: 'http://localhost:9222'
+  browserURL: 'http://127.0.0.1:<debugPort>'
 });
 
 const page = await browser.newPage();
@@ -631,7 +634,7 @@ page.on('response', response => {
 
 ## Changelog
 
-### v1.0.0 (2024-02-26)
+### v1.0.0
 - Initial release
 - Profile management support
 - CDP connection support

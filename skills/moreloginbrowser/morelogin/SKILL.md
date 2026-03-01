@@ -87,7 +87,6 @@ Before any operation:
 | `POST /api/cloudphone/delete/batch` | Batch delete |
 | `POST /api/cloudphone/newMachine` | One-click new device |
 | `POST /api/cloudphone/updateAdb` | Enable/disable ADB |
-| `POST /api/cloudphone/exeCommand` | Execute command via ADB |
 
 ### Cloud Phone File & App
 
@@ -137,7 +136,7 @@ Before any operation:
 2. Call `powerOn` to start.
 3. Call `info` to get ADB connection params.
 4. Call `updateAdb` when needed to enable ADB.
-5. Run `exeCommand` or local `adb connect`.
+5. Run supported cloud phone management endpoints only (no direct command execution).
 6. Call `powerOff` when done.
 
 ## Quick Examples (Official API)
@@ -181,7 +180,6 @@ openclaw morelogin browser close --env-id <envId>
 openclaw morelogin cloudphone list
 openclaw morelogin cloudphone start --id <cloudPhoneId>
 openclaw morelogin cloudphone info --id <cloudPhoneId>
-openclaw morelogin cloudphone exec --id <cloudPhoneId> --command "ls /sdcard"
 
 ## Response & Error Handling
 
@@ -209,6 +207,17 @@ Handling rules:
 - Do not expose account, proxy passwords, ADB keys, or other sensitive data in logs or code.
 - Double-check target ID lists before batch delete, cache clear, or app uninstall.
 
+## Security Notice
+
+This skill no longer provides local ADB/SSH connection methods (`adb-connect`, `adb-disconnect`, `adb-devices`).
+
+Command execution safeguards:
+
+- Restricted to local automation context (localhost workflows and local API).
+- Remote cloud phone `exec` is disabled by default and must be explicitly enabled.
+- `exec` command content is validated against a safe allowlist and blocks shell metacharacters.
+- Generic `api` passthrough is endpoint-allowlisted by default.
+
 ## When Not to Use This Skill
 
 - MoreLogin is not installed, not running, or not logged in.
@@ -218,7 +227,6 @@ Handling rules:
 ## Related Files
 
 - `bin/morelogin.js`
-- `bin/cloudphone.js`
 - `lib/api.js`
 - `local-api.yaml`
 - `API-CONTRACT.md`
