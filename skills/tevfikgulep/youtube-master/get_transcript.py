@@ -15,10 +15,10 @@ import urllib.error
 from pathlib import Path
 from datetime import datetime
 
-# Config - reads from credentials file
-YOUTUBE_API_KEY = "AIzaSyCQB2ewfhk1H76oYz2hw88bkb0GqHFvuOQ"
-APIFY_TOKEN = "apify_api_KcEKr6vOjQy0JSE5fuCBeINXq0tD2h33rZAw"
-APIFY_ACTOR = "karamelo~youtube-transcripts"
+# Config - reads from credentials file only
+YOUTUBE_API_KEY = None
+APIFY_TOKEN = None
+APIFY_ACTOR = "scrape-creators~best-youtube-transcripts-scraper"
 
 def get_credentials():
     """Load API tokens from credentials file if not in env"""
@@ -114,9 +114,9 @@ def get_transcript(url, languages=None):
     api_url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR}/run-sync-get-dataset-items?timeout=120"
     
     if languages:
-        data = json.dumps({"urls": [url], "languages": languages})
+        data = json.dumps({"videoUrls": [url], "languages": languages})
     else:
-        data = json.dumps({"urls": [url], "languages": ["en", "tr", "auto"]})
+        data = json.dumps({"videoUrls": [url], "languages": ["en", "tr", "auto"]})
     
     req = urllib.request.Request(
         api_url,
