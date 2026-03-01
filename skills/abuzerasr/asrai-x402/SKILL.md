@@ -1,5 +1,5 @@
 ---
-name: asrai
+name: asrai-x402
 description: Crypto market analysis using Asrai API. Covers technical analysis, screeners, sentiment, forecasting, smart money, Elliott Wave, cashflow, DEX data, and AI-powered insights. Requires asrai-mcp installed and PRIVATE_KEY env var set. Each API call costs $0.001 USDC from your own wallet on Base mainnet via x402.
 license: MIT
 ---
@@ -8,15 +8,30 @@ license: MIT
 
 ## Prerequisites
 
-This skill requires **asrai-mcp** to be installed:
-```bash
-pip install asrai-mcp
+This skill requires **asrai-mcp** (Node.js, zero install). Add to Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "asrai": {
+      "command": "npx",
+      "args": ["-y", "asrai-mcp"],
+      "env": { "PRIVATE_KEY": "0x<your_private_key>" }
+    }
+  }
+}
 ```
 
-And a `~/.env` file with your wallet key:
+Or store the key in `~/.env` and omit the `env` block:
 ```
 PRIVATE_KEY=0x<your_private_key>
 ```
+
+Config file location: macOS `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows `%APPDATA%\Claude\claude_desktop_config.json`, Linux `~/.config/Claude/claude_desktop_config.json`.
+
+For **n8n / remote connections**, use the hosted SSE server — no install needed:
+- HTTP Streamable: `https://mcp.asrai.me/mcp?key=0x<your_private_key>`
+- SSE (legacy): `https://mcp.asrai.me/sse?key=0x<your_private_key>`
 
 Each API call costs **$0.001 USDC** from your wallet on Base mainnet ($0.002 for `ask_ai`). `indicator_guide` is FREE.
 
@@ -57,11 +72,14 @@ Call only when you encounter an unfamiliar indicator name in tool output. Standa
 
 ## Output rules
 
+- Write like an experienced trader explaining to a friend — conversational, confident, direct. Not a report template.
 - Think like both a trader AND a long-term investor. Default to investor mode (macro thesis, cycle position, accumulation zones). Switch to trader mode only when user asks for entry/when to buy.
-- Keep responses 200-400 words — thorough but easy to read.
-- Use emojis to structure sections: 📊 market context, 🎯 target/entry, ⚠️ risk, 📈📉 direction, 💡 insight.
+- Keep responses 200-400 words — thorough but easy to read. Short lines, breathing room between sections.
+- Use emojis sparingly to mark section breaks where helpful — but don't force a fixed template. Let the response shape itself around what matters most.
 - Never list raw indicator values — synthesize into plain language verdict.
-- Never address the user by name in responses.
+- Avoid low-liquidity noise: prefer signals that appear across multiple indicators, have meaningful volume, or a clear catalyst.
+- Never mention tool names, endpoints, or API calls in responses.
+- End with 1 clear action bias: accumulate / wait / avoid — and why.
 
 ## Default analysis pattern
 
