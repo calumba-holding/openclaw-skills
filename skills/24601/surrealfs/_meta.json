@@ -3,9 +3,15 @@
   "slug": "surrealfs",
   "displayName": "surrealfs",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1771784951769,
-    "commit": "https://github.com/openclaw/skills/commit/0f8179d3c082b08620b1b8f11b82db73c842630f"
+    "version": "1.1.1",
+    "publishedAt": 1772212159652,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1771784951769,
+      "commit": "https://github.com/openclaw/skills/commit/0f8179d3c082b08620b1b8f11b82db73c842630f"
+    }
+  ]
 }
