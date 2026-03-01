@@ -1,140 +1,99 @@
-# Report Template (Hybrid)
+# Report Template (Strict)
 
-Use `daily` template by default. Use `full_report` template when user explicitly requests comprehensive analysis.
-
-## A) Daily Concise Template (Default)
+Use this template exactly. Keep key names unchanged for downstream parsing.
 
 ```markdown
+---
+version: 1
+run_date: <YYYY-MM-DD>
+run_time_local: <YYYY-MM-DD HH:mm TZ>
+mode: <daily|daily_minimal|full_report>
+ticker: <TICKER>
+exchange: <EXCHANGE>
+market: <TEXT>
+report_dir: <working_directory>/daily-stock-analysis/reports/
+output_file: <YYYY-MM-DD-TICKER-analysis.md or -vN.md>
+report_versioning_mode: <overwrite|new_version>
+history_window_days: <N>
+
+recommendation: <Buy|Hold|Sell|Watch>
+recommendation_triggers: <ENTRY/EXIT/INVALIDATION SUMMARY>
+
+pred_close_t1: <NUMBER>
+pred_range_t1: <LOW-HIGH or N/A>
+pred_confidence: <High|Medium|Low>
+pred_assumptions: <SHORT TEXT>
+
+prev_pred_close_t1: <NUMBER or N/A>
+prev_actual_close_t1: <NUMBER or pending or N/A>
+AE: <NUMBER or N/A>
+APE: <PERCENT or N/A>
+strict_hit: <true|false|N/A>
+loose_hit: <true|false|N/A>
+
+acc_1d_strict: <PERCENT or N/A>
+acc_1d_loose: <PERCENT or N/A>
+acc_3d_strict: <PERCENT or N/A>
+acc_3d_loose: <PERCENT or N/A>
+acc_7d_strict: <PERCENT or N/A>
+acc_7d_loose: <PERCENT or N/A>
+acc_30d_strict: <PERCENT or N/A>
+acc_30d_loose: <PERCENT or N/A>
+acc_custom_strict: <PERCENT or N/A>
+acc_custom_loose: <PERCENT or N/A>
+
+improvement_actions:
+  - <ACTION_1>
+  - <ACTION_2 or N/A>
+  - <ACTION_3 or N/A>
+status: <ok|pending_data|blocked>
+status_note: <SHORT TEXT>
+---
+
 # Daily Stock Analysis - <TICKER> (<EXCHANGE>)
 
-## 1) Execution Metadata
-- Run Time: <YYYY-MM-DD HH:mm TZ>
-- Market: <US/CN/HK>
-- Mode: daily
-- Target Session for Prediction: <YYYY-MM-DD>
-- Rolling Window Baseline: <7d default or custom>
-- Output File: <YYYY-MM-DD-TICKER-analysis.md in workspace root>
-
-## 2) Market Snapshot and Thesis
-- Last Price/Close: <VALUE>
+## 1) Market Snapshot
+- Last/Close: <VALUE>
 - Session Range: <LOW-HIGH>
 - Volume/Volatility: <SUMMARY>
-- Thesis: <Bullish/Neutral/Bearish + 2-3 sentence rationale>
+- Thesis: <BULLISH/NEUTRAL/BEARISH + concise rationale>
 
-## 3) Recommendation and Risk Controls
+## 2) Recommendation
 - Recommendation: <Buy/Hold/Sell/Watch>
-- Entry Trigger(s): <CONDITIONS>
-- Exit/Invalidation Trigger(s): <CONDITIONS>
-- Risk Controls: <POSITION/RISK NOTES>
+- Trigger Conditions: <ENTRY/EXIT/INVALIDATION>
+- Risk Controls: <SHORT TEXT>
 
-## 4) Next-Trading-Day Close Prediction
-- Point Forecast (`pred_close_t1`): <VALUE>
-- Optional Forecast Range: <LOW-HIGH>
-- Confidence: <High/Medium/Low>
-- Key Assumptions:
-  1. <ASSUMPTION_1>
-  2. <ASSUMPTION_2>
+## 3) Next Trading Day Prediction
+- Point Forecast: <pred_close_t1>
+- Range: <pred_range_t1>
+- Confidence: <pred_confidence>
+- Assumptions: <pred_assumptions>
 
-## 5) Prior Forecast Review (if available)
-- Previous Forecast (`prev_pred_close_t1`): <VALUE or N/A>
-- Actual Close (`prev_actual_close_t1`): <VALUE or N/A>
-- AE: <VALUE or N/A>
-- APE: <VALUE or N/A>
-- Attribution: <WHY HIT/MISS>
+## 4) Prior Forecast Review
+- Previous Forecast: <prev_pred_close_t1>
+- Actual Close: <prev_actual_close_t1>
+- AE / APE: <AE> / <APE>
+- Attribution: <WHY HIT OR MISS>
 
-## 6) Rolling Accuracy
-| Window | Strict (<=1%) | Loose (<=2%) | Direction (opt.) | n |
-|---|---:|---:|---:|---:|
-| 1d | <...> | <...> | <...> | <...> |
-| 3d | <...> | <...> | <...> | <...> |
-| 7d | <...> | <...> | <...> | <...> |
-| 30d | <...> | <...> | <...> | <...> |
-| Custom | <...> | <...> | <...> | <...> |
+## 5) Rolling Accuracy
+| Window | Strict | Loose |
+|---|---:|---:|
+| 1d | <acc_1d_strict> | <acc_1d_loose> |
+| 3d | <acc_3d_strict> | <acc_3d_loose> |
+| 7d | <acc_7d_strict> | <acc_7d_loose> |
+| 30d | <acc_30d_strict> | <acc_30d_loose> |
+| Custom | <acc_custom_strict> | <acc_custom_loose> |
 
-## 6.1) Forecast Correctness and Improvement Signal
-- Latest Forecast Correctness Score (optional): <SCORE_0_TO_100>
-- 7d APE Trend: <IMPROVING/STABLE/DEGRADING>
-- Strict Hit Rate Change (7d vs previous 7d): <VALUE>
-- Improvement Actions for Next Run:
-  1. <ACTION_1>
-  2. <ACTION_2>
+## 6) Self-Improvement Actions for Next Run
+1. <ACTION_1>
+2. <ACTION_2 or N/A>
+3. <ACTION_3 or N/A>
 
-## 7) Next Session Watchlist
-1. <EVENT_OR_LEVEL_1>
-2. <EVENT_OR_LEVEL_2>
-3. <EVENT_OR_LEVEL_3>
+## 7) Sources (with timestamp)
+- <SOURCE_1>
+- <SOURCE_2>
+- <SOURCE_3>
 
-## 8) Sources
-- <SOURCE_URL_1> (updated/published: <TIMESTAMP>)
-- <SOURCE_URL_2> (updated/published: <TIMESTAMP>)
-- <SOURCE_URL_3> (updated/published: <TIMESTAMP>)
-
-## 9) Disclaimer
-This content is for research and informational purposes only and does not constitute investment advice or a return guarantee. Markets are risky; invest with caution.
-```
-
-## B) Comprehensive Template (`full_report` Mode)
-
-```markdown
-# Comprehensive Stock Report - <TICKER> (<EXCHANGE>)
-
-## 1) Executive Summary
-- Company snapshot
-- Core thesis
-- Recommendation and conviction
-- Key upside/downside drivers
-- Output File: <YYYY-MM-DD-TICKER-analysis.md in workspace root>
-
-## 2) Company and Market Overview
-- Business model and segment mix
-- Industry position and peer context
-- Market regime context (rates/FX/commodities/index)
-
-## 3) Fundamental Analysis
-- Revenue/earnings/cash flow trends
-- Profitability and efficiency metrics
-- Balance sheet and leverage profile
-- Valuation (historical, peer-relative, scenario-based)
-
-## 4) Technical Analysis
-- Trend structure across timeframes
-- Support/resistance map
-- Indicator readout (MA, RSI, MACD, volume)
-- Pattern and momentum interpretation
-
-## 5) Recommendation Framework
-- Recommendation: Buy/Hold/Sell/Watch
-- Entry/exit criteria
-- Invalidation conditions and risk controls
-
-## 6) Next-Trading-Day Prediction
-- `pred_close_t1`
-- Optional interval and confidence
-- Assumption set
-
-## 7) Prior Forecast Review
-- `prev_pred_close_t1` vs `prev_actual_close_t1`
-- AE/APE and hit status
-- Attribution and what to change
-
-## 8) Rolling Forecast Accuracy
-- 1d / 3d / 7d / 30d / custom windows
-- strict and loose hit rates
-- optional direction accuracy
-- sample size notes
-
-## 8.1) Continuous Improvement Notes
-- Latest correctness score (optional)
-- Error pattern summary
-- Adjustments for next run
-
-## 9) Catalysts and Risk Calendar
-- Positive catalysts with dates
-- Negative catalysts/risk events with dates
-
-## 10) Sources and Timestamps
-- Primary and secondary sources used
-
-## 11) Disclaimer
+## 8) Disclaimer
 This content is for research and informational purposes only and does not constitute investment advice or a return guarantee. Markets are risky; invest with caution.
 ```

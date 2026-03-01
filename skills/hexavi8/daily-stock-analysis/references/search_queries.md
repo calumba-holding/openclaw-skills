@@ -1,87 +1,48 @@
-# Search Query Templates (Market-Aware)
+# Search Query Templates (Concise)
 
-Use `<TICKER>`, `<COMPANY>`, `<MARKET>`, `<DATE>` placeholders.
-Always capture source URL and publication/update timestamp.
+Use these templates with search engines and `site:` filters.
 
-## Source Priority
+Detailed source list is in `references/sources.md`.
 
-1. Official / primary:
-- Exchange disclosures and filings
-- Company investor relations releases
-- Regulator filings
+## 1) Identity and Listing
 
-2. Tier-1 financial media / data terminals:
-- Bloomberg, Reuters, CNBC, WSJ, MarketWatch, Yahoo Finance, TradingView
+- `<COMPANY> ticker symbol exchange`
+- `<TICKER> exchange listing market`
 
-3. Secondary aggregators:
-- Use for discovery only; verify key data in primary/tier-1 sources
+## 2) Official Filings and Disclosures
 
-## Cross-Verification Rule
+- `<TICKER> official filings latest`
+- `<COMPANY> investor relations latest release`
+- `site:sec.gov <TICKER> 10-Q OR 10-K OR 8-K`
+- `site:hkexnews.hk <TICKER> announcement`
+- `site:sse.com.cn <TICKER> 公告`
+- `site:szse.cn <TICKER> 公告`
 
-For critical values (close, EPS, guidance, major corporate events), verify with at least two independent sources whenever possible.
+## 3) Market Data and Price Context
 
-## A) US Market Queries
+- `site:finance.yahoo.com <TICKER> quote`
+- `<TICKER> latest close open high low volume`
+- `<TICKER> 52 week range market cap`
 
-1. Filings and disclosures:
-- `<TICKER> SEC 8-K 10-Q 10-K latest`
-- `<COMPANY> investor relations earnings release <DATE>`
+## 4) News and Analyst Context
 
-2. Price and technical context:
-- `<TICKER> price volume 52-week range`
-- `<TICKER> technical analysis RSI MACD moving averages`
-- `<TICKER> options implied volatility unusual options activity`
+- `site:reuters.com <TICKER> earnings guidance`
+- `site:bloomberg.com <TICKER> stock news`
+- `<TICKER> analyst rating target price`
 
-3. Analyst and news flow:
-- `<TICKER> analyst rating change price target`
-- `<COMPANY> latest news today Reuters Bloomberg`
+## 5) Technical Context
 
-## B) Hong Kong Market Queries
-
-1. Disclosures and announcements:
-- `<TICKER> HKEX announcement`
-- `<COMPANY> investor relations results announcement`
-
-2. Price and technical context:
-- `<TICKER> HK stock price volume`
 - `<TICKER> RSI MACD moving average`
+- `<TICKER> support resistance trend`
 
-3. Sell-side/news flow:
-- `<TICKER> broker target price Hong Kong`
-- `<COMPANY> Hong Kong market news`
+## 6) Macro Context (if used in thesis)
 
-## C) China A-Share Market Queries
-
-1. Official disclosures:
-- `<TICKER> exchange announcement SSE SZSE`
-- `<COMPANY> annual report quarterly report`
-
-2. Price and technical context:
-- `<TICKER> A-share close volume turnover`
-- `<TICKER> technical indicator RSI MACD MA`
-
-3. News and policy context:
-- `<COMPANY> regulatory policy industry news`
-- `<SECTOR> China policy support demand trend`
-
-## D) Macro and Regime Queries
-
+- `<MARKET> benchmark index today`
+- `<MARKET> central bank policy rate outlook`
 - `US 10Y yield today`
-- `Fed rate expectations today CME FedWatch`
-- `DXY index today`
-- `USD/CNH today`
-- `WTI crude oil price today`
-- `<MARKET_INDEX> index trend volatility`
 
-## E) Peer and Relative Queries
+## Data Quality Rules
 
-- `<COMPANY> peer comparison valuation`
-- `<TICKER> vs <PEER_TICKER> margins growth valuation`
-- `<SECTOR> ETF fund flow today`
-
-## Data Hygiene Checklist
-
-1. Use latest available session-aligned data.
-2. Align date and timezone before comparing values.
-3. Distinguish official close vs intraday last trade.
-4. Record corporate actions affecting comparability.
-5. Annotate unverified/low-confidence items.
+1. Prefer Tier-1 official sources first.
+2. Cross-check critical values with two independent sources.
+3. Record source URL and timestamp in report.

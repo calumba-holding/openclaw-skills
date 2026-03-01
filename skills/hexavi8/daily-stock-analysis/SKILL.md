@@ -1,188 +1,138 @@
 ---
 name: daily-stock-analysis
-description: Daily stock analysis and forecasting skill for multi-market equities, with explicit predictive pricing, next-run postmortem review, and continuous-improvement feedback loop. Use when users ask for next-trading-day close predictions, recommendation decisions (Buy/Hold/Sell/Watch), forecast correctness scoring, rolling accuracy statistics (1d/3d/7d/30d/custom), and iterative improvement of future analysis quality.
+description: Deterministic daily stock analysis skill for global equities. Use when users need daily analysis, next-trading-day close prediction, prior forecast review, rolling accuracy, and reliable markdown report output.
 ---
 
 # Daily Stock Analysis
 
 Perform market-aware, evidence-based daily stock analysis with prediction, next-run review, rolling accuracy tracking, and a structured self-evolution mechanism that updates future assumptions from observed forecast errors.
 
-## Core Capability Focus
+## Hard Rules
 
-This skill is optimized around three linked capabilities:
+1. Read and write files only under `working_directory`.
+2. Save new reports only to:
 
-1. `price_prediction`
+- `<working_directory>/daily-stock-analysis/reports/`
 
-- Predict next-trading-day closing price (`pred_close_t1`) with confidence and assumptions.
+3. Use filename:
 
-2. `postmortem_review`
+- `YYYY-MM-DD-<TICKER>-analysis.md`
 
-- Re-evaluate previous forecast against actual close and explain miss/hit attribution.
+4. If same ticker/day file exists, ask user:
 
-3. `continuous_improvement`
+- `overwrite` or `new_version` (`-v2`, `-v3`, ...)
+- For unattended runs, default to `new_version`
 
-- Convert review findings into explicit, reusable improvements for the next run: assumption updates, factor-weight adjustments, event-risk handling, and confidence calibration.
+5. Always review history before new prediction.
+6. Limit history read count to control token usage:
 
-## Self-Evolution Loop
+- Script mode: max 5 files (default)
+- Compatibility mode: max 3 files
 
-Treat each run as labeled feedback for the next run, not just a one-off report.
+## Required Scripts (Use First)
 
-### Trigger Conditions
+1. Plan output path + collect history:
 
-Start/refresh self-evolution when any of these occurs:
+```bash
+python3 {baseDir}/scripts/report_manager.py plan \
+  --workdir <working_directory> \
+  --ticker <TICKER> \
+  --run-date <YYYY-MM-DD> \
+  --versioning auto \
+  --history-limit 5
+```
 
-- Material forecast miss (`AE`/`APE` above recent baseline)
-- Wrong direction call (bullish vs bearish miss)
-- User correction that changes thesis, assumptions, or catalyst interpretation
-- Data-quality conflict or tool failure that degraded analysis confidence
+2. Compute rolling accuracy from existing reports:
 
-### Learning Record (Per Run)
+```bash
+python3 {baseDir}/scripts/calc_accuracy.py \
+  --workdir <working_directory> \
+  --ticker <TICKER> \
+  --windows 1,3,7,30 \
+  --history-limit 60
+```
 
-Create a concise learning record with:
+3. Optional: migrate legacy files after explicit user confirmation:
 
-- `observation`: what was wrong or unstable
-- `root_cause`: why the miss happened
-- `action`: what to change next run
-- `scope`: where it applies (`ticker-specific` or `cross-ticker`)
-- `expiry`: when to stop applying this rule (if regime-dependent)
+```bash
+python3 {baseDir}/scripts/report_manager.py migrate \
+  --workdir <working_directory> \
+  --file <ABS_PATH_1> --file <ABS_PATH_2>
+```
 
-Write this into current report via `improvement_actions` (and optional `learning_note`).
+## Compatibility Mode (No Python / Small Model)
 
-### Application Priority (Next Run)
+If Python scripts are unavailable or model capability is limited, switch to minimal mode:
 
-Apply prior learnings before generating new prediction:
+1. Read at most 3 recent reports for the same ticker.
+2. Use only a minimal source set:
 
-1. Data quality and event handling fixes
-2. Factor-weight and horizon adjustments
-3. Confidence calibration updates
-4. Recommendation threshold tuning
+- one official disclosure source
+- one reliable market data source (Yahoo Finance acceptable)
 
-If multiple learnings conflict, prefer the most recent learning with better observed follow-up accuracy.
+3. Output concise result only:
 
-### Validation and Rollback
+- recommendation
+- `pred_close_t1`
+- prior review (`prev_pred_close_t1`, `prev_actual_close_t1`, `AE`, `APE`) if available
+- one `improvement_action`
 
-After applying a learning:
+4. Save report with same filename rules in canonical reports directory.
 
-- Track whether rolling metrics improve over next valid samples.
-- If no improvement after multiple samples, downgrade or remove that learning.
-- Keep only learnings that change decisions or improve calibration.
+See `references/minimal_mode.md`.
 
-## Operation Modes
+## Minimal Run Protocol
 
-1. `daily` (default)
+1. Resolve ticker/exchange/market (ask if ambiguous).
+2. Run `report_manager.py plan`.
+3. Read `history_files` returned by script.
+4. If `legacy_files` exist, list all absolute paths and ask whether to migrate.
+5. Gather data using `references/sources.md` + `references/search_queries.md`.
+6. Run `calc_accuracy.py` for consistent metrics.
+7. Render report using `references/report_template.md`.
+8. Save to `selected_output_file` returned by `report_manager.py`.
 
-- Generate a concise daily report.
-- Include recommendation, next-trading-day close prediction, prior-day review (if available), and rolling accuracy metrics.
+## Required Output Fields
 
-2. `full_report` (optional)
+Must include:
 
-- Generate a comprehensive investment report.
-- Expand fundamental, technical, valuation, catalysts, and risk sections.
+- `recommendation`
+- `pred_close_t1`
+- `prev_pred_close_t1`
+- `prev_actual_close_t1`
+- `AE`, `APE`
+- rolling strict/loose accuracy fields
+- `improvement_actions`
 
-## Trigger Guidance
+## Self-Improvement (Required)
 
-Activate this skill when the user asks for:
+Each run must include 1-3 concrete `improvement_actions` from recent misses and use them in the next run.
+Do not skip this step.
 
-- Daily stock analysis (for example: "Analyze AAPL for tomorrow")
-- Daily recurring review (for example: "Analyze Tencent every morning and review yesterday's forecast")
-- Trading recommendation with rationale (Buy/Hold/Sell/Watch)
-- Next-day closing price prediction
-- Forecast quality review and error tracking
-- Rolling prediction accuracy for 1/3/7/30 days or a custom window
-- A full stock report (for example: "Give me a full report for TSLA")
+## Scheduling Recommendation
 
-## Input Defaults
+Recommend users set this as a weekday recurring task (for example 10:00 local time) to keep prediction-review windows continuous.
 
-If the user does not specify values, apply these defaults:
+## References
 
-- Mode: `daily`
-- Run time: local morning run, target 10:00
-- Window: last 7 valid forecast samples
-- Language: follow user language for response content (skill docs remain English)
-- Recommendation labels: Buy / Hold / Sell / Watch
-- Report file output: write one markdown report to workspace root on every run
+Default:
 
-If ticker is missing, infer from company name and confirm ticker + exchange before analysis.
+- `references/workflow.md`
+- `references/report_template.md`
+- `references/metrics.md`
+- `references/search_queries.md`
+- `references/sources.md`
+- `references/minimal_mode.md`
+- `references/security.md`
 
-## Default Report Persistence
+Deep-dive only (`full_report` mode):
 
-Persist every run as a markdown file in workspace root so future runs can reuse history for review and accuracy computation.
+- `references/fundamental-analysis.md`
+- `references/technical-analysis.md`
+- `references/financial-metrics.md`
 
-- Default filename format: `YYYY-MM-DD-<TICKER>-analysis.md`
-- Example: `2026-02-24-AAPL-analysis.md`
-- Include at minimum: prediction fields, prior-review fields, rolling metrics, and improvement actions
+## Compliance
 
-## Reference Files
-
-Read references as needed:
-
-- `references/workflow.md`: end-to-end execution sequence and edge handling
-- `references/search_queries.md`: market-aware web search playbook
-- `references/metrics.md`: error and accuracy definitions
-- `references/report_template.md`: output templates (`daily` and `full_report`)
-- `references/fundamental-analysis.md`: business and financial framework
-- `references/technical-analysis.md`: technical framework and indicators
-- `references/financial-metrics.md`: metric definitions and formulas
-
-## Core Execution Rules
-
-1. Verify all time-sensitive market data from current, authoritative sources.
-2. Prefer primary sources first (exchange filings, company IR, official releases), then tier-1 media.
-3. Cross-check key numbers with at least two independent sources when possible.
-4. Use market calendar and timezone correctly for US/CN/HK trading sessions.
-5. Before new analysis, first load and review previous analysis markdown files (if available) from workspace root.
-6. Clearly separate facts, assumptions, and inferences.
-7. If data is missing or conflicting, state uncertainty and reduce confidence.
-8. Always include legal disclaimer at the end.
-
-## Standardized Output Contract
-
-Each run must provide:
-
-1. `recommendation`
-
-- One of: Buy / Hold / Sell / Watch
-- Include trigger conditions and risk controls.
-
-2. `prediction`
-
-- `pred_close_t1`: point estimate for next trading day close
-- Optional interval `[pred_low_t1, pred_high_t1]`
-- Confidence level: High / Medium / Low
-- Key assumptions list
-
-3. `review`
-
-- Compare previous forecast vs actual close:
-  - `prev_pred_close_t1`
-  - `prev_actual_close_t1`
-  - `AE`, `APE`
-- Explain primary forecast miss/hit drivers
-
-4. `accuracy`
-
-- Rolling strict and loose hit rates for 1d/3d/7d/30d (as data permits)
-- Optional custom window if user requests
-- Optional direction accuracy
-
-5. `improvement_actions`
-
-- 1-3 concrete adjustments for the next run based on forecast review
-- Example: reduce weight on short-term momentum during event-heavy sessions
-- Optional `learning_note`: one concise self-evolution record from this run
-- Optional `learning_scope`: `ticker-specific` or `cross-ticker`
-- Optional `learning_expiry`: condition/date after which learning should be retired
-
-## Scheduling Guidance
-
-When user asks for daily automation at 10:00:
-
-- Use weekday schedule (Mon-Fri) in user's local timezone.
-- Keep schedule in automation config, not in analysis prompt text.
-- The analysis prompt should describe only the task behavior.
-
-## Compliance Disclaimer (Required)
-
-Append this (or equivalent meaning) in every report:
+Always append:
 
 "This content is for research and informational purposes only and does not constitute investment advice or a return guarantee. Markets are risky; invest with caution."
