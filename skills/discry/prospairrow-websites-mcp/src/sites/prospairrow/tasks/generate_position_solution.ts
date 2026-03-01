@@ -17,20 +17,19 @@ const inputSchema = z
   });
 
 export const task: TaskDefinition = {
-  taskId: "discover_competitors",
+  taskId: "generate_position_solution",
   capability: Capability.WRITE,
-  description: "Trigger competitor discovery for a Prospairrow prospect. Accepts prospect_id, company name, or website URL.",
+  description: "Generate positioning messages for a Prospairrow prospect.",
   run: async (ctx, params) => {
     const parsed = inputSchema.safeParse(params ?? {});
     if (!parsed.success) {
-      return { competitors: null, errors: [parsed.error.message] };
+      return { position_solution: null, errors: [parsed.error.message] };
     }
 
     const { prospect_id, company, website, diagnostics } = parsed.data;
-
     const apiInit = await ProspairrowApiClient.fromApiKey(ctx.apiKeys?.prospairrow ?? "");
     if (!apiInit.client) {
-      return { competitors: null, errors: [apiInit.error ?? "PROSPAIRROW_API_INIT_FAILED"] };
+      return { position_solution: null, errors: [apiInit.error ?? "PROSPAIRROW_API_INIT_FAILED"] };
     }
 
     const api = apiInit.client;
@@ -42,7 +41,7 @@ export const task: TaskDefinition = {
         const search = await api.searchProspects(query, 5);
         if (!search.ok) {
           return {
-            competitors: null,
+            position_solution: null,
             errors: [`search_failed:${search.error ?? search.status}`],
             diagnostics: { mode: "api", apiBase: api.apiBase, usedApiKey: true, diagnosticsEnabled: diagnostics }
           };
@@ -64,17 +63,17 @@ export const task: TaskDefinition = {
 
       if (!targetId) {
         return {
-          competitors: null,
+          position_solution: null,
           errors: [`Prospect not found: ${[prospect_id, company, website].filter(Boolean).join(" | ")}`],
           diagnostics: { mode: "api", apiBase: api.apiBase, usedApiKey: true, diagnosticsEnabled: diagnostics }
         };
       }
 
-      const result = await api.discoverCompetitors(targetId);
+      const result = await api.generatePositionSolution(targetId);
       if (!result.ok) {
         return {
-          competitors: null,
-          errors: [`discover_competitors_failed:${result.error ?? result.status}`],
+          position_solution: null,
+          errors: [`generate_position_solution_failed:${result.error ?? result.status}`],
           diagnostics: {
             mode: "api",
             apiBase: api.apiBase,
@@ -86,13 +85,8 @@ export const task: TaskDefinition = {
         };
       }
 
-      const competitors =
-        Array.isArray(result.data.competitors) ? result.data.competitors :
-        Array.isArray(result.data.items) ? result.data.items :
-        result.data;
-
       return {
-        competitors,
+        position_solution: result.data,
         errors: [],
         diagnostics: {
           mode: "api",

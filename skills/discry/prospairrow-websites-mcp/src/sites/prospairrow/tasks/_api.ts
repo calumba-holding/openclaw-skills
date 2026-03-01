@@ -132,6 +132,25 @@ export class ProspairrowApiClient {
     return { ok: res.ok, status: res.status, prospects, error: res.error, raw: res.data };
   }
 
+  async listIcpQualifiedProspects(input: {
+    minCompanyScore: number;
+    minIcpScore?: number;
+    perPage?: number;
+    page?: number;
+  }): Promise<{ ok: boolean; status: number; prospects: ProspectApiRecord[]; error?: string; raw: Record<string, unknown> }> {
+    const query = new URLSearchParams();
+    query.set("min_company_score", String(input.minCompanyScore));
+    if (typeof input.minIcpScore === "number") query.set("min_icp_score", String(input.minIcpScore));
+    if (typeof input.perPage === "number") query.set("per_page", String(input.perPage));
+    if (typeof input.page === "number") query.set("page", String(input.page));
+
+    const res = await this.call(`prospects/icp-qualified?${query.toString()}`, "GET");
+    const prospects = Array.isArray(res.data.prospects)
+      ? (res.data.prospects as ProspectApiRecord[])
+      : (Array.isArray(res.data.items) ? (res.data.items as ProspectApiRecord[]) : []);
+    return { ok: res.ok, status: res.status, prospects, error: res.error, raw: res.data };
+  }
+
   async createProspect(payload: Record<string, unknown>): Promise<ApiCallResult> {
     return this.call("prospects", "POST", payload);
   }
@@ -166,6 +185,10 @@ export class ProspairrowApiClient {
     );
   }
 
+  async generatePositionSolution(prospectId: string): Promise<ApiCallResult> {
+    return this.call(`prospects/${encodeURIComponent(prospectId)}/position-solution`, "POST");
+  }
+
   async getCompetitors(prospectId: string): Promise<ApiCallResult> {
     return this.call(`prospects/${encodeURIComponent(prospectId)}/competitors`, "GET");
   }
@@ -181,6 +204,35 @@ export class ProspairrowApiClient {
       }
     );
   }
+
+  async apolloIcpRun(
+    prospectId: string,
+    input: {
+      reveal: boolean;
+      revealLimit: number;
+    }
+  ): Promise<ApiCallResult> {
+    return this.call(`prospects/${encodeURIComponent(prospectId)}/apollo-icp-run`, "POST", {
+      reveal: input.reveal,
+      reveal_limit: input.revealLimit
+    });
+  }
+
+  async getIcpScore(
+    prospectId: string,
+    input: {
+      forceRescore?: boolean;
+    }
+  ): Promise<ApiCallResult> {
+    return this.call(`prospects/${encodeURIComponent(prospectId)}/icp-score`, "POST", {
+      force_rescore: Boolean(input.forceRescore)
+    });
+  }
+
+  async getCompanyScore(prospectId: string): Promise<ApiCallResult> {
+    return this.call(`prospects/${encodeURIComponent(prospectId)}/company-score`, "POST");
+  }
+
 }
 
 export function pickProspectId(record: Record<string, unknown>): string | null {

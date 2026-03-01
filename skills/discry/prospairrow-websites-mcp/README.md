@@ -8,7 +8,7 @@ Give your AI agent direct access to Prospairrow's AI-powered prospecting platfor
 - Hyper-target outreach by stopping bad-fit prospects before they waste your team's time
 - Unlock competitor intelligence and personalized pitches that resonate with decision-makers
 
-This skill runs a local `websites-mcp` JSON-RPC server that connects your agent to Prospairrow via API. The runtime source is bundled directly in this skill package — no external git clone required. `npm install --ignore-scripts` fetches npm dependencies at install time; Playwright downloads browser binaries on first use.
+This skill runs a local `websites-mcp` JSON-RPC server that connects your agent to Prospairrow via API. The runtime source is maintained in this repository, and the install script copies it to `~/.openclaw/runtime/websites-mcp`. `npm install --ignore-scripts` fetches npm dependencies at install time; Playwright downloads browser binaries on first use.
 
 ## Quick start
 
@@ -25,10 +25,10 @@ clawhub install prospairrow-websites-mcp
 - In dashboard settings, generate an API key
 - Keep the key private (do not commit to git)
 
-3. Install runtime from the bundled source:
+3. Install runtime from this repository:
 
 ```bash
-bash ./skills/prospairrow-websites-mcp/scripts/install-runtime.sh
+bash ./scripts/install-runtime.sh
 ```
 
 4. Add MCP server config to OpenClaw (snippet in `docs/CONFIGURATION.md`).
@@ -59,8 +59,14 @@ Two config namespaces are intentionally used:
 ## Auth precedence
 
 1. Request headers (`Authorization` / `X-API-Key`)
-2. OpenClaw skill dashboard/config (`skills.entries.prospairrow-websites-mcp.apiKey` or env mapping)
-3. Process environment fallback (`PROSPAIRROW_API_KEY`)
+2. Process environment (`PROSPAIRROW_API_KEY`)
+3. Optional OpenClaw config fallback (disabled by default; enable with `WEBSITES_ALLOW_OPENCLAW_CONFIG_API_KEY=1`)
+
+## Security controls
+
+- `WEBSITES_ALLOW_OPENCLAW_CONFIG_API_KEY=1`: allow reading `~/.openclaw/openclaw.json` for API key fallback.
+- `WEBSITES_LOG_INVOCATIONS=1`: enable invocation logging to `logs/task-invocations.log` (off by default).
+- `WEBSITES_DISABLE_STORAGE_STATE_WRITE=1`: block writing browser auth storage to `secrets/<site>/auth.json`.
 
 ## Docs
 

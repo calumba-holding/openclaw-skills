@@ -14,7 +14,7 @@ Use this skill when the user asks to run Prospairrow actions through MCP/API.
 
 ## Runtime
 
-The full runtime source is bundled in this skill package (`runtime/` directory). No external git clone required. Install copies the bundled source locally and runs `npm install --ignore-scripts` to fetch npm dependencies (including Playwright, which downloads browser binaries on first use).
+The full runtime source is maintained in this repository. Install copies repository source locally and runs `npm install --ignore-scripts` to fetch npm dependencies (including Playwright, which downloads browser binaries on first use).
 
 ```bash
 bash {baseDir}/scripts/install-runtime.sh
@@ -31,11 +31,16 @@ bash {baseDir}/scripts/install-runtime.sh
 ## Supported tasks
 
 - `extract_prospects` (READ_ONLY)
+- `list_icp_qualified_companies` (READ_ONLY)
+- `get_icp_score` (READ_ONLY)
+- `get_company_score` (READ_ONLY)
+- `apollo_enrich` (WRITE)
 - `add_prospects` (WRITE)
 - `enrich_prospects` (WRITE)
 - `get_prospect_detail` (READ_ONLY)
 - `generate_content_marketing` (WRITE)
-- `discover_competitors` (WRITE; pass `prospect_id`, `company`, or `website` — resolves ID by search if not provided directly)
+- `generate_position_solution` (WRITE; runs `POST /api/v1/prospects/{id}/position-solution`, accepts `prospect_id`, `company`, or `website`)
+- `discover_competitors` (READ_ONLY; pass `prospect_id`, `company`, or `website` — resolves ID by search if not provided directly)
 
 ## Install runtime
 
@@ -59,10 +64,16 @@ Why `mcporter` here: this key stores MCP server routing/config. This is separate
 ## API key resolution order
 
 1. Request headers (`Authorization` / `X-API-Key`)
-2. OpenClaw skill config:
+2. Process env fallback: `PROSPAIRROW_API_KEY`
+3. Optional OpenClaw skill config (disabled by default; set `WEBSITES_ALLOW_OPENCLAW_CONFIG_API_KEY=1`):
    - `skills.entries.prospairrow-websites-mcp.apiKey`
    - `skills.entries.prospairrow-websites-mcp.env.PROSPAIRROW_API_KEY`
-3. Process env fallback: `PROSPAIRROW_API_KEY`
+
+## Security toggles
+
+- `WEBSITES_ALLOW_OPENCLAW_CONFIG_API_KEY=1`: allow reading `~/.openclaw/openclaw.json` for API key fallback.
+- `WEBSITES_LOG_INVOCATIONS=1`: enable writing `logs/task-invocations.log` (off by default).
+- `WEBSITES_DISABLE_STORAGE_STATE_WRITE=1`: disable writing browser storage state to `secrets/<site>/auth.json`.
 
 ## MCP request shape
 

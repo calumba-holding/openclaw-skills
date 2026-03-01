@@ -28,5 +28,5 @@ Add/update this section in `~/.openclaw/openclaw.json`:
 ```
 
 Notes:
-- `apiKey` from dashboard/config is preferred.
-- Runtime process env `PROSPAIRROW_API_KEY` is fallback.
+- Runtime process env `PROSPAIRROW_API_KEY` is preferred fallback.
+- Config key lookup from this file is disabled by default; enable with `WEBSITES_ALLOW_OPENCLAW_CONFIG_API_KEY=1` when starting the runtime.

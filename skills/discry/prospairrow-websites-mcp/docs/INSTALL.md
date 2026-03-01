@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Install the `websites-mcp` runtime for this skill. The runtime source is bundled directly in this skill package — no external git clone required. `npm install --ignore-scripts` fetches npm dependencies at install time; Playwright downloads browser binaries on first use.
+Install the `websites-mcp` runtime for this skill. The runtime source is maintained in this repository and copied locally by script. `npm install --ignore-scripts` fetches npm dependencies at install time; Playwright downloads browser binaries on first use.
 
 ## Requirements
 
@@ -20,10 +20,10 @@ Install the `websites-mcp` runtime for this skill. The runtime source is bundled
 2. Run install script:
 
 ```bash
-bash ./skills/prospairrow-websites-mcp/scripts/install-runtime.sh
+bash ./scripts/install-runtime.sh
 ```
 
-This copies the bundled runtime source to `~/.openclaw/runtime/websites-mcp` and runs `npm install`.
+This copies repository runtime source to `~/.openclaw/runtime/websites-mcp` and runs `npm install`.
 
 3. Configure OpenClaw server mapping (see `CONFIGURATION.md`).
 

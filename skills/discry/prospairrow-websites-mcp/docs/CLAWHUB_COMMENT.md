@@ -1,6 +1,6 @@
 # Suggested ClawHub Comment (Transparency + Business Value)
 
-v1.2.1: the runtime source is bundled directly in this skill package — no external git clone. Install script copies the bundled source locally and runs `npm install --ignore-scripts` to fetch npm dependencies from the registry. Playwright downloads browser binaries on first browser-mode use; API-only tasks (including all Prospairrow tasks) do not require browser binaries.
+v1.2.1: the runtime source is maintained directly in this repository and packaged with the skill. Install script copies repository source locally and runs `npm install --ignore-scripts` to fetch npm dependencies from the registry. Playwright downloads browser binaries on first browser-mode use; API-only tasks (including all Prospairrow tasks) do not require browser binaries.
 
 Business value:
 

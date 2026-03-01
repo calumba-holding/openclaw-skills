@@ -1,11 +1,17 @@
 {
   "owner": "discry",
   "slug": "prospairrow-websites-mcp",
-  "displayName": "Prospairrow Websites Mcp",
+  "displayName": "Prospairrow Websites MCP",
   "latest": {
-    "version": "1.2.2",
-    "publishedAt": 1771822075720,
-    "commit": "https://github.com/openclaw/skills/commit/ccf7b165b1c33d30534f1d03c313417b923b43ee"
+    "version": "1.2.5",
+    "publishedAt": 1772320650381,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.2",
+      "publishedAt": 1771822075720,
+      "commit": "https://github.com/openclaw/skills/commit/ccf7b165b1c33d30534f1d03c313417b923b43ee"
+    }
+  ]
 }

@@ -8,10 +8,15 @@
       "moduleDir": "src/sites/prospairrow",
       "tasks": [
         "extract_prospects",
+        "list_icp_qualified_companies",
+        "get_icp_score",
+        "get_company_score",
+        "apollo_enrich",
         "add_prospects",
         "enrich_prospects",
         "get_prospect_detail",
         "generate_content_marketing",
+        "generate_position_solution",
         "discover_competitors"
       ]
     },

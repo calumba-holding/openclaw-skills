@@ -20,7 +20,22 @@ function cleanSecret(value: unknown): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+function envFlagEnabled(value: string | undefined): boolean {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
+
+function allowOpenClawConfigApiKey(): boolean {
+  return envFlagEnabled(process.env.WEBSITES_ALLOW_OPENCLAW_CONFIG_API_KEY);
+}
+
+function shouldLogInvocations(): boolean {
+  return envFlagEnabled(process.env.WEBSITES_LOG_INVOCATIONS);
+}
+
 async function readConfigApiKey(): Promise<string | undefined> {
+  if (!allowOpenClawConfigApiKey()) return undefined;
   try {
     const openclawConfigPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
     const raw = await fs.readFile(openclawConfigPath, "utf-8");
@@ -42,10 +57,10 @@ async function resolveProspairrowApiKey(inputData: RunTaskInput): Promise<string
   const fromRequest = cleanSecret(inputData.apiKey);
   if (fromRequest) return fromRequest;
 
-  const fromConfig = await readConfigApiKey();
-  if (fromConfig) return fromConfig;
+  const fromEnv = cleanSecret(process.env.PROSPAIRROW_API_KEY);
+  if (fromEnv) return fromEnv;
 
-  return cleanSecret(process.env.PROSPAIRROW_API_KEY);
+  return readConfigApiKey();
 }
 
 function buildTaskErrorResponse(inputData: RunTaskInput, runId: string, errors: string[]): TaskRunResponse {
@@ -78,11 +93,13 @@ export async function bootstrapLogin(rootDir: string, inputData: BootstrapLoginI
   }
 
   const runId = randomUUID();
-  await logTaskInvocation(rootDir, {
-    event: "bootstrap_login.start",
-    run_id: runId,
-    site: site.siteId
-  });
+  if (shouldLogInvocations()) {
+    await logTaskInvocation(rootDir, {
+      event: "bootstrap_login.start",
+      run_id: runId,
+      site: site.siteId
+    });
+  }
 
   const runner = await createRunnerSession({
     allowedHosts: site.allowedHosts,
@@ -96,14 +113,28 @@ export async function bootstrapLogin(rootDir: string, inputData: BootstrapLoginI
     rl.close();
 
     const storageState = await runner.context.storageState();
-    const filePath = await saveStorageState(rootDir, site.siteId, storageState);
+    let filePath: string;
+    try {
+      filePath = await saveStorageState(rootDir, site.siteId, storageState);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        run_id: runId,
+        timestamp: nowIso(),
+        site: site.siteId,
+        message: "Login captured, but storage state write is disabled.",
+        errors: [message]
+      };
+    }
 
-    await logTaskInvocation(rootDir, {
-      event: "bootstrap_login.success",
-      run_id: runId,
-      site: site.siteId,
-      storage_file: filePath
-    });
+    if (shouldLogInvocations()) {
+      await logTaskInvocation(rootDir, {
+        event: "bootstrap_login.success",
+        run_id: runId,
+        site: site.siteId,
+        storage_file: filePath
+      });
+    }
 
     return {
       run_id: runId,
@@ -165,13 +196,15 @@ export async function runTask(rootDir: string, inputData: RunTaskInput): Promise
     }
   }
 
-  await logTaskInvocation(rootDir, {
-    event: "run_task.start",
-    run_id: runId,
-    site: site.siteId,
-    task: task.taskId,
-    capability: task.capability
-  });
+  if (shouldLogInvocations()) {
+    await logTaskInvocation(rootDir, {
+      event: "run_task.start",
+      run_id: runId,
+      site: site.siteId,
+      task: task.taskId,
+      capability: task.capability
+    });
+  }
 
   const runner = await createRunnerSession({
     allowedHosts: site.allowedHosts,
@@ -195,12 +228,14 @@ export async function runTask(rootDir: string, inputData: RunTaskInput): Promise
       inputData.params
     );
 
-    await logTaskInvocation(rootDir, {
-      event: "run_task.success",
-      run_id: runId,
-      site: site.siteId,
-      task: task.taskId
-    });
+    if (shouldLogInvocations()) {
+      await logTaskInvocation(rootDir, {
+        event: "run_task.success",
+        run_id: runId,
+        site: site.siteId,
+        task: task.taskId
+      });
+    }
 
     return {
       run_id: runId,
@@ -211,13 +246,15 @@ export async function runTask(rootDir: string, inputData: RunTaskInput): Promise
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await logTaskInvocation(rootDir, {
-      event: "run_task.error",
-      run_id: runId,
-      site: site.siteId,
-      task: task.taskId,
-      error: message
-    });
+    if (shouldLogInvocations()) {
+      await logTaskInvocation(rootDir, {
+        event: "run_task.error",
+        run_id: runId,
+        site: site.siteId,
+        task: task.taskId,
+        error: message
+      });
+    }
 
     return buildTaskErrorResponse(inputData, runId, [`Task failed: ${message}`]);
   } finally {
