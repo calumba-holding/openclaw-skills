@@ -1,7 +1,7 @@
 ---
 name: clawguardian
 description: Local-first security scanner for OpenClaw agents. Detects prompt injection, exfiltration patterns, tool abuse, and social engineering using bundled signatures.
-version: 2.0.19
+version: 2.2.0
 metadata:
   openclaw:
     requires:

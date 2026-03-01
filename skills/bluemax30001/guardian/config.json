@@ -43,5 +43,48 @@
     ],
     "_allowlist_note": "Patterns that suppress specific false positives. Use narrow, audited patterns only; broad patterns can reduce detection coverage."
   },
-  "_comment": "Guardian Security Skill \u2014 Configuration. See README.md for details."
+  "pro_tier": {
+    "enabled": false,
+    "_note": "Guardian Pro tier ($9/mo). Set enabled=true and configure billing settings to activate.",
+    "billing": {
+      "stripe_price_id": "",
+      "_stripe_price_id_note": "Stripe Price ID for the $9/mo Guardian Pro plan (e.g. price_1ABC...)",
+      "billing_db_path": "auto",
+      "_billing_db_path_note": "Path to billing SQLite cache. 'auto' uses <skill_root>/billing.db",
+      "webhook_endpoint": "/billing/webhook",
+      "_webhook_note": "Register this path in your Stripe dashboard as the webhook endpoint"
+    },
+    "features": {
+      "premium_signatures": true,
+      "_premium_signatures_note": "Pro users receive extended threat signature packs updated in real-time",
+      "extended_analytics": true,
+      "_extended_analytics_note": "30-day trend charts, category breakdowns, and export to CSV",
+      "priority_support": true,
+      "api_rate_limit_5x": true,
+      "_api_rate_limit_note": "Pro tier gets 5x API rate limit (500 req/min vs 100 for free)",
+      "export_csv": true,
+      "custom_alert_rules": true,
+      "_custom_alert_rules_note": "Create per-signature or per-channel alert rules with custom thresholds"
+    },
+    "signature_delivery": {
+      "premium_definition_packs": [
+        "advanced-injection-v2.json",
+        "llm-jailbreaks.json",
+        "supply-chain-attacks.json",
+        "insider-threat-indicators.json"
+      ],
+      "_premium_packs_note": "Definition packs only served to verified Pro subscribers",
+      "update_channel": "pro",
+      "_update_channel_note": "pro | stable | canary — Pro subscribers receive updates before stable"
+    },
+    "access_control": {
+      "gating_mode": "soft",
+      "_gating_mode_note": "soft: serve free tier on auth failure | hard: block entirely on auth failure",
+      "grace_period_hours": 72,
+      "_grace_period_note": "Hours of Pro access after payment failure before downgrading to free",
+      "user_id_header": "X-Guardian-User-Id",
+      "_user_id_header_note": "HTTP header used to identify the user for subscription lookup"
+    }
+  },
+  "_comment": "Guardian Security Skill — Configuration. See README.md and BILLING.md for details."
 }
