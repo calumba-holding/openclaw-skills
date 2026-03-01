@@ -1,0 +1,11 @@
+{
+  "owner": "infra403",
+  "slug": "opentwitter-mcp",
+  "displayName": "opentwitter",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772092304629,
+    "commit": null
+  },
+  "history": []
+}
