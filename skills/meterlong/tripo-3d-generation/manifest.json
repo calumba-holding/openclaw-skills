@@ -1,0 +1,53 @@
+{
+  "name": "tripo-3d-generation",
+  "version": "1.0.0",
+  "description": "Turn text or images into production-ready 3D models with sculpture-level geometry and sharp edges. Powered by Tripo AI — supports text-to-3D, image-to-3D, auto-rigging, skeletal animation (walk/run/jump/attack), PBR materials, and 6 export formats (GLB/FBX/OBJ/STL/USDZ/3MF). Ideal for games, architecture, e-commerce, 3D printing, and AR/VR. Start free — 10 credits, no API key required.",
+  "author": "tripo-team",
+  "license": "MIT",
+  "homepage": "https://www.tripo3d.ai/",
+  "repository": "",
+  "categories": ["creative", "ai-models", "media"],
+  "tags": ["3d", "ai", "model-generation", "text-to-3d", "image-to-3d", "tripo", "glb", "fbx", "rigging", "animation", "pbr", "stl", "3d-printing", "game-assets"],
+  "permissions": ["network:outbound"],
+  "secrets": {
+    "TRIPO_API_KEY": {
+      "description": "Your Tripo API key (starts with tsk_). Optional — 10 free credits are available without a key. Get yours at https://platform.tripo3d.ai/api-keys",
+      "required": false
+    }
+  },
+  "entry": "index.mjs",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "enum": ["generate", "status", "download", "credits"],
+        "description": "The action to perform. 'generate' creates a new 3D model, 'status' checks task progress, 'download' gets model URLs, 'credits' shows remaining free credits."
+      },
+      "prompt": {
+        "type": "string",
+        "description": "Text description for 3D model generation. Used with action='generate' when no image_url is provided. Example: 'a futuristic robot with glowing eyes'"
+      },
+      "image_url": {
+        "type": "string",
+        "description": "Public image URL for image-to-3D generation. When provided with action='generate', uses image-to-model instead of text-to-model."
+      },
+      "task_id": {
+        "type": "string",
+        "description": "Task ID returned from a generate action. Required for action='status' and action='download'."
+      },
+      "format": {
+        "type": "string",
+        "enum": ["glb", "fbx", "obj", "stl"],
+        "description": "Desired output 3D model format. Default: glb"
+      },
+      "model_version": {
+        "type": "string",
+        "default": "v3.0-20250812",
+        "enum": ["Turbo-v1.0-20250506", "v3.1-20260211", "v3.0-20250812", "v2.5-20250123", "v2.0-20240919", "v1.4-20240625"],
+        "description": "Tripo model version. Default: v3.0-20250812 (best stable quality). Options: Turbo-v1.0 (fastest), v3.1 (newest, may be unstable), v2.5 (fast+balanced), v2.0 (accurate), v1.4 (legacy)"
+      }
+    },
+    "required": ["action"]
+  }
+}
