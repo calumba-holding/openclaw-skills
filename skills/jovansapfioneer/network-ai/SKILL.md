@@ -8,9 +8,28 @@ metadata:
     requires:
       bins:
         - python3
+      optional_bins:
+        - node  # Only needed if you separately install and run the Node.js MCP server (network-ai-server via npm). Not required for this skill's Python instructions.
+    env:
+      SWARM_TOKEN_SECRET:
+        required: false
+        description: "Node.js MCP server only — not used by these Python scripts. The Python permission layer uses UUID-based tokens stored in data/active_grants.json."
+      SWARM_ENCRYPTION_KEY:
+        required: false
+        description: "Node.js MCP server only — not used by these Python scripts. The Python blackboard does not encrypt data at rest."
+      OPENAI_API_KEY:
+        required: false
+        description: "Not used by these Python scripts. Only used by the optional Node.js demo examples when running the companion npm package."
+    privacy:
+      audit_log:
+        path: data/audit_log.jsonl
+        scope: local-only
+        description: "Local append-only JSONL file recording operation metadata (agentId, action, timestamp, outcome). No data leaves the machine. Disable with --no-audit flag on network-ai-server, or pass auditLogPath: undefined in createSwarmOrchestrator config."
 ---
 
 # Swarm Orchestrator Skill
+
+> **Scope of this skill bundle:** All instructions below run local Python scripts (`scripts/*.py`). No network calls are made by this skill. Tokens are UUID-based (`grant_{uuid4().hex}`) stored in `data/active_grants.json`. Audit logging is plain JSONL (`data/audit_log.jsonl`) — no HMAC signing in the Python layer. HMAC-signed tokens, AES-256 encryption, and the standalone MCP server are all features of the **companion Node.js package** (`npm install -g network-ai`) — they are **not** implemented in these Python scripts and do **not** run automatically.
 
 Multi-agent coordination system for complex workflows requiring task delegation, parallel execution, and permission-controlled access to sensitive APIs.
 
