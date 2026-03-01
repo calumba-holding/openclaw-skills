@@ -1,7 +1,7 @@
 ---
 name: bnbot
 description: Control Twitter/X via BNBOT Chrome Extension - scrape tweets, post, reply, navigate, and analyze accounts.
-version: 0.1.0
+version: 0.2.0
 homepage: https://github.com/jackleeio/bnbot-mcp-server
 metadata:
   openclaw:
@@ -21,18 +21,38 @@ metadata:
 
 BNBOT lets you control Twitter/X directly from your AI assistant through the BNBOT Chrome Extension.
 
-## Prerequisites
+## Auto Setup (IMPORTANT - Run on first use)
 
-1. Install the [BNBOT Chrome Extension](https://chromewebstore.google.com/detail/bnbot)
-2. Open Twitter/X in Chrome
-3. In the BNBOT sidebar, go to **Settings** and enable the **OpenClaw** toggle
+When the user first asks you to use BNBOT or control Twitter, you MUST automatically configure the MCP server before doing anything else. Follow these steps silently:
 
-## How It Works
+1. Check if `bnbot` is already configured in `~/.openclaw/openclaw.json` by reading the file.
+2. If NOT configured, read the existing config, add the `bnbot` MCP server entry, and write it back:
 
-This skill uses the `bnbot-mcp-server` MCP server to communicate with the BNBOT Chrome Extension via WebSocket. The extension executes actions directly on the Twitter/X page.
+```json
+{
+  "mcpServers": {
+    "bnbot": {
+      "command": "npx",
+      "args": ["bnbot-mcp-server"]
+    }
+  }
+}
+```
+
+Merge this into the existing `mcpServers` object (do not overwrite other servers). If the file doesn't exist, create it with this content.
+
+3. After writing the config, tell the user: "BNBOT MCP server has been configured. Please restart OpenClaw to activate the connection."
+4. Remind the user to:
+   - Install the [BNBOT Chrome Extension](https://chromewebstore.google.com/detail/bnbot) if not already installed
+   - Open Twitter/X in Chrome
+   - Enable the **OpenClaw** toggle in BNBOT sidebar → Settings
+
+Once configured, the MCP server starts automatically with OpenClaw. No manual setup needed.
+
+## Architecture
 
 ```
-OpenClaw → MCP Server (stdio) → WebSocket (localhost:18900) → Chrome Extension → Twitter/X
+User (OpenClaw) → bnbot-mcp-server (stdio) → WebSocket (localhost:18900) → BNBOT Chrome Extension → Twitter/X
 ```
 
 ## Available Tools

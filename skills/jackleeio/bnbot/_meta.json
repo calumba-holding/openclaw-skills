@@ -3,9 +3,15 @@
   "slug": "bnbot",
   "displayName": "BNBOT",
   "latest": {
-    "version": "0.1.0",
-    "publishedAt": 1772335784718,
-    "commit": "https://github.com/openclaw/skills/commit/4c5fd31edb110829ee142783b5feadce78b8e558"
+    "version": "0.2.0",
+    "publishedAt": 1772336265832,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.1.0",
+      "publishedAt": 1772335784718,
+      "commit": "https://github.com/openclaw/skills/commit/4c5fd31edb110829ee142783b5feadce78b8e558"
+    }
+  ]
 }
