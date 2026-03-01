@@ -11,6 +11,7 @@ Use this skill to ensure interrupted tasks are recovered automatically.
 
 - Make interruption enqueue the default behavior.
 - On any non-explicit context switch, auto-enqueue the active unfinished task.
+- Enqueue at message-time (immediately when interruption is detected), not only on periodic checks.
 - Use one shared queue file for all sessions/clones so the view is unified.
 
 ## Rules
@@ -35,9 +36,33 @@ Consider a task interrupted when all are true:
 2. A new user request is unrelated to finishing that active task.
 3. User did not explicitly cancel/pause/defer the active task.
 
+## Message-Time Enforcement (required)
+
+Before handling every new user message:
+1. Check whether an active task exists and is unfinished.
+2. If the incoming message is an unrelated request and no explicit override is present, enqueue immediately.
+3. Only then switch to the new request.
+
+This prevents queue misses caused by timing gaps.
+
+## Log-based Recovery (ENOENT-safe)
+
+When recovery needs session `.jsonl` context, use:
+
+```bash
+python3 skills/task-resume/scripts/task_resume_queue.py recover \
+  --log "~/.openclaw/agents/main/sessions/<session>.jsonl" \
+  --title "<active task title>" \
+  --acceptance "<acceptance criteria>" \
+  --source "<channel>" \
+  --session "<session_key_or_chat_id>"
+```
+
+If the log file is missing (`ENOENT`), treat it as expected and continue (`skipped_missing_log`), do not raise alert-level failure.
+
 ## On Interruption (auto-enqueue)
 
-Run immediately:
+Run immediately at interruption detection:
 
 ```bash
 python3 skills/task-resume/scripts/task_resume_queue.py add \
@@ -77,6 +102,21 @@ This returns total queue count + grouped counts by source/session.
 - Always include next-step quality context when enqueueing.
 - Deduplicate: if same task title and near-identical context exists in queue, update timestamp instead of appending.
 - Keep queue max size 30; discard oldest overflow items after logging to `memory/YYYY-MM-DD.md`.
+
+## Watchdog Auto-Continue (Heartbeat/Cron)
+
+When users require "not just reminder, but auto-continue execution", add a watchdog cron policy:
+
+- Run every 30 minutes.
+- First inspect unfinished primary task + queue status.
+- If interrupted or no recent progress, immediately continue the next actionable step.
+- Send concise progress each run: done / in-progress / next step + ETA.
+- Even with no material change, send a short巡检回执（"已巡检，继续执行中"）.
+
+Recommended cron shape for delivery reliability:
+
+- Prefer `sessionTarget="main"` + `payload.kind="systemEvent"` for user-facing continuity checks.
+- Avoid fragile announce-only chains when delivery channel config is unstable.
 
 ## Daily Hygiene
 
