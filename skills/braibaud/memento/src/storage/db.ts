@@ -11,6 +11,7 @@ import {
   MIGRATE_V3_TO_V4,
   MIGRATE_V4_TO_V5,
   MIGRATE_V5_TO_V6,
+  MIGRATE_V6_TO_V7,
   type ConversationRow,
   type MessageRow,
   type FactRow,
@@ -180,6 +181,19 @@ export class ConversationDB {
         db.exec(ddl);
       }
     }
+
+    if (fromVersion < 7) {
+      // v6 → v7: Add causal_weight to fact_relations; add previous_value to facts
+      for (const ddl of MIGRATE_V6_TO_V7) {
+        try {
+          db.exec(ddl);
+        } catch (err) {
+          // Column may already exist on fresh installs using updated DDL
+          const msg = String(err);
+          if (!msg.includes("duplicate column")) throw err;
+        }
+      }
+    }
   }
 
   // =========================================================================
@@ -247,8 +261,9 @@ export class ConversationDB {
     db.prepare(`
       INSERT OR IGNORE INTO facts
         (id, agent_id, category, content, summary, visibility, confidence,
-         first_seen_at, last_seen_at, occurrence_count, supersedes, is_active, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         first_seen_at, last_seen_at, occurrence_count, supersedes, is_active, metadata,
+         previous_value)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       fact.id,
       fact.agent_id,
@@ -263,6 +278,7 @@ export class ConversationDB {
       fact.supersedes ?? null,
       fact.is_active,
       fact.metadata ?? null,
+      fact.previous_value ?? null,
     );
   }
 
@@ -312,10 +328,17 @@ export class ConversationDB {
 
   /**
    * Mark an existing fact as inactive (superseded), then insert the new fact.
+   * Automatically sets previous_value on the new fact from the old fact's content.
    * Both writes are atomic.
    */
   supersedeFact(oldFactId: string, newFact: FactRow): void {
     const db = this.ensureInit();
+
+    // Fetch the old fact's content to populate previous_value on the new fact
+    const oldFactRow = db
+      .prepare("SELECT content FROM facts WHERE id = ?")
+      .get(oldFactId) as { content: string } | undefined;
+    const previousValue = oldFactRow?.content ?? null;
 
     const deactivate = db.prepare(
       `UPDATE facts SET is_active = 0 WHERE id = ?`,
@@ -324,8 +347,9 @@ export class ConversationDB {
     const insertNew = db.prepare(`
       INSERT OR IGNORE INTO facts
         (id, agent_id, category, content, summary, visibility, confidence,
-         first_seen_at, last_seen_at, occurrence_count, supersedes, is_active, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         first_seen_at, last_seen_at, occurrence_count, supersedes, is_active, metadata,
+         previous_value)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const tx = db.transaction(() => {
@@ -344,6 +368,7 @@ export class ConversationDB {
         oldFactId, // supersedes
         1,         // is_active
         newFact.metadata ?? null,
+        previousValue, // previous_value = old fact's content
       );
     });
 
@@ -577,14 +602,15 @@ export class ConversationDB {
     const db = this.ensureInit();
     db.prepare(`
       INSERT OR IGNORE INTO fact_relations
-        (id, source_id, target_id, relation_type, strength, created_at, created_by, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (id, source_id, target_id, relation_type, strength, causal_weight, created_at, created_by, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       relation.id,
       relation.source_id,
       relation.target_id,
       relation.relation_type,
       relation.strength,
+      relation.causal_weight ?? 1.0,
       relation.created_at,
       relation.created_by ?? null,
       relation.metadata ?? null,
@@ -599,14 +625,14 @@ export class ConversationDB {
     const db = this.ensureInit();
     const stmt = db.prepare(`
       INSERT OR IGNORE INTO fact_relations
-        (id, source_id, target_id, relation_type, strength, created_at, created_by, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (id, source_id, target_id, relation_type, strength, causal_weight, created_at, created_by, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const tx = db.transaction(() => {
       for (const r of relations) {
         stmt.run(
           r.id, r.source_id, r.target_id, r.relation_type,
-          r.strength, r.created_at, r.created_by ?? null, r.metadata ?? null,
+          r.strength, r.causal_weight ?? 1.0, r.created_at, r.created_by ?? null, r.metadata ?? null,
         );
       }
     });

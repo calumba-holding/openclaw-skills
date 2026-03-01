@@ -98,6 +98,7 @@ export function processExtractedFacts(
 
       // ── Store graph relations ─────────────────────────────────────────
       if (persistedFactId && fact.relations && fact.relations.length > 0) {
+        const CAUSAL_TYPES = new Set(["caused_by", "precondition_of"]);
         const relations: FactRelationRow[] = fact.relations
           .filter((r) => r.target_id !== persistedFactId) // no self-loops
           .map((r) => ({
@@ -106,6 +107,8 @@ export function processExtractedFacts(
             target_id: r.target_id,
             relation_type: r.relation_type,
             strength: r.strength ?? 0.8,
+            // Causal edges get a higher causal_weight for graph traversal boosting
+            causal_weight: CAUSAL_TYPES.has(r.relation_type) ? 1.5 : 1.0,
             created_at: now,
             created_by: "extraction",
             metadata: null,
@@ -154,5 +157,6 @@ function buildFactRow(fact: ExtractedFact, agentId: string, now: number): FactRo
     is_active: 1,
     metadata: null,
     embedding: null, // populated later by the embedding backfill pass
+    previous_value: null, // set by supersedeFact in db.ts when superseding an existing fact
   };
 }

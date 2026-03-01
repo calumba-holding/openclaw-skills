@@ -215,13 +215,14 @@ const mementoPlugin = {
           const queryEmbedding: number[] | null = await embeddingEngine.embed(queryText);
 
           // Search for relevant facts (FTS5 + semantic when embedding available)
-          const scoredFacts = searchRelevantFacts(
+          const scoredFacts = await searchRelevantFacts(
             writer.getDb(),
             agentId,
             queryText,
             cfg.recall,
             embeddingEngine.isReady ? embeddingEngine : null,
             queryEmbedding,
+            api.config, // OpenClaw config for query planning (autoQueryPlanning)
           );
 
           if (scoredFacts.length === 0) return {};

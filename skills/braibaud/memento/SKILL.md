@@ -2,7 +2,7 @@
 name: memento
 description: Local persistent memory for OpenClaw agents. Captures conversations, extracts structured facts via LLM, and auto-recalls relevant knowledge before each turn. Privacy-first, all stored data stays local in SQLite.
 metadata:
-  version: "0.5.0"
+  version: "0.5.2"
   author: braibaud
   license: MIT
   repository: https://github.com/braibaud/Memento
@@ -111,13 +111,16 @@ Add to your `openclaw.json` under `plugins.entries.memento.config`:
     "recall": {
       "autoRecall": true,
       "maxFacts": 20,
-      "crossAgentRecall": true
+      "crossAgentRecall": true,
+      "autoQueryPlanning": false
     }
   }
 }
 ```
 
 > **`autoExtract: true`** is an explicit opt-in (default: `false`). When enabled, conversation segments are sent to the configured `extractionModel` for LLM-based fact extraction. Omit or set to `false` to keep everything local.
+
+> **`autoQueryPlanning: true`** is an explicit opt-in (default: `false`). When enabled, a fast LLM call runs before each recall search to expand the query with synonyms and identify relevant categories — improving precision at the cost of one extra LLM call per turn.
 
 ## Data Storage
 
@@ -190,9 +193,9 @@ npx tsx src/extraction/migrate.ts --all
 ## Architecture
 
 - **Capture layer** — hooks `message:received` + `message:sent`, buffers multi-turn segments
-- **Extraction layer** — async LLM extraction with deduplication, occurrence tracking, and temporal pattern detection
-- **Storage layer** — SQLite (better-sqlite3) with FTS5 full-text search + optional vector embeddings
-- **Recall layer** — multi-factor scoring (recency × frequency × category weight) injected via `before_prompt_build` hook
+- **Extraction layer** — async LLM extraction with deduplication, occurrence tracking, temporal state transitions (`previous_value`), and knowledge graph relations (including causal edges with `causal_weight`)
+- **Storage layer** — SQLite schema v7 (better-sqlite3) with FTS5 full-text search + optional vector embeddings; knowledge graph (`fact_relations` with `causal_weight`), multi-layer clusters, and temporal transition tracking (`previous_value`)
+- **Recall layer** — optional LLM query planning pre-pass (`autoQueryPlanning`), multi-factor scoring (recency × frequency × category weight), 1-hop graph traversal with causal edge 1.5× boost, injected via `before_prompt_build` hook
 
 ## Requirements
 

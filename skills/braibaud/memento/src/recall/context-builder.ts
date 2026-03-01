@@ -132,7 +132,10 @@ export function buildRecallContext(
       const graphTag = fact.matchSource === "graph" && fact.graphParentSummary
         ? ` 🔗 _(related to: ${fact.graphParentSummary.slice(0, 60)})_`
         : "";
-      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}${graphTag}`;
+      const previousTag = fact.previous_value
+        ? ` _(previously: ${fact.previous_value.slice(0, 60)}${fact.previous_value.length > 60 ? "..." : ""})_`
+        : "";
+      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}${graphTag}${previousTag}`;
 
       if (totalChars + line.length + 1 > maxChars) break;
       lines.push(line);
@@ -160,7 +163,10 @@ export function buildRecallContext(
       const graphTag = fact.matchSource === "graph" && fact.graphParentSummary
         ? ` 🔗 _(related to: ${fact.graphParentSummary.slice(0, 60)})_`
         : "";
-      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}${graphTag}`;
+      const previousTag = fact.previous_value
+        ? ` _(previously: ${fact.previous_value.slice(0, 60)}${fact.previous_value.length > 60 ? "..." : ""})_`
+        : "";
+      const line = `- ${fact.summary ?? fact.content.slice(0, 120)} _(${when})_${recurrence}${source}${graphTag}${previousTag}`;
 
       if (totalChars + line.length + 1 > maxChars) break;
       lines.push(line);

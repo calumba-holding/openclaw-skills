@@ -158,3 +158,29 @@ Full multi-turn conversation about a specific fact, beyond the current inline co
 - [x] New `src/extraction/embedded-runner.ts` module wraps the OpenClaw integration
 - [x] `ExtractionTrigger` and `extractFacts()` updated to thread `api.config` through
 - [x] README and docs updated to reflect model routing behaviour
+
+## ✅ Recently Completed (v0.5.1)
+
+### AMA-Agent Inspired Features — ALL DONE (from arxiv 2602.22769)
+
+#### 1. Causality Edges in fact_relations — DONE
+- [x] Added `precondition_of` edge type (alongside `caused_by`)
+- [x] Extraction prompt instructs LLM to prefer causal types for cause-effect / prerequisite relationships
+- [x] `causal_weight` column added to `fact_relations` (schema v7); set to `1.5` for causal edges
+- [x] Graph traversal in `search.ts` applies **1.5× score boost** for `caused_by` / `precondition_of` edges vs. 0.4× for associative edges
+- [x] `deduplicator.ts` stores `causal_weight` when persisting relation edges
+
+#### 2. Query Planning Before Retrieval — DONE
+- [x] `planQuery()` function in `search.ts` calls LLM to expand query with synonyms/entities/categories
+- [x] `recall.autoQueryPlanning` config option (default: `false`, opt-in)
+- [x] Graceful fallback: if planning fails or times out, falls back to raw FTS query
+- [x] Uses OpenClaw model routing via `runViaOpenClaw`
+
+#### 3. Temporal State Transitions — DONE
+- [x] `previous_value` column added to `facts` table (schema v7)
+- [x] `db.supersedeFact()` automatically captures old fact's content as `previous_value` on the new fact
+- [x] `context-builder.ts` shows `_(previously: ...)_` in recall output for facts that have changed
+- [x] `deduplicator.buildFactRow()` initialises `previous_value: null`; actual value set atomically in `supersedeFact`
+
+### What was NOT implemented (by design)
+Full trajectory-based reasoning from AMA-Bench — designed for agent-environment interactions (web nav, code editing), not personal assistant conversations. Memento's dialogue-centric approach is correct for this use case.

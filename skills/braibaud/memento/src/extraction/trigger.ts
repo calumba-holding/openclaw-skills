@@ -100,6 +100,7 @@ export class ExtractionTrigger {
         existingFacts,
         this.extractionModel,
         this.logger,
+        this.openClawConfig,
       );
 
       if (extractionResult.error) {

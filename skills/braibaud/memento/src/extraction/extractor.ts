@@ -40,7 +40,7 @@ export type ExtractedFactRelation = {
   /** ID of the related existing fact */
   target_id: string;
   /** Type of relation */
-  relation_type: string; // 'related_to' | 'elaborates' | 'contradicts' | 'supports' | 'caused_by' | 'part_of'
+  relation_type: string; // 'related_to' | 'elaborates' | 'contradicts' | 'supports' | 'caused_by' | 'part_of' | 'precondition_of'
   /** Edge strength 0.0–1.0 (default 0.8) */
   strength: number;
 };
@@ -103,8 +103,9 @@ Rules:
 9. For action_items, include who is responsible and the deadline if mentioned
 10. For each extracted fact, identify RELATIONS to existing facts listed above. For each relation, add a "relations" array to the fact with objects containing:
     - target_id: the ID of the related existing fact
-    - relation_type: one of [related_to, elaborates, contradicts, supports, caused_by, part_of]
+    - relation_type: one of [related_to, elaborates, contradicts, supports, caused_by, part_of, precondition_of]
     - strength: 0.0-1.0 how strong the connection is (default 0.8)
+    CAUSAL RELATIONS: When the relationship is causal, PREFER caused_by (this fact was caused by target) or precondition_of (this fact is a precondition for target) over generic relation types. Use causal types whenever there is a clear cause-and-effect or prerequisite relationship.
     Only include relations where there is a genuine semantic connection. Do NOT force relations where none exist.
 
 Return a JSON array of fact objects. If there are no meaningful facts to extract, return an empty array [].

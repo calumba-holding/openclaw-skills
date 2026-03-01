@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.5.1 — 2026-02-28
+
+### Added
+- **Causality edges in knowledge graph** — new `precondition_of` relation type alongside existing `caused_by`; extraction prompt instructs the LLM to prefer causal relation types when a clear cause-and-effect or prerequisite relationship exists
+- **Causal weight field** — `causal_weight` column added to `fact_relations` (schema v7); deduplicator sets `causal_weight = 1.5` for `caused_by` and `precondition_of` edges vs. `1.0` for associative edges
+- **1.5× graph traversal boost for causal edges** — `search.ts` now applies a `1.5×` score multiplier (vs. `0.4×` for non-causal edges) when traversing `caused_by` / `precondition_of` graph edges during recall
+- **Query planning** — new `planQuery()` function in `search.ts` runs an LLM pre-pass to expand the query with synonyms and identify relevant categories/entities before FTS search
+- **`recall.autoQueryPlanning` config option** — opt-in (default `false`); when enabled, calls the LLM once per recall turn to improve search precision
+- **Temporal state transitions** — `previous_value` column added to `facts` table (schema v7); `db.supersedeFact()` automatically captures the old fact's content as `previous_value` on the new fact
+- **Previous value shown in recall context** — `context-builder.ts` appends `_(previously: ...)_` to recalled facts that carry a `previous_value`
+- **Schema v7 migration** — `MIGRATE_V6_TO_V7` adds `causal_weight` to `fact_relations` and `previous_value` to `facts`; migration is safe to re-run (duplicate column errors are caught)
+
+### Fixed
+- **OpenClaw model routing not invoked during extraction** — `ExtractionTrigger` was constructing with `openClawConfig` but not passing it through to `extractFacts()`; this meant every extraction silently fell back to direct API calls, bypassing the v0.5.0 model routing feature entirely
+
 ## v0.5.0 — 2026-02-28
 
 ### Changed

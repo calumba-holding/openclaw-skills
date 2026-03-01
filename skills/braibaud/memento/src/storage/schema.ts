@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 // ---------------------------------------------------------------------------
 // Table definitions — Phase 1
@@ -68,7 +68,8 @@ CREATE TABLE IF NOT EXISTS facts (
   occurrence_count INTEGER DEFAULT 0,
   supersedes      TEXT,
   is_active       INTEGER DEFAULT 1,
-  metadata        TEXT
+  metadata        TEXT,
+  previous_value  TEXT
 );
 `;
 
@@ -162,6 +163,7 @@ CREATE TABLE IF NOT EXISTS fact_relations (
   target_id     TEXT    NOT NULL REFERENCES facts(id),
   relation_type TEXT    NOT NULL,
   strength      REAL    DEFAULT 1.0,
+  causal_weight REAL    DEFAULT 1.0,
   created_at    INTEGER NOT NULL,
   created_by    TEXT,
   metadata      TEXT
@@ -336,6 +338,23 @@ export const MIGRATE_V5_TO_V6 = [
 ];
 
 // ---------------------------------------------------------------------------
+// Schema migration v6 → v7: Add causal_weight to fact_relations, previous_value to facts
+// ---------------------------------------------------------------------------
+
+export const MIGRATE_V6_ADD_CAUSAL_WEIGHT = `
+ALTER TABLE fact_relations ADD COLUMN causal_weight REAL DEFAULT 1.0;
+`;
+
+export const MIGRATE_V6_ADD_PREVIOUS_VALUE = `
+ALTER TABLE facts ADD COLUMN previous_value TEXT;
+`;
+
+export const MIGRATE_V6_TO_V7 = [
+  MIGRATE_V6_ADD_CAUSAL_WEIGHT,
+  MIGRATE_V6_ADD_PREVIOUS_VALUE,
+];
+
+// ---------------------------------------------------------------------------
 // All DDL statements to run on first boot (idempotent)
 // ---------------------------------------------------------------------------
 
@@ -424,6 +443,8 @@ export type FactRow = {
   is_active: number; // 1 = active, 0 = superseded
   metadata: string | null;
   embedding: Buffer | null; // Float32Array stored as raw bytes
+  /** Previous content value when this fact superseded an older one */
+  previous_value: string | null;
 };
 
 export type FactOccurrenceRow = {
@@ -439,10 +460,12 @@ export type FactRelationRow = {
   id: string;
   source_id: string;
   target_id: string;
-  /** 'related_to' | 'elaborates' | 'contradicts' | 'supports' | 'caused_by' | 'part_of' */
+  /** 'related_to' | 'elaborates' | 'contradicts' | 'supports' | 'caused_by' | 'part_of' | 'precondition_of' */
   relation_type: string;
   /** 0.0–1.0 edge weight */
   strength: number;
+  /** Causal weight for boosting graph traversal on causal edges (DEFAULT 1.0) */
+  causal_weight: number;
   created_at: number;
   /** 'extraction' | 'consolidation' | 'user_feedback' | null */
   created_by: string | null;

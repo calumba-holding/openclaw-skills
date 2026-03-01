@@ -17,6 +17,7 @@ import type { ConversationDB } from "../storage/db.js";
 import type { FactRow } from "../storage/schema.js";
 import type { RecallConfig } from "../config.js";
 import { EmbeddingEngine } from "../storage/embeddings.js";
+import { runViaOpenClaw } from "../extraction/embedded-runner.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,6 +48,57 @@ const CATEGORY_WEIGHT: Record<string, number> = {
   emotional: 0.9,
   routine: 0.7,
 };
+
+// ---------------------------------------------------------------------------
+// Query planning (AMA-Agent inspired)
+// ---------------------------------------------------------------------------
+
+export type QueryPlan = {
+  categories?: string[];
+  timeRangeHint?: string;
+  entities?: string[];
+  expandedQuery?: string;
+};
+
+const QUERY_PLAN_PROMPT = `You are a memory retrieval planning system. Given a user query, output a JSON object to guide knowledge base search.
+
+QUERY: {{query}}
+
+Return a JSON object with these optional fields:
+- categories: array of relevant fact categories from [preference, decision, person, action_item, correction, technical, routine, emotional]
+- timeRangeHint: time range hint like "recent", "last week", "last month", or omit if not relevant
+- entities: key named entities, topics, or concepts to search for
+- expandedQuery: a richer version of the query with synonyms/related terms for better FTS matching
+
+Respond with ONLY a JSON object, no markdown, no explanation.`;
+
+/**
+ * Use LLM to plan a query before retrieval — expands terms and identifies
+ * relevant categories/entities for more targeted search.
+ *
+ * Returns an empty object on any failure (non-fatal, best-effort only).
+ */
+export async function planQuery(
+  query: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: any,
+): Promise<QueryPlan> {
+  try {
+    const prompt = QUERY_PLAN_PROMPT.replace("{{query}}", query);
+    const result = await runViaOpenClaw(prompt, config);
+    if (!result) return {};
+
+    const trimmed = result.text.trim();
+    const jsonStr = trimmed.startsWith("{") ? trimmed : trimmed.slice(trimmed.indexOf("{"));
+    const end = jsonStr.lastIndexOf("}");
+    if (end === -1) return {};
+
+    const parsed = JSON.parse(jsonStr.slice(0, end + 1)) as QueryPlan;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Search implementation
@@ -97,20 +149,31 @@ function extractSearchTerms(text: string): string[] {
  *
  * Returns scored facts sorted by relevance (descending).
  */
-export function searchRelevantFacts(
+export async function searchRelevantFacts(
   db: ConversationDB,
   agentId: string,
   userMessage: string,
   cfg: RecallConfig,
   embeddingEngine?: EmbeddingEngine | null,
   queryEmbedding?: number[] | null,
-): ScoredFact[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  openClawConfig?: any,
+): Promise<ScoredFact[]> {
   const now = Date.now();
   const seenIds = new Set<string>();
   const results: ScoredFact[] = [];
 
+  // ── Query planning (optional, AMA-Agent inspired) ─────────────────────
+  let effectiveQuery = userMessage;
+  if (cfg.autoQueryPlanning && openClawConfig) {
+    const plan = await planQuery(userMessage, openClawConfig);
+    if (plan.expandedQuery) {
+      effectiveQuery = `${userMessage} ${plan.expandedQuery}`;
+    }
+  }
+
   // ── Strategy 1: FTS5 keyword search ─────────────────────────────────────
-  const terms = extractSearchTerms(userMessage);
+  const terms = extractSearchTerms(effectiveQuery);
 
   if (terms.length > 0) {
     // Build OR query for broader matching, limit to reasonable chunk
@@ -333,8 +396,10 @@ export function searchRelevantFacts(
             { strength: 0.5, relation_type: "related_to" } as { strength: number; relation_type: string },
           );
 
-          // Graph-sourced facts score as a fraction of the parent's score
-          const graphScore = seed.score * bestEdge.strength * 0.4;
+          // Causal edges (caused_by, precondition_of) get a 1.5x boost instead of 0.4 reduction
+          const isCausal = bestEdge.relation_type === "caused_by" || bestEdge.relation_type === "precondition_of";
+          const graphMultiplier = isCausal ? 1.5 : 0.4;
+          const graphScore = seed.score * bestEdge.strength * graphMultiplier;
 
           results.push({
             ...relFact,

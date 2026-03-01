@@ -13,6 +13,12 @@ export type RecallConfig = {
   minQueryLength: number;
   /** Whether to include shared facts from other agents (master KB). Default: true */
   crossAgentRecall: boolean;
+  /**
+   * Whether to use LLM-based query planning before retrieval (AMA-Agent inspired).
+   * When enabled, calls the LLM to expand the query with synonyms/entities for
+   * better FTS matching. Adds a small LLM call overhead per recall. Default: false
+   */
+  autoQueryPlanning: boolean;
 };
 
 export const DEFAULT_RECALL_CONFIG: RecallConfig = {
@@ -21,6 +27,7 @@ export const DEFAULT_RECALL_CONFIG: RecallConfig = {
   maxContextChars: 4000,
   minQueryLength: 5,
   crossAgentRecall: true,
+  autoQueryPlanning: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -177,6 +184,10 @@ export function resolveConfig(raw?: Record<string, unknown>): PluginConfig {
         typeof rawRecall.crossAgentRecall === "boolean"
           ? rawRecall.crossAgentRecall
           : DEFAULT_RECALL_CONFIG.crossAgentRecall,
+      autoQueryPlanning:
+        typeof rawRecall.autoQueryPlanning === "boolean"
+          ? rawRecall.autoQueryPlanning
+          : DEFAULT_RECALL_CONFIG.autoQueryPlanning,
     },
   };
 }
