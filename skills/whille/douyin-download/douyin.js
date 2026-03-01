@@ -7,15 +7,19 @@
  * 1. 从抖音分享链接获取无水印视频下载链接
  * 2. 下载视频并提取音频
  * 3. 使用硅基流动 API 从音频中提取文本
- * 4. 自动保存文案到文件
+ * 4. 使用 MiniMax 模型进行语义分段（可选）
+ * 5. 自动保存文案到文件
  * 
  * 环境变量:
  * - SILI_FLOW_API_KEY: 硅基流动 API 密钥 (用于文案提取功能)
+ * - MINIMAX_API_KEY: MiniMax API 密钥 (用于语义分段功能)
  * 
  * 使用示例:
  *   node douyin.js info "抖音分享链接"
  *   node douyin.js download "抖音分享链接" -o /tmp/douyin-download
  *   node douyin.js extract "抖音分享链接" -o /tmp/douyin-download
+ *   node douyin.js extract "抖音链接" --segment     # 带语义分段
+ *   node douyin.js extract "抖音链接" --no-segment  # 不分段
  */
 
 const fs = require('fs');
@@ -34,6 +38,7 @@ const HEADERS = {
 
 const SILI_FLOW_BASE_URL = 'https://api.siliconflow.cn/v1/audio/transcriptions';
 const SILI_FLOW_MODEL = 'FunAudioLLM/SenseVoiceSmall';
+const MINIMAX_BASE_URL = 'https://api.minimaxi.com';
 const DEFAULT_DOWNLOAD_PATH = '/tmp/douyin-download/';
 
 // 工具函数：Promise 版本的 http 请求
@@ -304,8 +309,87 @@ async function transcribeAudio(audioPath, apiKey, showProgress = true) {
   });
 }
 
+// 语义分段 - 使用 MiniMax API
+async function semanticSegment(text, apiKey, showProgress = true) {
+  if (!apiKey) {
+    apiKey = process.env.MINIMAX_API_KEY;
+  }
+  
+  if (!apiKey) {
+    if (showProgress) {
+      console.log('Warning: MINIMAX_API_KEY 未设置，跳过语义分段');
+    }
+    return text;
+  }
+  
+  if (showProgress) {
+    console.log('正在语义分段...');
+  }
+  
+  const url = `${MINIMAX_BASE_URL}/v1/text/chatcompletion_v2`;
+  
+  const prompt = `你是专业语音转写文本分段助手。
+请对下面这段语音转写文本进行**自然语义分段**。
+
+要求：
+1. 根据语义完整性和内容逻辑进行分段
+2. 每段应该是内容相对完整的句子或论述
+3. 保持原文内容不变，只添加合理的段落分隔
+4. 保留原文的语气词和表达特点
+5. 适当添加##小标题概括每段主旨（如果内容足够长）
+
+请直接返回分段后的文本，用markdown格式，小标题用##开头。不要添加其他说明。`;
+
+  const data = {
+    model: "MiniMax-M2.5",
+    messages: [
+      { role: "system", content: prompt },
+      { role: "user", content: text }
+    ],
+    max_tokens: 4096,
+    temperature: 0.3
+  };
+
+  return new Promise((resolve, reject) => {
+    const { spawn } = require('child_process');
+    const proc = spawn('curl', [
+      '-X', 'POST',
+      url,
+      '-H', `Authorization: Bearer ${apiKey}`,
+      '-H', 'Content-Type: application/json',
+      '-d', JSON.stringify(data)
+    ]);
+
+    let stdout = '';
+    let stderr = '';
+
+    proc.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+    proc.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        try {
+          const json = JSON.parse(stdout);
+          if (json.choices && json.choices[0]) {
+            resolve(json.choices[0].message.content);
+          } else {
+            console.error('分段失败:', stdout);
+            resolve(text);
+          }
+        } catch (e) {
+          console.error('解析失败:', e);
+          resolve(text);
+        }
+      } else {
+        reject(new Error(`curl failed: ${stderr}`));
+      }
+    });
+    proc.on('error', reject);
+  });
+}
+
 // 提取文案主函数
-async function extractText(shareLink, apiKey, outputDir, saveVideo = false, showProgress = true) {
+async function extractText(shareLink, apiKey, outputDir, saveVideo = false, showProgress = true, doSegment = true) {
   if (!apiKey) {
     apiKey = process.env.SILI_FLOW_API_KEY;
   }
@@ -336,7 +420,12 @@ async function extractText(shareLink, apiKey, outputDir, saveVideo = false, show
     console.log('正在从音频中提取文本...');
   }
   
-  const textContent = await transcribeAudio(audioPath, apiKey, showProgress);
+  let textContent = await transcribeAudio(audioPath, apiKey, showProgress);
+  
+  // 语义分段
+  if (doSegment) {
+    textContent = await semanticSegment(textContent, null, showProgress);
+  }
   
   // 保存文案
   const outputPath = path.join(outputDir, videoInfo.video_id, 'transcript.md');
@@ -392,11 +481,13 @@ async function main() {
   node douyin.js info <分享链接|modal_id>         - 获取视频信息
   node douyin.js download <链接|modal_id> -o <目录>  - 下载视频（默认: /tmp/douyin-download/）
   node douyin.js extract <链接|modal_id> -o <目录>   - 提取文案（默认: /tmp/douyin-download/）
+  node douyin.js extract <链接> --no-segment        - 提取文案（不语义分段）
   
 支持输入:
   - 抖音分享链接: https://v.douyin.com/xxxxx
   - modal_id: 7597329042169220398
   - modal_id=xxx 格式
+
 `);
     process.exit(1);
   }
@@ -404,6 +495,7 @@ async function main() {
   // 解析参数
   let outputDir = DEFAULT_DOWNLOAD_PATH;
   let saveVideo = false;
+  let doSegment = true;
   
   for (let i = 2; i < args.length; i++) {
     if (args[i] === '-o' && args[i + 1]) {
@@ -411,6 +503,10 @@ async function main() {
       i++;
     } else if (args[i] === '-v' || args[i] === '--save-video') {
       saveVideo = true;
+    } else if (args[i] === '--segment') {
+      doSegment = true;
+    } else if (args[i] === '--no-segment') {
+      doSegment = false;
     }
   }
   
@@ -431,7 +527,7 @@ async function main() {
       console.log(`\n视频已保存到: ${videoPath}`);
       
     } else if (command === 'extract') {
-      const result = await extractText(shareLink, null, outputDir, saveVideo);
+      const result = await extractText(shareLink, null, outputDir, saveVideo, true, doSegment);
       console.log('\n' + '='.repeat(50));
       console.log('提取完成!');
       console.log('='.repeat(50));
