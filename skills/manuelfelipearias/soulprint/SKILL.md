@@ -1,6 +1,6 @@
 ---
 name: soulprint
-description: "Soulprint decentralized identity verification for AI agents. v0.4.1 — ProtocolThresholds on-chain (Base Sepolia): mutable threshold governance via superAdmin, GET /protocol/thresholds endpoint, validator auto-loads from blockchain at startup. Also: P2P auto-bootstrap, network/stats with total_peers, 6 bug fixes in verify. Use when: proving a real human is behind a bot, issuing privacy-preserving identity proofs, running a validator node, adding identity verification middleware to an API or MCP server, checking bot reputation scores, or enforcing protocol-level configurable trust thresholds."
+description: "Soulprint decentralized identity verification for AI agents. v0.4.3 — PeerRegistry on-chain (Base Sepolia): every node auto-discovers peers via smart contract, registers its DID+multiaddr on startup, GET /network/peers endpoint shows all nodes in the network. Also: ProtocolThresholds mutable governance, ZK proofs (Circom), MCPRegistry for verified MCPs. Use when: proving a real human is behind a bot, issuing privacy-preserving identity proofs, running a validator node, adding identity verification middleware to an API or MCP server, checking bot reputation scores, building decentralized AI agent networks, or enforcing protocol-level configurable trust thresholds."
 homepage: https://soulprint.digital
 metadata:
   {
