@@ -1,6 +1,6 @@
 ---
 name: glass2claw
-description: "Turn your Meta Ray-Ban smart glasses into a life-logging system. Snap a photo with a voice command, send it to yourself on WhatsApp — OpenClaw picks it up and routes it into your own databases automatically."
+description: "Ray-Ban glasses → voice command → WhatsApp → OpenClaw auto-routes your photo into the right database. Hands-free life logging."
 metadata:
   {
     "openclaw":
