@@ -1,75 +1,117 @@
 # Contributing to UnderSheet
 
-## The fastest way to contribute: add a platform adapter
+Thanks for wanting to help. UnderSheet is open source (MIT) and actively looking for contributions — especially new platform adapters.
 
-An adapter is a single Python file in `platforms/`. Here's the minimum viable version:
+## How It Works
+
+- `main` is protected. All changes go through **pull requests**, no exceptions.
+- PRs need 1 approval before merging. Maintainer reviews within a few days.
+- Keep it focused: one thing per PR. Small and correct beats large and risky.
+
+## What's Wanted
+
+**High priority:**
+- New platform adapters (Bluesky, Mastodon, Lemmy, LinkedIn, Slack — see below)
+- Bug fixes with a test case or repro
+- Better error messages and edge case handling
+
+**Also welcome:**
+- Documentation improvements
+- Performance tweaks
+- Proxy/auth edge cases
+
+**Not the right fit:**
+- Heavy dependencies (this is stdlib-only, intentionally)
+- Major architecture changes without discussing in an issue first
+- Anything that requires credentials you can't actually test with
+
+---
+
+## Adding a Platform Adapter
+
+Drop a file in `platforms/` with a class named `Adapter`:
 
 ```python
-# platforms/myplatform.py
 from undersheet import PlatformAdapter
 
 class Adapter(PlatformAdapter):
-    name = "myplatform"
+    name = "myplatform"          # used in CLI: --platform myplatform
+    config_file = "myplatform"   # reads ~/.config/undersheet/myplatform.json
+
+    def auth(self, config: dict):
+        """Store auth state. config = contents of the JSON config file."""
+        self.token = config.get("api_key")
 
     def get_threads(self, thread_ids: list) -> list:
         """
-        Fetch threads/posts by ID. Must return:
-        [{"id": str, "title": str, "url": str, "comment_count": int, "score": int}, ...]
+        Fetch current state for tracked threads.
+        Returns: [{"id", "title", "url", "comment_count"}, ...]
         """
         ...
 
-    def get_feed(self, limit: int = 25, **kwargs) -> list:
+    def get_thread_comments(self, thread_id: str) -> list:
         """
-        Fetch recent posts. Must return:
-        [{"id": str, "title": str, "url": str, "score": int, "created_at": str}, ...]
+        Optional — but strongly recommended. Return individual comments for a thread.
+        Enables get_unanswered_comments() + mark_replied() dupe guard.
+        Returns: [{"id", "author", "content", ...}, ...]
+
+        Without this, get_unanswered_comments() silently returns [] for your adapter.
+        """
+        ...
+
+    def get_feed(self, limit=25, **kwargs) -> list:
+        """
+        Fetch the platform's feed/frontpage.
+        Returns: [{"id", "title", "url", "score", "created_at"}, ...]
         """
         ...
 
     def post_comment(self, thread_id: str, content: str, **kwargs) -> dict:
         """
-        Post a reply. Must return {"success": True} or {"error": "reason"}
+        Post a reply.
+        Returns: {"success": True} or {"error": "reason"}
         """
         ...
 ```
 
-That's it. Drop the file in `platforms/`, run `python3 undersheet.py platforms` to confirm it shows up, then `python3 undersheet.py heartbeat --platform myplatform` to test.
+Run `python3 undersheet.py platforms` to confirm it's auto-detected.
 
-## Testing your adapter
+### Dupe-Reply Guard (mandatory if posting comments)
 
-```bash
-# Run the verify script against your platform
-python3 verify.py --platform myplatform
+If your adapter posts comments, **always** use `get_unanswered_comments()` + `mark_replied()`. Never check `comment.replies[]` or scan content — both produce false negatives and cause duplicate replies.
 
-# Or run the full suite
-python3 verify.py
+```python
+import undersheet as us
+
+state = us.load_state("myplatform")
+adapter = MyAdapter()
+
+for c in us.get_unanswered_comments(adapter, state, thread_ids):
+    result = adapter.post_comment(c["_thread_id"], f"reply to {c['author']}")
+    if result.get("success"):
+        us.mark_replied(state, c["id"])   # log ID — never re-fires on this comment
+        us.save_state("myplatform", state)
+    time.sleep(30)
 ```
 
-## Credentials convention
+`replied_comment_ids` in state.json is the sole source of truth. It caps at 2000 entries automatically.
 
-Store credentials at `~/.config/undersheet/<platform>.json`. Document the exact format in your adapter's module docstring. Never hardcode secrets.
+**Credential config** goes in `~/.config/undersheet/myplatform.json`. Document the expected keys in your PR description.
 
-## PR checklist
+---
 
-- [ ] Adapter file in `platforms/<platform>.py`
-- [ ] Module docstring explains credentials format + required permissions
-- [ ] `python3 verify.py --platform <platform>` passes at minimum the feed test
-- [ ] Added platform to the README table
+## Submitting a PR
 
-## Bugs / edge cases
+1. Fork the repo (or ask for write access if you're a regular contributor)
+2. Branch off main: `git checkout -b feature/bluesky-adapter`
+3. Make your changes
+4. Test it actually works — real output preferred over mocked
+5. Open a PR against `main` with a short description of what and why
 
-Open a GitHub issue with:
-- Platform name
-- What you expected vs. what happened
-- The raw API response if relevant (redact tokens)
+That's it. No CLA, no lengthy checklist.
 
-## Ideas for new adapters
+---
 
-- Twitter / X
-- Mastodon
-- Slack
-- Telegram
-- GitHub Discussions
-- Lobsters
-- Dev.to
+## Questions
 
-If you're building one, open an issue first so we don't duplicate effort.
+Open an issue, or reach out on Moltbook / X [@A2091_](https://x.com/A2091_).

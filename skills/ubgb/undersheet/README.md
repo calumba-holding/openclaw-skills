@@ -1,5 +1,10 @@
 # UnderSheet 🗂️
 
+[![GitHub Stars](https://img.shields.io/github/stars/ubgb/undersheet?style=social)](https://github.com/ubgb/undersheet/stargazers)
+[![ClawHub](https://img.shields.io/badge/clawhub-install-blue)](https://clawhub.com/skills/undersheet)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 **Persistent thread memory for OpenClaw agents. Works everywhere.**
 
 Zero dependencies. Pure Python stdlib. One file to rule them all.
@@ -8,9 +13,18 @@ Zero dependencies. Pure Python stdlib. One file to rule them all.
 
 ## The Problem
 
-Your agent wakes up every 30 minutes. It sees 40 posts. It has no idea which ones it already read, which threads it was part of, or what changed since it last looked. So it either re-reads everything or ignores everything.
+You've already solved the memory problem: `MEMORY.md`, daily logs, SOUL.md. You write things down. That part works.
 
-This is the session amnesia problem. Every agent hits it.
+What you haven't solved is **threading**.
+
+Your agent wakes up, reads its memory files, and has no idea:
+- Which threads you were part of that got new replies
+- Which posts you already read vs. which are actually new
+- What changed on any given platform since the last session
+
+So you either re-check everything (token expensive) or ignore everything (miss replies). Neither is right.
+
+This is the threading gap. UnderSheet closes it.
 
 ## The Solution
 
@@ -69,6 +83,12 @@ Your agent picks up exactly where it left off. Every platform. Every heartbeat.
 
 ## Install
 
+**Recommended — clone from GitHub (always latest):**
+```bash
+git clone https://github.com/ubgb/undersheet ~/.openclaw/skills/undersheet
+```
+
+Or grab individual files:
 ```bash
 # Core engine
 curl -fsSL https://raw.githubusercontent.com/ubgb/undersheet/main/undersheet.py \
@@ -84,10 +104,7 @@ curl -fsSL https://raw.githubusercontent.com/ubgb/undersheet/main/platforms/redd
   -o ~/.openclaw/skills/undersheet/platforms/reddit.py
 ```
 
-Or via ClawHub:
-```bash
-clawhub install undersheet
-```
+ClawHub: `clawhub install undersheet` (may lag behind GitHub)
 
 > **Twitter/X adapter:** also grab `platforms/twitter.py`
 > ```bash
@@ -144,14 +161,11 @@ Route agent traffic through a proxy without changing your system settings.
 # Config file (persists across runs)
 echo '{"http": "http://yourproxy:8080"}' > ~/.config/undersheet/proxy.json
 
-# SOCKS5 (SSH tunnel, Tor — needs: pip install pysocks)
-echo '{"socks5": "socks5://127.0.0.1:1080"}' > ~/.config/undersheet/proxy.json
-
 # Per-command override
 python3 undersheet.py heartbeat --platform reddit --proxy http://yourproxy:8080
 
 # Env vars work too
-ALL_PROXY=socks5://127.0.0.1:1080 python3 undersheet.py heartbeat --platform hackernews
+HTTP_PROXY=http://yourproxy:8080 python3 undersheet.py heartbeat --platform hackernews
 ```
 
 **System VPNs (Mullvad, WireGuard, ProtonVPN):** no config needed — they route all traffic automatically.
@@ -194,6 +208,27 @@ State is stored per-platform at `~/.config/undersheet/<platform>_state.json`. Sa
 ## Relationship to MoltMemory
 
 UnderSheet is the generalized successor to [MoltMemory](https://github.com/ubgb/moltmemory). MoltMemory is Moltbook-specific and stays maintained. UnderSheet brings the same architecture to every platform.
+
+---
+
+## Contributing
+
+UnderSheet is community-driven. The most wanted contribution: **new platform adapters**. Adding Bluesky, Mastodon, Lemmy, or anything else? Just drop a file in `platforms/` following the adapter template.
+
+You don't need to write code to contribute:
+
+- **Got an idea?** → [Open a GitHub issue](https://github.com/ubgb/undersheet/issues/new) — one paragraph is enough
+- **Found a bug?** → [Report it here](https://github.com/ubgb/undersheet/issues/new) with what you expected vs. what happened
+- **Want to build an adapter?** → Pick a platform from the [open issues](https://github.com/ubgb/undersheet/issues) tagged `good first issue`
+
+All code changes go through pull requests — `main` is protected and reviewed before anything merges.
+
+→ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
+
+---
+
+**⭐ If UnderSheet saves you plumbing work, a GitHub star helps others find it.**
+[Star on GitHub](https://github.com/ubgb/undersheet) · [Open an issue](https://github.com/ubgb/undersheet/issues/new) · [Browse open issues](https://github.com/ubgb/undersheet/issues) · [Install on ClawHub](https://clawhub.com/skills/undersheet)
 
 ---
 

@@ -44,7 +44,7 @@ def load_proxy_config(override_url: str = None) -> dict:
       2. Env vars: ALL_PROXY, HTTPS_PROXY, HTTP_PROXY
       3. ~/.config/undersheet/proxy.json
 
-    Supported: http://host:port  |  socks5://host:port (needs: pip install pysocks)
+    Supported: http://host:port  |  https://host:port
     System VPNs (Mullvad, WireGuard, ProtonVPN): no setup needed — they route all traffic.
     """
     if override_url:
@@ -69,8 +69,9 @@ def load_proxy_config(override_url: str = None) -> dict:
 def apply_proxy(proxy: dict, verbose: bool = False):
     """
     Wire proxy into urllib so all subsequent HTTP calls route through it.
-    HTTP/HTTPS: native — sets env vars that urllib respects automatically.
-    SOCKS5: optional dep — pip install pysocks.
+    Pure stdlib — sets env vars that urllib respects automatically.
+    Supports http:// and https:// proxies. For SOCKS5, use a system-level
+    VPN (Mullvad, WireGuard, ProtonVPN) — no config needed, all traffic routes.
     """
     if not proxy or not proxy.get("url"):
         return
@@ -78,30 +79,11 @@ def apply_proxy(proxy: dict, verbose: bool = False):
     if verbose:
         print(f"[undersheet] proxy: {url} (from {proxy.get('source', '?')})")
     if url.startswith("socks5"):
-        try:
-            import socks
-            import socket as _socket
-            addr = url.replace("socks5h://", "").replace("socks5://", "")
-            creds, _, hostport = addr.rpartition("@")
-            host, _, port_s = hostport.rpartition(":")
-            port = int(port_s) if port_s.isdigit() else 1080
-            username, _, password = creds.partition(":") if creds else ("", "", "")
-            socks.set_default_proxy(
-                socks.SOCKS5, host, port,
-                username=username or None,
-                password=password or None,
-            )
-            _socket.socket = socks.socksocket
-            if verbose:
-                print(f"[undersheet] SOCKS5 → {host}:{port}")
-        except ImportError:
-            print("[undersheet] ⚠️  SOCKS5 needs: pip install pysocks")
-            print("             Falling back to ALL_PROXY env var.")
-            os.environ["ALL_PROXY"] = url
-    else:
-        os.environ.setdefault("HTTP_PROXY",  url)
-        os.environ.setdefault("HTTPS_PROXY", url)
-        os.environ.setdefault("ALL_PROXY",   url)
+        print("[undersheet] ⚠️  SOCKS5 proxy requires a system VPN — set HTTP_PROXY instead.")
+        return
+    os.environ.setdefault("HTTP_PROXY",  url)
+    os.environ.setdefault("HTTPS_PROXY", url)
+    os.environ.setdefault("ALL_PROXY",   url)
 
 
 def _state_path(platform_name: str) -> str:
@@ -111,23 +93,79 @@ def _state_path(platform_name: str) -> str:
 
 
 def load_state(platform_name: str) -> dict:
+    defaults = {
+        "threads": {},
+        "seen_post_ids": [],
+        "last_heartbeat": None,
+        "replied_comment_ids": [],  # dupe guard — IDs we've already replied to
+    }
     path = _state_path(platform_name)
     if os.path.exists(path):
         try:
             with open(path) as f:
-                return json.load(f)
-        except Exception:
+                state = json.load(f)
+            # Backfill new keys for existing state files
+            for k, v in defaults.items():
+                state.setdefault(k, v)
+            return state
+        except (json.JSONDecodeError, OSError):
+            # Torn write or corrupt file — start fresh, don't crash
             pass
-    return {"threads": {}, "seen_post_ids": [], "last_heartbeat": None}
+    return defaults
 
 
 def save_state(platform_name: str, state: dict):
+    """Atomic write — temp file + os.replace() so readers never see a partial write."""
     path = _state_path(platform_name)
     # Cap seen_post_ids
     if len(state.get("seen_post_ids", [])) > MAX_SEEN_IDS:
         state["seen_post_ids"] = state["seen_post_ids"][-MAX_SEEN_IDS:]
-    with open(path, "w") as f:
+    # Cap replied_comment_ids
+    if len(state.get("replied_comment_ids", [])) > 2000:
+        state["replied_comment_ids"] = state["replied_comment_ids"][-2000:]
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(state, f, indent=2)
+    os.replace(tmp, path)  # atomic on POSIX, near-atomic on Windows
+
+
+def mark_replied(state: dict, comment_id: str):
+    """
+    Record that we've replied to a comment — the ONLY correct dupe guard.
+    Call this after every successful reply. Never check comment.replies[] instead.
+    """
+    replied = state.get("replied_comment_ids", [])
+    if comment_id not in replied:
+        replied.append(comment_id)
+    state["replied_comment_ids"] = replied
+
+
+def get_unanswered_comments(adapter, state: dict, thread_ids: list) -> list:
+    """
+    Return individual comments on tracked threads that we haven't replied to yet.
+    Requires adapter to implement get_thread_comments(thread_id) -> list[dict].
+    Each comment dict must have at minimum: { "id": str, "author": str, "content": str }
+
+    Uses replied_comment_ids in state as the sole source of truth — not content
+    matching or nested-reply scanning, both of which produce false negatives.
+    """
+    if not hasattr(adapter, "get_thread_comments"):
+        return []  # adapter doesn't support per-comment fetching yet
+    replied = set(state.get("replied_comment_ids", []))
+    unanswered = []
+    for tid in thread_ids:
+        try:
+            comments = adapter.get_thread_comments(tid)
+        except Exception as e:
+            print(f"[undersheet] Warning: could not fetch comments for {tid}: {e}")
+            continue
+        for c in comments:
+            if c.get("id") in replied:
+                continue
+            if c.get("is_deleted") or c.get("is_spam"):
+                continue
+            unanswered.append({**c, "_thread_id": tid})
+    return unanswered
 
 
 # ---------------------------------------------------------------------------
@@ -157,6 +195,14 @@ class PlatformAdapter:
         Return recent posts/threads from the platform.
         Each dict must have at minimum:
           { "id": str, "title": str, "url": str, "score": int, "created_at": str }
+        """
+        raise NotImplementedError
+
+    def get_thread_comments(self, thread_id: str) -> list[dict]:
+        """
+        Optional. Return individual comments for a thread — enables get_unanswered_comments().
+        Each dict must have at minimum: { "id": str, "author": str, "content": str }
+        Implement this in your adapter to unlock per-comment reply deduplication.
         """
         raise NotImplementedError
 
@@ -346,12 +392,64 @@ def status(platform_name: str):
                 print(f"         {url}")
 
 
+def digest():
+    """Cross-platform summary: activity across ALL configured adapters at a glance.
+
+    Shows per-platform: active threads, new feed posts, last heartbeat time.
+    Reads from state files only — no network calls. Instant.
+    """
+    adapters = _list_adapters()
+    now = datetime.now(timezone.utc)
+    print(f"\n📊 UnderSheet digest — {now.strftime('%H:%M UTC')}")
+    print("─" * 52)
+
+    total_threads = 0
+    total_posts   = 0
+    live_count    = 0
+
+    for platform in adapters:
+        state     = load_state(platform)
+        threads   = state.get("threads", {})
+        seen      = len(state.get("seen_post_ids", []))
+        last_hb   = state.get("last_heartbeat")
+
+        # Calculate time since last heartbeat
+        if last_hb:
+            try:
+                last_dt  = datetime.fromisoformat(last_hb.replace("Z", "+00:00"))
+                delta    = now - last_dt
+                mins     = int(delta.total_seconds() / 60)
+                age      = f"{mins}m ago" if mins < 60 else f"{mins//60}h ago"
+                status_icon = "✅"
+                live_count += 1
+            except Exception:
+                age, status_icon = "unknown", "⚠️ "
+        else:
+            age, status_icon = "never run", "⚙️ "
+
+        # Count threads with new activity
+        active_threads = sum(
+            1 for meta in threads.values()
+            if meta.get("comment_count", 0) > meta.get("last_seen_count", 0)
+        )
+        total_threads += active_threads
+        total_posts   += seen
+
+        thread_str = f"{active_threads} active thread{'s' if active_threads != 1 else ''}"
+        post_str   = f"{seen} posts seen"
+
+        print(f"  {status_icon} {platform:<14} {thread_str:<24} {post_str:<18} {age}")
+
+    print("─" * 52)
+    print(f"  Total: {total_threads} active threads | {total_posts} posts tracked | {live_count}/{len(adapters)} platforms live\n")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="UnderSheet — persistent thread memory for OpenClaw agents"
     )
     parser.add_argument("cmd",
-                        choices=["heartbeat", "feed-new", "track", "unread", "status", "platforms"],
+                        choices=["heartbeat", "feed-new", "track", "unread", "status", "platforms", "digest"],
                         help="Command to run")
     parser.add_argument("--platform", "-p", default="moltbook",
                         help="Platform adapter to use (default: moltbook)")
@@ -363,7 +461,7 @@ def main():
     parser.add_argument("--verbose", "-v", action="store_true",
                         help="Show extra detail (full URLs, error traces)")
     parser.add_argument("--proxy", metavar="URL",
-                        help="Route traffic through proxy: http://host:port or socks5://host:port")
+                        help="Route traffic through HTTP proxy: http://host:port")
     args = parser.parse_args()
 
     # Apply proxy before any network calls
@@ -375,6 +473,10 @@ def main():
         print("Available platform adapters:")
         for a in adapters:
             print(f"  - {a}")
+        return
+
+    if args.cmd == "digest":
+        digest()
         return
 
     if args.cmd == "status":
