@@ -1,13 +1,18 @@
 {
   "owner": "vladchatware",
   "slug": "notion-agent-memory",
-  "displayName": "agent-memory",
+  "displayName": "notion-agent-memory",
   "latest": {
-    "version": "1.0.5",
-    "publishedAt": 1772027285911,
-    "commit": "https://github.com/openclaw/skills/commit/a70a33b5b643ba5bc3165907959f6aee2c541494"
+    "version": "1.0.1",
+    "publishedAt": 1772272456191,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.5",
+      "publishedAt": 1772027285911,
+      "commit": "https://github.com/openclaw/skills/commit/a70a33b5b643ba5bc3165907959f6aee2c541494"
+    },
     {
       "version": "1.2.0",
       "publishedAt": 1771682301487,

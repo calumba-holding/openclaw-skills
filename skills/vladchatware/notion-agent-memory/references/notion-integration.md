@@ -31,11 +31,11 @@ echo "ntn_your_key_here" > ~/.config/notion/api_key
 ### Query a Database
 
 ```bash
-NOTION_KEY=$(cat ~/.config/notion/api_key)
+TOKEN=$(grep -o '"token"[[:space:]]*:[[:space:]]*"[^"]*"' ~/.config/notion/api_key | cut -d'"' -f4)
 DB_ID="your-database-id-here"
 
 curl -s -X POST "https://api.notion.com/v1/databases/$DB_ID/query" \
-  -H "Authorization: Bearer $NOTION_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Notion-Version: 2022-06-28" \
   -H "Content-Type: application/json" \
   -d '{"page_size": 10}'
@@ -44,22 +44,22 @@ curl -s -X POST "https://api.notion.com/v1/databases/$DB_ID/query" \
 ### Get a Page
 
 ```bash
-NOTION_KEY=$(cat ~/.config/notion/api_key)
+TOKEN=$(grep -o '"token"[[:space:]]*:[[:space:]]*"[^"]*"' ~/.config/notion/api_key | cut -d'"' -f4)
 PAGE_ID="your-page-id-here"
 
 curl -s "https://api.notion.com/v1/pages/$PAGE_ID" \
-  -H "Authorization: Bearer $NOTION_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Notion-Version: 2022-06-28"
 ```
 
 ### Create a Page
 
 ```bash
-NOTION_KEY=$(cat ~/.config/notion/api_key)
+TOKEN=$(grep -o '"token"[[:space:]]*:[[:space:]]*"[^"]*"' ~/.config/notion/api_key | cut -d'"' -f4)
 DB_ID="your-database-id-here"
 
 curl -s -X POST "https://api.notion.com/v1/pages" \
-  -H "Authorization: Bearer $NOTION_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Notion-Version: 2022-06-28" \
   -H "Content-Type: application/json" \
   -d "{
@@ -78,11 +78,11 @@ curl -s -X POST "https://api.notion.com/v1/pages" \
 ### Update a Page
 
 ```bash
-NOTION_KEY=$(cat ~/.config/notion/api_key)
+TOKEN=$(grep -o '"token"[[:space:]]*:[[:space:]]*"[^"]*"' ~/.config/notion/api_key | cut -d'"' -f4)
 PAGE_ID="your-page-id-here"
 
 curl -s -X PATCH "https://api.notion.com/v1/pages/$PAGE_ID" \
-  -H "Authorization: Bearer $NOTION_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Notion-Version: 2022-06-28" \
   -H "Content-Type: application/json" \
   -d "{
@@ -95,41 +95,6 @@ curl -s -X PATCH "https://api.notion.com/v1/pages/$PAGE_ID" \
 ```
 
 ---
-
-## Python Example
-
-```python
-import requests
-
-NOTION_KEY = "ntn_your_key_here"
-BASE_URL = "https://api.notion.com/v1"
-
-headers = {
-    "Authorization": f"Bearer {NOTION_KEY}",
-    "Notion-Version": "2022-06-28",
-    "Content-Type": "application/json"
-}
-
-def query_database(db_id, filter_dict=None):
-    url = f"{BASE_URL}/databases/{db_id}/query"
-    data = {"page_size": 100}
-    if filter_dict:
-        data["filter"] = filter_dict
-    response = requests.post(url, headers=headers, json=data)
-    return response.json()
-
-def create_page(db_id, title, status="Captured"):
-    url = f"{BASE_URL}/pages"
-    data = {
-        "parent": {"database_id": db_id},
-        "properties": {
-            "Name": {"title": [{"text": {"content": title}}]},
-            "Status": {"select": {"name": status}}
-        }
-    }
-    response = requests.post(url, headers=headers, json=data)
-    return response.json()
-```
 
 ---
 
