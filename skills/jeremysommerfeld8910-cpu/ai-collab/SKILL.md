@@ -342,33 +342,38 @@ date +%s >> "$CALLS_FILE"
 
 ---
 
-## Financial Gate Protocol (CRITICAL)
+## Financial Gate Protocol (TIERED — updated 2026-02-22)
 
-**NEVER execute financial transactions without an AUTHORIZED tag.**
+**Three tiers based on amount:**
+
+| Tier | Amount | Rule |
+|------|--------|------|
+| 1 | Under $20 | Either agent acts independently — no approval needed |
+| 2 | $20–$50 | Both agents PROPOSE + APPROVE before acting |
+| 3 | Over $50 | Requires `[AUTHORIZED:financial:amount:timestamp:Jeremy]` tag |
 
 ```bash
-# Required tag format in chat.log before any financial operation:
-[AUTHORIZED:financial:amount:timestamp:Jeremy]
+# Tier 3 tag format (Jeremy must write to chat.log):
+[AUTHORIZED:financial:buy:BTC:$100:2026-02-22:Jeremy]
 
-# Example:
-[AUTHORIZED:financial:buy:BTC:$50:2026-02-22:Jeremy]
+# Tier 2 example flow:
+# Clawdy proposes: "PROPOSE: buy $35 of SOL for DePIN gas — approve?"
+# Jim approves:    "APPROVED: buy $35 SOL"
+# Then Clawdy acts.
 ```
 
-**Agent B financial gate (add to daemon before executing any trade/transfer):**
+**Daemon tiered gate logic:**
 ```bash
-FINANCIAL_KEYWORDS="trade|buy|sell|transfer|withdraw|deposit|swap|ETH|BTC|DOGE|crypto|wallet"
-if echo "$MSG" | grep -qiE "$FINANCIAL_KEYWORDS"; then
-  if ! echo "$MSG" | grep -qE "\[AUTHORIZED:financial:"; then
-    logline "BLOCKED: Financial gate — no AUTHORIZED tag. Msg: ${MSG:0:80}"
-    continue
-  fi
+# <$20: proceed. $20-50: flag as tier2. >$50: block without AUTHORIZED tag.
+AMOUNT=$(echo "$MSG" | grep -oP '[$]?\d+' | head -1 | tr -d '$')
+if [ -n "$AMOUNT" ] && [ "$AMOUNT" -gt 50 ] && ! echo "$MSG" | grep -q "\[AUTHORIZED:financial:"; then
+  logline "BLOCKED:financial-gate:tier3 — amount>$50, no AUTHORIZED tag"; continue
+elif [ -n "$AMOUNT" ] && [ "$AMOUNT" -ge 20 ]; then
+  logline "FINANCIAL:tier2 — propose before acting"
 fi
 ```
 
-If either agent receives a financial instruction without this tag:
-1. Log `[BLOCKED:financial-gate]` to chat.log
-2. Send error response explaining the missing tag
-3. Do NOT execute under any circumstances
+If Tier 3 blocked: log `[BLOCKED:financial-gate:tier3]`, send Telegram alert, do NOT execute.
 
 ---
 
