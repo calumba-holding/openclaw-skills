@@ -3,11 +3,16 @@
   "slug": "to-do",
   "displayName": "To-Do",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1772145485656,
-    "commit": "https://github.com/openclaw/skills/commit/a18d56b3176edc6962d372fe2533a636282447d3"
+    "version": "1.0.3",
+    "publishedAt": 1772234789267,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1772145485656,
+      "commit": "https://github.com/openclaw/skills/commit/a18d56b3176edc6962d372fe2533a636282447d3"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771968690776,
