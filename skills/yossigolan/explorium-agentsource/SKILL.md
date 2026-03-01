@@ -1,9 +1,9 @@
 ---
 name: vibe-prospecting
-description: Use this skill when the user wants to find companies (businesses) or people (contacts/prospects/leads) using the AgentSource B2B database. Trigger keywords include: find companies, find leads, find prospects, find contacts, B2B search, sales prospecting, market research, export to CSV, company events, funding signals, hiring signals, buying intent, intent signals, who is hiring, companies using [technology], decision makers at, CTO/CMO/VP of, enrich companies, enrich contacts, company firmographics, technographics, tech stack, Series A/B/C companies, target list.
+description: "Use this skill when the user wants to find companies (businesses) or people (contacts/prospects/leads) using the AgentSource B2B database. Trigger keywords include: find companies, find leads, find prospects, find contacts, B2B search, sales prospecting, market research, export to CSV, company events, funding signals, hiring signals, buying intent, intent signals, who is hiring, companies using [technology], decision makers at, CTO/CMO/VP of, enrich companies, enrich contacts, company firmographics, technographics, tech stack, Series A/B/C companies, target list. Requires: EXPLORIUM_API_KEY (env var or ~/.agentsource/config.json)."
 metadata:
-  required_env_vars: "EXPLORIUM_API_KEY — your Explorium AgentSource API key. Set via environment variable or run: python3 <cli_path> config --api-key <key>"
-  data_sent_to_remote: "Search filters, entity IDs, and optional request metadata (plan_id, call_reasoning) are sent to https://api.explorium.ai/v1/. See README for full details."
+  primary_credential: "EXPLORIUM_API_KEY (env var or ~/.agentsource/config.json) — your Explorium AgentSource API key. Get one at https://developers.explorium.ai/reference/setup/getting_your_api_key"
+  data_sent_to_remote: "Search filters, entity IDs, and optional call_reasoning (opt-in) are sent to https://api.explorium.ai/v1/. See README Data & Privacy for full details."
 ---
 
 # Vibe Prospecting Skill
@@ -18,21 +18,20 @@ All API operations go through the `agentsource` CLI tool (`agentsource.py`). The
 
 Before starting any workflow:
 
-1. **Find the CLI** — search all known install locations across environments:
+1. **Find the CLI** — check the two known install locations:
    ```bash
    CLI=$(python3 -c "
    import pathlib
    candidates = [
-     pathlib.Path.home() / '.agentsource/bin/agentsource.py',   # local setup.sh install
-     *sorted(pathlib.Path('/').glob('sessions/*/mnt/**/*agentsource*/bin/agentsource.py')),  # Cowork
-     *sorted(pathlib.Path('/').glob('**/.local-plugins/**/*agentsource*/bin/agentsource.py')),  # other environments
+     pathlib.Path.home() / '.agentsource/bin/agentsource.py',          # setup.sh install
+     pathlib.Path.home() / '.local-plugins/agentsource-plugin/bin/agentsource.py',  # OpenClaw plugin dir
    ]
    found = next((str(p) for p in candidates if p.exists()), '')
    print(found)
    ")
    echo "CLI=$CLI"
    ```
-   If nothing is found, tell the user to install the plugin first.
+   If nothing is found, tell the user to run `./setup.sh` first.
 
 2. **Verify API key** — the CLI accepts the key in two ways:
    - **Environment variable** (recommended for CI / shared environments): `export EXPLORIUM_API_KEY=<key>`
