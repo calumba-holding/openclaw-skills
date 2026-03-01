@@ -10,6 +10,7 @@ Full Odyn API: see references/odyn-api.md in the nova-app-builder skill
 """
 
 import os
+import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from odyn import Odyn, OdynError
@@ -44,22 +45,22 @@ def health():
         return {"status": "degraded", "error": str(e)}
 
 
-@app.get("/api/attestation")
-def attestation_b64():
-    """Base64 attestation document — required by Nova Platform."""
-    return odyn.get_attestation()
+@app.get("/api/info")
+def info():
+    """App info — useful for debugging."""
+    return {
+        "app": "{{APP_NAME}}",
+        "in_enclave": os.getenv("IN_ENCLAVE", "false").lower() == "true",
+        "timestamp": time.time(),
+    }
 
 
 @app.post("/.well-known/attestation")
 def attestation_raw():
     """Raw CBOR attestation — required by Nova Platform for registry verification."""
-    import base64
     from fastapi.responses import Response
-    doc = odyn.get_attestation()
-    cbor = doc.get("attestation", "")
-    if cbor:
-        return Response(content=base64.b64decode(cbor), media_type="application/cbor")
-    return doc
+    cbor = odyn.get_attestation()
+    return Response(content=cbor, media_type="application/cbor")
 
 
 # ─── Your app logic goes below ────────────────────────────────────────────────

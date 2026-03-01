@@ -5,7 +5,7 @@ description: "Build and deploy Nova Platform apps (TEE apps on Sparsity Nova / s
 
 # Nova App Builder
 
-End-to-end workflow: understand the idea → scaffold → write code → build → push → deploy → confirm live URL.
+End-to-end workflow: scaffold → code → push to Git → create app → build → deploy → (on-chain: create app on-chain → enroll version → generate ZK proof → register instance).
 
 ## Architecture Overview
 
@@ -13,14 +13,29 @@ Nova apps run inside AWS Nitro Enclaves, managed by **Enclaver** (Sparsity editi
 
 - **Enclaver**: packages your Docker image into an EIF (Enclave Image File) and manages the enclave lifecycle.
 - **Odyn**: supervisor inside the enclave; provides Internal API for signing, attestation, encryption, KMS, S3, and manages networking.
-- **Nova Platform**: cloud platform at [sparsity.cloud](https://sparsity.cloud) — builds EIFs, runs enclaves, exposes app URLs.
+- **Nova Platform**: cloud platform at [sparsity.cloud](https://sparsity.cloud) — builds EIFs from Git, runs enclaves, exposes app URLs.
 - **Nova KMS**: distributed key management; enclave apps derive keys via `/v1/kms/derive`.
 
 ## Prerequisites (collect from user before starting)
 
+> **Ensure skill is up to date before starting:**
+> ```bash
+> clawhub update nova-app-builder
+> ```
+> Older versions are missing `Dockerfile.txt` in the template, causing scaffold to fail.
+
 - **App idea**: What does the app do?
 - **Nova account + API key**: Sign up at [sparsity.cloud](https://sparsity.cloud) → Account → API Keys.
-- **Git repo**: Nova Platform builds directly from a Git repo URL + branch.
+- **GitHub repo + GitHub PAT**: Used only to push your app code to GitHub. Nova Platform then builds from the repo URL. The PAT is not passed to Nova Platform.
+
+  **GitHub PAT setup**:
+  1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+  2. Required permissions: **Contents** (Read & Write), **Metadata** (Read)
+  3. Push with token:
+     ```bash
+     git remote set-url origin https://oauth2:${GH_TOKEN}@github.com/<user>/<repo>.git
+     git push origin main
+     ```
 
 > ⚠️ **Do NOT ask for Docker registry credentials or AWS S3 credentials.**
 > Nova Platform handles the Docker build and image registry internally (Git-based build pipeline).
@@ -34,13 +49,25 @@ Nova apps run inside AWS Nitro Enclaves, managed by **Enclaver** (Sparsity editi
 python3 scripts/scaffold.py \
   --name <app-name> \
   --desc "<one-line description>" \
-  --port 8000 \
+  --port <port> \
   --out <output-dir>
 ```
 
-This copies the asset template into `<output-dir>/<app-name>/` and prints the file list.
+> **Port choice**: Any port works. Set it via `advanced.app_listening_port` when creating the app. Must also match `EXPOSE` in your Dockerfile. No requirement to use 8080.
 
-Alternatively, fork [nova-app-template](https://github.com/sparsity-xyz/nova-app-template) — it's a production-ready starter with KMS, S3, App Wallet, E2E encryption, and a built-in React frontend.
+This generates `<output-dir>/<app-name>/` with the following structure:
+```
+<app-name>/
+├── Dockerfile
+└── enclave/
+    ├── main.py
+    ├── odyn.py
+    └── requirements.txt
+```
+
+> **Note**: The template ships as `Dockerfile.txt` (clawhub cannot distribute extensionless files). `scaffold.py` automatically renames it to `Dockerfile` and substitutes the port. No manual action needed.
+
+Alternatively, fork [nova-app-template](https://github.com/sparsity-xyz/nova-app-template) — a production-ready starter with KMS, S3, App Wallet, E2E encryption, and a built-in React frontend.
 
 ### Step 2 — Write the app logic
 
@@ -64,7 +91,6 @@ def hello():
 **With App Wallet + KMS (from nova-app-template):**
 ```python
 from kms_client import NovaKmsClient
-import base64
 
 kms = NovaKmsClient(endpoint=ODYN_BASE)
 
@@ -83,75 +109,19 @@ def sign(body: dict):
 
 Helios light-client RPC runs locally at `http://127.0.0.1:18545` (Base Sepolia) and `http://127.0.0.1:18546` (Mainnet).
 
+> ⚠️ **Helios RPC ports must be decided before creating the app** — they are set in `advanced.helios_chains[].local_rpc_port` and locked at creation time. Choose values carefully up front.
+
 Rules for enclave code:
 - All outbound HTTP must use `httpx` (proxy-aware). Never use `requests` or `urllib` — they may bypass the egress proxy.
 - Persistent state → use `/v1/s3/*` endpoints; the enclave filesystem is ephemeral.
 - Secrets → derive via KMS (`/v1/kms/derive`); never from env vars or hardcoded.
-- Test locally: `IN_ENCLAVE=false uvicorn main:app --port 8000` (Odyn calls hit the public mock).
+- Test locally: `IN_ENCLAVE=false uvicorn main:app --port <port>` (Odyn calls hit the public mock).
 
-### Step 3 — Configure enclaver.yaml
+### Step 3 — Commit & push to Git
 
-Key fields to update in your fork:
+Your repo only needs `Dockerfile` + app code. No local Docker build needed — Nova Platform builds from your Git repo directly.
 
-```yaml
-version: v1
-name: my-app
-sources:
-  app: my-app:latest
-target: my-app-enclave:latest
-
-ingress:
-  - listen_port: 8000
-
-egress:
-  proxy_port: 10000
-  allow:
-    - "169.254.169.254"             # IMDS (required for S3/KMS)
-    - "s3.us-east-1.amazonaws.com"
-    - "api.example.com"
-
-api:
-  listen_port: 18000
-
-kms_integration:
-  enabled: true
-  use_app_wallet: true
-  kms_app_id: <YOUR_APP_ID>             # from Nova Portal
-  nova_app_registry: "0x0f68E6..."      # Base Sepolia registry
-
-helios_rpc:
-  enabled: true
-  chains:
-    - name: "L2-base-sepolia"
-      network_id: "84532"
-      kind: "opstack"
-      network: "base-sepolia"
-      execution_rpc: "https://sepolia.base.org"
-      local_rpc_port: 18545
-    - name: "ethereum-mainnet"
-      network_id: "1"
-      kind: "ethereum"
-      network: "mainnet"
-      execution_rpc: "https://eth.llamarpc.com"
-      local_rpc_port: 18546
-
-storage:
-  s3:
-    enabled: true
-    bucket: "my-app-data"
-    prefix: "apps/my-app/"
-    region: "us-east-1"
-    encryption:
-      mode: "kms"
-```
-
-Also update `enclave/config.py`: set `CONTRACT_ADDRESS`, `APP_ID`, `APP_VERSION_ID`.
-
-### Step 4 — Commit & push to Git
-
-No local Docker build needed. Nova Platform builds the image and EIF from your Git repo.
-
-Just push your changes to the branch you'll specify in Step 5:
+KMS integration is fully handled by the platform — just set `enable_decentralized_kms: true` (and optionally `enable_app_wallet: true`) in `advanced` when creating the app. No contract addresses, app IDs, or manual KMS config needed in your code.
 
 ```bash
 git add .
@@ -159,65 +129,254 @@ git commit -m "Initial Nova app"
 git push origin main
 ```
 
-### Step 5 — Deploy to Nova Platform (Portal-based)
+### Step 4 — Deploy to Nova Platform
+
+The deployment is a **3-step** process: **Create App → Trigger Build → Create Deployment**.
+
+#### Via Portal (recommended for first-time)
 
 1. Go to [sparsity.cloud](https://sparsity.cloud) → **Apps** → **Create App**
-2. Fill in **Name** and **Description** → Submit → copy the **App ID**
-3. Update `enclave/config.py` and `enclaver.yaml` with the App ID → push to Git
-4. In the App page → **Builds/Versions** → **Create Build**:
-   - Version Tag: e.g. `v1.0.0`
-   - Git Repository: your fork URL
-   - Git Branch: `main` (or commit hash)
-5. Wait for build (Nova builds your Docker image → EIF via Enclaver → generates PCRs)
-6. **Deployments** → **Create Deployment** → select the version → **Deploy**
-   (No AWS credentials needed — Enclaver handles S3 access internally)
-7. Status → `running` → copy the **App URL**
+2. Fill in **Name**, **Description**, **Git Repo URL**, configure Advanced settings → Submit → copy the **App sqid**
+3. In the App page → **Builds** → **Trigger Build**:
+   - Git Ref: `main` (or tag / commit SHA)
+   - Version: e.g. `v1.0.0`
+4. Wait for build status → `success` (Nova builds Docker image → EIF → generates PCRs)
+5. **Deployments** → **Create Deployment** → select the successful build → **Deploy**
+6. Poll until state → `running` → copy the **App URL** (hostname from app detail)
 
-#### API-based deploy (alternative, if user has Nova API key)
+#### Via API (scripted)
+
+The script will ask interactively whether to run on-chain registration after the app is live. Use `--onchain` to always run it, `--no-onchain` to always skip.
 
 ```bash
+# Preview config without deploying
 python3 scripts/nova_deploy.py \
-  --name "<app-name>" \
-  --port 8000 \
-  --api-key <nova-api-key>
+  --repo https://github.com/you/my-app \
+  --name "my-app" \
+  --port 8080 \
+  --api-key <your-nova-api-key> \
+  --dry-run
+
+# Deploy (will prompt for on-chain at the end)
+python3 scripts/nova_deploy.py \
+  --repo https://github.com/you/my-app \
+  --name "my-app" \
+  --port 8080 \
+  --api-key <your-nova-api-key>
+
+# Deploy + on-chain registration in one shot
+python3 scripts/nova_deploy.py \
+  --repo https://github.com/you/my-app \
+  --name "my-app" \
+  --port 8080 \
+  --api-key <your-nova-api-key> \
+  --onchain
 ```
 
-This calls `POST /apps` + `POST /apps/{appId}/deploy`, then polls until `running` and prints the live URL. No Docker push needed — Nova pulls from Git.
+Or via raw API:
 
-### Step 6 — Verify the live app
+```bash
+BASE="https://sparsity.cloud/api"
+TOKEN="<your-api-key>"
+REPO="https://github.com/you/my-app"
+
+# 1. Create app — 'advanced' is the only config field needed
+SQID=$(curl -sX POST "$BASE/apps" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"my-app",
+    "repo_url":"'"$REPO"'",
+    "advanced":{
+      "directory":"/",
+      "app_listening_port":8080,
+      "egress_allow":["**"],
+      "enable_decentralized_kms":false,
+      "enable_persistent_storage":false,
+      "enable_s3_storage":false,
+      "enable_s3_kms_encryption":false,
+      "enable_ipfs_storage":false,
+      "enable_walrus_storage":false,
+      "enable_app_wallet":false,
+      "enable_helios_rpc":false,
+      "helios_chains":[
+        {"chain_id":"1","kind":"ethereum","network":"mainnet","execution_rpc":"","local_rpc_port":18545}
+      ]
+    }
+  }' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['sqid'])")
+echo "App sqid: $SQID"
+
+# 2. Trigger build
+BUILD_ID=$(curl -sX POST "$BASE/apps/$SQID/builds" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"git_ref":"main","version":"1.0.0"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+echo "Build ID: $BUILD_ID"
+
+# 3. Poll build
+while true; do
+  STATUS=$(curl -s "$BASE/builds/$BUILD_ID/status" \
+    -H "Authorization: Bearer $TOKEN" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('status',''))")
+  echo "Build: $STATUS"
+  [ "$STATUS" = "success" ] && break
+  [ "$STATUS" = "failed" ] && echo "Build failed!" && exit 1
+  sleep 15
+done
+
+# 4. Create deployment
+DEPLOY_ID=$(curl -sX POST "$BASE/apps/$SQID/deployments" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"build_id\":$BUILD_ID}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+echo "Deployment ID: $DEPLOY_ID"
+
+# 5. Poll deployment
+while true; do
+  RESP=$(curl -s "$BASE/deployments/$DEPLOY_ID/status" -H "Authorization: Bearer $TOKEN")
+  STATE=$(echo $RESP | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('deployment_state',''))")
+  echo "Deployment state: $STATE"
+  [ "$STATE" = "running" ] && break
+  [ "$STATE" = "failed" ] && echo "Deploy failed!" && exit 1
+  sleep 15
+done
+
+# 6. Get app URL (hostname from detail, or use unified status)
+curl -s "$BASE/apps/$SQID/detail" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['app'].get('hostname',''))"
+
+# Tip: GET /api/apps/{sqid}/status gives the full lifecycle in one call:
+# build_status, deployment_state, proof_status, onchain_instance_id, etc.
+```
+
+### Step 5 — Verify the live app
 
 ```bash
 # Health check
-curl https://<appUrl>/
+curl https://<hostname>/
 
-# Attestation (proves it's a real Nitro Enclave)
-curl https://<appUrl>/api/attestation
+# Hello endpoint (returns enclave address + signature)
+curl https://<hostname>/api/hello
 
-# App Wallet address
-curl https://<appUrl>/api/app-wallet
+# Attestation (proves it's a real Nitro Enclave) — POST, returns binary CBOR
+curl -sX POST https://<hostname>/.well-known/attestation --output attestation.bin
 ```
+
+> **Note**: `/api/app-wallet` is only available if you forked [nova-app-template](https://github.com/sparsity-xyz/nova-app-template). The scaffold template includes `/api/hello` instead.
+
+### Step 6 — On-Chain Registration (optional but important for trust)
+
+After the app is running, register it on-chain to establish verifiable trust.
+
+**Using the script** (recommended):
+```bash
+python3 scripts/nova_deploy.py ... --onchain
+```
+The script will automatically execute steps 6a–6d and poll until complete.
+
+**Manually via API** — 4-step sequence:
+
+```bash
+# 6a. Create app on-chain
+curl -sX POST "$BASE/apps/$SQID/create-onchain" \
+  -H "Authorization: Bearer $TOKEN"
+# Poll: GET /api/apps/{sqid}/status → onchain_app_id is set when done
+
+# 6b. Enroll build version on-chain (PCR measurements → trusted code fingerprint)
+curl -sX POST "$BASE/apps/$SQID/builds/$BUILD_ID/enroll" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Poll enrollment via build status endpoint
+while true; do
+  ENROLLED=$(curl -s "$BASE/builds/$BUILD_ID/status" \
+    -H "Authorization: Bearer $TOKEN" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('is_enrolled',''))")
+  echo "Enrolled: $ENROLLED"
+  [ "$ENROLLED" = "True" ] && break
+  sleep 10
+done
+
+# 6c. Generate ZK proof
+curl -sX POST "$BASE/zkproof/generate" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"deployment_id\": $DEPLOY_ID}"
+
+# Poll proof via deployment status endpoint (or /zkproof/status/{deployment_id})
+while true; do
+  PROOF=$(curl -s "$BASE/deployments/$DEPLOY_ID/status" \
+    -H "Authorization: Bearer $TOKEN" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('proof_status',''))")
+  echo "Proof status: $PROOF"
+  [ "$PROOF" = "proved" ] && break
+  [ "$PROOF" = "failed" ] && echo "Proof failed!" && exit 1
+  sleep 30
+done
+
+# 6d. Register instance on-chain
+curl -sX POST "$BASE/zkproof/onchain/register" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"deployment_id\": $DEPLOY_ID}"
+
+# Poll: GET /api/deployments/{id}/status → onchain_instance_id is set when done
+# Or use unified: GET /api/apps/{sqid}/status → latest_onchain_instance_id
+```
+
+**What each step does:**
+- **Create app on-chain**: Registers your app in the Nova App Registry contract (Base Sepolia)
+- **Enroll version**: Records the EIF's PCR measurements on-chain — the trusted code fingerprint
+- **Generate ZK proof**: Platform generates a zero-knowledge proof from the enclave's attestation
+- **Register instance**: Verifies the ZK proof on-chain and links the live instance to its enrolled version
+
+After registration, anyone can verify on-chain that this running instance matches the audited build.
+
+## Key Notes
+
+1. **`advanced` is REQUIRED at app creation.** Omitting it will cause the build to fail. Only `advanced` exists — the old `enclaver` field has been removed from the API.
+2. **Your repo only needs `Dockerfile` + app code.** The platform handles everything else at build time.
+3. **App ID format**: `sqid` (string like `abc123`) — use in all URL paths, not the integer `id`.
+4. **Port**: Set via `advanced.app_listening_port`. Must also match `EXPOSE` in Dockerfile.
+5. **Helios RPC**: Use the canonical port mapping in `references/nova-api.md` — ports are fixed and locked at app creation.
+6. **KMS dependency chain**: `enable_app_wallet` or `enable_s3_kms_encryption` implies KMS → implies Helios (with base-sepolia chain) → implies `kms_app_id` + `nova_app_registry`.
+7. **KMS is handled by Enclaver** — no contract addresses or config.py changes needed in your app code.
+8. **No Docker push**: Platform builds from Git.
+9. **On-chain steps** (create-onchain → enroll → ZK proof → register) are required for public verifiability, but optional for a functional running app.
 
 ## Common Issues
 
 | Symptom | Fix |
 |---|---|
-| `docker push` fails | `docker login` first |
+| `Dockerfile` missing after scaffold | Run `clawhub update nova-app-builder` then re-scaffold. The template ships as `Dockerfile.txt` and scaffold renames it to `Dockerfile` automatically. |
+| scaffold fails / `enclaver.yaml` or `config.py` expected | You have an old version. Run `clawhub update nova-app-builder`. These files are no longer needed — `advanced` field at app creation replaces all manual config. |
+| API endpoint `console.sparsity.cloud` not resolving | Old version of `nova_deploy.py`. Run `clawhub update nova-app-builder`. Correct endpoint is `https://sparsity.cloud/api`. |
+| Build stuck in `pending` | Check GitHub Actions in nova build repo; may be queued |
+| Build `failed` | Check `error_message` in build response; usually Dockerfile issue |
 | Deploy API returns 401 | Regenerate API key at sparsity.cloud |
-| App stuck in `provisioning` >10 min | Check Nova Console logs; usually a Dockerfile CMD issue |
-| `httpx` request fails inside enclave | Add domain to `egress.allow` in enclaver.yaml |
+| App stuck in `provisioning` >10 min | Check app logs via `GET /api/apps/{sqid}/detail` |
+| `httpx` request fails inside enclave | Add domain to `advanced.egress_allow`. Note: `"**"` matches domains only — add `"0.0.0.0/0"` for direct IP connections |
+| Direct IP connection blocked | `"**"` does NOT cover IPs. Add `"0.0.0.0/0"` (IPv4) and/or `"::/0"` (IPv6) to `egress_allow` |
 | S3 fails | Ensure `169.254.169.254` and S3 endpoint are in egress allow list |
-| `/v1/kms/*` returns 400 | Check `kms_integration` config; requires `helios_rpc.enabled=true` for registry mode |
-| App Wallet unavailable | Nova KMS unreachable or `use_app_wallet: true` missing in `kms_integration` |
+| `/v1/kms/*` returns 400 | Ensure `enable_decentralized_kms: true` and `enable_helios_rpc: true` in `advanced` at app creation |
+| App Wallet unavailable | Ensure `enable_app_wallet: true` in `advanced` at app creation |
 | Proxy not respected | Switch from `requests`/`urllib` to `httpx` |
+| Health check returns 502 | App is starting; wait for enclave to fully boot |
+| ZK proof stuck | Check `GET /api/zkproof/status/{deployment_id}` for details |
 
 ## Reference Files
 
 - **`references/odyn-api.md`** — Full Odyn Internal API (signing, encryption, S3, KMS, App Wallet, attestation)
-- **`references/nova-api.md`** — Nova Console REST API + manual console walkthrough
+- **`references/nova-api.md`** — Nova Platform REST API (full endpoint reference)
 
 ## Key URLs
 
 - Nova Platform: https://sparsity.cloud
+- **Nova Platform API docs**: https://sparsity.cloud/api/docs
+- **Create-App Full Parameter Guide**: https://sparsity.cloud/resources/nova-api/create-app-guide
+- Nova Examples: https://github.com/sparsity-xyz/sparsity-nova-examples/
 - Enclaver (Sparsity): https://github.com/sparsity-xyz/enclaver
 - Nova App Template: https://github.com/sparsity-xyz/nova-app-template
 - Enclaver Docs: [odyn.md](https://github.com/sparsity-xyz/enclaver/blob/sparsity/docs/odyn.md), [internal_api.md](https://github.com/sparsity-xyz/enclaver/blob/sparsity/docs/internal_api.md)
