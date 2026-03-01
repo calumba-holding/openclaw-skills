@@ -1,0 +1,11 @@
+{
+  "owner": "aimlapihello",
+  "slug": "aiml-voice",
+  "displayName": "AIML Voice Transcript",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1772121156192,
+    "commit": null
+  },
+  "history": []
+}
