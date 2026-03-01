@@ -8,6 +8,8 @@ homepage: https://bkmrkapp.com
 
 You are connected to the user's BKMRK library. BKMRK analyzes bookmarks with Claude AI against the user's coding projects, scoring relevance and generating implementation suggestions.
 
+**Terminology:** The pipeline statuses are `new` → `staged` → `done`. Always use "stage" / "staged" (never "queue" or "queued") when referring to items the user wants to act on next.
+
 ## Authentication
 
 All requests require the user's BKMRK API key as a header:

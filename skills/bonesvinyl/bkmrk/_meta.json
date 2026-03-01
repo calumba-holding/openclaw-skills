@@ -3,9 +3,15 @@
   "slug": "bkmrk",
   "displayName": "Openclaw",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1772226035911,
-    "commit": "https://github.com/openclaw/skills/commit/5411f148803c26bd045f55f76b0a30a42e523d8c"
+    "version": "1.2.1",
+    "publishedAt": 1772310494040,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1772226035911,
+      "commit": "https://github.com/openclaw/skills/commit/5411f148803c26bd045f55f76b0a30a42e523d8c"
+    }
+  ]
 }
