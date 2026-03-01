@@ -77,9 +77,19 @@ Optionals:
 # Create workspace directory
 mkdir -p /path/to/workspace/memory
 
-# Create files (use write tool)
-# Each file should be created with appropriate content from templates.md
+# Create files (use write tool with correct parameters)
+# Important: Use `file_path` parameter, not `path`
+# Example:
+# write:
+#   file_path: /path/to/workspace/IDENTITY.md
+#   content: "content here"
+
+# For large files (>2000 bytes), consider using file-writer skill
+# or split content into smaller chunks
 ```
+
+**Note:** If you encounter "Missing required parameter: path (path or file_path)" error,
+ensure you're using `file_path` parameter in your write tool calls.
 
 **Error handling:**
 
@@ -133,8 +143,11 @@ cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.backup
 # Add agent to OpenClaw configuration
 openclaw agents add <agent-name> --workspace /path/to/workspace
 
-# Example:
-openclaw agents add my-assistant --workspace /home/user/.openclaw/workspaces/my-assistant
+# Example 1: Use independent workspace (recommended - each agent has its own workspace)
+openclaw agents add my-assistant --workspace ~/.openclaw/workspace-my-assistant
+
+# Example 2: Use default workspace (for single agent setup only)
+openclaw agents add my-assistant --workspace ~/.openclaw/workspace
 ```
 
 **Channel binding options:**
@@ -183,6 +196,93 @@ openclaw agents add my-assistant --workspace /home/user/.openclaw/workspaces/my-
 }
 ```
 
+**Model provider configuration (optional):**
+
+If the new agent needs to use custom model providers, you need to configure API keys:
+
+**Step 1: Check main agent's model configuration**
+
+```bash
+# View main agent's model configuration
+cat ~/.openclaw/agents/main/agent/models.json
+
+# View global model providers
+cat ~/.openclaw/openclaw.json | grep -A 20 "providers"
+```
+
+**Step 2: Choose configuration approach**
+
+**Option A: Use same model as main agent (recommended)**
+- New agent can directly use main agent's model configuration
+- No additional configuration needed
+- Models are shared across agents by default
+
+**Option B: Configure new model provider**
+- Required only if agent needs different model provider
+- Add provider to openclaw.json models.providers
+- Configure auth-profiles.json for the agent
+
+**Step 3: Configure model provider (if needed)**
+
+```bash
+# Add provider to openclaw.json
+# Location: ~/.openclaw/openclaw.json
+
+# Example structure:
+{
+  "models": {
+    "providers": {
+      "custom-provider": {
+        "baseUrl": "https://api.example.com/v1",
+        "apiKey": "key_id:secret",
+        "api": "openai-completions",
+        "models": [...]
+      }
+    }
+  }
+}
+```
+
+**Step 4: Configure agent-specific auth (if needed)**
+
+```bash
+# Edit auth-profiles.json for the agent
+# Location: ~/.openclaw/agents/<agent-name>/agent/auth-profiles.json
+
+# Example structure:
+{
+  "custom-provider": {
+    "apiKey": "key_id:secret",
+    "baseUrl": "https://api.example.com/v1"
+  }
+}
+```
+
+**⚠️ IMPORTANT: Model providers vs Channel providers**
+
+- **Model providers**: Configure AI model API keys (OpenAI, Anthropic, custom providers)
+  - Location: openclaw.json → models.providers
+  - Used for: AI model access
+  - Examples: openai, anthropic, custom-maas-api-*
+
+- **Channel providers**: Configure messaging platform credentials (Feishu, Telegram, Discord)
+  - Location: openclaw.json → channels.<provider>
+  - Used for: Message delivery
+  - Examples: feishu, telegram, discord, whatsapp
+
+**Do not confuse these two types of providers!**
+
+**Common error:**
+```
+⚠️ Agent failed before reply: No API key found for provider "provider-name"
+```
+
+**Solution:**
+1. Check if provider name matches openclaw.json models.providers
+2. Verify API key is configured correctly
+3. Check auth-profiles.json for agent-specific configuration
+4. Restart OpenClaw Gateway after configuration changes
+
 **⚠️ IMPORTANT: Never reuse credentials from main agent!**
 
 **Error recovery:**
@@ -192,6 +292,86 @@ openclaw agents add my-assistant --workspace /home/user/.openclaw/workspaces/my-
 - If binding fails: Check channel permissions and network connectivity
 - If backup fails: Check write permissions on ~/.openclaw/ directory
 - **If main agent stops responding:** Immediately restore from backup and restart OpenClaw
+
+**Common errors and solutions:**
+
+**Error 1: "No API key found for provider 'provider-name'"**
+
+**Causes:**
+- Provider name doesn't match any configured provider in openclaw.json
+- Typo in provider name
+- Provider not added to models.providers
+
+**Solutions:**
+1. Check provider name in openclaw.json:
+   ```bash
+   cat ~/.openclaw/openclaw.json | grep -A 10 "providers"
+   ```
+2. Verify provider name spelling (case-sensitive)
+3. Add provider to models.providers if needed
+4. Restart OpenClaw Gateway after configuration changes
+
+**Error 2: "Agent failed before reply"**
+
+**Causes:**
+- Agent configuration is invalid
+- Workspace files are missing or corrupted
+- Model configuration is incorrect
+
+**Solutions:**
+1. Verify workspace files exist:
+   ```bash
+   ls -la /path/to/workspace/
+   ```
+2. Check agent configuration:
+   ```bash
+   openclaw agents list
+   ```
+3. Test agent loading:
+   ```bash
+   openclaw agents test <agent-name>
+   ```
+4. Check OpenClaw logs:
+   ```bash
+   openclaw logs --follow
+   ```
+
+**Error 3: "Missing required parameter: path (path or file_path)"**
+
+**Causes:**
+- Using wrong parameter name in write tool
+- Parameter format error in tool call
+
+**Solutions:**
+1. Use correct parameter name: `file_path` instead of `path`
+2. Verify tool call syntax:
+   ```markdown
+   write:
+     file_path: /path/to/file.md
+     content: "content here"
+   ```
+3. Check tool documentation for correct parameters
+
+**Error 4: "Could not find exact text in file"**
+
+**Causes:**
+- Using edit tool with incorrect oldText
+- Whitespace differences (spaces vs tabs)
+- File already modified by another process
+
+**Solutions:**
+1. Re-read file to get exact content:
+   ```bash
+   read /path/to/file.md
+   ```
+2. Use unique markers for large sections:
+   ```markdown
+   <!-- SECTION_START -->
+   [content]
+   <!-- SECTION_END -->
+   ```
+3. Match whitespace exactly (copy from file read)
+4. Use smaller oldText for more precise matching
 
 ### Phase 2.6 - Verify configuration
 
