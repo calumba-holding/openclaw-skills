@@ -3,9 +3,15 @@
   "slug": "monero-wallet",
   "displayName": "Monero Wallet",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1772111526515,
-    "commit": "https://github.com/openclaw/skills/commit/abedb941f08479a7b37f132fb5f8beb174f79844"
+    "version": "1.0.10",
+    "publishedAt": 1772304689939,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1772111526515,
+      "commit": "https://github.com/openclaw/skills/commit/abedb941f08479a7b37f132fb5f8beb174f79844"
+    }
+  ]
 }
