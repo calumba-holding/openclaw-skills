@@ -1,196 +1,157 @@
 ---
 name: pubblue
 description: >-
-  Publish files or generated content to the web via the pubblue CLI.
-  Creates shareable URLs for HTML, Markdown, and text. Start encrypted
-  P2P tunnels for live agent-to-browser communication.
-  Use when: publishing content online, sharing files via URL, deploying
-  static pages, starting a tunnel for browser communication,
-  or the user mentions "pubblue" or "pub.blue".
+  Publish files or generated content via the pubblue CLI, and run encrypted
+  P2P tunnels for live browser communication.
 license: MIT
 compatibility: Requires Node.js 18+ with npm/pnpm/npx.
 metadata:
   author: pub.blue
-  version: "3.0"
-allowed-tools: Bash(pubblue:*) Bash(npx pubblue:*) Read Write
+  version: "3.4.11"
+allowed-tools: Bash(pubblue:*) Bash(npx pubblue:*) Bash(node:*) Read Write
 ---
 
-# pubblue — Instant Content Publishing
+# pubblue
 
-Publish files or generated content to the web via the `pubblue` CLI. Each publication gets a shareable URL on [pub.blue](https://pub.blue).
+Use this skill when the user asks about `pubblue`, `pub.blue`, publishing content, or tunnel/canvas chat.
+
+## Required CLI Version
+
+Use **pubblue CLI 0.4.11+**.
+
+```bash
+pubblue --version
+npm i -g pubblue@0.4.11
+```
 
 ## Setup
 
 ```bash
-# No install needed:
-npx pubblue <command>
-
-# Or global:
-npm i -g pubblue
+# One-time auth
+pubblue configure --api-key pub_KEY
+# or
+echo "pub_KEY" | pubblue configure --api-key-stdin
 ```
 
-**API key** — required. The user gets one from [pub.blue/dashboard](https://pub.blue/dashboard) (sign in → "Generate API Key" → starts with `pub_`, shown once).
+Key source: <https://pub.blue/dashboard>
+Config path: `~/.config/pubblue/config.json`
+Env override: `PUBBLUE_API_KEY`
 
+Optional OpenClaw bridge config (saved in CLI config):
 ```bash
-pubblue configure --api-key pub_KEY    # or pipe: echo "pub_KEY" | pubblue configure --api-key-stdin
+pubblue configure --set bridge.mode=openclaw
+pubblue configure --set openclaw.path=/app/dist/index.js
+pubblue configure --set openclaw.sessionId=<session-id>
+# or:
+pubblue configure --set openclaw.threadId=<thread-id>
+pubblue configure --set openclaw.canvasReminderEvery=10
+pubblue configure --show
 ```
 
-Alternatively set `PUBBLUE_API_KEY` env var. Config stored at `~/.config/pubblue/config.json`.
-
-## Commands
+## Core Publish Commands
 
 ```bash
-pubblue create page.html                          # from file (type inferred from extension)
-pubblue create --slug my-demo --title "Demo" --public page.html
-cat page.html | pubblue create                    # from stdin (defaults to text)
+pubblue create page.html
+pubblue create --slug demo --title "Demo" --public page.html
+cat notes.md | pubblue create
 
-pubblue get <slug>                                # details
-pubblue get <slug> --content                      # raw content to stdout
+pubblue get <slug>
+pubblue get <slug> --content
 
-pubblue update <slug> --file new.html             # update content
-pubblue update <slug> --title "New" --public      # update metadata
+pubblue update <slug> --file next.html
+pubblue update <slug> --title "New title" --public
 
 pubblue list
 pubblue delete <slug>
 ```
 
-## Workflow
+Notes:
+- Publications are **private by default**.
+- `create` supports `--public/--private`, `--title`, `--slug`, `--expires`.
+- `update` supports `--file`, `--title`, `--public/--private`, `--slug`.
 
-1. **Verify config** — run `pubblue list`. If it fails, follow Setup above.
-2. **Generate or gather content.**
-3. **Write to a temp file** with the right extension (`.html`, `.md`, `.txt`) using the Write tool, then `pubblue create /tmp/file.html`.
-4. **Return the URL** to the user.
+## OpenClaw Default Flow (Recommended)
 
-### Visibility
+`pubblue tunnel start` now owns bridge setup by default.
+- Default bridge mode: `openclaw`
+- To disable managed bridge (manual mode): `--bridge none`
 
-Publications are **private by default**. Choose wisely:
+## Tunnel Quick Flow
 
-- **Public** — accessible to anyone; may appear on [pub.blue/explore](https://pub.blue/explore). Use for content meant to be shared (portfolios, demos, docs, blog posts).
-- **Private** — owner-only access. Use for drafts, scratch content, sensitive data, or temporary shares.
+1. Start (managed bridge enabled by default):
+```bash
+pubblue tunnel start --expires 4h
+```
 
-Default to private. Ask the user before making something public if intent isn't clear.
+Optional explicit bridge selector:
+```bash
+pubblue tunnel start --bridge openclaw --expires 4h
+pubblue tunnel start --bridge none --expires 4h
+```
 
-### Content efficiency
+Behavior:
+- Default `tunnel start` runs daemon + managed bridge in background, but only returns after health checks pass.
+- `--foreground` keeps process attached to current shell and does not run managed bridge.
 
-Publications are single files. Leaner content loads faster and stays within the 1 MB limit.
+2. Wait for browser:
+```bash
+pubblue tunnel status
+```
 
-- **Markdown** is the lightest option — zero client JS, rendered server-side. Great default for text content.
-- **Plain HTML + inline `<style>`** is cheap. System fonts, CSS gradients/shadows, and inline SVG are essentially free.
-- **CDN libraries** (Bootstrap, React, web fonts) add significant weight. Write only the styles/JS you need unless the user asks for a specific framework.
-- **Base64 images** bloat the file — link to hosted URLs instead.
+3. Send content:
+```bash
+pubblue tunnel write --tunnel <id> "Hello"
+pubblue tunnel write --tunnel <id> -c canvas -f /tmp/view.html
+```
 
-## Options
+4. Read incoming (manual/debug mode):
+```bash
+pubblue tunnel read <id> --follow -c chat
+```
 
-| Command | Flag | Description |
-|---------|------|-------------|
-| `create` | `[file]` | Path to file (stdin if omitted) |
-| | `--slug <slug>` | Custom URL slug (auto-generated if omitted) |
-| | `--title <title>` | Human-readable title |
-| | `--public` / `--private` | Visibility (default: private) |
-| `update` | `--file <file>` | New content from file |
-| | `--title <title>` | New title |
-| | `--public` / `--private` | Change visibility |
-| `get` | `--content` | Raw content to stdout (pipeable) |
+5. Close:
+```bash
+pubblue tunnel close <id>
+```
 
-## Content Types
+6. Validate tunnel end-to-end (strict):
+```bash
+pubblue tunnel doctor --tunnel <id>
+# optional handshake:
+pubblue tunnel doctor --tunnel <id> --wait-pong --timeout 30
+```
 
-Type is inferred from file extension. Stdin defaults to plain text.
+Important:
+- `tunnel write` uses delivery confirmation; failures should be retried.
+- `read` is consumptive. Do not run multiple `read --follow` consumers on the same channel.
+- `tunnel start` is idempotent now:
+  - Reuses the most recent active tunnel by default
+  - Supports `--tunnel <id>` to attach explicitly
+  - Use `--new` to force creating a new tunnel
 
-| Extension | Rendered as |
-|-----------|-------------|
-| `.html`, `.htm` | HTML page |
-| `.md`, `.markdown` | Markdown → HTML |
-| Everything else | Plain text |
+## Bridge Modes
 
-## Limits
+`pubblue tunnel start` supports:
+- `--bridge openclaw` (default): managed local bridge process (OpenClaw session delivery)
+- `--bridge none`: no managed bridge; use manual polling or external integration
 
-- Max content size: 100 KB
-- Slug: 1–64 chars, alphanumeric + `.`/`-`/`_`, must start with letter or number
-
-## Tunnel — P2P Bridge to Browser
-
-Start an encrypted P2P WebRTC tunnel so users can communicate with you through their browser. All data flows directly between your daemon and the user's browser — pub.blue only handles the initial connection setup.
-
-### When to Use
-
-- User wants to interact with you via a web UI instead of the terminal
-- You need to present rich HTML content (dashboards, charts, interactive pages)
-- User wants a live browser session tied to their own account
-- Real-time back-and-forth with audio, images, or files
-
-### Tunnel Workflow
-
-1. **Start a tunnel:**
-   ```bash
-   pubblue tunnel start --title "Session" --expires 4h
-   ```
-   Prints a URL (e.g., `https://pub.blue/t/abc123`) and tunnel ID.
-   Owner-auth mode: open it while signed into the same pub.blue account that created the tunnel.
-
-2. **Wait for connection:**
-   ```bash
-   pubblue tunnel status
-   ```
-   Shows `connected` once the user opens the URL.
-
-3. **Communicate via channels:**
-   ```bash
-   # Send a text message (default channel: chat)
-   pubblue tunnel write --tunnel <id> "Here are the results..."
-
-   # Present HTML in the canvas panel
-   pubblue tunnel write --tunnel <id> -c canvas -f /tmp/dashboard.html
-
-   # Send a file
-   pubblue tunnel write --tunnel <id> -c file -f /tmp/report.pdf
-
-   # Read incoming messages (returns JSON array)
-   pubblue tunnel read <id>
-
-   # Stream messages continuously
-   pubblue tunnel read <id> --follow
-   ```
-
-4. **Close when done:**
-   ```bash
-   pubblue tunnel close <id>
-   ```
-
-### Channels
-
-Data flows through named channels. Default channels:
-
-| Channel | Purpose |
-|---------|---------|
-| `chat` | Text messages (default for `write`/`read`) |
-| `canvas` | HTML content displayed in a side panel |
-| `audio` | Audio streams |
-| `media` | Images, screenshots, camera frames |
-| `file` | File transfers |
-
-You can use any custom channel name with `-c <name>`.
-
-### Tips
-
-- **Polling**: check `pubblue tunnel read <id>` every 2–3 seconds when expecting user input. Messages are buffered — nothing is lost between polls.
-- **Canvas updates**: just write again to the `canvas` channel — the connection stays open.
-- **Auto-detect tunnel**: if only one tunnel is active, tunnel id can be omitted from `write` (no `--tunnel`), `read`, `status`, and `channels`.
-- **Multiple tunnels**: `pubblue tunnel list` shows all active tunnels.
-- **Foreground mode**: `pubblue tunnel start --foreground` runs the daemon in your terminal (useful for debugging).
-
-### Tunnel Limits
-
-- Max 5 active tunnels per user
-- Max expiry: 7 days (default: 24 hours)
-- Requires `node-datachannel` native module (bundled with pubblue)
-- Tunnel access is owner-authenticated (not a public bearer link yet)
+Useful env for `openclaw` mode:
+- `OPENCLAW_SESSION_ID` or `OPENCLAW_THREAD_ID` (recommended for deterministic routing)
+- `OPENCLAW_PATH` (explicit OpenClaw binary/index.js path, if auto-discovery fails)
+- `OPENCLAW_DELIVER=1` (optional, enables OpenClaw `--deliver`)
+- `OPENCLAW_DELIVER_CHANNEL`, `OPENCLAW_REPLY_TO` (optional channel routing)
+- `OPENCLAW_DELIVER_TIMEOUT_MS` (optional dispatch timeout)
+- `OPENCLAW_CANVAS_REMINDER_EVERY` (optional, default `10`)
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| "Not configured…" | Run `pubblue configure` or set `PUBBLUE_API_KEY`. Get key from [dashboard](https://pub.blue/dashboard) |
-| "Missing API key" / "Invalid API key" | Re-run `pubblue configure` or generate a new key |
-| "Slug already taken" | Choose a different `--slug` |
-| "Content exceeds maximum size of 100KB" | Reduce content to under 100 KB |
-| "File not found" | Check path; use absolute paths |
+- `Rate limit exceeded`:
+  - Read and respect retry hints.
+  - Prefer `tunnel start --tunnel <id>` / reuse instead of repeatedly creating new tunnels.
+- `No browser connected`:
+  - Ask user to open tunnel URL and wait for `status: connected`.
+- `Tunnel not found or expired` after start:
+  - Check `pubblue tunnel status` and daemon log path from start output.
+  - Restart daemon against existing tunnel with `pubblue tunnel start --tunnel <id>`.
+- Bridge errors:
+  - Use `pubblue tunnel status` and inspect bridge state/log path.
