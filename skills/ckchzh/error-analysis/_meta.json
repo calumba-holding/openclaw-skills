@@ -3,11 +3,16 @@
   "slug": "error-analysis",
   "displayName": "Error Analysis",
   "latest": {
-    "version": "2.2.0",
-    "publishedAt": 1773421273198,
-    "commit": "https://github.com/openclaw/skills/commit/0221cd20db5a1dc6170e7c3d43613858acd67710"
+    "version": "2.3.2",
+    "publishedAt": 1773613307743,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.2.0",
+      "publishedAt": 1773421273198,
+      "commit": "https://github.com/openclaw/skills/commit/0221cd20db5a1dc6170e7c3d43613858acd67710"
+    },
     {
       "version": "1.1.1",
       "publishedAt": 1773140973100,

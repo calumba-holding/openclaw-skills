@@ -1,6 +1,6 @@
 ---
 name: Error Analysis
-description: >-
+description: "错题分析助手。分析错误原因、知识点定位、举一反三出变式题。. Use when you need error analysis capabilities. Triggers on: error analysis."
   错题分析助手。错题归类、知识点定位、薄弱环节分析、复习建议。Error analysis for study with categorization, knowledge gap identification. 错题本、考试复盘、学习分析。Use when analyzing exam mistakes.
 ---
 
@@ -34,3 +34,6 @@ bash scripts/error.sh summary
 - Python 3.6+ compatible
 - No external dependencies
 - 错题记录保存在 `data/errors.json`
+---
+💬 Feedback & Feature Requests: https://bytesagain.com/feedback
+Powered by BytesAgain | bytesagain.com
