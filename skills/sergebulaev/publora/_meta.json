@@ -3,11 +3,16 @@
   "slug": "publora",
   "displayName": "Publora",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1772064603522,
-    "commit": "https://github.com/openclaw/skills/commit/4916736b9725f2697baa32d179fe53b653a58b0f"
+    "version": "1.2.0",
+    "publishedAt": 1773488180627,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1772064603522,
+      "commit": "https://github.com/openclaw/skills/commit/4916736b9725f2697baa32d179fe53b653a58b0f"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1771618238559,

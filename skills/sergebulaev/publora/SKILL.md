@@ -1,16 +1,17 @@
 ---
 name: publora
 description: >
-  Publora API — schedule and publish social media posts across 10 platforms
+  Publora API — schedule and publish social media posts across 11 platforms
   (X/Twitter, LinkedIn, Instagram, Threads, TikTok, YouTube, Facebook, Bluesky,
-  Mastodon, Telegram). Use this skill when the user wants to post, schedule,
-  draft, or bulk-schedule content on any social platform via Publora.
+  Mastodon, Telegram, Pinterest). Use this skill when the user wants to post,
+  schedule, draft, bulk-schedule, manage workspace users, configure webhooks,
+  or retrieve LinkedIn analytics via Publora.
 ---
 
 # Publora API — Core Skill
 
 Publora is an affordable REST API for scheduling and publishing social media posts
-across 10 platforms. Base URL: `https://api.publora.com/api/v1`
+across 11 platforms. Base URL: `https://api.publora.com/api/v1`
 
 ## Authentication
 
@@ -28,16 +29,13 @@ Get your key: [publora.com](https://publora.com) → Settings → API Keys → G
 
 **Always call this first** to get valid platform IDs before posting.
 
-```bash
-GET /api/v1/platform-connections
-```
-
 ```javascript
 const res = await fetch('https://api.publora.com/api/v1/platform-connections', {
   headers: { 'x-publora-key': 'sk_YOUR_KEY' }
 });
 const { connections } = await res.json();
-// connections[i].id → use this as platform ID (e.g. "linkedin-ABC123")
+// connections[i].platformId → e.g. "linkedin-ABC123", "twitter-456"
+// Also returns: tokenStatus, tokenExpiresIn, lastSuccessfulPost, lastError
 ```
 
 Platform IDs look like: `twitter-123`, `linkedin-ABC`, `instagram-456`, `threads-789`, etc.
@@ -59,7 +57,7 @@ await fetch('https://api.publora.com/api/v1/create-post', {
 
 ## Schedule a Post
 
-Include `scheduledTime` in ISO 8601 UTC — must be at least 2 minutes in the future:
+Include `scheduledTime` in ISO 8601 UTC — must be in the future:
 
 ```javascript
 await fetch('https://api.publora.com/api/v1/create-post', {
@@ -90,6 +88,57 @@ await fetch(`https://api.publora.com/api/v1/update-post/${postGroupId}`, {
 });
 ```
 
+## List Posts
+
+Filter, paginate and sort your scheduled/published posts:
+
+```javascript
+// GET /api/v1/list-posts
+// Query params: status, platform, fromDate, toDate, page, limit, sortBy, sortOrder
+const res = await fetch(
+  'https://api.publora.com/api/v1/list-posts?status=scheduled&platform=twitter&page=1&limit=20',
+  { headers: { 'x-publora-key': 'sk_YOUR_KEY' } }
+);
+const { posts, pagination } = await res.json();
+// pagination: { page, limit, totalItems, totalPages, hasNextPage, hasPrevPage }
+```
+
+Valid statuses: `draft`, `scheduled`, `published`, `failed`, `partially_published`
+
+## Get / Delete a Post
+
+```bash
+# Get post details
+GET /api/v1/get-post/:postGroupId
+
+# Delete post (also removes media from storage)
+DELETE /api/v1/delete-post/:postGroupId
+```
+
+## Get Post Logs
+
+Debug failed or partially published posts:
+
+```javascript
+const res = await fetch(
+  `https://api.publora.com/api/v1/post-logs/${postGroupId}`,
+  { headers: { 'x-publora-key': 'sk_YOUR_KEY' } }
+);
+const { logs } = await res.json();
+```
+
+## Test a Connection
+
+Verify a platform connection is healthy before posting:
+
+```javascript
+const res = await fetch(
+  'https://api.publora.com/api/v1/test-connection/linkedin-ABC123',
+  { method: 'POST', headers: { 'x-publora-key': 'sk_YOUR_KEY' } }
+);
+// Returns: { status: "ok"|"error", message, permissions, tokenExpiresIn }
+```
+
 ## Bulk Schedule (a Week of Content)
 
 ```python
@@ -112,7 +161,7 @@ for i, content in enumerate(posts):
 
 ## Media Uploads
 
-All media (images and videos) use a 3-step S3 pre-signed upload workflow:
+All media (images and videos) use a 3-step pre-signed upload workflow:
 
 **Step 1:** `POST /api/v1/create-post` → get `postGroupId`  
 **Step 2:** `POST /api/v1/get-upload-url` → get `uploadUrl`  
@@ -144,45 +193,172 @@ with open('./photo.jpg', 'rb') as f:
     requests.put(upload['uploadUrl'], headers={'Content-Type': 'image/jpeg'}, data=f)
 ```
 
-### Key Notes
-
-- **Carousel/album:** call `get-upload-url` N times for N images — all with the **same `postGroupId`**
-- **Max file size:** 512 MB per file
-- **Supported image formats:** JPEG, PNG, GIF, WebP
-- **Supported video formats:** MP4, MOV
-- **WebP auto-converted** to JPEG for platforms that don't support it (LinkedIn, Bluesky, Mastodon, Telegram)
-- **Video metadata** (duration, dimensions, codec) auto-extracted after upload
-
-## Platform-Specific Skills
-
-For platform-specific settings and examples, install the relevant skill:
-- `publora-linkedin` — LinkedIn posts
-- `publora-twitter` — X/Twitter posts & threads
-- `publora-instagram` — Instagram images/reels
-- `publora-threads` — Threads posts
-- `publora-tiktok` — TikTok videos
-- `publora-youtube` — YouTube videos
-- `publora-facebook` — Facebook posts
-- `publora-bluesky` — Bluesky posts
-- `publora-mastodon` — Mastodon posts
-- `publora-telegram` — Telegram channels
+For carousels: call `get-upload-url` N times with the **same `postGroupId`**.
 
 ## Cross-Platform Threading
 
-For platforms that support threads (X/Twitter and Threads), you can create a thread by separating post segments with `---` on its own line.
+X/Twitter and Threads support auto-threading. Separate segments with `---` on its own line:
 
 ```javascript
 await fetch('https://api.publora.com/api/v1/create-post', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'x-publora-key': 'sk_YOUR_KEY' },
   body: JSON.stringify({
-    content: 'First tweet in the thread. Here is the intro.\n\n---\n\nSecond tweet continues the thought.\n\n---\n\nThird tweet wraps it up. Follow for more!',
+    content: 'First tweet in the thread.\n\n---\n\nSecond tweet continues.\n\n---\n\nFinal tweet wraps up.',
     platforms: ['twitter-123', 'threads-789']
   })
 });
 ```
 
-The `---` separator tells Publora to split the content into individual thread posts. Each segment becomes its own post in the thread, linked together automatically. Only X/Twitter and Threads support threading — on other platforms the `---` is treated as plain text.
+> ⚠️ **Threads Restriction:** Multi-threaded nested posts (content auto-split into connected replies) are **temporarily unavailable on Threads** due to Threads app reconnection status. Single posts and carousels continue to work normally. Contact support@publora.com for updates.
+
+## LinkedIn Analytics
+
+```javascript
+// Post statistics
+await fetch('https://api.publora.com/api/v1/linkedin-post-statistics', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'x-publora-key': 'sk_YOUR_KEY' },
+  body: JSON.stringify({
+    postedId: 'urn:li:share:7123456789',
+    platformId: 'linkedin-ABC123',
+    queryTypes: 'ALL'  // or: IMPRESSION, MEMBERS_REACHED, RESHARE, REACTION, COMMENT
+  })
+});
+
+// Profile summary (followers + aggregated stats)
+await fetch('https://api.publora.com/api/v1/linkedin-profile-summary', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'x-publora-key': 'sk_YOUR_KEY' },
+  body: JSON.stringify({ platformId: 'linkedin-ABC123' })
+});
+```
+
+Available analytics endpoints:
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /linkedin-post-statistics` | Impressions, reactions, reshares for a post |
+| `POST /linkedin-account-statistics` | Aggregated account metrics |
+| `POST /linkedin-followers` | Follower count and growth |
+| `POST /linkedin-profile-summary` | Combined profile overview |
+| `POST /linkedin-create-reaction` | React to a post |
+| `DELETE /linkedin-delete-reaction` | Remove a reaction |
+
+## Webhooks
+
+Get real-time notifications when posts are published, fail, or tokens are expiring.
+
+```javascript
+// Create a webhook
+await fetch('https://api.publora.com/api/v1/webhooks', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'x-publora-key': 'sk_YOUR_KEY' },
+  body: JSON.stringify({
+    name: 'My webhook',
+    url: 'https://myapp.com/webhooks/publora',
+    events: ['post.published', 'post.failed', 'token.expiring']
+  })
+});
+// Returns: { webhook: { _id, name, url, events, secret, isActive } }
+// Save the `secret` — it's only shown once. Use it to verify webhook signatures.
+```
+
+Valid events: `post.scheduled`, `post.published`, `post.failed`, `token.expiring`
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/webhooks` | GET | List all webhooks |
+| `/webhooks` | POST | Create webhook |
+| `/webhooks/:id` | PATCH | Update webhook |
+| `/webhooks/:id` | DELETE | Delete webhook |
+| `/webhooks/:id/regenerate-secret` | POST | Rotate webhook secret |
+
+Max 10 webhooks per account.
+
+## Workspace / B2B API
+
+Manage multiple users under your workspace account. Contact serge@publora.com to enable Workspace API access.
+
+```javascript
+// Create a managed user
+const user = await fetch('https://api.publora.com/api/v1/workspace/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'x-publora-key': 'sk_CORP_KEY' },
+  body: JSON.stringify({ email: 'client@example.com', displayName: 'Acme Corp' })
+}).then(r => r.json());
+
+// Generate connection URL for user to connect their social accounts
+const { connectionUrl } = await fetch(
+  `https://api.publora.com/api/v1/workspace/users/${user.id}/connection-url`,
+  { method: 'POST', headers: { 'x-publora-key': 'sk_CORP_KEY' } }
+).then(r => r.json());
+
+// Post on behalf of managed user
+await fetch('https://api.publora.com/api/v1/create-post', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-publora-key': 'sk_CORP_KEY',
+    'x-publora-user-id': user.id  // ← key header for acting on behalf of a user
+  },
+  body: JSON.stringify({ content: 'Post for Acme Corp!', platforms: ['linkedin-XYZ'] })
+});
+```
+
+Workspace endpoints:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/workspace/users` | GET | List managed users |
+| `/workspace/users` | POST | Create managed user |
+| `/workspace/users/:userId` | DELETE | Remove managed user |
+| `/workspace/users/:userId/api-key` | POST | Generate per-user API key |
+| `/workspace/users/:userId/connection-url` | POST | Generate OAuth connection link |
+
+Each managed user has a limit of **100 posts/day** (`dailyPostsLeft`). Never expose your workspace key client-side — use per-user API keys for client-facing scenarios.
+
+## Platform Limits Quick Reference (API)
+
+> ⚠️ API limits are often stricter than native app limits. Always design against these.
+
+| Platform | Char Limit | Max Images | Video Max | Text Only? |
+|----------|-----------|-----------|-----------|------------|
+| Twitter/X | 280 (25K Premium) | 4 × 5MB | 2 min / 512MB | ✅ |
+| LinkedIn | 3,000 | 20 × 5MB | 30 min / 500MB | ✅ |
+| Instagram | 2,200 | **10 × 8MB (JPEG only)** | **90s** / 300MB | ❌ |
+| Threads | 500 | 20 × 8MB | 5 min / 500MB | ✅ |
+| TikTok | 2,200 | Video only | 10 min / 4GB | ❌ |
+| YouTube | 5,000 desc | Video only | 12h / 256GB | ❌ |
+| Facebook | 63,206 | 10 × 10MB | 45 min / 2GB | ✅ |
+| Bluesky | 300 | 4 × 1MB | 3 min / 100MB | ✅ |
+| Mastodon | 500 | 4 × 16MB | ~99MB | ✅ |
+| Telegram | 4,096 (1,024 captions) | 10 × 10MB | 50MB (Bot API) | ✅ |
+
+For full limits detail, see the `docs/guides/platform-limits.md` in the [Publora API Docs](https://github.com/publora/publora-api-docs).
+
+## Platform-Specific Skills
+
+For platform-specific settings, limits, and examples:
+
+- `publora-linkedin` — LinkedIn posts + analytics + reactions
+- `publora-twitter` — X/Twitter posts & threads
+- `publora-instagram` — Instagram images/reels/carousels
+- `publora-threads` — Threads posts
+- `publora-tiktok` — TikTok videos
+- `publora-youtube` — YouTube videos
+- `publora-facebook` — Facebook page posts
+- `publora-bluesky` — Bluesky posts
+- `publora-mastodon` — Mastodon posts
+- `publora-telegram` — Telegram channels
+
+## Post Statuses
+
+- `draft` — Not scheduled yet
+- `scheduled` — Waiting to publish
+- `published` — Successfully posted
+- `failed` — Publishing failed (check `/post-logs`)
+- `partially_published` — Some platforms failed
 
 ## Errors
 
@@ -190,5 +366,6 @@ The `---` separator tells Publora to split the content into individual thread po
 |------|---------|
 | 400 | Invalid request (check `scheduledTime` format, required fields) |
 | 401 | Invalid or missing API key |
-| 403 | Free plan limit reached (5 pending posts max) |
+| 403 | Plan limit reached or Workspace API not enabled |
 | 404 | Post/resource not found |
+| 429 | Platform rate limit exceeded |
