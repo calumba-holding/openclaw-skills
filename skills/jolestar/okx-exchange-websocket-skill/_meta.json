@@ -1,0 +1,11 @@
+{
+  "owner": "jolestar",
+  "slug": "okx-exchange-websocket-skill",
+  "displayName": "OKX Exchange WebSocket Skill",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773617056231,
+    "commit": null
+  },
+  "history": []
+}
