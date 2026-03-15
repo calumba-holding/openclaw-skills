@@ -1,11 +1,17 @@
 {
   "owner": "cnatom",
   "slug": "agent-cli-orchestrator",
-  "displayName": "agent-cli-orchestrator",
+  "displayName": "Agent Cli Orchestrator",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1773614326415,
-    "commit": "https://github.com/openclaw/skills/commit/db8d4c3d5a8be1b94f54560c06cad3041d12c93c"
+    "version": "2.0.1",
+    "publishedAt": 1773616101250,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1773614326415,
+      "commit": "https://github.com/openclaw/skills/commit/db8d4c3d5a8be1b94f54560c06cad3041d12c93c"
+    }
+  ]
 }

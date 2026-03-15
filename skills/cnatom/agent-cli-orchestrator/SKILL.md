@@ -1,8 +1,34 @@
 # SKILL: agent-cli-orchestrator (Multi AI CLI Orchestrator)
 
-**Version:** 2.0.0 (2026-03-16)  
+**Version:** 2.0.1 (2026-03-16)  
 **Status:** Stable  
 **Expertise:** CLI Automation, Error Recovery, Tool Chain Management
+
+---
+
+## ⚠️ 重要：工具检测方式
+
+**必须执行扫描脚本来检测工具**，因为：
+- 直接使用 `which` 或 `command -v` 无法获取完整环境变量
+- Gemini CLI 等工具安装在用户 shell 配置的路径中
+- 必须先 `source ~/.zshrc` 加载环境后再检测
+
+**正确做法：**
+```bash
+# 1. 先加载环境
+source ~/.zshrc
+
+# 2. 再检测工具
+command -v gemini
+command -v claude
+command -v cursor-agent
+```
+
+**或使用内置扫描脚本：**
+```bash
+# 扫描脚本会自动加载环境并检测工具
+/Users/atom/.openclaw/workspace/skills/agent-cli-orchestrator/scripts/scan_ai_tools.sh
+```
 
 ---
 

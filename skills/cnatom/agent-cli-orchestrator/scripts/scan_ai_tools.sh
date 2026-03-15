@@ -7,13 +7,11 @@
 
 CONFIG_FILE="$HOME/.ai-cli-config.json"
 
-# 要扫描的 AI CLI 工具列表（真正的命令行AI工具）
+# 要扫描的 AI CLI 工具列表（只检测这三个核心工具）
 AI_TOOLS=(
     "gemini:Gemini CLI:Google AI - 网络搜索/问答"
-    "cursor-agent:Cursor Agent:AI代码编辑器 - 代码生成/调试"
     "claude:Claude Code:Anthropic AI - 代码/问答"
-    "codex:Codex:OpenAI - 代码生成"
-    "aider:aider:AI编程助手 - 代码编辑"
+    "cursor-agent:Cursor Agent:AI代码编辑器 - 代码生成/调试"
 )
 
 echo "🤖 AI CLI 工具扫描器"
