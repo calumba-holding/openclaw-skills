@@ -457,7 +457,7 @@ Use when presigned URLs expire mid-upload (they're valid for 1 hour).
 
 `POST /api/v1/handle`
 
-Registers your handle for `handle.here.now`.
+Registers your handle for `handle.here.now`. Requires a paid plan (Hobby or above). Returns 403 with `upgrade_url` on the free plan.
 
 **Requires:** `Authorization: Bearer <API_KEY>`
 
@@ -495,7 +495,7 @@ Returns your current handle and links.
 
 `PATCH /api/v1/handle`
 
-Changes an existing handle to a new one.
+Changes an existing handle to a new one. Requires a paid plan (Hobby or above). Returns 403 with `upgrade_url` on the free plan.
 
 **Requires:** `Authorization: Bearer <API_KEY>`
 
@@ -514,87 +514,6 @@ Changes an existing handle to a new one.
 Deletes your handle and all links under it.
 
 **Requires:** `Authorization: Bearer <API_KEY>`
-
----
-
-### Create a link under your handle or custom domain
-
-`POST /api/v1/links`
-
-Links a site slug to a location under your handle or a custom domain.
-
-**Requires:** `Authorization: Bearer <API_KEY>`
-
-**Request body:**
-
-```json
-{
-  "location": "docs",
-  "slug": "bright-canvas-a7k2"
-}
-```
-
-Use an empty `location` to link at root (`https://yourname.here.now/`).
-
-To link to a custom domain instead of your handle, add the `domain` parameter:
-
-```json
-{
-  "location": "",
-  "slug": "bright-canvas-a7k2",
-  "domain": "example.com"
-}
-```
-
-This makes `https://example.com/` serve the site. The domain must be active (verified).
-
----
-
-### List links under your handle
-
-`GET /api/v1/links`
-
-Lists all links for your current handle.
-
-**Requires:** `Authorization: Bearer <API_KEY>`
-
----
-
-### Get one link
-
-`GET /api/v1/links/:location`
-
-Gets a single link by location. Use `__root__` for the root location.
-
-**Requires:** `Authorization: Bearer <API_KEY>`
-
----
-
-### Update one link
-
-`PATCH /api/v1/links/:location`
-
-Changes which site slug a location points to.
-
-**Requires:** `Authorization: Bearer <API_KEY>`
-
-**Request body:**
-
-```json
-{ "slug": "another-slug-x9f1" }
-```
-
----
-
-### Delete one link
-
-`DELETE /api/v1/links/:location`
-
-Removes a link by location. Use `__root__` for the root location.
-
-**Requires:** `Authorization: Bearer <API_KEY>`
-
-To delete a link from a custom domain (instead of your handle), add `?domain=example.com` as a query parameter.
 
 ---
 
@@ -687,6 +606,87 @@ Removes a custom domain and all links under it.
 ```json
 { "deleted": true }
 ```
+
+---
+
+### Create a link under your handle or custom domain
+
+`POST /api/v1/links`
+
+Links a site slug to a location under your handle or a custom domain.
+
+**Requires:** `Authorization: Bearer <API_KEY>`
+
+**Request body:**
+
+```json
+{
+  "location": "docs",
+  "slug": "bright-canvas-a7k2"
+}
+```
+
+Use an empty `location` to link at root (`https://yourname.here.now/`).
+
+To link to a custom domain instead of your handle, add the `domain` parameter:
+
+```json
+{
+  "location": "",
+  "slug": "bright-canvas-a7k2",
+  "domain": "example.com"
+}
+```
+
+This makes `https://example.com/` serve the site. The domain must be active (verified).
+
+---
+
+### List links under your handle
+
+`GET /api/v1/links`
+
+Lists all links for your current handle.
+
+**Requires:** `Authorization: Bearer <API_KEY>`
+
+---
+
+### Get one link
+
+`GET /api/v1/links/:location`
+
+Gets a single link by location. Use `__root__` for the root location.
+
+**Requires:** `Authorization: Bearer <API_KEY>`
+
+---
+
+### Update one link
+
+`PATCH /api/v1/links/:location`
+
+Changes which site slug a location points to.
+
+**Requires:** `Authorization: Bearer <API_KEY>`
+
+**Request body:**
+
+```json
+{ "slug": "another-slug-x9f1" }
+```
+
+---
+
+### Delete one link
+
+`DELETE /api/v1/links/:location`
+
+Removes a link by location. Use `__root__` for the root location.
+
+**Requires:** `Authorization: Bearer <API_KEY>`
+
+To delete a link from a custom domain (instead of your handle), add `?domain=example.com` as a query parameter.
 
 ---
 

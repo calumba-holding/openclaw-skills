@@ -10,15 +10,13 @@ description: >
 
 # here.now
 
-**Skill version: 1.8.0**
+**Skill version: 1.8.3**
 
 Create a live URL from any file or folder. Static hosting only.
 
 To install or update (recommended): `npx skills add heredotnow/skill --skill here-now -g`
 
 For repo-pinned/project-local installs, run the same command without `-g`.
-
-If npm is unavailable, see fallback install docs: https://here.now/docs#install-skill
 
 ## Requirements
 
@@ -186,18 +184,18 @@ curl -sS -X POST https://here.now/api/v1/publish/{slug}/duplicate \
 
 For delete, metadata patch (including password protection), duplicate, claim, list, and other operations, see [references/REFERENCE.md](references/REFERENCE.md).
 
-## Handle and links quick reference
+## Handle
 
-- Handles are user-owned subdomain namespaces on `here.now` (for example, `yourname.here.now`) that route paths to your sites.
-- Any account with an API key can claim a handle.
+Handles are user-owned subdomain namespaces on `here.now` (for example, `yourname.here.now`) that route paths to your sites. Claiming a handle requires a paid plan (Hobby or above).
+
 - Handle endpoints: `/api/v1/handle`
-- Link endpoints: `/api/v1/links` and `/api/v1/links/:location`
-- Root location sentinel for path params remains `__root__`
-- Handle/link changes can take up to 60 seconds to propagate globally (Cloudflare KV)
+- Handle format: lowercase letters/numbers/hyphens, 2-30 chars, no leading/trailing hyphens
 
 ## Custom domains
 
-Bring your own domain (e.g. `example.com`) and serve sites from it. Requires a paid plan (Hobby or above).
+Bring your own domain (e.g. `example.com`) and serve sites from it. Custom domains: 1 on Free, up to 5 on Hobby.
+
+- Domain endpoints: `/api/v1/domains` and `/api/v1/domains/:domain`
 
 ### Add a custom domain
 
@@ -210,6 +208,8 @@ curl -sS https://here.now/api/v1/domains \
 
 Response includes DNS instructions. Point an ALIAS record (or CNAME for subdomains) to `fallback.here.now`. SSL is provisioned automatically.
 
+Most domains use an ALIAS record (sometimes called ANAME or CNAME flattening). Subdomains (e.g. `docs.example.com`) can also use a standard CNAME record.
+
 ### Check domain status
 
 ```bash
@@ -218,19 +218,6 @@ curl -sS https://here.now/api/v1/domains/example.com \
 ```
 
 Status is `pending` until DNS is verified and SSL is active, then becomes `active`.
-
-### Link a site to a custom domain
-
-Use the `domain` parameter when creating a link:
-
-```bash
-curl -sS https://here.now/api/v1/links \
-  -H "Authorization: Bearer {API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"location": "", "slug": "bright-canvas-a7k2", "domain": "example.com"}'
-```
-
-An empty `location` makes it the homepage (`https://example.com/`). Use `"location": "docs"` for `https://example.com/docs/`.
 
 ### List custom domains
 
@@ -248,13 +235,32 @@ curl -sS -X DELETE https://here.now/api/v1/domains/example.com \
 
 Removes the domain and all links under it.
 
-### Key points
+## Links
 
-- Custom domains: 1 on Free, up to 5 on Hobby
-- Most domains use an ALIAS record (sometimes called ANAME or CNAME flattening)
-- Subdomains (e.g. `docs.example.com`) can also use a standard CNAME record
-- Domain endpoints: `/api/v1/domains` and `/api/v1/domains/:domain`
-- Links to custom domains use the same `/api/v1/links` endpoint with an added `domain` parameter
+Links connect a site to a location on your handle or a custom domain. The same endpoints work for both — omit the `domain` parameter to target your handle, or include it to target a custom domain.
+
+- Link endpoints: `/api/v1/links` and `/api/v1/links/:location`
+- Root location sentinel for path params: `__root__`
 - Changes propagate globally in up to 60 seconds (Cloudflare KV)
+
+Link to your handle:
+
+```bash
+curl -sS https://here.now/api/v1/links \
+  -H "Authorization: Bearer {API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"location": "docs", "slug": "bright-canvas-a7k2"}'
+```
+
+Link to a custom domain:
+
+```bash
+curl -sS https://here.now/api/v1/links \
+  -H "Authorization: Bearer {API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"location": "", "slug": "bright-canvas-a7k2", "domain": "example.com"}'
+```
+
+An empty `location` makes it the homepage (e.g. `https://example.com/`). Use `"location": "docs"` for `https://example.com/docs/`.
 
 Full docs: https://here.now/docs
