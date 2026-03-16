@@ -1,220 +1,63 @@
 ---
-name: Qunar Travel
-slug: qunar
-version: 1.1.0
-homepage: https://clawic.com/skills/qunar
-description: Navigate Qunar (去哪儿) for flight deals, hotel bookings, and travel optimization strategies.
-metadata:
-  clawdbot:
-    emoji: "✈️"
-    requires:
-      bins: []
-    os: ["linux", "darwin", "win32"]
+name: qunar
+description: Help users make better Qunar travel-booking decisions from public platform trade-offs. Use when the user wants to think through flight, hotel, or travel booking choices, compare booking priorities, or judge whether lower price is worth possible flexibility or service trade-offs.
 ---
 
-## When to Use
+# Qunar
 
-User wants to book travel via Qunar (去哪儿网). Agent helps with flight price optimization, hotel selection, deal timing, and navigating one of China's largest travel platforms.
+Help users think through Qunar booking decisions from public travel trade-offs.
 
-## Quick Reference
+This is a low-sensitivity public skill. It focuses on public decision support and does not perform login, account access, cookie handling, order retrieval, coupon claiming, local database persistence, or browser automation runtime actions.
 
-| Topic | File |
-|-------|------|
-| Flight booking | `flights.md` |
-| Hotel selection | `hotels.md` |
-| Deal timing | `timing.md` |
+Use this skill when the user wants public buying, ordering, sourcing, or booking guidance rather than account-state operations.
 
-## Core Rules
+For live page inspection, account pages, checkout-state actions, or real-time retrieval that depends on login, switch to browser-based workflows instead of pretending this skill performs those actions directly.
 
-### 1. Qunar Platform Overview
+Read these references as needed:
+- `references/booking-guide.md` for supporting guidance
+- `references/output-patterns.md` for supporting guidance
 
-**Strengths:**
-- Aggregates prices from multiple sources
-- Strong in domestic China travel
-- Competitive hotel pricing
-- Good for last-minute deals
+## Workflow
 
-**Platform Comparison:**
+1. Identify the user's shopping, ordering, or booking need.
+   - Accept a product, merchant, ride, store, or booking scenario.
+   - If the request is too broad, ask one short clarifying question.
 
-| Platform | Best For | Strength |
-|----------|----------|----------|
-| **Qunar** | Price comparison | Aggregates best deals |
-| **Ctrip** | International | Better overseas options |
-| **Fliggy** | Young travelers | Alibaba ecosystem |
-| **Meituan** | Budget hotels | Local deals |
+2. Focus on public decision-relevant factors.
+   - Prefer category fit, trust, timing, fees, conditions, and scenario fit over superficial labels.
 
-### 2. Flight Booking Strategy
+3. Explain trade-offs.
+   - Say why the strongest option fits.
+   - Mention meaningful risks or caveats.
 
-**Best Booking Times:**
+4. Give practical next-step advice.
+   - Tell the user what to verify before paying or placing an order.
 
-| Advance Booking | Typical Savings |
-|-----------------|-----------------|
-| Domestic: 2-4 weeks | 15-30% |
-| International: 1-3 months | 20-40% |
-| Last minute (3-7 days) | Sometimes 50%+ |
+## Output
 
-**Day of Week Patterns:**
-- Cheapest: Tuesday, Wednesday
-- Most expensive: Friday, Sunday
-- Red-eye flights: Often 30-50% cheaper
+Use this structure unless the user asks for something shorter:
 
-**Qunar-Specific Tips:**
-- Check "低价提醒" (price alerts)
-- Compare "直飞" (direct) vs "中转" (connecting)
-- Look for "往返" (round-trip) discounts
-- "学生票" available with valid ID
+### Best Option
+State the strongest current choice.
 
-**Hidden Costs to Check:**
-- Baggage fees (especially budget airlines)
-- Seat selection charges
-- Meal inclusion
-- Change/cancellation policies
+### Why
+List the main reasons.
 
-### 3. Hotel Booking Mastery
+### Caveats
+List meaningful concerns or trade-offs.
 
-**Qunar Hotel Filters (Use These):**
+### Final Advice
+Give a direct practical suggestion.
 
-| Filter | When to Use |
-|--------|-------------|
-| **评分** (Rating) | 4.5+ for comfort |
-| **位置** (Location) | Near subway/attractions |
-| **价格** (Price) | Set max budget |
-| **设施** (Amenities) | WiFi, breakfast, gym |
-| **点评** (Reviews) | Recent, with photos |
+## Quality bar
 
-**Hotel Types on Qunar:**
+Do:
+- focus on public decision support
+- explain trade-offs clearly
+- stay honest about not doing account-state operations
 
-| Type | Chinese | Best For |
-|------|---------|----------|
-| International chains | 国际酒店 | Consistent quality |
-| Boutique hotels | 精品酒店 | Unique experience |
-| Budget chains | 经济连锁 | Value travelers |
-| Homestays | 民宿 | Local experience |
-
-**Location Strategy:**
-- Business trip: Near meeting venues
-- Tourism: Near subway lines
-- Airport transit: Airport hotels for early flights
-- Food exploration: Near dining districts
-
-### 4. Price Optimization
-
-**Qunar Price Tracking:**
-- Set "降价提醒" for watched flights/hotels
-- Prices fluctuate throughout the day
-- Clear browser cookies or use incognito
-- Mobile app sometimes shows different prices
-
-**Member Benefits:**
-- 去哪儿会员: Points for discounts
-- 里程兑换: Airline miles integration
-- 联合会员: Partner promotions
-
-**Payment Optimization:**
-- Credit card promotions (check 银行卡优惠)
-- 花呗分期 for expensive bookings
-- 企业账户 for business travel
-
-### 5. Deal Categories
-
-**特卖会 (Flash Sales):**
-- Limited time offers
-- Often 30-60% off
-- Subscribe to notifications
-- Act fast - limited inventory
-
-**尾单 (Last Minute):**
-- Unsold inventory
-- Deep discounts (50-80%)
-- Flexible dates required
-- High risk/reward
-
-**早鸟价 (Early Bird):**
-- Book 30+ days ahead
-- 20-40% savings
-- Usually non-refundable
-- Best for planned trips
-
-### 6. Booking Protection
-
-**Before Booking:**
-- Check cancellation policy
-- Verify included amenities
-- Read recent reviews (within 30 days)
-- Confirm baggage allowances
-
-**After Booking:**
-- Save confirmation numbers
-- Download e-tickets
-- Check in online when available
-- Set calendar reminders
-
-**When Things Go Wrong:**
-
-| Issue | Solution |
-|-------|----------|
-| Flight cancelled | Contact airline first, then Qunar |
-| Hotel overbooked | Qunar must find alternative |
-| Price dropped after booking | Check if price protection applies |
-| Need changes | Check change fees before modifying |
-
-### 7. Travel Hacking Tips
-
-**Flexible Date Search:**
-- Use "±3 days" option
-- Sometimes shifting by 1 day saves 50%
-- Mid-week flights significantly cheaper
-
-**Multi-City Strategy:**
-- Open-jaw tickets often cheaper
-- Combine with ground transport
-- Check "多目的地" (multi-city) option
-
-**Package Deals:**
-- 机+酒 (Flight + Hotel) bundles
-- Often 10-20% cheaper than separate
-- Less flexibility but better value
-
-**Student/Senior Discounts:**
-- Valid ID required at check-in
-- Usually 10-20% off
-- Not always shown in search results
-
-## Common Traps
-
-- **Booking without checking cancellation policy** → Costly changes
-- **Ignoring total price (fees not included)** → Budget shock
-- **Not comparing with Ctrip/Fliggy** → Missing better deals
-- **Booking too early or too late** → Suboptimal pricing
-- **Skipping travel insurance** → Risk for expensive trips
-- **Not verifying hotel location** → Far from attractions
-- **Ignoring baggage fees** → Budget airlines add up
-
-## Seasonal Considerations
-
-**Peak Seasons (Book Early):**
-- Chinese New Year (Jan/Feb)
-- Golden Week (Oct 1-7)
-- Summer holidays (July-August)
-
-**Shoulder Seasons (Best Value):**
-- March-April (Spring)
-- September-October (Autumn)
-- November (Pre-winter)
-
-**Low Season (Cheapest):**
-- January (Post-New Year)
-- June (Before summer)
-- December (Pre-holiday)
-
-## Related Skills
-
-Install with `clawhub install <slug>` if user confirms:
-- `trip` - General travel planning
-- `didi` - Local transportation
-- `meituan` - Local services and dining
-
-## Feedback
-
-- If useful: `clawhub star qunar`
-- Stay updated: `clawhub sync`
+Do not:
+- pretend to log in
+- claim to retrieve orders, coupons, or account data
+- store cookies or user data
+- present heuristics as guaranteed outcomes
