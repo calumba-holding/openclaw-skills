@@ -1,95 +1,101 @@
 ---
 name: ascii-chord
-description: Show ASCII guitar chord diagrams using the ascii_chord CLI tool. Use when asked how to play a guitar chord, or to show chord charts/diagrams for any chord name (e.g. E, B7, Am, C, G, Dm, etc.). Requires git and cargo (Rust toolchain) to be installed. First use clones https://github.com/yzhong52/ascii_chord into /tmp and builds it with cargo — review the source before running if desired.
+description: Show ASCII guitar chord diagrams using the ascii_chord CLI tool. Use when asked how to play a guitar chord, or to show chord charts/diagrams for any chord name (e.g. E, B7, Am, C, G, Dm, etc.). Uses a bundled pre-compiled binary — no internet access or build step required.
 metadata:
   openclaw:
     requires:
-      bins:
-        - git
-        - cargo
-    sideEffects:
+      bins: []
+    bundledBinaries:
       note: >
-        If the Rust toolchain is not installed, the SKILL.md suggests installing rustup — this modifies
-        the user's home directory (~/.cargo, ~/.rustup) and may update PATH. cargo build also creates
-        a target/ directory under /tmp/ascii_chord. These are normal Rust toolchain side effects
-        and persist beyond a single invocation.
-    thirdPartyCode:
-      note: >
-        This skill clones https://github.com/yzhong52/ascii_chord (MIT, authored by the same person as
-        this skill) and builds it locally with `cargo run`. You are compiling and executing code fetched
-        from GitHub. Review the repository before building if you have concerns. The repo is open-source
-        and MIT licensed.
+        Pre-compiled binaries are included in bin/ for macOS arm64. Built from
+        https://github.com/ascii-music/ascii_chord at commit 197a47033fb45f83936bd1e8b410de41db3b595d
+        (MIT license, authored by the same person as this skill). No external fetch or build required.
 ---
 
 # ascii-chord
 
-Display ASCII guitar chord diagrams using [ascii_chord](https://github.com/yzhong52/ascii_chord) — an open-source Rust CLI (MIT license, authored by the same person as this skill).
+Display ASCII guitar chord diagrams using [ascii_chord](https://github.com/ascii-music/ascii_chord) — an open-source Rust CLI (MIT license, authored by the same person as this skill).
 
-## Required Tools
+Pre-compiled binaries are bundled in `bin/` — no Rust toolchain or internet access needed.
 
-| Tool | Purpose | Check |
+## Bundled Binaries
+
+| File | Platform | Built from commit |
 |---|---|---|
-| **git** | Clone the source repo | `git --version` |
-| **cargo / Rust** | Build and run the CLI | `cargo --version` |
+| `bin/aschord-darwin-arm64` | macOS Apple Silicon | `197a4703` |
 
-## Before First Use
+## Setup (first use)
 
-This skill clones `https://github.com/yzhong52/ascii_chord` into `/tmp` and builds it with `cargo run`. This executes third-party code on your machine. The repository is open-source (MIT) and authored by the same person as this skill — you can review it at https://github.com/yzhong52/ascii_chord before proceeding.
-
-### Installing Rust (if not already installed)
+Make the binary executable and symlink it:
 
 ```bash
-# macOS (Homebrew — recommended)
-brew install rustup-init && rustup-init
+SKILL_DIR="$(dirname "$0")"
+# detect arch
+ARCH=$(uname -m)
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+if [ "$OS" = "darwin" ] && [ "$ARCH" = "arm64" ]; then
+  BINARY="$SKILL_DIR/bin/aschord-darwin-arm64"
+else
+  echo "No bundled binary for $OS/$ARCH — see fallback below"
+  exit 1
+fi
+
+chmod +x "$BINARY"
 ```
 
-Or download the installer from [rustup.rs](https://rustup.rs) and follow the instructions there.
-
-> **Note:** Installing Rust via rustup will create `~/.cargo` and `~/.rustup` in your home directory and may modify your shell `PATH`. This is standard Rust toolchain behavior and persists after the skill runs.
-
-### Cloning the repo
-
-Check if already cloned; clone if not:
-
-```bash
-[ -d /tmp/ascii_chord ] || git clone https://github.com/yzhong52/ascii_chord /tmp/ascii_chord
-```
-
-No further installation step is needed — `cargo run` builds and runs in one step. The compiled binary is cached in `/tmp/ascii_chord/target/` and reused on subsequent runs.
+For day-to-day use, just call the binary directly (see Usage below).
 
 ## Usage
 
+Set `ASCHORD` to the correct binary path for the platform, then:
+
 **Single chord:**
 ```bash
-cd /tmp/ascii_chord && cargo run -- get <CHORD> 2>/dev/null
+SKILL_BIN=/Users/yuchen/.openclaw/workspace-mati/skills/ascii-chord/bin/aschord-darwin-arm64
+chmod +x $SKILL_BIN && $SKILL_BIN get <CHORD>
 ```
 
 **Multiple chords side by side:**
 ```bash
-cd /tmp/ascii_chord && cargo run -- list <CHORD1> <CHORD2> ... 2>/dev/null
+$SKILL_BIN list <CHORD1> <CHORD2> ...
 ```
 
 **List all supported chords:**
 ```bash
-cd /tmp/ascii_chord && cargo run -- all 2>/dev/null
+$SKILL_BIN all
 ```
 
 ## Examples
 
 ```bash
+SKILL_BIN=/Users/yuchen/.openclaw/workspace-mati/skills/ascii-chord/bin/aschord-darwin-arm64
+chmod +x $SKILL_BIN
+
 # Single chord
-cd /tmp/ascii_chord && cargo run -- get Am 2>/dev/null
+$SKILL_BIN get Am
 
-# Multiple side by side (great for progressions)
-cd /tmp/ascii_chord && cargo run -- list C G Am F 2>/dev/null
+# Progression
+$SKILL_BIN list C G Am F
 
-# Full list of supported chord names
-cd /tmp/ascii_chord && cargo run -- all 2>/dev/null
+# All supported chords
+$SKILL_BIN all
 ```
+
+## Fallback (non-arm64 macOS or Linux)
+
+If no bundled binary matches your platform, build from source:
+
+```bash
+[ -d /tmp/ascii_chord ] || git clone https://github.com/ascii-music/ascii_chord /tmp/ascii_chord
+git -C /tmp/ascii_chord checkout 197a47033fb45f83936bd1e8b410de41db3b595d
+cd /tmp/ascii_chord && cargo build --release
+```
+
+Then use `/tmp/ascii_chord/target/release/aschord` as the binary.
 
 ## Notes
 
-- Suppress build warnings with `2>/dev/null`
 - Chord names are case-sensitive (`Am` not `am`, `B7` not `b7`)
-- After first build, subsequent runs are fast (binary is cached by cargo in `/tmp/ascii_chord/target/`)
-- Source repo: https://github.com/yzhong52/ascii_chord (MIT licensed)
+- Source repo: https://github.com/ascii-music/ascii_chord (MIT licensed)
+- Pinned commit: `197a47033fb45f83936bd1e8b410de41db3b595d`
