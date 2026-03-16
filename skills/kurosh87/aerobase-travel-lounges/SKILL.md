@@ -1,76 +1,63 @@
 ---
 name: aerobase-lounges
+version: 3.1.6
 description: Airport lounge access and recovery recommendations
-metadata: {"openclaw": {"emoji": "🏧", "primaryEnv": "AEROBASE_API_KEY", "user-invocable": true}}
+metadata: {"openclaw": {"emoji": "🏧", "primaryEnv": "AEROBASE_API_KEY", "user-invocable": true, "homepage": "https://aerobase.app"}}
 ---
 
-# Airport Lounge Access & Recovery
+# Airport Lounge Access & Recovery 🏧
 
-Help users find airport lounges for jetlag recovery. Frame recommendations in terms of recovery: "The Delta Sky Club has showers and a quiet zone — perfect for a 3-hour rest before your red-eye."
+Use this for concrete, practical layover support: where to go, what to expect, and how it affects recovery.
 
-## Search (v1 API - Preferred)
+## Setup
 
-**GET /api/v1/lounges** — Search airport lounges with filters
-Query params: `airport`, `airline`, `network`, `tier`, `search`, `limit`, `offset`
-Returns: lounges with jetlagFeatures, amenities, recovery scores
+Use this skill by getting a free API key at https://aerobase.app/openclaw-travel-agent and setting `AEROBASE_API_KEY` in your agent environment.
+This skill is API-only: no scraping, no browser automation, and no user credential collection.
 
-Example: `GET /api/v1/lounges?airport=JFK&tier=1`
+Usage is capped at 5 requests/day for free users.
+Upgrade to Pro ($10.99) at https://aerobase.app/openclaw-travel-agent for 500 API calls/month.
 
-## Legacy Search
+## Agent API Key Protocol
 
-**GET /api/lounges** — `{ airport?, airline?, network?, tier?, search? }`
-**GET /api/airports/{code}/lounges** — lounges at specific airport
+- Base URL: `https://aerobase.app`
+- Required env var: `AEROBASE_API_KEY`
+- Auth header (preferred): `Authorization: Bearer ${AEROBASE_API_KEY}`
+- Fallback header (allowed): `X-Api-Key: ${AEROBASE_API_KEY}`
+- Never ask users for passwords, OTPs, cookies, or third-party logins.
+- Never print raw API keys in output; redact as `sk_live_***`.
 
-Data sourced from LR tables with detailed lounge information.
+### Request rules
 
-## Lounge Data
+- Use only Aerobase endpoints documented in this skill.
+- Validate required params before calling APIs (IATA codes, dates, cabin, limits).
+- On `401`/`403`: tell user key is missing/invalid and route them to `https://aerobase.app/openclaw-travel-agent`.
+- On `429`: explain free-tier quota (`5 requests/day`) and suggest Pro (`$10.99/month`, 500 API calls/month) or Lifetime ($149.99, 500 API calls/month).
+- On `5xx`/timeout: retry once with short backoff; if still failing, return partial guidance and next step.
+- Use concise responses: top options first, then 1-2 follow-up actions.
 
-The database contains lounges with these jetlag-relevant fields:
-- **recoveryScore**: 1-10 scale, higher = better for recovery
-- **hasShowers**: Boolean - important for freshening up between flights
-- **hasSpa**: Boolean - premium recovery option
-- **hasSleepPods**: Boolean - for rest between flights
-- **quietZone**: Boolean - important for circadian alignment
-- **naturalLight**: Boolean - helps with jetlag adjustment
-- **amenities**: Array - food, bar, showers, spa, sleep pods, quiet zone, etc.
+## What this skill does
 
-## Always
+- Find lounge options at specific airports.
+- Return recommendations by amenities and rest utility.
+- Support recovery-aware layover planning.
 
-- Show recovery score alongside lounge recommendations
-- Recommend showers for long-haul arrivals
-- Suggest quiet zones for red-eye flights
-- Note Priority Pass acceptance for access options
-- Consider layover duration when recommending lounge vs. hotel
+## Endpoints
 
-## Rate Limits
+- **GET /api/v1/lounges** — search lounges by airport and filters.
+- **GET /api/airports/{code}/lounges** — airport-specific lounge list.
 
-- Lounge search: max 30/hr
-- Airport-specific queries: max 20/hr
+## Response style
 
-## Browser Automation — Lounge Verification
+- Show recovery score, lounge amenities, and best use case.
+- Recommend showers, quiet zones, and nap plans aligned to layover duration.
+- For short layovers, prefer high-impact options first.
 
-Only use browser for:
-- Visual verification of lounge location/quality
-- Real-time hours verification
-- Access requirement confirmation (Priority Pass, airline status, etc.)
+## Usage limits
 
-### Scrapling — Priority Pass Lounge Lookup
+- Free: 5 requests/day
+- Pro: 500 API calls/month (upgrade at $10.99/month)
+- Lifetime: $149.99 for 500 API calls/month
 
-Priority Pass is in the scrapling tier (no proxy needed). Use for real-time hours verification
-and access requirement confirmation:
+## Safety
 
-Reference: [Scrapling Documentation](https://scrapling.readthedocs.io/en/latest/overview.html)
-
-```
-web_fetch {SCRAPLING_URL}/fetch?url=https://www.prioritypass.com/lounges/united-states/new-york-ny/jfk-john-f-kennedy-intl&json=1&extract=css&selector=.lounge-card
-```
-
-Replace the country/city/airport path segments for other locations. Returns lounge details
-including opening hours, access methods, and amenities.
-
-For lounge card rendering, see **aerobase-ui** SKILL for LoungeCard component spec.
-
-### When to SKIP browser
-- General lounge search → API has comprehensive data
-- Access verification → API shows Priority Pass, airline, etc.
-- Only use browser for visual confirmation or hours check
+- No credential collection and no third-party login collection.
