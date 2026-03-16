@@ -3,9 +3,15 @@
   "slug": "press-release",
   "displayName": "Press Release",
   "latest": {
-    "version": "2.3.0",
-    "publishedAt": 1773448540686,
-    "commit": "https://github.com/openclaw/skills/commit/fb007f038206a6a56a9f1e5cf083800361bf4ad0"
+    "version": "2.3.5",
+    "publishedAt": 1773666804691,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.3.0",
+      "publishedAt": 1773448540686,
+      "commit": "https://github.com/openclaw/skills/commit/fb007f038206a6a56a9f1e5cf083800361bf4ad0"
+    }
+  ]
 }
