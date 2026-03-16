@@ -1,11 +1,11 @@
 ---
 name: bili-sunflower-publish
-description: Publish HTML content to Bilibili — supports both 专栏 (article) and 小站 (tribee) targets. Handles login check, title input, HTML paste via clipboard, and direct publish. Trigger when user asks to publish to B站专栏/小站, or mentions 发布文章到B站/上传专栏/发B站文章/发小站帖子/tribee发帖.
+description: Publish HTML or Markdown content to Bilibili — supports both 专栏 (article) and 小站 (tribee) targets. Handles login check, title input, content injection via editor API, and direct publish. Trigger when user asks to publish to B站专栏/小站, or mentions 发布文章到B站/上传专栏/发B站文章/发小站帖子/tribee发帖.
 ---
 
 # bili-sunflower-publish
 
-Unified publish pipeline for Bilibili: HTML file → editor → publish.
+Unified publish pipeline for Bilibili: HTML/Markdown file → editor → publish. Uses `window.editor` API directly — no system clipboard dependency.
 
 Supports two targets:
 
@@ -14,12 +14,11 @@ Supports two targets:
 
 ## Prerequisites
 
-- **macOS** (uses Swift NSPasteboard for HTML clipboard)
 - **Browser tool** with `openclaw` profile (Playwright-managed browser)
 
 ## Input
 
-- **HTML file path** (article body)
+- **Content file path** (article body) — supports `.html` and `.md` / `.markdown` files
 - **Target type**: `article` (专栏) or `tribee` (小站) — infer from user intent
 - **Title** (optional — see Phase 2)
 - For tribee: **tribee name or ID** (required)
@@ -58,17 +57,50 @@ If not logged in, **stop and tell the user** to log in manually in the openclaw 
 
 ---
 
-## Phase 2: Title Handling
+## Phase 2: Preprocess & Title Handling
 
-Determine the title:
+Run the preprocess script matching the file type. The script handles H1 extraction, heading promotion, image inlining, and (for HTML) whitespace cleanup.
 
-1. If user provided a title → use it
-2. If not → use HTML filename (sans `.html` extension)
+### 2a. For `.html` files
+
+```bash
+python3 {SKILL_DIR}/scripts/preprocess_html.py <input.html> [output-dir]
+```
+
+Output (stdout, 3 lines):
+
+```
+title=<extracted title>
+path=<processed html file path>
+bytes=<html byte size>
+```
+
+Parse `title` and `path` from the output. The processed HTML at `path` is ready for injection in Phase 3.
+
+### 2b. For `.md` / `.markdown` files
+
+```bash
+python3 {SKILL_DIR}/scripts/preprocess_md.py <input.md> [output-dir]
+```
+
+Output (stdout, 3 lines):
+
+```
+title=<extracted title>
+path=<processed md file path>
+bytes=<md byte size>
+```
+
+Parse `title` and `path` from the output. The processed Markdown at `path` is ready for injection in Phase 3.
+
+### 2c. Title validation
+
+If the user provided a title explicitly, use it instead of the script-extracted one.
 
 After resolving, validate:
 
 - **Title > 50 characters**: present 2-3 shortened alternatives, let user choose
-- **Title looks meaningless** (e.g. `output`, `untitled`, `temp`, or clearly unrelated to the HTML content): read the first few hundred chars of HTML body, generate 2-3 title suggestions, let user choose
+- **Title looks meaningless** (e.g. `output`, `untitled`, `temp`, or clearly unrelated to the content): read the first few hundred chars of body, generate 2-3 title suggestions, let user choose
 
 Do NOT silently use a bad title. Wait for user selection before proceeding.
 
@@ -76,33 +108,72 @@ Enter the title: click the title textbox and type.
 
 ---
 
-## Phase 3: Paste Article Body
+## Phase 3: Insert Article Body
 
-Both editors share the same rich-text editor component.
+Both editors share the same rich-text editor component (`window.editor`).
 
-### 3a. Set HTML clipboard (macOS NSPasteboard)
+Use the preprocessed content from Phase 2 and inject it into the editor.
+
+**IMPORTANT — JS string escaping:**
+
+Content (HTML or Markdown) often contains characters that break JS syntax (backticks, quotes, newlines, backslashes, etc.). You **must** use the method below to safely construct the JS code. **Do NOT** paste raw content directly into a JS variable assignment.
+
+### How to construct the evaluate JS code
+
+Follow these steps **exactly** for both HTML and Markdown injection:
+
+1. Get the processed file path from Phase 2 output (`path=...`)
+2. Run the following command to produce a JSON-escaped string of the file content:
 
 ```bash
-swift {SKILL_DIR}/scripts/set_html_clipboard.swift <html-file>
+python3 -c "import json,sys; print(json.dumps(open(sys.argv[1]).read()))" <processed-file-path>
 ```
 
-Sets `text/html` + `text/plain` on the system clipboard.
+This outputs a double-quoted JSON string with all special characters escaped (newlines, quotes, backslashes, etc.), e.g. `"line1\nline2\"quoted\""`.
 
-### 3b. Focus editor body and paste
+3. Capture the stdout output as `ESCAPED_JSON_STRING`
+4. Build the full JS code by embedding `ESCAPED_JSON_STRING` into the template (see 3a-HTML / 3a-MD below). It already includes its own surrounding double quotes, so place it directly after `JSON.parse(` with no additional quotes.
 
-1. Click the body contenteditable area
-2. Press `Meta+v` to paste
-
-**Note:** The `openclaw` Playwright browser profile on macOS correctly routes `Meta+v` through the system clipboard. This does NOT work with the Chrome extension relay profile.
-
-### 3c. Verify paste
-
-Evaluate JS to confirm content was pasted:
+### 3a-HTML. Processed HTML → ClipboardEvent dispatch
 
 ```javascript
-// DOM selector for the editor's contenteditable area
 (function () {
-  const e = document.querySelector(".eva3-editor");
+  const html = JSON.parse(ESCAPED_JSON_STRING);
+  const clipboardData = new DataTransfer();
+  clipboardData.setData('text/html', html);
+  clipboardData.setData('text/plain', '');
+
+  const pasteEvent = new ClipboardEvent('paste', {
+    bubbles: true,
+    cancelable: true,
+    clipboardData,
+  });
+
+  window.editor.view.dom.dispatchEvent(pasteEvent);
+})();
+```
+
+**Note:** If the HTML content is large (>50KB), split it into chunks and paste sequentially.
+
+### 3a-MD. Processed Markdown → editor importMarkdown command
+
+```javascript
+(function () {
+  const markdown = JSON.parse(ESCAPED_JSON_STRING);
+  window.editor.commands.importMarkdown({
+    content: markdown,
+    replaceContent: true,
+  });
+})();
+```
+
+### 3b. Verify content
+
+Evaluate JS to confirm content was inserted:
+
+```javascript
+(function () {
+  const e = window.editor.view.dom;
   return { chars: e.textContent.length, first80: e.textContent.substring(0, 80) };
 })();
 ```
@@ -178,41 +249,6 @@ Steps:
 2. Apply any other user-requested settings
 3. Click **"发布"** button (blue, bottom right)
 4. Verify publish succeeded
-
----
-
-## Fallback: CDP WebSocket Injection
-
-If `Meta+v` paste fails (clipboard not recognized), use direct CDP injection:
-
-1. Split HTML into ~1500-char chunks
-2. Connect via CDP WebSocket to inject chunks into `window.__hp` array
-3. Join and dispatch a synthetic ClipboardEvent with `text/html`
-
-```javascript
-// DOM selector for the editor's contenteditable area
-// After all chunks pushed to window.__hp:
-(function () {
-  const e = document.querySelector(".eva3-editor");
-  e.focus();
-  const html = window.__hp.join("");
-  const dt = new DataTransfer();
-  dt.setData("text/html", html);
-  const pe = new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: dt });
-  e.dispatchEvent(pe);
-  return e.textContent.length;
-})();
-```
-
-CDP WebSocket URL pattern: `ws://127.0.0.1:18800/devtools/page/{targetId}`
-
-Locate the `ws` module dynamically:
-
-```bash
-node -e "console.log(require.resolve('ws', {paths:[require.resolve('openclaw')]}))"
-```
-
-Use `Runtime.evaluate` to inject each chunk. Keep each evaluate payload under 6KB.
 
 ---
 

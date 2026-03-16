@@ -1,14 +1,15 @@
 # bili-sunflower-publish
 
-将 HTML 内容一键发布到 Bilibili，支持 **专栏**（Article）和 **小站**（Tribee）两种目标。
+将 HTML 或 Markdown 内容一键发布到 Bilibili，支持 **专栏**（Article）和 **小站**（Tribee）两种目标。
 
 ## 功能
 
 - 🔐 自动检测登录状态，未登录时提示手动登录
-- 📝 智能标题处理：过长自动缩短、无意义标题自动生成建议
-- 📋 通过 macOS 系统剪贴板（NSPasteboard）粘贴富文本 HTML
+- 📝 智能标题处理：从 H1 提取标题、过长自动缩短、无意义标题自动生成建议
+- 📄 支持 HTML 和 Markdown 两种输入格式
+- 🖼️ 本地图片自动内联为 base64 data URI（HTML 和 Markdown 均支持）
 - 🚀 一键发布，支持专栏发布设置（封面、定时、原创声明等）
-- 🔄 粘贴失败时自动回退 CDP WebSocket 注入方案
+- ⚡ 直接通过编辑器 API 注入内容，无系统剪贴板依赖
 
 ## 支持的发布目标
 
@@ -19,7 +20,6 @@
 
 ## 前置条件
 
-- **macOS**（依赖 Swift NSPasteboard 设置 HTML 剪贴板）
 - **OpenClaw** 的 `openclaw` 浏览器 profile（Playwright 管理的浏览器）
 
 ## 触发词
@@ -31,8 +31,8 @@
 ## 工作流程
 
 1. **导航 & 登录检查** — 打开对应编辑器页面，检测登录状态
-2. **标题处理** — 用户指定或自动推断，异常时提供候选
-3. **粘贴文章正文** — Swift 脚本设置 HTML 剪贴板 → 编辑器内 `⌘V` 粘贴
+2. **预处理 & 标题** — 运行预处理脚本（H1 提取、heading 提升、图片内联、HTML 空白清理）；验证标题
+3. **插入文章正文** — HTML 通过 ClipboardEvent dispatch 注入，Markdown 通过 `editor.commands.importMarkdown` 注入
 4. **发布** — 应用用户设置后点击发布按钮
 
 ## 文件结构
@@ -43,7 +43,8 @@ bili-sunflower-publish/
 ├── README.md                        # English README
 ├── README_zh.md                     # 本文件（中文说明）
 └── scripts/
-    └── set_html_clipboard.swift     # macOS 剪贴板 HTML 写入工具
+    ├── preprocess_html.py           # HTML 预处理（H1、图片、空白）
+    └── preprocess_md.py             # Markdown 预处理（H1、图片）
 ```
 
 ## 作者
