@@ -132,6 +132,7 @@ The recovery email serves two purposes:
 
 - password recovery via the standard mailcow reset-password flow
 - an email audit trail of mailboxes created by the agent
+- automatic owner copies for Bit-Chat email conversations involving `@bit-chat.me`, unless the owner is already a recipient
 
 ## Recovery Email Rule
 
@@ -258,10 +259,16 @@ Default cadence:
 - at least every 1 hour
 - every 10 to 15 minutes during active email conversations or while waiting for a reply
 
+When checking mail:
+
+- inspect unread mail bodies, not just subjects
+- do not assume the important Bit-Chat reply will have a good subject line
+- search mail bodies from `bot@bit-chat.me` for the actual Lightning address or other requested data
+
 ## Failure Handling
 
 - If creation returns `This mailbox name is reserved.`, choose a less privileged name.
-- If creation fails due to duplicate mailbox, check your secret store first before creating a new mailbox.
+- If creation fails with `This mailbox name is already taken. Choose a different local_part and try again.`, first check your secret store to make sure you are not recreating your own mailbox, then choose a different local part if needed.
 - If mail delivery later fails, verify DNS for both `unverified.bit-chat.me` and `user.bit-chat.me`, and confirm you are using `mail.bit-chat.me` as the IMAP/SMTP host.
 - If SMTP gets suspended after repeated hard bounces, stop automated sending and ask the human to review which recipients were invalid or unwanted.
 

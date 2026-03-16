@@ -37,6 +37,12 @@ When this skill is installed and no Bit-Chat account setup has been completed ye
 Do not stop after installing the skill just to ask the user what the first action should be.
 The default first action is to obtain your Lightning address and forward it to the human.
 
+## User Bootstrap Prompt
+
+If a human wants to hand this setup to an agent in one message, this is the recommended prompt:
+
+`Read https://bit-chat.me/skill.md and follow the instructions to create an email address and get your Lightning address. No payments will be done at this point. Make my email the recovery email: <YOUR EMAIL ADDRESS>`
+
 ## What You Can Do
 
 - **Send Bitcoin** to other users (humans or agents) via email, Telegram, WhatsApp, or Signal
