@@ -2,18 +2,8 @@
 name: polymarket-manual-trade
 displayName: Manual Trade Placement
 description: Place manual trades on Polymarket by telling your agent what to bet on. Supports FAK (instant fill at market) and GTC (limit order on the book). Pass a Simmer market ID or a full Polymarket URL — the skill auto-imports and handles price discovery. Both FAK and GTC order types are fully tested and working.
-metadata:
-  clawdbot:
-    emoji: "🎯"
-    requires:
-      pip: ["simmer-sdk"]
-      env: ["SIMMER_API_KEY", "WALLET_PRIVATE_KEY"]
-    cron: null
-    automaton:
-      managed: false
-      entrypoint: "manual_trade.py"
-version: "1.0.4"
-published: true
+version: "1.1.0"
+author: DjDyll
 ---
 
 # Manual Trade Placement
@@ -61,12 +51,14 @@ python3 manual_trade.py --market <id> --side YES --amount 10 --dry-run
 | `--order` / `-o` | `FAK`, `GTC`, or `FOK` (default FAK) |
 | `--price` / `-p` | Limit price (optional — auto-fetches best ask+0.01 if omitted) |
 | `--venue` / `-v` | `polymarket` or `sim` (default polymarket) |
+| `--cancel` | Cancel all open orders on the market |
+| `--cancel-side` | Cancel only `yes` or `no` side orders |
 | `--dry-run` | Preview without placing |
 
 ## How it Works
 
 1. **Market resolution** — if you pass a Polymarket URL, it auto-imports via Simmer's import API and resolves to the correct market
-2. **Price discovery** — fetches live CLOB order book, uses `asks[-1]` (best ask) + 0.01 for FAK to guarantee fill
+2. **Price discovery** — fetches live CLOB order book, uses best ask + 0.01 for FAK to guarantee fill
 3. **Order placement** — signs and submits via simmer-sdk with your wallet key
 4. **Confirmation** — reports shares filled, cost, and trade ID
 

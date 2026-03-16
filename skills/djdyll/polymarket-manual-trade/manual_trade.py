@@ -15,6 +15,8 @@ import os
 import sys
 import urllib.request
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 try:
     from dotenv import load_dotenv
     load_dotenv("/root/.openclaw/.env")
@@ -252,4 +254,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        print(json.dumps({"status": "ok", "skill": SKILL_SLUG}))
+    except SystemExit as e:
+        print(json.dumps({"status": "error", "skill": SKILL_SLUG, "exit_code": e.code}))
+        raise
+    except Exception as e:
+        print(json.dumps({"status": "error", "skill": SKILL_SLUG, "error": str(e)}))
+        sys.exit(1)
