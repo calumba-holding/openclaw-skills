@@ -169,6 +169,34 @@ Then paste the callback URL when prompted.
 
 **Key Recommendation:** Use **Bot Token** for almost all operations. User OAuth2 is only useful if you need to read user profile information as that specific user. For reading channel messages, managing servers, or sending messages, Bot Token is required.
 
+## Subscribe / Gateway Status
+
+Discord inbound events flow through the Gateway WebSocket, not through this REST/OpenAPI surface.
+
+Current `uxc subscribe` status:
+
+- the built-in `discord-gateway` transport now bootstraps through `GET /gateway/bot`
+- live Gateway sessions reached `READY` and delivered `GUILD_CREATE`
+- a real posted channel message produced a `MESSAGE_CREATE` event in the subscribe sink
+- heartbeat scheduling, `IDENTIFY`, sequence tracking, and reconnect handling are implemented
+
+Recommended invocation:
+
+```bash
+uxc subscribe start https://discord.com/api/v10 \
+  '{"intents":4609,"device":"uxc-discord"}' \
+  --transport discord-gateway \
+  --auth discord-bot \
+  --sink file:$HOME/.uxc/subscriptions/discord-gateway.ndjson
+```
+
+Intent notes:
+
+- `4609` = `GUILDS | GUILD_MESSAGES | DIRECT_MESSAGES`
+- add `32768` (`MESSAGE_CONTENT`) only when the bot has that privileged intent enabled in the Discord developer portal
+
+Use `discord-openapi-cli` for REST calls and `uxc subscribe start ... --transport discord-gateway ...` for inbound Gateway events.
+
 ## Guardrails
 
 - **OAuth2 Scope Limitation:** User OAuth2 tokens cannot read channel messages via HTTP API, send messages, or manage servers. These operations require Bot Token authentication.

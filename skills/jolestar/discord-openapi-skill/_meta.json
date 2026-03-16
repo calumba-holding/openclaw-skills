@@ -1,11 +1,17 @@
 {
   "owner": "jolestar",
   "slug": "discord-openapi-skill",
-  "displayName": "Discord Openapi Skill",
+  "displayName": "Discord OpenAPI Skill",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1772843320645,
-    "commit": "https://github.com/openclaw/skills/commit/bb6c38f843d622054cbac5d8c1fd9930d1ecc130"
+    "version": "1.0.1",
+    "publishedAt": 1773587197916,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1772843320645,
+      "commit": "https://github.com/openclaw/skills/commit/bb6c38f843d622054cbac5d8c1fd9930d1ecc130"
+    }
+  ]
 }
