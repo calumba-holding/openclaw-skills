@@ -3,11 +3,16 @@
   "slug": "meeting-minutes",
   "displayName": "Meeting Minutes",
   "latest": {
-    "version": "2.3.3",
-    "publishedAt": 1773613925788,
-    "commit": "https://github.com/openclaw/skills/commit/d14f5ad917c102945431d9285d25ae5b954b4c6c"
+    "version": "2.3.5",
+    "publishedAt": 1773666478214,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.3.3",
+      "publishedAt": 1773613925788,
+      "commit": "https://github.com/openclaw/skills/commit/d14f5ad917c102945431d9285d25ae5b954b4c6c"
+    },
     {
       "version": "2.2.0",
       "publishedAt": 1773421525153,
