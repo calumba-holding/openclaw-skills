@@ -1,13 +1,18 @@
 {
   "owner": "ckchzh",
   "slug": "docs-generator",
-  "displayName": "docs-generator",
+  "displayName": "Docs Generator",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1773282680464,
-    "commit": "https://github.com/openclaw/skills/commit/7420a3f44062480f08b8ef4202227bb0a18cd2e3"
+    "version": "2.3.3",
+    "publishedAt": 1773665806315,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1773282680464,
+      "commit": "https://github.com/openclaw/skills/commit/7420a3f44062480f08b8ef4202227bb0a18cd2e3"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1773202636819,

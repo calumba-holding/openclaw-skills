@@ -1,6 +1,8 @@
 ---
+version: "2.0.0"
 name: Docs Generator
-description: Automated documentation generator. API docs, README, CHANGELOG, contributing guide, architecture docs, tutorials, FAQ, reference manual. REST, GraphQL, OpenAPI. documentation, technical-writing, api-docs, developer-tools.
+description: "Automated documentation generator. API docs, README, CHANGELOG, contributing guide, architecture docs, tutorials, FAQ, reference manual. REST, GraphQL, OpenAPI. documentation, technical-writing, api-docs, developer-tools. Use when you need docs generator capabilities. Triggers on: docs generator."
+author: BytesAgain
 ---
 
 # Docs Generator — Automated Documentation
@@ -42,3 +44,6 @@ bash scripts/docs-generator.sh changelog 2.0.0 "New features"
 ## Philosophy
 
 Documentation is a product. Good docs = more users = fewer issues.
+---
+💬 Feedback & Feature Requests: https://bytesagain.com/feedback
+Powered by BytesAgain | bytesagain.com
