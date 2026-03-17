@@ -3,9 +3,15 @@
   "slug": "browser-devtools",
   "displayName": "Browser Devtools",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1773450743197,
-    "commit": "https://github.com/openclaw/skills/commit/f9687d60df1c78974848351ab6b7f2d39768257b"
+    "version": "1.0.6",
+    "publishedAt": 1773664928967,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1773450743197,
+      "commit": "https://github.com/openclaw/skills/commit/f9687d60df1c78974848351ab6b7f2d39768257b"
+    }
+  ]
 }
