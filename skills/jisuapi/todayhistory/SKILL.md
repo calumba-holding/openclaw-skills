@@ -24,7 +24,7 @@ $env:JISU_API_KEY="your_appkey_here"
 
 ## 脚本路径
 
-脚本文件：`skill/todayhistory/todayhistory.py`
+脚本文件：`skills/todayhistory/todayhistory.py`
 
 ## 使用方式与请求参数
 
@@ -33,7 +33,7 @@ $env:JISU_API_KEY="your_appkey_here"
 ### 历史上的今天查询（/todayhistory/query）
 
 ```bash
-python3 skill/todayhistory/todayhistory.py query '{"month":1,"day":2}'
+python3 skills/todayhistory/todayhistory.py query '{"month":1,"day":2}'
 ```
 
 请求 JSON：
@@ -105,6 +105,6 @@ python3 skill/todayhistory/todayhistory.py query '{"month":1,"day":2}'
 ## 在 OpenClaw 中的推荐用法
 
 1. 用户提问：「今天在历史上发生了什么？」代理先确定当前日期，例如 1 月 2 日。  
-2. 调用：`python3 skill/todayhistory/todayhistory.py query '{"month":1,"day":2}'`。  
+2. 调用：`python3 skills/todayhistory/todayhistory.py query '{"month":1,"day":2}'`。  
 3. 从返回列表中选取 3–5 条代表性事件，将 `year`、`title` 与 `content` 整理成时间线式的自然语言描述，作为回答给用户。  
 
