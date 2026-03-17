@@ -1,0 +1,11 @@
+{
+  "owner": "moooai",
+  "slug": "trip-coupon",
+  "displayName": "Trip Coupon 出行优惠券隐藏券-支持滴滴出行、携程礼包（机票、酒店、门票）",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1773659577919,
+    "commit": null
+  },
+  "history": []
+}
