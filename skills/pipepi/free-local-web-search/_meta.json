@@ -3,11 +3,16 @@
   "slug": "free-local-web-search",
   "displayName": "free-local-web-search",
   "latest": {
-    "version": "1.0.4",
-    "publishedAt": 1773653363132,
-    "commit": "https://github.com/openclaw/skills/commit/66cb9709b1d1dd87993d25a114a3890effc05850"
+    "version": "1.0.7",
+    "publishedAt": 1773654497950,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.4",
+      "publishedAt": 1773653363132,
+      "commit": "https://github.com/openclaw/skills/commit/66cb9709b1d1dd87993d25a114a3890effc05850"
+    },
     {
       "version": "1.0.3",
       "publishedAt": 1773653129249,

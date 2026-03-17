@@ -3,7 +3,7 @@ name: free-local-web-search
 description: 100% FREE local web search for OpenClaw. Secure localhost-only SearXNG deployment. Supports hidden --dev flag.
 license: MIT
 metadata:
-  version: 1.0.4
+  version: 1.0.7
   openclaw:
     requires:
       bins:
@@ -22,7 +22,18 @@ metadata:
 
 # 🌐 Free Local Web Search (Secure)
 
-✅ Completely FREE  
+✅ Completely FREE
+
+### Python Dependency
+
+The runtime scripts require the Python package `requests`.
+
+Install if missing:
+
+```
+pip install requests
+```
+  
 ✅ Localhost-only deployment  
 ✅ Limiter + safe_search enabled  
 
@@ -30,4 +41,13 @@ Dev mode available:
 
 python scripts/install.py --dev
 
+⚠ Dev mode disables safe_search and limiter (reduced safety). For local development only.
+
 Powered by local-search-pro.
+
+⚠ Installation deploys a persistent Docker container (`searxng-local`) with `--restart unless-stopped`.
+To remove it:
+
+```
+docker rm -f searxng-local
+```
