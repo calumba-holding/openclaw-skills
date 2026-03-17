@@ -1,0 +1,11 @@
+{
+  "owner": "jolestar",
+  "slug": "slack-openapi-skill",
+  "displayName": "Slack OpenAPI Skill",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773587199763,
+    "commit": null
+  },
+  "history": []
+}
