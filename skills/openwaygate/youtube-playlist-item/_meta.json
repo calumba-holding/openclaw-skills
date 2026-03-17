@@ -1,0 +1,11 @@
+{
+  "owner": "openwaygate",
+  "slug": "youtube-playlist-item",
+  "displayName": "YouTube Playlist Item",
+  "latest": {
+    "version": "0.10.7-dev",
+    "publishedAt": 1773497312844,
+    "commit": null
+  },
+  "history": []
+}
