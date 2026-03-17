@@ -157,7 +157,7 @@ OK！{价格}没问题，改价我就付款！谢谢老板～
 - 友好：要的要的！很喜欢，就等您松口了～
 - 专业：确定要的，请问价格方面可以再商量吗？
 - 随性：要啊！就看价格了
-- 幽默：要！做梦都在想！（夸张了点但诚意是真的）
+- 幽默：当然要！诚意满满的！就等老板给个好价了
 
 ---
 
@@ -183,11 +183,4 @@ OK！{价格}没问题，改价我就付款！谢谢老板～
 
 ## 随机选择逻辑
 
-```python
-import random
-
-def get_message(stage, style, context):
-    templates = TEMPLATES[style][stage]
-    template = random.choice(templates)
-    return template.format(**context)
-```
+LLM 在生成回复时，应从同一风格和阶段的多个模板中随机选择一个作为参考，然后结合上下文自然改写，避免每次回复完全相同。

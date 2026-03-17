@@ -8,17 +8,24 @@
 
 ```json
 {
+  "cronEnabled": false,
   "maxReplies": 5,
-  "checkIntervalMin": 3,
+  "checkIntervalMin": 5,
   "maxFollowUps": 2,
   "followUpDelayMin": 30,
-  "autoAcceptWithinMax": true,
+  "autoAcceptWithinMax": false,
   "notifyOnEveryReply": false,
   "messageStyle": "friendly"
 }
 ```
 
 ## 配置项详解
+
+### cronEnabled (自动监控开关)
+- **默认**: false
+- **说明**: 是否允许创建 cron job 自动监控卖家回复
+- **设为true**: 仅在用户明确要求自动监控时设置
+- **注意**: Agent 不得自行开启此选项，必须由用户明确同意
 
 ### maxReplies (最大回复次数)
 - **默认**: 5
@@ -27,10 +34,10 @@
 - **建议**: 3-5次足够，太多可能引起卖家反感
 
 ### checkIntervalMin (检查间隔)
-- **默认**: 3分钟
-- **范围**: 1-30分钟
+- **默认**: 5分钟
+- **范围**: 5-30分钟
 - **说明**: 多久检查一次卖家是否回复
-- **建议**: 3-5分钟，太频繁可能触发风控
+- **建议**: 5-10分钟，太频繁可能触发风控
 
 ### maxFollowUps (最大跟进次数)
 - **默认**: 2
@@ -43,9 +50,10 @@
 - **说明**: 卖家无回复多久后发送跟进消息
 
 ### autoAcceptWithinMax (自动接受底价内还价)
-- **默认**: true
+- **默认**: false
 - **说明**: 卖家还价在底价范围内时是否自动接受
-- **设为false**: 所有还价都通知用户确认
+- **设为true**: 自动接受底价范围内的还价（注意：会自动代你回复卖家，请确认了解风险）
+- **设为false**: 所有还价都通知用户确认（推荐）
 
 ### notifyOnEveryReply (每次回复都通知)
 - **默认**: false

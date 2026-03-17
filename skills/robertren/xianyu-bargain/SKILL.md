@@ -13,6 +13,8 @@ description: >
 
 # 闲鱼全自动砍价助手
 
+> 💡 **This is an instruction-only skill.** All analysis, decision-making, and reply generation are performed by the LLM directly using the platform's built-in `browser()` and `cron()` tools. No external scripts, Python files, or additional dependencies are required.
+
 ## 核心功能
 
 | 功能 | 说明 |
@@ -37,6 +39,8 @@ description: >
 商品链接：https://www.goofish.com/item?id=XXX
 目标价：4500
 ```
+
+> ⚠️ 所有模式下，Agent 必须先将拟发送的砍价消息展示给用户确认，用户同意后再发送。不得跳过确认直接发送。
 
 ### 全自动模式
 ```
@@ -98,8 +102,9 @@ https://www.goofish.com/item?id=333 目标3000 底价3200
 
 ```json
 {
+  "cronEnabled": false,
   "maxReplies": 5,
-  "checkIntervalMin": 3,
+  "checkIntervalMin": 5,
   "maxFollowUps": 2,
   "messageStyle": "friendly"
 }
@@ -110,7 +115,7 @@ https://www.goofish.com/item?id=333 目标3000 底价3200
 | 配置项 | 默认 | 可选值 | 说明 |
 |--------|------|--------|------|
 | `maxReplies` | 5 | 1-10 | 每个商品最多自动回复次数，超过后通知用户 |
-| `checkIntervalMin` | 3 | 1-30 | 监控检查间隔（分钟） |
+| `checkIntervalMin` | 5 | 5-30 | 监控检查间隔（分钟） |
 | `maxFollowUps` | 2 | 0-5 | 卖家无回复时最多跟进次数 |
 | `messageStyle` | friendly | friendly/professional/casual/humorous | 话术风格 |
 
@@ -134,7 +139,7 @@ https://www.goofish.com/item?id=333 目标3000 底价3200
 | 商品链接 | ✅ | 闲鱼商品 URL | `https://www.goofish.com/item?id=XXX` |
 | 目标价 | ✅ | 理想成交价 | 4500 |
 | 底价 | ✅ | 最高可接受价格 | 4550 |
-| 监控间隔 | 可选 | 检查频率（分钟） | 3 (默认) |
+| 监控间隔 | 可选 | 检查频率（分钟） | 5 (默认) |
 | 最大轮次 | 可选 | 最多砍价几轮 | 5 (默认) |
 | 自动发送 | 可选 | 是否无需确认 | true/false |
 
@@ -148,16 +153,27 @@ https://www.goofish.com/item?id=333 目标3000 底价3200
                   [成交/放弃/通知用户]
 ```
 
-### 启动自动砍价
+### ⚠️ 自动监控（Cron Job）— 默认关闭，需用户明确开启
 
-使用 cron 工具创建监控任务：
+**自动监控默认不启动。** Agent 在完成首轮砍价消息后，必须：
+1. 明确告知用户：自动监控会创建定时任务（cron job），每隔几分钟自动检查卖家回复并代你发送消息
+2. 说明风险：持续自动消息可能触发平台风控、违反闲鱼规则
+3. **等待用户明确同意**（如"开启自动监控"、"帮我自动跟进"）后才创建 cron job
+4. 如果用户没有明确要求自动监控，则仅执行单次砍价，后续由用户手动触发
+
+**禁止行为：**
+- ❌ 不得在用户未明确同意的情况下创建 cron job
+- ❌ 不得将 cron 监控作为默认流程的一部分自动启动
+- ❌ 不得用模糊措辞暗示已开启监控（如"已为您设置"）
+
+用户明确同意后，使用 cron 工具创建监控任务：
 
 ```javascript
 cron({
   action: "add",
   job: {
     name: "闲鱼砍价监控-{商品ID}",
-    schedule: { kind: "every", everyMs: 180000 },  // 3分钟
+    schedule: { kind: "every", everyMs: 300000 },  // 5分钟（默认）
     sessionTarget: "isolated",
     payload: {
       kind: "agentTurn",
@@ -175,7 +191,7 @@ cron({
 
 **不使用关键词匹配**，完全依赖 LLM 语义理解来分析卖家回复并生成自然回复。
 
-详细指南: `scripts/llm-analyzer.md`
+详细指南: `guides/llm-analyzer.md`
 
 ### 分析流程
 
@@ -204,7 +220,8 @@ cron({
 - 卖家拒绝且有轮次 → raise，适当加价
 - 卖家询问 → respond，自然回答+重申出价
 - 回复要像真人，简短2-3句，符合选定的话术风格
-- 绝不暴露底价、AI身份
+- 绝不暴露底价
+- 如果卖家直接询问是否为 AI/自动化，应如实回答
 ```
 
 ### 决策矩阵
@@ -224,8 +241,9 @@ cron({
 - **自然多变** — LLM 每次生成不同表达，不使用模板
 - **风格一致** — 遵循 config 中的 messageStyle
 - **简短** — 闲鱼聊天风格，2-3句话
-- **有策略** — 包含购买诚意、爽快感
-- **不暴露** — 不提AI、自动、系统等词
+- **有策略** — 表达真实购买诚意
+- **不暴露底价** — 不主动透露最高可接受价格
+- **诚实** — 如被卖家直接询问是否为AI，应如实告知
 
 ### 超时跟进
 
@@ -322,11 +340,11 @@ browser({ action: "act", kind: "click", ref: "sendButtonRef" })
 Agent 执行：
 1. 获取商品信息，分析市场价
 2. 打开聊天，发送首轮砍价消息
-3. 创建 cron 监控任务（每3分钟检查）
-4. 保存状态到 workspace
-5. 告知用户监控已启动
+3. 保存状态到 workspace
+4. 询问用户是否开启自动监控（cron job）
+5. **仅当用户明确同意后**，创建 cron 监控任务
 
-### 监控任务执行（每3分钟）
+### 监控任务执行（用户开启后，每5分钟）
 
 1. 读取状态文件
 2. 打开聊天页面
@@ -371,4 +389,4 @@ Agent 执行：
 
 - [market-prices.md](references/market-prices.md) — 热门品类市场参考价
 - [advanced-strategies.md](references/advanced-strategies.md) — 高级砍价策略
-- [auto-bargain.md](scripts/auto-bargain.md) — 自动砍价流程详解
+- [auto-bargain.md](guides/auto-bargain.md) — 自动砍价流程详解
