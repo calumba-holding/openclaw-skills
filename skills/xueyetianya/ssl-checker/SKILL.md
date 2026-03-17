@@ -1,6 +1,8 @@
 ---
+version: "2.0.0"
 name: ssl-checker
 description: "Error: --domain required. Use when you need ssl checker capabilities. Triggers on: ssl checker, domain, port, warn-days, format, output."
+author: BytesAgain
 ---
 
 # ssl-checker

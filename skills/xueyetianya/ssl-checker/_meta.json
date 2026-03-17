@@ -3,11 +3,16 @@
   "slug": "ssl-checker",
   "displayName": "Ssl Checker",
   "latest": {
-    "version": "2.3.3",
-    "publishedAt": 1773614662750,
-    "commit": "https://github.com/openclaw/skills/commit/93de8e53c0888a380205d6eb6ebeb1d8c7865973"
+    "version": "2.3.5",
+    "publishedAt": 1773664178565,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.3.3",
+      "publishedAt": 1773614662750,
+      "commit": "https://github.com/openclaw/skills/commit/93de8e53c0888a380205d6eb6ebeb1d8c7865973"
+    },
     {
       "version": "2.3.0",
       "publishedAt": 1773448609606,
