@@ -1,6 +1,6 @@
 ---
 name: vidau video generator
-version: "1.0.6"
+version: "1.0.8"
 license: MIT
 description: Use Vidau Open API to generate short videos with Veo3, Sora2, and other models, or query account credits. Register at superaiglobal.com and configure API Key.
 homepage: https://vidau.ai
@@ -15,7 +15,7 @@ compatibility: Python 3.x required; network access to api.superaiglobal.com
 
 # Vidau Video Generator 
 
-**Version:** 1.0.6
+**Version:** 1.0.8
 
 ## When to use
 
