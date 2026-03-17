@@ -1,6 +1,6 @@
 {
   "name": "baidu-yijian-vision",
-  "version": "0.9.25",
+  "version": "0.9.26",
   "description": "Client tool for registering and invoking Baidu Yijian vision skills",
   "type": "module",
   "private": true,
