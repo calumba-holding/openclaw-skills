@@ -1,0 +1,35 @@
+{
+  "funds": {
+    "000218": {
+      "code": "000218",
+      "name": "国泰黄金ETF联接A",
+      "current_nav": 4.0433,
+      "last_nav": 4.0943,
+      "estimate_growth": -1.25,
+      "update_time": "2026-03-16 15:04",
+      "source": "天天基金网",
+      "cache_time": "2026-03-16 15:05:12"
+    },
+    "017470": {
+      "code": "017470",
+      "name": "嘉实上证科创板芯片ETF发起联接C",
+      "current_nav": 2.0695,
+      "last_nav": 2.0255,
+      "estimate_growth": 2.17,
+      "update_time": "2026-03-16 15:00",
+      "source": "天天基金网",
+      "cache_time": "2026-03-16 15:05:12"
+    },
+    "020274": {
+      "code": "020274",
+      "name": "富国中证细分化工产业主题ETF发起式联接C",
+      "current_nav": 1.5803,
+      "last_nav": 1.6363,
+      "estimate_growth": -3.42,
+      "update_time": "2026-03-16 15:00",
+      "source": "天天基金网",
+      "cache_time": "2026-03-16 15:05:12"
+    }
+  },
+  "last_update": "2026-03-16 15:05:12"
+}
