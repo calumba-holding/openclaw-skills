@@ -3,11 +3,16 @@
   "slug": "ai-cost-optimizer",
   "displayName": "Ai Cost Optimizer",
   "latest": {
-    "version": "1.0.51",
-    "publishedAt": 1773632866243,
-    "commit": "https://github.com/openclaw/skills/commit/36578ab2f2b42abc9a05261f847616de47b766ed"
+    "version": "1.0.52",
+    "publishedAt": 1773632971837,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.51",
+      "publishedAt": 1773632866243,
+      "commit": "https://github.com/openclaw/skills/commit/36578ab2f2b42abc9a05261f847616de47b766ed"
+    },
     {
       "version": "1.0.6",
       "publishedAt": 1773594226807,
