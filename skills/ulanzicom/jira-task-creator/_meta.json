@@ -1,0 +1,11 @@
+{
+  "owner": "ulanzicom",
+  "slug": "jira-task-creator",
+  "displayName": "Jira Task Creator",
+  "latest": {
+    "version": "2.1.0",
+    "publishedAt": 1773657658443,
+    "commit": null
+  },
+  "history": []
+}
