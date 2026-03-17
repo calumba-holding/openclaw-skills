@@ -1,0 +1,11 @@
+{
+  "owner": "engineering-trunkate-ai",
+  "slug": "trunkate",
+  "displayName": "Trunkate AI",
+  "latest": {
+    "version": "0.31.0",
+    "publishedAt": 1773770064385,
+    "commit": null
+  },
+  "history": []
+}
