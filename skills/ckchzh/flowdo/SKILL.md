@@ -1,7 +1,7 @@
 ---
 name: FlowDo
 description: "Task and workflow manager with kanban-style status tracking. Add tasks, move them through workflow states (todo, doing, done, blocked), set priority levels, filter by status, and track completion percentage. Simple project management in your terminal."
-version: "1.0.0"
+version: "2.0.0"
 author: "BytesAgain"
 tags: ["task","todo","workflow","productivity","project","kanban","gtd","management"]
 categories: ["Productivity", "Project Management"]
@@ -18,8 +18,6 @@ FlowDo brings kanban-style task management to your terminal. Track tasks through
 - **Visual status**: Icons show task state at a glance
 - **Completion tracking**: See your progress percentage
 - **Filter views**: Show only tasks in a specific state
-- **Zero config**: Works immediately, data stored locally
-
 ## Commands
 
 - `add <text>` — Add a new task
