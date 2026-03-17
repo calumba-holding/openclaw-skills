@@ -3,9 +3,15 @@
   "slug": "sense-music",
   "displayName": "sense-music",
   "latest": {
-    "version": "0.1.1",
-    "publishedAt": 1773424175260,
-    "commit": "https://github.com/openclaw/skills/commit/220d89dc1e3c58e382ac5d19e101baa92cdd01d3"
+    "version": "0.1.2",
+    "publishedAt": 1773700575815,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.1.1",
+      "publishedAt": 1773424175260,
+      "commit": "https://github.com/openclaw/skills/commit/220d89dc1e3c58e382ac5d19e101baa92cdd01d3"
+    }
+  ]
 }
