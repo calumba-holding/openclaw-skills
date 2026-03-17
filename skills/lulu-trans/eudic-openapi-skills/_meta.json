@@ -1,0 +1,11 @@
+{
+  "owner": "lulu-trans",
+  "slug": "eudic-openapi-skills",
+  "displayName": "使用欧路词典OpenAPI，对生词本及笔记进行查询、修改等操作。",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773711865087,
+    "commit": null
+  },
+  "history": []
+}
