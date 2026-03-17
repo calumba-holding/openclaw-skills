@@ -2,7 +2,7 @@
 name: research-analyst
 description: AI-powered US/China/HK stock & crypto research with 8-dimension analysis, China market reports (东方财富/新浪/财联社/腾讯/同花顺), portfolio tracking, and trend detection | AI 驱动的美股/A股/港股/加密货币研究工具，提供 8 维度分析、中国市场多源报告（东方财富/新浪/财联社/腾讯/同花顺）、投资组合追踪和趋势检测
 version: 1.0.1
-verified_commit: 0304974  # v1.0.1 - Official release
+verified_commit: 0d4db90  # v1.0.1 - Release with verified_commit
 homepage: https://finance.yahoo.com
 commands:
   - /stock - Analyze a stock or crypto (分析股票或加密货币)
