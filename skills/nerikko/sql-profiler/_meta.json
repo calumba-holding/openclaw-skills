@@ -1,0 +1,11 @@
+{
+  "owner": "nerikko",
+  "slug": "sql-profiler",
+  "displayName": "SQL Profiler",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773328053018,
+    "commit": null
+  },
+  "history": []
+}
