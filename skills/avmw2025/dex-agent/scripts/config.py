@@ -44,6 +44,20 @@ MAX_SLIPPAGE_BPS = 500      # 5% max slippage
 GAS_LIMIT = 350_000
 OUR_FEE_BPS = 30            # 0.3% our fee (vs Bankr's 0.65%)
 
+# Risk Management Defaults
+# These can be overridden via trading-config.json at runtime
+RISK_DEFAULTS = {
+    "max_daily_trades": 8,        # Max new trades per 24h period
+    "max_active_positions": 8,    # Max concurrent open positions
+    "trade_size_usd": 20,         # Default trade size in USD
+    "take_profit_pct": 5.0,       # Take profit trigger (%)
+    "stop_loss_pct": 8.0,         # Stop loss trigger (%)
+    "max_drawdown_pct": 20.0,     # Max portfolio drawdown before halt
+    "cooldown_minutes": 60,       # Min time between trades on same token
+    "min_liquidity": 50000,       # Min pool liquidity (USD)
+    "min_volume_24h": 100000,     # Min 24h volume (USD)
+}
+
 # Fee Collection Wallet (separate from trading wallet)
 # TODO: Set up fee collection wallet
 FEE_WALLET = None
