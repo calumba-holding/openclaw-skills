@@ -1,11 +1,17 @@
 {
   "owner": "zhaog100",
   "slug": "ai-deterministic-control",
-  "displayName": "Ai Deterministic Control",
+  "displayName": "AI Deterministic Control",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1773394208394,
-    "commit": "https://github.com/openclaw/skills/commit/17274ac049908ab71a58e6899a32bee14d63a0b5"
+    "version": "1.1.2",
+    "publishedAt": 1773714299034,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1773394208394,
+      "commit": "https://github.com/openclaw/skills/commit/17274ac049908ab71a58e6899a32bee14d63a0b5"
+    }
+  ]
 }
