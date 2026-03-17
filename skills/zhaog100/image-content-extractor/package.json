@@ -21,7 +21,6 @@
     "terminal-ocr"
   ],
   "dependencies": {
-    "python": ">=3.8",
     "tesseract-ocr": ">=4.0",
     "opencv-python": ">=4.5",
     "pillow": ">=8.0",
@@ -65,5 +64,6 @@
   "changelog": {
     "2.0.0": "统一版本，集成terminal-ocr，三大模式支持",
     "1.0.0": "初始版本"
-  }
+  },
+  "license": "MIT"
 }

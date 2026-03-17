@@ -3,11 +3,16 @@
   "slug": "image-content-extractor",
   "displayName": "Image Content Extractor",
   "latest": {
-    "version": "2.2.0",
-    "publishedAt": 1773538313324,
-    "commit": "https://github.com/openclaw/skills/commit/45f9ff94e31b59c21ed01f4847a1a05b9bba7172"
+    "version": "2.1.1",
+    "publishedAt": 1773740503503,
+    "commit": null
   },
   "history": [
+    {
+      "version": "2.2.0",
+      "publishedAt": 1773538313324,
+      "commit": "https://github.com/openclaw/skills/commit/45f9ff94e31b59c21ed01f4847a1a05b9bba7172"
+    },
     {
       "version": "2.0.0",
       "publishedAt": 1772767215201,
