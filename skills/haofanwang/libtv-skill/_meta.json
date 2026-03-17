@@ -1,0 +1,11 @@
+{
+  "owner": "haofanwang",
+  "slug": "libtv-skill",
+  "displayName": "LibTV API Skills",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1773720828347,
+    "commit": null
+  },
+  "history": []
+}
