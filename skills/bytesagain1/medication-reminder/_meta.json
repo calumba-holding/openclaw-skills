@@ -3,9 +3,15 @@
   "slug": "medication-reminder",
   "displayName": "Medication Reminder",
   "latest": {
-    "version": "2.3.0",
-    "publishedAt": 1773447609484,
-    "commit": "https://github.com/openclaw/skills/commit/56a0a8f9f0e7a1a2875b223320cf69fe79f2de41"
+    "version": "2.3.6",
+    "publishedAt": 1773666444005,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.3.0",
+      "publishedAt": 1773447609484,
+      "commit": "https://github.com/openclaw/skills/commit/56a0a8f9f0e7a1a2875b223320cf69fe79f2de41"
+    }
+  ]
 }
