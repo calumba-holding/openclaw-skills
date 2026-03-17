@@ -1,7 +1,7 @@
 ---
 name: polymarket-weather-high-temp-sniper
 description: Scans Polymarket daily high-temperature markets, auto-imports new ones, then snipes YES positions between 9–10 AM local time when forecast and reality converge — buys YES at ≥$0.60 during the scan window, or follows crowd volume at 10 AM sharp.
-metadata:
+Scans Polymarket daily high-temperature markets, auto-imports new ones, then snipes YES positions between 9–10 AM local time when forecast and reality converge — buys YES at ≥$0.40 during the scan window, or follows crowd volume at 10 AM sharp.
   author: "StefanTaylor"
   version: "2.0.0"
   displayName: "Weather High-Temp Sniper"
@@ -33,7 +33,7 @@ Every 5 minutes (cron):
 │   └─ Detect city → timezone from question title; log local window status
 │
 ├─ PHASE 4 — Trading Windows
-│   ├─ 9:00–9:55 AM local: SCAN → If YES% ≥ PRICE_THRESHOLD → buy 1 share
+│   ├─ 9:00–9:55 AM local: SCAN → If YES% ≥ PRICE_THRESHOLD → buy 5 shares (total cost = 5 × price)
 │   └─ 10:00 AM local: FALLBACK → buy highest-YES% unowned market
 │
 └─ PHASE 5 — Risk Monitor (optional, ENABLE_TP_SL=true)
@@ -55,8 +55,9 @@ Every 5 minutes (cron):
 |---|---|---|---|
 | `SIMMER_API_KEY` | ✅ Yes | — | API key from simmer.markets dashboard |
 | `ENABLE_TP_SL` | No | `false` | Enable take-profit / stop-loss monitoring |
-| `PRICE_THRESHOLD` | No | `0.60` | Minimum YES% to trigger a buy |
-| `MAX_AMOUNT_USD` | No | `1.0` | Max spend per trade in USD |
+| `PRICE_THRESHOLD` | No | `0.40` | Minimum YES% to trigger a buy |
+| `MAX_AMOUNT_USD` | No | `2.50` | Max spend per trade in USD (5 shares × price) |
+| `SHARES_PER_ORDER` | No | `5` | Number of shares per trade |
 | `MAX_RETRY` | No | `1` | Retry count on trade failure |
 | `TAKE_PROFIT` | No | `0.50` | TP ratio (e.g. 0.50 = +50%) |
 | `STOP_LOSS` | No | `0.25` | SL ratio (e.g. 0.25 = −25%) |

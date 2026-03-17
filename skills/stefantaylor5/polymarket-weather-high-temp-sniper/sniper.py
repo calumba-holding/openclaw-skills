@@ -76,8 +76,9 @@ def _ienv(k: str, d: int) -> int:
     except ValueError:
         return d
 
-PRICE_THRESHOLD = max(0.01, min(0.99, _fenv("PRICE_THRESHOLD", 0.60)))
-MAX_AMOUNT_USD  = max(0.10, min(100.0, _fenv("MAX_AMOUNT_USD",  1.0)))
+PRICE_THRESHOLD = max(0.01, min(0.99, _fenv("PRICE_THRESHOLD", 0.40)))
+SHARES_PER_ORDER = 5  # 每次买入 5 股
+MAX_AMOUNT_USD  = max(0.10, min(100.0, _fenv("MAX_AMOUNT_USD",  2.50)))  # 5 * $0.50
 MAX_RETRY       = max(0,    min(10,    _ienv("MAX_RETRY",        1)))
 REPORT_INTERVAL = max(60,              _ienv("REPORT_INTERVAL",  240))
 ENABLE_TP_SL    = os.environ.get("ENABLE_TP_SL", "false").lower() == "true"
@@ -132,7 +133,8 @@ CITY_TZ_MAP: dict[str, str] = {
     "helsinki": "Europe/Helsinki",       "warsaw": "Europe/Warsaw",
     "prague": "Europe/Prague",           "budapest": "Europe/Budapest",
     "athens": "Europe/Athens",           "istanbul": "Europe/Istanbul",
-    "moscow": "Europe/Moscow",           "barcelona": "Europe/Madrid",
+    "ankara": "Europe/Istanbul",         "moscow": "Europe/Moscow",
+    "barcelona": "Europe/Madrid",        "lisbon": "Europe/Lisbon",
     "lisbon": "Europe/Lisbon",           "dublin": "Europe/Dublin",
     "munich": "Europe/Berlin",           "hamburg": "Europe/Berlin",
     "frankfurt": "Europe/Berlin",        "milan": "Europe/Rome",
@@ -143,14 +145,18 @@ CITY_TZ_MAP: dict[str, str] = {
     "bangkok": "Asia/Bangkok",           "jakarta": "Asia/Jakarta",
     "kuala lumpur": "Asia/Kuala_Lumpur", "manila": "Asia/Manila",
     "mumbai": "Asia/Kolkata",            "delhi": "Asia/Kolkata",
+    "bangalore": "Asia/Kolkata",         "lucknow": "Asia/Kolkata",
     "bangalore": "Asia/Kolkata",         "sydney": "Australia/Sydney",
     "melbourne": "Australia/Melbourne",  "brisbane": "Australia/Brisbane",
     "perth": "Australia/Perth",          "auckland": "Pacific/Auckland",
+    "wellington": "Pacific/Auckland",
+    "auckland": "Pacific/Auckland",
     "buenos aires": "America/Argentina/Buenos_Aires",
     "sao paulo": "America/Sao_Paulo",    "lima": "America/Lima",
     "bogota": "America/Bogota",          "santiago": "America/Santiago",
     "mexico city": "America/Mexico_City",
-    "cairo": "Africa/Cairo",             "johannesburg": "Africa/Johannesburg",
+    "cairo": "Africa/Cairo",             "tel aviv": "Asia/Jerusalem",
+    "johannesburg": "Africa/Johannesburg",
     "nairobi": "Africa/Nairobi",         "lagos": "Africa/Lagos",
     "hartsfield": "America/New_York",    "mia": "America/New_York",
     "katl": "America/New_York",          "kord": "America/Chicago",
@@ -445,33 +451,44 @@ def register_tp_sl(market_id: str) -> bool:
 # ---------------------------------------------------------------------------
 def execute_trade(
     market_id: str,
-    question:  str,
-    price:     float,
-    reasoning: str,         # Hard Rule #4 — always include reasoning
-    state:     dict,
-    dry_run:   bool,
+    question: str,
+    price: float,
+    reasoning: str,
+    state: dict,
+    dry_run: bool
 ) -> bool:
-    traded_today    = state["traded_today"]
+    """
+    Place a trade with retry logic. Returns True on success.
+    """
+    traded_today = state["traded_today"]
     tp_sl_registered = state.setdefault("tp_sl_registered", [])
-    amount = min(round(price, 4), MAX_AMOUNT_USD)
+
+    max_per_share = MAX_AMOUNT_USD / SHARES_PER_ORDER
+    if price > max_per_share:
+        log.warning(f"[TRADE] price ${price:.4f} exceeds per-share max ${max_per_share:.4f} — skip {market_id}")
+        return False
+
+    amount = round(SHARES_PER_ORDER * price, 4)
     if amount < 0.01:
         log.warning(f"[TRADE] amount too small ({amount:.4f}), skip {market_id}")
         return False
 
     tag = "[DRY-RUN]" if dry_run else "[LIVE]"
-    log.info(f"{tag} → '{question[:55]}' | YES%={price:.0%} | amount=${amount:.4f}")
+    log.info(f"{tag} → '{question[:55]}' | YES%={price:.0%} | shares={SHARES_PER_ORDER} | amount=${amount:.4f}")
     log.info(f"{tag}   reasoning: {reasoning[:120]}")
 
     if dry_run:
-        return True  # Hard Rule #2 — dry-run never places real orders
+        # In dry-run mode, we don't actually trade
+        return True
 
-    for attempt in range(1, 2 + MAX_RETRY):
+    # Hard Rule #1: Always use SimmerClient
+    for attempt in range(1 + MAX_RETRY):
         try:
-            # Hard Rule #1: Always use SimmerClient
             result = get_client().trade(
                 market_id  = market_id,
                 side       = "yes",
-                amount     = amount,
+                shares     = SHARES_PER_ORDER,  # buy 5 shares
+                amount     = amount,            # total cost
                 venue      = VENUE,
                 source     = TRADE_SOURCE,   # Hard Rule #3
                 skill_slug = SKILL_SLUG,     # Hard Rule #6
@@ -491,7 +508,7 @@ def execute_trade(
             return True
         except Exception as e:
             log.warning(f"[TRADE] attempt {attempt}/{1+MAX_RETRY} failed: {e}")
-            if attempt < 1 + MAX_RETRY:
+            if attempt < MAX_RETRY:
                 time.sleep(3)
 
     log.error(f"[TRADE] ❌ all retries failed: {market_id}")
