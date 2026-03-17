@@ -1,0 +1,11 @@
+{
+  "owner": "1393368499",
+  "slug": "my-browser-agent",
+  "displayName": "My Browser Agent",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773670579014,
+    "commit": null
+  },
+  "history": []
+}
