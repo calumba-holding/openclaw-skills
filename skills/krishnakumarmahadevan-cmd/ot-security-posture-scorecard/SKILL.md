@@ -172,21 +172,22 @@ curl -s -X POST "https://portal.toolweb.in:8443/security/itotassessor" \
 ## Pricing
 
 - API access via portal.toolweb.in subscription plans
-- Starter: ₹2,999/month (~$36) — 500 API calls
-- Professional: ₹9,999/month (~$120) — 5,000 API calls
-- Enterprise: ₹49,999/month (~$600) — Unlimited API calls
-- Free trial: 10 API calls to test the skill
+- Free trial: 10 API calls/day, 50 API calls/month to test the skill
+- Developer: $39/month — 20 calls/day and 500 calls/month
+- Professional: $99/month — 200 calls/day, 5000 calls/month
+- Enterprise: $299/month — 100K calls/day, 1M calls/month
 
-**International Users (USA, UK, Europe):** At checkout, select **PayPal** as your payment method to pay in USD, EUR, GBP, or 6 other international currencies. PayU processes the conversion automatically.
+##About
 
-## About
+Created by **ToolWeb.in** — a security-focused MicroSaaS platform with 200+ security APIs, built by a CISSP & CISM certified professional. Trusted by security teams in USA, UK, and Europe and we have platforms for "Pay-per-run", "API Gateway", "MCP Server", "OpenClaw", "RapidAPI" for execution and YouTube channel for demos.
 
-Created by **ToolWeb.in** — a security-focused MicroSaaS platform with 191+ security APIs, built by a CISSP & CISM certified professional. Trusted by security teams in USA, UK, and Europe.
+- 🌐 Toolweb Platform: https://toolweb.in
+- 🔌 API Hub (Kong): https://portal.toolweb.in
+- 🎡 MCP Server: https://hub.toolweb.in
+- 🦞 OpenClaw Skills: https://toolweb.in/openclaw/
+- 🛒 RapidAPI: https://rapidapi.com/user/mkrishna477
+- 📺 YouTube demos: https://youtube.com/@toolweb-009
 
-- 🌐 Platform: https://toolweb.in
-- 🔌 API Hub: https://portal.toolweb.in
-- 📺 YouTube demos: https://youtube.com/@toolweb
-- 🛒 Also on RapidAPI: https://rapidapi.com/user/mkkpro
 
 ## Tips
 
