@@ -3,11 +3,16 @@
   "slug": "openclaw-error-fix",
   "displayName": "Openclaw Error Fix",
   "latest": {
-    "version": "1.0.49",
-    "publishedAt": 1773632580847,
-    "commit": "https://github.com/openclaw/skills/commit/80764db8522f2856130e2cc3aae12280a3e65b9f"
+    "version": "1.1.0",
+    "publishedAt": 1773643784633,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.49",
+      "publishedAt": 1773632580847,
+      "commit": "https://github.com/openclaw/skills/commit/80764db8522f2856130e2cc3aae12280a3e65b9f"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1773489588418,
