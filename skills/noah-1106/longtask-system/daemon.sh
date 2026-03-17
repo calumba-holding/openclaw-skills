@@ -60,10 +60,23 @@ update_state() {
     if jq "$jq_expr" "$file" > "$tmp_file" 2>/dev/null; then
         # 原子性替换
         mv "$tmp_file" "$file"
+        # 触发驾驶舱渲染
+        render_cockpit "$file"
         return 0
     else
         rm -f "$tmp_file"
         return 1
+    fi
+}
+
+# 渲染驾驶舱 UI
+render_cockpit() {
+    local task_file="$1"
+    local renderer="${SCRIPT_DIR}/cockpit_renderer.py"
+    
+    # 如果渲染器存在，则调用
+    if [ -f "$renderer" ] && command -v python3 >/dev/null 2>&1; then
+        python3 "$renderer" "$task_file" >/dev/null 2>&1 &
     fi
 }
 
@@ -102,8 +115,8 @@ trigger_agent() {
     task_id=$(jq -r '.task_id' "$task_file")
     step_name=$(jq -r ".steps[] | select(.id == $step_id) | .name" "$task_file")
     params=$(jq -r ".steps[] | select(.id == $step_id) | .params // {}" "$task_file")
-    agent_id=$(jq -r '.agent_id // "bibi"' "$task_file")
-    session_name=$(jq -r '.session_name // "main"' "$task_file")
+    agent_id=$(jq -r ".steps[] | select(.id == $step_id) | .agent_id // .agent_id // \"bibi\"" "$task_file")
+    session_name=$(jq -r ".steps[] | select(.id == $step_id) | .session_name // .session_name // \"main\"" "$task_file")
     
     log "Triggering step $step_id: $step_name (agent: $agent_id, session: $session_name)"
     
