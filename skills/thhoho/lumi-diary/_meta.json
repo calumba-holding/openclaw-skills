@@ -3,9 +3,15 @@
   "slug": "lumi-diary",
   "displayName": "Lumi Diary",
   "latest": {
-    "version": "0.1.5",
-    "publishedAt": 1773515704654,
-    "commit": "https://github.com/openclaw/skills/commit/50dc9ee3d5c4bf445e07dd1c33d1ff733e2b22a2"
+    "version": "0.2.0",
+    "publishedAt": 1773677408094,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.1.5",
+      "publishedAt": 1773515704654,
+      "commit": "https://github.com/openclaw/skills/commit/50dc9ee3d5c4bf445e07dd1c33d1ff733e2b22a2"
+    }
+  ]
 }
