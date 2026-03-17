@@ -1,89 +1,332 @@
 #!/usr/bin/env bash
-# erp - Enterprise resource planning toolkit — manage busi
-# Powered by BytesAgain | bytesagain.com
+# Erp — productivity tool
+# Powered by BytesAgain | bytesagain.com | hello@bytesagain.com
 set -euo pipefail
 
-VERSION="1.0.0"
-DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/erp"
+DATA_DIR="${HOME}/.local/share/erp"
 mkdir -p "$DATA_DIR"
 
-show_help() {
-    echo "ERP v$VERSION"
+_log() { echo "$(date '+%m-%d %H:%M') $1: $2" >> "$DATA_DIR/history.log"; }
+
+_version() { echo "erp v2.0.0"; }
+
+_help() {
+    echo "Erp v2.0.0 — productivity toolkit"
     echo ""
-    echo "Usage: erp <command> [options]"
+    echo "Usage: erp <command> [args]"
     echo ""
     echo "Commands:"
-    echo "  run               Execute main function"
-    echo "  list              List all items"
-    echo "  add <item>        Add new item"
-    echo "  status            Show current status"
-    echo "  export <format>   Export data (json|csv|txt)"
-    echo "  help              Show this help"
+    echo "  add                Add"
+    echo "  plan               Plan"
+    echo "  track              Track"
+    echo "  review             Review"
+    echo "  streak             Streak"
+    echo "  remind             Remind"
+    echo "  prioritize         Prioritize"
+    echo "  archive            Archive"
+    echo "  tag                Tag"
+    echo "  timeline           Timeline"
+    echo "  report             Report"
+    echo "  weekly-review      Weekly Review"
+    echo "  stats              Summary statistics"
+    echo "  export <fmt>       Export (json|csv|txt)"
+    echo "  status             Health check"
+    echo "  help               Show this help"
+    echo "  version            Show version"
     echo ""
+    echo "Data: $DATA_DIR"
 }
 
-cmd_run() {
-    echo "[erp] Running..."
-    echo "Processing complete."
-    echo "$(date '+%Y-%m-%d %H:%M') run" >> "$DATA_DIR/history.log"
+_stats() {
+    echo "=== Erp Stats ==="
+    local total=0
+    for f in "$DATA_DIR"/*.log; do
+        [ -f "$f" ] || continue
+        local name=$(basename "$f" .log)
+        local c=$(wc -l < "$f")
+        total=$((total + c))
+        echo "  $name: $c entries"
+    done
+    echo "  ---"
+    echo "  Total: $total entries"
+    echo "  Data size: $(du -sh "$DATA_DIR" 2>/dev/null | cut -f1)"
+    echo "  Since: $(head -1 "$DATA_DIR/history.log" 2>/dev/null | cut -d'|' -f1 || echo 'N/A')"
 }
 
-cmd_list() {
-    echo "[erp] Items:"
-    if [ -f "$DATA_DIR/items.txt" ]; then
-        cat -n "$DATA_DIR/items.txt"
+_export() {
+    local fmt="${1:-json}"
+    local out="$DATA_DIR/export.$fmt"
+    case "$fmt" in
+        json)
+            echo "[" > "$out"
+            local first=1
+            for f in "$DATA_DIR"/*.log; do
+                [ -f "$f" ] || continue
+                local name=$(basename "$f" .log)
+                while IFS='|' read -r ts val; do
+                    [ $first -eq 1 ] && first=0 || echo "," >> "$out"
+                    printf '  {"type":"%s","time":"%s","value":"%s"}' "$name" "$ts" "$val" >> "$out"
+                done < "$f"
+            done
+            echo "" >> "$out"
+            echo "]" >> "$out"
+            ;;
+        csv)
+            echo "type,time,value" > "$out"
+            for f in "$DATA_DIR"/*.log; do
+                [ -f "$f" ] || continue
+                local name=$(basename "$f" .log)
+                while IFS='|' read -r ts val; do
+                    echo "$name,$ts,$val" >> "$out"
+                done < "$f"
+            done
+            ;;
+        txt)
+            echo "=== Erp Export ===" > "$out"
+            for f in "$DATA_DIR"/*.log; do
+                [ -f "$f" ] || continue
+                echo "--- $(basename "$f" .log) ---" >> "$out"
+                cat "$f" >> "$out"
+                echo "" >> "$out"
+            done
+            ;;
+        *) echo "Formats: json, csv, txt"; return 1 ;;
+    esac
+    echo "Exported to $out ($(wc -c < "$out") bytes)"
+}
+
+_status() {
+    echo "=== Erp Status ==="
+    echo "  Version: v2.0.0"
+    echo "  Data dir: $DATA_DIR"
+    echo "  Entries: $(cat "$DATA_DIR"/*.log 2>/dev/null | wc -l) total"
+    echo "  Disk: $(du -sh "$DATA_DIR" 2>/dev/null | cut -f1)"
+    local last=$(tail -1 "$DATA_DIR/history.log" 2>/dev/null || echo "never")
+    echo "  Last activity: $last"
+    echo "  Status: OK"
+}
+
+_search() {
+    local term="${1:?Usage: erp search <term>}"
+    echo "Searching for: $term"
+    local found=0
+    for f in "$DATA_DIR"/*.log; do
+        [ -f "$f" ] || continue
+        local matches=$(grep -i "$term" "$f" 2>/dev/null || true)
+        if [ -n "$matches" ]; then
+            echo "  --- $(basename "$f" .log) ---"
+            echo "$matches" | while read -r line; do
+                echo "    $line"
+                found=$((found + 1))
+            done
+        fi
+    done
+    [ $found -eq 0 ] && echo "  No matches found."
+}
+
+_recent() {
+    echo "=== Recent Activity ==="
+    if [ -f "$DATA_DIR/history.log" ]; then
+        tail -20 "$DATA_DIR/history.log" | while IFS='' read -r line; do
+            echo "  $line"
+        done
     else
-        echo "  (empty)"
+        echo "  No activity yet."
     fi
 }
 
-cmd_add() {
-    local item="${1:?Usage: erp add <item>}"
-    echo "$item" >> "$DATA_DIR/items.txt"
-    echo "Added: $item"
-}
-
-cmd_status() {
-    echo "[erp] Status"
-    echo "  Data dir: $DATA_DIR"
-    local count=0
-    [ -f "$DATA_DIR/items.txt" ] && count=$(wc -l < "$DATA_DIR/items.txt")
-    echo "  Items: $count"
-    echo "  Version: $VERSION"
-}
-
-cmd_export() {
-    local fmt="${1:-json}"
-    echo "[erp] Exporting as $fmt..."
-    case "$fmt" in
-        json)
-            echo "{"
-            echo "  \"tool\": \"erp\","
-            echo "  \"version\": \"$VERSION\","
-            local items="[]"
-            if [ -f "$DATA_DIR/items.txt" ]; then
-                items=$(python3 -c "
-import json
-with open('$DATA_DIR/items.txt') as f:
-    print(json.dumps([l.strip() for l in f if l.strip()]))
-" 2>/dev/null || echo "[]")
-            fi
-            echo "  \"items\": $items"
-            echo "}"
-            ;;
-        csv) [ -f "$DATA_DIR/items.txt" ] && cat "$DATA_DIR/items.txt" || echo "(empty)";;
-        txt) cmd_status;;
-        *) echo "Formats: json, csv, txt";;
-    esac
-}
-
+# Main dispatch
 case "${1:-help}" in
-    run) shift; cmd_run "$@";;
-    list) shift; cmd_list "$@";;
-    add) shift; cmd_add "$@";;
-    status) shift; cmd_status "$@";;
-    export) shift; cmd_export "$@";;
-    help|-h|--help) show_help;;
-    version|-v) echo "erp v$VERSION";;
-    *) echo "Unknown: $1"; show_help; exit 1;;
+    add)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent add entries:"
+            tail -20 "$DATA_DIR/add.log" 2>/dev/null || echo "  No entries yet. Use: erp add <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/add.log"
+            local total=$(wc -l < "$DATA_DIR/add.log")
+            echo "  [Erp] add: $input"
+            echo "  Saved. Total add entries: $total"
+            _log "add" "$input"
+        fi
+        ;;
+    plan)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent plan entries:"
+            tail -20 "$DATA_DIR/plan.log" 2>/dev/null || echo "  No entries yet. Use: erp plan <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/plan.log"
+            local total=$(wc -l < "$DATA_DIR/plan.log")
+            echo "  [Erp] plan: $input"
+            echo "  Saved. Total plan entries: $total"
+            _log "plan" "$input"
+        fi
+        ;;
+    track)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent track entries:"
+            tail -20 "$DATA_DIR/track.log" 2>/dev/null || echo "  No entries yet. Use: erp track <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/track.log"
+            local total=$(wc -l < "$DATA_DIR/track.log")
+            echo "  [Erp] track: $input"
+            echo "  Saved. Total track entries: $total"
+            _log "track" "$input"
+        fi
+        ;;
+    review)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent review entries:"
+            tail -20 "$DATA_DIR/review.log" 2>/dev/null || echo "  No entries yet. Use: erp review <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/review.log"
+            local total=$(wc -l < "$DATA_DIR/review.log")
+            echo "  [Erp] review: $input"
+            echo "  Saved. Total review entries: $total"
+            _log "review" "$input"
+        fi
+        ;;
+    streak)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent streak entries:"
+            tail -20 "$DATA_DIR/streak.log" 2>/dev/null || echo "  No entries yet. Use: erp streak <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/streak.log"
+            local total=$(wc -l < "$DATA_DIR/streak.log")
+            echo "  [Erp] streak: $input"
+            echo "  Saved. Total streak entries: $total"
+            _log "streak" "$input"
+        fi
+        ;;
+    remind)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent remind entries:"
+            tail -20 "$DATA_DIR/remind.log" 2>/dev/null || echo "  No entries yet. Use: erp remind <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/remind.log"
+            local total=$(wc -l < "$DATA_DIR/remind.log")
+            echo "  [Erp] remind: $input"
+            echo "  Saved. Total remind entries: $total"
+            _log "remind" "$input"
+        fi
+        ;;
+    prioritize)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent prioritize entries:"
+            tail -20 "$DATA_DIR/prioritize.log" 2>/dev/null || echo "  No entries yet. Use: erp prioritize <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/prioritize.log"
+            local total=$(wc -l < "$DATA_DIR/prioritize.log")
+            echo "  [Erp] prioritize: $input"
+            echo "  Saved. Total prioritize entries: $total"
+            _log "prioritize" "$input"
+        fi
+        ;;
+    archive)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent archive entries:"
+            tail -20 "$DATA_DIR/archive.log" 2>/dev/null || echo "  No entries yet. Use: erp archive <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/archive.log"
+            local total=$(wc -l < "$DATA_DIR/archive.log")
+            echo "  [Erp] archive: $input"
+            echo "  Saved. Total archive entries: $total"
+            _log "archive" "$input"
+        fi
+        ;;
+    tag)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent tag entries:"
+            tail -20 "$DATA_DIR/tag.log" 2>/dev/null || echo "  No entries yet. Use: erp tag <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/tag.log"
+            local total=$(wc -l < "$DATA_DIR/tag.log")
+            echo "  [Erp] tag: $input"
+            echo "  Saved. Total tag entries: $total"
+            _log "tag" "$input"
+        fi
+        ;;
+    timeline)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent timeline entries:"
+            tail -20 "$DATA_DIR/timeline.log" 2>/dev/null || echo "  No entries yet. Use: erp timeline <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/timeline.log"
+            local total=$(wc -l < "$DATA_DIR/timeline.log")
+            echo "  [Erp] timeline: $input"
+            echo "  Saved. Total timeline entries: $total"
+            _log "timeline" "$input"
+        fi
+        ;;
+    report)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent report entries:"
+            tail -20 "$DATA_DIR/report.log" 2>/dev/null || echo "  No entries yet. Use: erp report <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/report.log"
+            local total=$(wc -l < "$DATA_DIR/report.log")
+            echo "  [Erp] report: $input"
+            echo "  Saved. Total report entries: $total"
+            _log "report" "$input"
+        fi
+        ;;
+    weekly-review)
+        shift
+        if [ $# -eq 0 ]; then
+            echo "Recent weekly-review entries:"
+            tail -20 "$DATA_DIR/weekly-review.log" 2>/dev/null || echo "  No entries yet. Use: erp weekly-review <input>"
+        else
+            local input="$*"
+            local ts=$(date '+%Y-%m-%d %H:%M')
+            echo "$ts|$input" >> "$DATA_DIR/weekly-review.log"
+            local total=$(wc -l < "$DATA_DIR/weekly-review.log")
+            echo "  [Erp] weekly-review: $input"
+            echo "  Saved. Total weekly-review entries: $total"
+            _log "weekly-review" "$input"
+        fi
+        ;;
+    stats) _stats ;;
+    export) shift; _export "$@" ;;
+    search) shift; _search "$@" ;;
+    recent) _recent ;;
+    status) _status ;;
+    help|--help|-h) _help ;;
+    version|--version|-v) _version ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'erp help' for available commands."
+        exit 1
+        ;;
 esac

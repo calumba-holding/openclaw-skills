@@ -3,9 +3,15 @@
   "slug": "erp",
   "displayName": "Erp",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1773580173941,
-    "commit": "https://github.com/openclaw/skills/commit/847413971107dfa7c5f8185c4220680fdf03c459"
+    "version": "1.0.5",
+    "publishedAt": 1773663696754,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1773580173941,
+      "commit": "https://github.com/openclaw/skills/commit/847413971107dfa7c5f8185c4220680fdf03c459"
+    }
+  ]
 }

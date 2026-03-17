@@ -1,9 +1,10 @@
 ---
 name: erp
-version: 1.0.0
+version: "2.0.0"
 author: BytesAgain
 license: MIT-0
 tags: [erp, tool, utility]
+description: "Erp - command-line tool for everyday use"
 ---
 
 # ERP
@@ -49,6 +50,7 @@ erp export json
 
 ---
 *Powered by BytesAgain | bytesagain.com*
+*Feedback & Feature Requests: https://bytesagain.com/feedback*
 
 - Run `erp help` for all commands
 
