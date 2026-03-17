@@ -1,6 +1,8 @@
 ---
+version: "2.0.0"
 name: bookmark-keeper
 description: "Bookmark manager with tags, dead link checking, and multi-format export. Use when you need to save bookmarks, organize with tags, search saved links, check for dead URLs, or export bookmarks as HTML/Markdown. Triggers on: bookmark, link, URL, save link, favorites, reading later."
+author: BytesAgain
 ---
 
 # Linkwarden
@@ -11,7 +13,7 @@ Bookmark Manager — save & organize links
 
 - Designed for personal daily use — simple and practical
 - No external dependencies — works with standard system tools
-- Data stored locally — your data stays on your machine
+ — your data stays on your machine
 - Original implementation by BytesAgain
 
 ## Commands
