@@ -1,0 +1,11 @@
+{
+  "owner": "rangeking",
+  "slug": "self-evo-agent",
+  "displayName": "self evolving agent",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773837280080,
+    "commit": null
+  },
+  "history": []
+}
