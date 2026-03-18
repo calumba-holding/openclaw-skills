@@ -8,7 +8,7 @@ torchvision>=0.9.0
 # Image processing
 Pillow>=8.0.0
 
-# HTTP requests for API calls
+# HTTP requests
 requests>=2.25.0
 
 # Numerical computing

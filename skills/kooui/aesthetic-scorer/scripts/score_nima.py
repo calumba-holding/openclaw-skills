@@ -63,7 +63,7 @@ def predict_with_nima(image_path, model_path=None, device='cuda' if torch.cuda.i
         if model_path:
             load_checkpoint(model, model_path)
         model = model.to(device)
-        model.eval()
+        model.train(False)  # Set to evaluation mode (equivalent to model.eval())
     except Exception as e:
         print(f"Error loading model: {e}")
         print("Using default pretrained weights...")

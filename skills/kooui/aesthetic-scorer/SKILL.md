@@ -1,8 +1,8 @@
 ---
 name: aesthetic-scorer
-version: "1.4.0"
+version: "1.4.4"
 description: |
-  给你的照片给出打分、评价反馈、给出改进建议或美学分析 / Aesthetic photo scorer with detailed analysis
+  给你的照片打分、评价反馈、给出改进建议或美学分析 / Aesthetic photo scorer with detailed analysis
 author: "WorkBuddy Community"
 tags: [latest, image, 图片, vision, 视觉, aesthetic, 美学, photography, 摄影, scoring, 评分, evaluation, 评估, offline, 离线, ai-powered, AI驱动, bilingual, 双语, chinese, 中文, english, 英文, photo-analysis, 照片分析, deep-learning, 深度学习]
 ---
@@ -96,9 +96,7 @@ Always generate the **detailed evaluation (10分)** in the background first and 
 ```markdown
 ## [Photo Name]
 
-### 综合评分: X.XX/10
-- 从夯到拉等级: 夯/人上人/顶级/NPC/拉完了
-- 评估可靠性: [级别]
+### 综合评分: X.XX/10 (夯/人上人/顶级/NPC/拉完了)
 
 ### 综合分析
 
@@ -134,9 +132,7 @@ Always generate the **detailed evaluation (10分)** in the background first and 
 ```markdown
 ## [Photo Name]
 
-### 综合评分: X.XX/10
-- 从夯到拉等级: 夯/人上人/顶级/NPC/拉完了
-- 评估可靠性: [级别]
+### 综合评分: X.XX/10 (夯/人上人/顶级/NPC/拉完了)
 
 ### 评分解读
 [3-4句话]
@@ -218,13 +214,13 @@ Always generate the **detailed evaluation (10分)** in the background first and 
 | 4.0-5.9 | 较差 | Below average, significant improvements needed |
 | 0.0-3.9 | 很差 | Poor quality, substantial improvements needed |
 
-**重要说明**: 在给出综合评分后,必须在评价中增加一句话说明"从夯到拉"等级:
+**重要说明**: 综合评分格式示例:
 ```
-综合评分: X.XX/10 (等级: 夯)
-综合评分: X.XX/10 (等级: 人上人)
-综合评分: X.XX/10 (等级: 顶级)
-综合评分: X.XX/10 (等级: NPC)
-综合评分: X.XX/10 (等级: 拉完了)
+综合评分: X.XX/10 (夯)
+综合评分: X.XX/10 (人上人)
+综合评分: X.XX/10 (顶级)
+综合评分: X.XX/10 (NPC)
+综合评分: X.XX/10 (拉完了)
 ```
 
 ## Error Handling

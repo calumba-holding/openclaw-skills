@@ -1,6 +1,6 @@
 {
   "skill_name": "aesthetic-scorer",
-  "version": "1.4.0",
+  "version": "1.4.4",
   "models": {
     "improved_predictor": {
       "enabled": true,

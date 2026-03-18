@@ -8,7 +8,6 @@ Outputs only weighted comprehensive score and integrated evaluation (no individu
 import json
 import argparse
 import sys
-import math
 from pathlib import Path
 
 # Import two scoring modules
@@ -33,7 +32,7 @@ def calculate_weighted_score(scores):
         scores: dict of source -> score
 
     Returns:
-        dict with weighted score and consistency analysis
+        dict with weighted score
     """
     # Filter out None values (failed evaluations)
     valid_scores = {k: v for k, v in scores.items() if v is not None}
@@ -44,32 +43,8 @@ def calculate_weighted_score(scores):
     # Calculate weighted average (equal weights)
     weighted_score = sum(valid_scores.values()) / len(valid_scores)
 
-    # Calculate standard deviation
-    score_values = list(valid_scores.values())
-    mean_score = sum(score_values) / len(score_values)
-    variance = sum((x - mean_score) ** 2 for x in score_values) / len(score_values)
-    std_dev = math.sqrt(variance)
-
-    # Determine consistency level
-    if std_dev < 0.5:
-        consistency = "高"
-        consistency_desc = "极高 - 三个评估源高度一致"
-        reliability = "极高"
-    elif std_dev < 1.5:
-        consistency = "中"
-        consistency_desc = "中等 - 各评估源存在合理差异"
-        reliability = "高"
-    else:
-        consistency = "低"
-        consistency_desc = "低 - 评估源存在较大分歧"
-        reliability = "中"
-
     return {
         'weighted_score': weighted_score,
-        'consistency': consistency,
-        'consistency_desc': consistency_desc,
-        'reliability': reliability,
-        'std_dev': std_dev,
         'source_count': len(valid_scores)
     }, None
 
@@ -142,10 +117,6 @@ def synthesize_evaluation(image_path, api_key=None):
         'weighted_score': weighted_result['weighted_score'],
         'level_cn': level_cn,
         'level_en': level_en,
-        'consistency': weighted_result['consistency'],
-        'consistency_desc': weighted_result['consistency_desc'],
-        'reliability': weighted_result['reliability'],
-        'std_dev': weighted_result['std_dev'],
         'source_count': weighted_result['source_count'],
         'sources_failed': sources_failed
     }
@@ -157,20 +128,14 @@ def generate_unified_report(evaluation):
     """Generate unified evaluation report"""
     score = evaluation['weighted_score']
     level_cn = evaluation['level_cn']
-    consistency = evaluation['consistency']
-    consistency_desc = evaluation['consistency_desc']
-    reliability = evaluation['reliability']
 
     report = f"""
 ## 综合美学评估报告
 
-### 综合评分: {score:.2f}/10
-- 评分等级: {level_cn} ({evaluation['level_en'].replace('_', ' ').title()})
-- 一致性: {consistency} ({evaluation['std_dev']:.2f})
-- 评估可靠性: {reliability}
+### 综合评分: {score:.2f}/10 ({level_cn})
 
 ### 评分解读
-基于三个专业评估系统的综合分析，这张照片的最终评分为 {score:.2f} 分。
+基于两个专业评估模型的综合分析，这张照片的最终评分为 {score:.2f} 分。
 """
 
     # Add interpretation based on score
@@ -199,32 +164,10 @@ def generate_unified_report(evaluation):
 建议从基础摄影技巧开始学习，逐步提升构图、光线、色彩和曝光控制能力。
 """
 
-    # Consistency analysis
-    report += f"""
-### 综合分析
-
-#### 评估一致性
-{consistency_desc}
-
-"""
-
-    if reliability == "极高":
-        report += """三个专业评估系统高度一致地认可这张照片的质量。综合评分具有极高的可靠性，
-评估结果值得完全信任。这张照片的评价非常明确和稳定。
-"""
-    elif reliability == "高":
-        report += """三个专业评估系统总体认可这张照片的质量，存在合理的差异是正常的。
-综合评分具有高可靠性，评估结果值得信任。这提供了平衡的、多视角的综合评价。
-"""
-    else:
-        report += """三个专业评估系统对这张照片的评价存在较大分歧。这可能意味着照片的某些方面非常优秀，
-而其他方面则有待改进。综合评分提供了折中的评价，但建议重点关注具体的优点和缺点。
-"""
-
     report += """
 
 #### 构图评价
-综合三个评估系统的分析，这张照片的构图"""
+综合两个评估模型的分析，这张照片的构图"""
 
     # Dynamic composition analysis based on score
     if score >= 7.5:
@@ -247,7 +190,7 @@ def generate_unified_report(evaluation):
     report += """
 
 #### 色彩评价
-综合三个评估系统的分析，这张照片的色彩"""
+综合两个评估模型的分析，这张照片的色彩"""
 
     if score >= 7.5:
         report += """非常和谐。色彩搭配恰当，饱和度和色温控制出色，营造了良好的视觉氛围。
@@ -269,7 +212,7 @@ def generate_unified_report(evaluation):
     report += """
 
 #### 光线评价
-综合三个评估系统的分析，这张照片的光线"""
+综合两个评估模型的分析，这张照片的光线"""
 
     if score >= 7.5:
         report += """运用出色。光线的方向、质量和强度都控制得当，塑造了良好的立体感和氛围。
@@ -291,7 +234,7 @@ def generate_unified_report(evaluation):
     report += """
 
 #### 技术质量评价
-综合三个评估系统的分析，这张照片的技术质量"""
+综合两个评估模型的分析，这张照片的技术质量"""
 
     if score >= 7.5:
         report += """优秀。清晰度高，细节丰富，噪点控制良好，动态范围得当。
@@ -404,14 +347,14 @@ def generate_unified_report(evaluation):
 
     # Add specific overall evaluation
     if score >= 8.5:
-        report += """这是一张非常出色的作品，三个专业评估系统都给予了高度评价。
+        report += """这是一张非常出色的作品，两个专业评估模型都给予了高度评价。
 构图、色彩、光线、技术质量各方面都达到了优秀水平，具有专业水准。
 可以作为您的代表作，适合专业展示、商业用途和摄影比赛。
 继续发挥这种高水平，在创意和细节上追求完美，您会创作出更多优秀作品！
 """
     elif score >= 7.0:
         report += """这是一张质量很高的作品，展示了扎实的摄影技巧和良好的审美。
-三个专业评估系统总体认可这张照片的质量，虽然存在一些改进空间，但整体效果令人满意。
+两个专业评估模型总体认可这张照片的质量，虽然存在一些改进空间，但整体效果令人满意。
 建议在保持现有水平的基础上，在细节和创意上进一步提升，您会达到更高的专业水准。
 """
     elif score >= 5.5:
