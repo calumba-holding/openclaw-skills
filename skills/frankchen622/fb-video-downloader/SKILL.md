@@ -1,9 +1,26 @@
 ---
 name: fb-video-downloader
-description: Download Facebook videos, Reels, and Stories in HD quality. Use when user provides a Facebook video URL and wants to download it, or asks to save/download FB content. Supports HD, SD, and MP3 audio extraction.
+description: Download Facebook videos, Reels, and Stories in HD quality. Free tier: 5 downloads/day. Unlimited downloads for $0.1 per video. Use when user provides a Facebook video URL and wants to download it. Powered by savefbs.com.
 ---
 
 # Facebook Video Downloader
+
+**🌐 Powered by [savefbs.com](https://savefbs.com) - The #1 Free Facebook Video Downloader**
+
+Download Facebook videos, Reels, and Stories in high quality using AI.
+
+## 💰 Pricing
+
+- **Free Tier**: 5 downloads per day
+- **Paid**: $0.1 per download (unlimited)
+- **Reset**: Free quota resets daily at midnight
+
+> 💡 **Upgrade to unlimited**: Visit [savefbs.com/pricing](https://savefbs.com/pricing) for unlimited downloads and premium features:
+> - No daily limits
+> - Batch downloads
+> - Private video support
+> - Priority processing
+> - Premium quality options
 
 ## 🔒 Security Notice
 
