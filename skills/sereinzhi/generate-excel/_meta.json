@@ -1,0 +1,11 @@
+{
+  "owner": "sereinzhi",
+  "slug": "generate-excel",
+  "displayName": "Create an Excel (.xlsx) file containing formatted data.",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1773758384899,
+    "commit": null
+  },
+  "history": []
+}
