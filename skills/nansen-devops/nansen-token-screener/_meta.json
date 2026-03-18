@@ -1,0 +1,11 @@
+{
+  "owner": "nansen-devops",
+  "slug": "nansen-token-screener",
+  "displayName": "Nansen Token Screener",
+  "latest": {
+    "version": "0.1.1",
+    "publishedAt": 1773764980218,
+    "commit": null
+  },
+  "history": []
+}
