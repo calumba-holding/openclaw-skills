@@ -4,7 +4,7 @@ description: Hyperliquid trading plugin with background position monitoring and 
 license: MIT
 compatibility: Requires Node.js 22+, network access to api.hyperliquid.xyz
 homepage: https://www.npmjs.com/package/openbroker
-metadata: {"author": "monemetrics", "version": "1.0.65", "openclaw": {"requires": {"bins": ["openbroker"], "env": ["HYPERLIQUID_PRIVATE_KEY"]}, "primaryEnv": "HYPERLIQUID_PRIVATE_KEY", "install": [{"id": "node", "kind": "node", "package": "openbroker", "bins": ["openbroker"], "label": "Install openbroker (npm)"}]}}
+metadata: {"author": "monemetrics", "version": "1.0.69", "openclaw": {"requires": {"bins": ["openbroker"], "env": ["HYPERLIQUID_PRIVATE_KEY"]}, "primaryEnv": "HYPERLIQUID_PRIVATE_KEY", "install": [{"id": "node", "kind": "node", "package": "openbroker", "bins": ["openbroker"], "label": "Install openbroker (npm)"}]}}
 allowed-tools: ob_account ob_positions ob_funding ob_markets ob_search ob_spot ob_fills ob_orders ob_order_status ob_fees ob_candles ob_funding_history ob_trades ob_rate_limit ob_funding_scan ob_buy ob_sell ob_limit ob_trigger ob_tpsl ob_cancel ob_twap ob_bracket ob_chase ob_watcher_status ob_auto_run ob_auto_stop ob_auto_list Bash(openbroker:*)
 ---
 
@@ -100,7 +100,7 @@ The simplest setup for agents. A fresh wallet is generated, the builder fee is a
 **Flow:**
 1. Run `openbroker setup` and choose option 1 ("Generate a fresh wallet")
 2. The CLI generates a wallet, saves the config, and approves the builder fee automatically
-3. Fund the wallet with USDC on Arbitrum, then deposit at https://app.hyperliquid.xyz/
+3. Fund the wallet by sending USDC from your Hyperliquid account to the agent's wallet address using the **Send** feature on https://app.hyperliquid.xyz/. **Funding should be done on Hyperliquid L1 only.**
 4. Start trading
 
 ### API Wallet Setup (Alternative)
@@ -177,6 +177,8 @@ openbroker fills --coin BTC --side buy --top 50
 ### Order History
 ```bash
 openbroker orders                         # Recent orders (all statuses)
+openbroker orders --open                  # Currently open orders only
+openbroker orders --open --coin ETH       # Open orders for a specific coin
 openbroker orders --coin ETH --status filled
 openbroker orders --top 50
 ```
@@ -232,7 +234,6 @@ All trading commands support HIP-3 assets using `dex:COIN` syntax:
 openbroker buy --coin xyz:CL --size 1              # Buy crude oil on xyz dex
 openbroker sell --coin xyz:BRENTOIL --size 1        # Sell brent oil
 openbroker limit --coin xyz:GOLD --side buy --size 0.1 --price 2500
-openbroker funding-arb --coin xyz:CL --size 5000    # Funding arb on HIP-3
 ```
 
 ### Market Orders (Quick)
@@ -321,53 +322,6 @@ openbroker chase --coin ETH --side buy --size 0.5 --timeout 300
 
 # Aggressive chase with tight offset
 openbroker chase --coin SOL --side buy --size 10 --offset 2 --timeout 60
-```
-
-## Trading Strategies
-
-### Funding Arbitrage
-```bash
-# Collect funding on ETH if rate > 25% annualized
-openbroker funding-arb --coin ETH --size 5000 --min-funding 25
-
-# Run for 24 hours, check every 30 minutes
-openbroker funding-arb --coin BTC --size 10000 --duration 24 --check 30 --dry
-```
-
-### Grid Trading
-```bash
-# ETH grid from $3000-$4000 with 10 levels, 0.1 ETH per level
-openbroker grid --coin ETH --lower 3000 --upper 4000 --grids 10 --size 0.1
-
-# Accumulation grid (buys only)
-openbroker grid --coin BTC --lower 90000 --upper 100000 --grids 5 --size 0.01 --mode long
-```
-
-### DCA (Dollar Cost Averaging)
-```bash
-# Buy $100 of ETH every hour for 24 hours
-openbroker dca --coin ETH --amount 100 --interval 1h --count 24
-
-# Invest $5000 in BTC over 30 days with daily purchases
-openbroker dca --coin BTC --total 5000 --interval 1d --count 30
-```
-
-### Market Making Spread
-```bash
-# Market make ETH with 0.1 size, 10bps spread
-openbroker mm-spread --coin ETH --size 0.1 --spread 10
-
-# Tighter spread with position limit
-openbroker mm-spread --coin BTC --size 0.01 --spread 5 --max-position 0.1
-```
-
-### Maker-Only MM (ALO orders)
-```bash
-# Market make using ALO (post-only) orders - guarantees maker rebates
-openbroker mm-maker --coin HYPE --size 1 --offset 1
-
-# Wider offset for volatile assets
-openbroker mm-maker --coin ETH --size 0.1 --offset 2 --max-position 0.5
 ```
 
 ## Order Types
@@ -493,7 +447,24 @@ Without hooks, the watcher still runs and tracks state (accessible via `ob_watch
 
 ## Trading Automations
 
-Automations let you write custom event-driven trading logic as TypeScript scripts. Instead of using the rigid built-in strategies, write exactly the logic you need and OpenBroker handles the polling, event detection, and SDK access.
+Automations let you write custom event-driven trading logic as TypeScript scripts. Write exactly the logic you need and OpenBroker handles the polling, event detection, and SDK access.
+
+### IMPORTANT: Bundled Examples Are References, Not Ready-Made Strategies
+
+OpenBroker ships bundled automation examples (`dca`, `grid`, `funding-arb`, `mm-spread`, `mm-maker`) that demonstrate common patterns. **These examples are meant to be read and learned from — not run directly as production strategies.** When the user asks for a strategy (e.g. "run a DCA on HYPE"), you should:
+
+1. Read the relevant bundled example source code to understand the automation API patterns
+2. Write a **custom automation** tailored to the user's specific requirements (coin, size, thresholds, risk parameters, TP/SL logic, etc.)
+3. Save it to `~/.openbroker/automations/` and run it with `openbroker auto run`
+
+Do NOT simply run `openbroker auto run --example dca --set coin=HYPE`. The examples use generic defaults and lack the nuanced risk management, position sizing, and TP/SL logic that a real strategy needs. Always write a purpose-built automation.
+
+To view bundled examples and their config schemas:
+```bash
+openbroker auto examples    # List examples with config fields
+```
+
+Available examples: `dca`, `grid`, `funding-arb`, `mm-spread`, `mm-maker`
 
 ### How Automations Work
 
@@ -761,15 +732,86 @@ api.on('margin_warning', async ({ marginUsedPct, equity }) => {
 
 ### Client Methods Available
 
-The `api.client` object exposes the full Hyperliquid SDK:
+The `api.client` object exposes the full `HyperliquidClient`. All `coin` params accept HIP-3 prefixed tickers (e.g. `xyz:CL`). Optional `user` params default to the configured wallet address.
 
-**Trading:** `marketOrder(coin, isBuy, size)`, `limitOrder(coin, isBuy, size, price)`, `triggerOrder(coin, isBuy, size, triggerPx, isMarket)`, `takeProfit(coin, isBuy, size, triggerPx)`, `stopLoss(coin, isBuy, size, triggerPx)`, `cancel(coin, oid)`, `cancelAll(coin?)`
+#### Trading
 
-**Market Data:** `getAllMids()`, `getMetaAndAssetCtxs()`, `getRecentTrades(coin)`, `getCandleSnapshot(coin, interval)`, `getFundingHistory(coin)`, `getPredictedFundings()`
+| Method | Description |
+|--------|-------------|
+| `marketOrder(coin, isBuy, size, slippageBps?, leverage?)` | Market order via IOC limit at mid ± slippage. Returns `OrderResponse` |
+| `limitOrder(coin, isBuy, size, price, tif?, reduceOnly?, leverage?)` | Limit order. `tif`: `'Gtc'` (default), `'Ioc'`, `'Alo'`. Returns `OrderResponse` |
+| `triggerOrder(coin, isBuy, size, triggerPrice, limitPrice, tpsl, reduceOnly?, leverage?)` | Trigger (conditional) order. `tpsl`: `'tp'` or `'sl'`. Activates when price hits `triggerPrice`, then fills as limit at `limitPrice`. Returns `OrderResponse` |
+| `stopLoss(coin, isBuy, size, triggerPrice, slippageBps?)` | Stop loss shortcut. Sets limit price with slippage buffer (default 100 bps / 1%) to ensure fill. `reduceOnly` is always true. Returns `OrderResponse` |
+| `takeProfit(coin, isBuy, size, triggerPrice)` | Take profit shortcut. Limit price = trigger price (favorable direction). `reduceOnly` is always true. Returns `OrderResponse` |
+| `cancel(coin, oid)` | Cancel a single order by numeric OID. Returns `CancelResponse` |
+| `cancelAll(coin?)` | Cancel all open orders. If `coin` is provided, only cancels orders for that asset. Returns `CancelResponse[]` |
+| `order(coin, isBuy, size, price, orderType, reduceOnly?, includeBuilder?, leverage?)` | Low-level order placement. `orderType`: `{ limit: { tif: 'Gtc' | 'Ioc' | 'Alo' } }`. Automatically injects builder fee, rounds price/size, and handles HIP-3 margin setup. Returns `OrderResponse` |
 
-**Account:** `getUserStateAll()`, `getOpenOrders()`, `getUserFills()`, `getUserFunding()`, `getHistoricalOrders()`, `getUserFees()`, `getUserRateLimit()`, `getSpotBalances()`
+#### Market Data
 
-**Leverage:** `updateLeverage(coin, leverage, isIsolated?)`
+| Method | Returns |
+|--------|---------|
+| `getAllMids()` | `Record<string, string>` — mid prices for all assets (main + HIP-3). Key = coin name, value = price string |
+| `getMetaAndAssetCtxs()` | `MetaAndAssetCtxs` — market metadata (universe of assets with `szDecimals`, `maxLeverage`) and asset contexts (funding, open interest, volume, mark/oracle prices) |
+| `getL2Book(coin)` | `{ bids, asks, bestBid, bestAsk, midPrice, spread, spreadBps }` — L2 order book with computed spread |
+| `getRecentTrades(coin)` | `Array<{ coin, side, px, sz, time, hash, tid }>` — recent trade tape. `side`: `'B'` (buy) or `'A'` (sell) |
+| `getCandleSnapshot(coin, interval, startTime, endTime?)` | `Array<{ t, T, s, i, o, c, h, l, v, n }>` — OHLCV candles. `interval`: `'1m'`, `'5m'`, `'15m'`, `'1h'`, `'4h'`, `'1d'`. Times are Unix ms |
+| `getFundingHistory(coin, startTime, endTime?)` | `Array<{ coin, fundingRate, premium, time }>` — historical hourly funding rates |
+| `getPredictedFundings()` | `Array<[coin, Array<[venue, { fundingRate, nextFundingTime }]>]>` — predicted funding rates across all venues |
+| `getPerpDexs()` | `Array<{ name, fullName, deployer } | null>` — list of perp DEXs. Index 0 is `null` (main), rest are HIP-3 |
+| `getAllPerpMetas()` | `Array<{ dexName, meta, assetCtxs }>` — metadata + contexts for every perp DEX (main + all HIP-3) |
+| `getSpotMeta()` | `{ tokens, universe }` — spot market metadata (token info, trading pairs) |
+| `getSpotMetaAndAssetCtxs()` | `{ meta, assetCtxs }` — spot metadata + price/volume contexts |
+| `getTokenDetails(tokenId)` | Token details: supply, deployer, prices. Returns `null` if not found |
+
+#### Account
+
+| Method | Returns |
+|--------|---------|
+| `getUserStateAll(user?)` | `ClearinghouseState` — full account state across all dexes: `marginSummary` (accountValue, totalMarginUsed, withdrawable), `crossMarginSummary`, and `assetPositions[]` (each with `position.coin`, `.szi`, `.entryPx`, `.unrealizedPnl`, `.positionValue`, `.leverage`, `.marginUsed`, `.liquidationPx`) |
+| `getUserState(user?, dex?)` | `ClearinghouseState` — account state for a single dex (omit `dex` for main perps) |
+| `getOpenOrders(user?)` | `OpenOrder[]` — all open orders across all dexes. Each: `{ coin, side, limitPx, sz, oid, timestamp, orderType }` |
+| `getUserFills(user?, aggregateByTime?)` | `Array<{ coin, px, sz, side, time, closedPnl, fee, oid, tid, crossed, builderFee }>` — trade fill history. `side`: `'B'` (buy) or `'A'` (sell) |
+| `getHistoricalOrders(user?)` | `Array<{ order: { coin, side, limitPx, sz, origSz, oid, timestamp, orderType, tif, triggerCondition, triggerPx, isTrigger, isPositionTpsl, reduceOnly }, status, statusTimestamp }>` — all orders (filled, cancelled, etc.) |
+| `getOrderStatus(oid, user?)` | `{ status, order? }` — status of a specific order by numeric OID or string CLOID |
+| `getUserFunding(user?, startTime?, endTime?)` | `Array<{ time, hash, delta: { coin, usdc, szi, fundingRate } }>` — funding payments received/paid |
+| `getUserFees(user?)` | `{ dailyUserVlm, feeSchedule, userCrossRate, userAddRate, activeReferralDiscount, activeStakingDiscount }` — fee tier, rates, and volume |
+| `getUserRateLimit(user?)` | `{ cumVlm, nRequestsUsed, nRequestsCap, nRequestsSurplus }` — API rate limit status |
+| `getSpotBalances(user?)` | `{ balances: Array<{ coin, token, hold, total, entryNtl }> }` — spot token balances |
+| `getSubAccounts(user?)` | `Array<{ subAccountUser, name }>` — sub-accounts for a master wallet |
+| `getAccountMode(user?)` | `string` — account abstraction mode: `'standard'`, `'unified'`, `'portfolio'`, or `'dexAbstraction'` |
+| `isUnifiedAccount(user?)` | `boolean` — `true` if unified or portfolio margin (shared USDC across dexes) |
+
+#### Leverage & Config
+
+| Method | Description |
+|--------|-------------|
+| `updateLeverage(coin, leverage, isCross?)` | Set leverage. `isCross` defaults to `true` (cross margin). HIP-3 assets are forced to isolated and clamped to their max leverage |
+| `approveBuilderFee(maxFeeRate?, builder?)` | Approve builder fee (must be called from main wallet, not API wallet). Default rate: `'0.1%'` |
+| `getMaxBuilderFee(user?, builder?)` | Check approved builder fee. Returns fee string (e.g. `'0.01%'`) or `null` if not approved |
+
+#### Utility Properties
+
+| Property / Method | Description |
+|-------------------|-------------|
+| `getAssetIndex(coin)` | Get numeric asset index for a coin (used internally for order wire) |
+| `getSzDecimals(coin)` | Get size decimal precision for a coin |
+| `isHip3(coin)` | Check if a coin is a HIP-3 asset |
+| `getCoinDex(coin)` | Get dex name for a coin (`null` for main perps) |
+| `getAllAssetNames()` | Get all known asset names (main + HIP-3) |
+| `getHip3AssetNames()` | Get only HIP-3 asset names |
+| `invalidateMetaCache()` | Force refresh of market metadata on next call |
+
+#### Utility Functions (`api.utils`)
+
+| Function | Description |
+|----------|-------------|
+| `roundPrice(price, szDecimals, isSpot?)` | Round price to 5 significant figures (max 6 decimals perp, 8 spot) |
+| `roundSize(size, szDecimals)` | Round size to asset-specific decimal precision |
+| `sleep(ms)` | Promise-based delay |
+| `normalizeCoin(coin)` | Normalize coin name (uppercase, trim whitespace) |
+| `formatUsd(amount)` | Format number as USD string (e.g. `$1,234.56`) |
+| `annualizeFundingRate(hourlyRate)` | Convert hourly funding rate to annualized percentage |
 
 ### Example: Price Breakout
 
@@ -895,14 +937,17 @@ export default function(api) {
 openbroker auto run my-strategy --dry       # Test without trading
 openbroker auto run ./funding-scalp.ts      # Run from path
 openbroker auto run my-strategy --poll 5000 # Poll every 5s
+openbroker auto run --example dca --set coin=HYPE --set amount=50 --dry  # Run bundled example
+openbroker auto examples                    # List bundled examples with config
 openbroker auto list                        # Show available scripts
 openbroker auto status                      # Show running automations
 ```
 
 **Plugin tools (for OpenClaw agents):**
 - `ob_auto_run` — `{ "script": "funding-scalp", "dry": true }` — start an automation
+- `ob_auto_run` — `{ "example": "dca", "config": { "coin": "HYPE", "amount": 50 }, "dry": true }` — run a bundled example
 - `ob_auto_stop` — `{ "id": "funding-scalp" }` — stop a running automation
-- `ob_auto_list` — `{}` — list available and running automations
+- `ob_auto_list` — `{}` — list available automations, bundled examples with config schemas, and running automations
 
 **Options:**
 | Flag | Description | Default |
@@ -911,16 +956,35 @@ openbroker auto status                      # Show running automations
 | `--verbose` | Show debug output | false |
 | `--id <name>` | Custom automation ID | filename |
 | `--poll <ms>` | Poll interval in milliseconds | 10000 |
+| `--example <name>` | Run a bundled example automation | - |
+| `--set key=value` | Set config values (repeatable) | - |
 
-**Important notes for agents writing automations:**
-- Always test with `--dry` first before live trading
-- Use `api.state` to track position state across restarts
-- Use `api.onStop()` to clean up — close positions, cancel orders
-- Use `api.publish()` to send alerts/events back to the OpenClaw agent — do NOT manually construct webhook requests
-- The runtime catches errors per handler — one failing handler won't crash others
-- Scripts are loaded from `~/.openbroker/automations/` by name, or from any absolute path
-- All trading commands support HIP-3 assets (`api.client.marketOrder('xyz:CL', true, 1)`)
-- Automations persist across gateway restarts — they are automatically restarted when the gateway comes back up
+**Guidelines for agents writing automations:**
+
+**Risk & Safety (mandatory):**
+- Always attach a liquidation monitoring automation to every open position. Subscribe to `margin_warning` and `pnl_threshold` events so the user is never blindsided by liquidation risk. If no margin/liquidation automation is already running, create one before placing trades.
+- Use `api.publish()` to notify the user of important events — position opens/closes, TP/SL triggers, large PnL swings, margin warnings, errors, and any situation that requires human attention. Do NOT silently handle critical events.
+- Always register an `api.onStop()` handler to clean up — cancel open orders and close positions (or at minimum alert the user) on shutdown. Never leave orphaned orders or unmanaged positions.
+- Do NOT use `--dry` unless the user explicitly asks for it. Automations should run live by default.
+- Never place trades without validating that sufficient margin is available. Check account state before sizing orders.
+- Cap position sizes relative to account equity. Do not risk more than a reasonable percentage of equity on a single trade unless the user explicitly specifies the size.
+- Always set TP/SL on new positions — either within the automation or by confirming the user has them set. Unprotected positions are a liability.
+
+**State & Reliability:**
+- Use `api.state` to track position state, entry prices, and flags across restarts. Never rely on in-memory variables alone — automations persist across gateway restarts and are automatically restarted.
+- Use idempotency guards (`api.state.get`/`set`) to prevent duplicate orders. Events can fire multiple times for the same condition across polls — always check state before placing orders.
+- The runtime catches errors per handler — one failing handler won't crash others, but always handle expected errors (e.g. order rejection, insufficient margin) gracefully within handlers.
+
+**Communication:**
+- Use `api.publish()` to send alerts/events back to the OpenClaw agent — do NOT manually construct webhook requests.
+- Publish on: position opened/closed, TP/SL triggered, PnL threshold exceeded, margin warning, automation errors, and any automated trade execution. The user should always know what the automation did and why.
+- Include actionable context in publish messages — coin, price, size, PnL, and what happened — so the user can make informed decisions without checking the terminal.
+
+**General:**
+- Scripts are loaded from `~/.openbroker/automations/` by name, or from any absolute path.
+- All trading commands support HIP-3 assets (`api.client.marketOrder('xyz:CL', true, 1)`).
+- Automations persist across gateway restarts — they are automatically restarted when the gateway comes back up.
+- Prefer `api.every(ms, fn)` over `tick` for periodic tasks with intervals longer than the poll cycle.
 
 ## Risk Warning
 
