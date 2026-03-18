@@ -1,0 +1,4 @@
+interface:
+  display_name: "AudioClaw Skills Voice Intake"
+  short_description: "AudioClaw speech-to-text intake for voice messages"
+  default_prompt: "Use $audioclaw-skills-voice-intake to transcribe a user voice message with SenseAudio and package it for AudioClaw."
