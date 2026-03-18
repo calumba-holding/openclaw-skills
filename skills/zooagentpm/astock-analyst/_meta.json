@@ -1,0 +1,11 @@
+{
+  "owner": "zooagentpm",
+  "slug": "astock-analyst",
+  "displayName": "A 股全流程量化决策系统",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1773721311890,
+    "commit": null
+  },
+  "history": []
+}
