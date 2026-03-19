@@ -1,13 +1,18 @@
 {
   "owner": "autogame-17",
   "slug": "capability-evolver",
-  "displayName": "Evolver",
+  "displayName": "Capability Evolver",
   "latest": {
-    "version": "1.29.9",
-    "publishedAt": 1773559659955,
-    "commit": "https://github.com/openclaw/skills/commit/937ca0bcd3238fd83c96c4bd80efb0b15dc59eab"
+    "version": "1.32.2",
+    "publishedAt": 1773766396726,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.29.9",
+      "publishedAt": 1773559659955,
+      "commit": "https://github.com/openclaw/skills/commit/937ca0bcd3238fd83c96c4bd80efb0b15dc59eab"
+    },
     {
       "version": "1.27.3",
       "publishedAt": 1772839251530,
