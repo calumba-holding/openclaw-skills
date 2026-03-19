@@ -1,13 +1,18 @@
 {
   "owner": "rnwy",
   "slug": "rnwy",
-  "displayName": "RNWY.com",
+  "displayName": "AI Fake Review, Sybil and Sock Puppet Detector from RNWY.com (MCP + REST)",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1773221628031,
-    "commit": "https://github.com/openclaw/skills/commit/2975627be175123473a613fc9d59b9026348a8d2"
+    "version": "1.0.9",
+    "publishedAt": 1773859129688,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1773221628031,
+      "commit": "https://github.com/openclaw/skills/commit/2975627be175123473a613fc9d59b9026348a8d2"
+    },
     {
       "version": "1.0.6",
       "publishedAt": 1771484310750,
