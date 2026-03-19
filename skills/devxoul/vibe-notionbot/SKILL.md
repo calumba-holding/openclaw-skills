@@ -1,7 +1,7 @@
 ---
 name: vibe-notionbot
 description: Interact with Notion workspaces using official API - manage pages, databases, blocks, users, and comments
-version: 0.9.0
+version: 1.2.2
 allowed-tools: Bash(vibe-notionbot:*)
 metadata:
   openclaw:
@@ -138,6 +138,8 @@ vibe-notionbot database create --parent <page_id> --title "My Database" --proper
 
 # Update a database schema or title
 vibe-notionbot database update <database_id> --title "Updated Title"
+vibe-notionbot database update <database_id> --properties '{"Status": {"select": {"options": [{"name": "Active"}, {"name": "Archived"}]}}}'
+vibe-notionbot database update <database_id> --title "Updated Title" --properties '{"Status": {"select": {}}}'
 
 # Delete a property from a database
 vibe-notionbot database delete-property <database_id> --property "Status"
@@ -377,7 +379,7 @@ Common errors from the Notion API:
 The `vibe-notion` package is not installed. Run it directly using a package runner. Ask the user which one to use:
 
 ```bash
-npx -p vibe-notion vibe-notionbot ...
+npx -y -p vibe-notion vibe-notionbot ...
 bunx -p vibe-notion vibe-notionbot ...
 pnpm dlx --package vibe-notion vibe-notionbot ...
 ```
