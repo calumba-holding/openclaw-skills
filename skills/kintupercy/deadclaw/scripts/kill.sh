@@ -51,11 +51,20 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --trigger-source)
-            TRIGGER_SOURCE="$2"
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --trigger-source requires a value"
+                exit 1
+            fi
+            # Sanitize: strip newlines/control chars to prevent log injection
+            TRIGGER_SOURCE=$(echo "$2" | tr -d '\n\r' | head -c 200)
             shift 2
             ;;
         --trigger-method)
-            TRIGGER_METHOD="$2"
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --trigger-method requires a value"
+                exit 1
+            fi
+            TRIGGER_METHOD=$(echo "$2" | tr -d '\n\r' | head -c 200)
             shift 2
             ;;
         *)
@@ -206,10 +215,15 @@ find_openclaw_processes() {
 
     # Pattern 7: Processes matching the OPENCLAW_PROCESS_PATTERN env var
     # (allows users to add custom patterns for their specific setup)
+    # Safety: reject overly broad patterns that could match everything
     if [[ -n "${OPENCLAW_PROCESS_PATTERN:-}" ]]; then
-        while IFS= read -r pid; do
-            [[ -n "$pid" ]] && pids+=("$pid")
-        done < <(pgrep -f "${OPENCLAW_PROCESS_PATTERN}" 2>/dev/null || true)
+        if [[ "${OPENCLAW_PROCESS_PATTERN}" == ".*" || "${OPENCLAW_PROCESS_PATTERN}" == "*" || "${OPENCLAW_PROCESS_PATTERN}" == "." || ${#OPENCLAW_PROCESS_PATTERN} -lt 3 ]]; then
+            log_event "WARNING: OPENCLAW_PROCESS_PATTERN='${OPENCLAW_PROCESS_PATTERN}' is too broad — ignored for safety. Use a specific pattern (3+ chars)."
+        else
+            while IFS= read -r pid; do
+                [[ -n "$pid" ]] && pids+=("$pid")
+            done < <(pgrep -f "${OPENCLAW_PROCESS_PATTERN}" 2>/dev/null || true)
+        fi
     fi
 
     # Deduplicate PIDs (guard against empty array)

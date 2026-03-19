@@ -39,6 +39,11 @@ WORKSPACE="${DEADCLAW_WORKSPACE:-${OPENCLAW_WORKSPACE:-}}"
 CHECK_INTERVAL=60   # seconds between checks
 GRACE_PERIOD=300    # seconds to wait before first check (lets sessions settle after restart)
 
+# Validate numeric thresholds — fall back to defaults if non-numeric
+[[ "$MAX_RUNTIME_MIN" =~ ^[0-9]+$ ]] || { echo "Warning: DEADCLAW_MAX_RUNTIME_MIN='${MAX_RUNTIME_MIN}' is not a number. Using default 30." >&2; MAX_RUNTIME_MIN=30; }
+[[ "$MAX_TOKENS" =~ ^[0-9]+$ ]] || { echo "Warning: DEADCLAW_MAX_TOKENS='${MAX_TOKENS}' is not a number. Using default 50000." >&2; MAX_TOKENS=50000; }
+[[ "$TOKEN_WINDOW_MIN" =~ ^[0-9]+$ ]] || { echo "Warning: DEADCLAW_TOKEN_WINDOW_MIN='${TOKEN_WINDOW_MIN}' is not a number. Using default 10." >&2; TOKEN_WINDOW_MIN=10; }
+
 DRY_RUN=false
 
 # ---------------------------------------------------------------------------
