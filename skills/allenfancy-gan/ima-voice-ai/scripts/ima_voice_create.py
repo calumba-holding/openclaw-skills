@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 IMA Voice/Music Creation Script — ima_voice_create.py
-Version: 1.1.0
+Version: 1.2.2
 
 Music/audio generation via IMA Open API (text_to_music only).
 Flow: product list → virtual param resolution → task create → poll status.
@@ -9,18 +9,16 @@ Flow: product list → virtual param resolution → task create → poll status.
 Models: Suno (sonic), DouBao BGM (GenBGM), DouBao Song (GenSong).
 
 Usage:
-  python3 ima_voice_create.py --api-key ima_xxx --model-id sonic \\
+  IMA_API_KEY=ima_xxx python3 ima_voice_create.py --model-id sonic \\
     --prompt "upbeat lo-fi hip hop, 90 BPM"
-
-Logs: ~/.openclaw/logs/ima_skills/ima_create_YYYYMMDD.log
 """
 
 import argparse
 import json
 import os
+import re
 import sys
 import time
-from datetime import datetime, timezone
 
 try:
     import requests
@@ -28,31 +26,24 @@ except ImportError:
     print("requests not installed. Run: pip install requests", file=sys.stderr)
     sys.exit(1)
 
-# Import logger module
-try:
-    from ima_logger import setup_logger, cleanup_old_logs
-    logger = setup_logger("ima_skills")
-    cleanup_old_logs(days=7)
-except ImportError:
-    # Fallback: create basic logger if ima_logger not available
-    import logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s | %(levelname)-5s | %(funcName)-20s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    logger = logging.getLogger("ima_skills")
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)-5s | %(funcName)-20s | %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger("ima_skills")
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 
 DEFAULT_BASE_URL = "https://api.imastudio.com"
-PREFS_PATH       = os.path.expanduser("~/.openclaw/memory/ima_prefs.json")
 TASK_TYPE        = "text_to_music"  # Fixed task type for voice/music generation
 
 # Poll configuration for music generation
 POLL_CONFIG = {
     "interval": 5,
-    "max_wait": 300,  # Increased for Suno (slow generation, 120-180s typical)
+    "max_wait": 480,  # 8-minute cap for text_to_music polling
 }
 
 
@@ -62,7 +53,7 @@ def make_headers(api_key: str, language: str = "en") -> dict:
     return {
         "Authorization":  f"Bearer {api_key}",
         "Content-Type":   "application/json",
-        "User-Agent":     "IMA-OpenAPI-Client/Skill-1.0.2",
+        "User-Agent":     "IMA-OpenAPI-Client/Skill-1.2.2",
         "x-app-source":   "ima_skills",
         "x_app_language": language,
     }
@@ -345,8 +336,6 @@ def create_task(base_url: str, api_key: str, model_params: dict,
             elif code == 4008:
                 error_msg += "\n\n💡 Insufficient points to create this task"
                 error_msg += "\n🔗 Buy Credits: https://www.imaclaw.ai/imaclaw/subscription"
-            else:
-                error_msg += f"\nrequest={json.dumps(payload, ensure_ascii=False)}"
             
             raise RuntimeError(error_msg)
 
@@ -716,82 +705,145 @@ def create_task_with_reflection(base_url: str, api_key: str, model_params: dict,
     return None, reflection
 
 
-def generate_user_suggestion(reflection: ReflectionLog, model_params: dict) -> str:
-    """
-    Generate user-friendly error message from reflection log.
-    
-    Shows what went wrong and suggests alternative models/parameters.
-    """
-    if not reflection.attempts:
-        return "❌ 音频生成失败：未知错误"
-    
-    last_attempt = reflection.attempts[-1]
-    error_code = last_attempt.get("error_code")
-    removed_params = []
-    
-    # Collect all removed params across attempts
-    for attempt in reflection.attempts:
-        removed_params.extend(attempt.get("removed_params", []))
-    
-    removed_params = list(set(removed_params))  # Deduplicate
-    
-    msg_parts = ["❌ 音频生成失败"]
-    msg_parts.append(f"\n• 尝试次数: {len(reflection.attempts)}")
-    msg_parts.append(f"\n• 模型: {model_params['model_name']}")
-    
-    if removed_params:
-        msg_parts.append(f"\n• 不支持的参数: {', '.join(removed_params)}")
-    
-    if error_code == 6009:
-        msg_parts.append("\n\n❓ 原因: 模型不支持当前参数组合")
-        msg_parts.append("\n💡 建议:")
-        msg_parts.append("\n  1. 尝试其他模型（推荐: Suno sonic, DouBao GenBGM）")
-        msg_parts.append("\n  2. 移除不支持的参数")
-    elif error_code == 6010:
-        msg_parts.append("\n\n❓ 原因: 参数配置与模型不匹配")
-        msg_parts.append("\n💡 建议:")
-        msg_parts.append("\n  1. 使用模型的默认参数")
-        msg_parts.append("\n  2. 尝试其他模型")
-    else:
-        msg_parts.append("\n\n❓ 原因: 生成参数配置异常")
-        msg_parts.append("\n💡 建议: 换个模型试试（推荐: Suno sonic）")
-    
-    # Add reflection log (condensed)
-    msg_parts.append("\n\n📝 反省日志:")
-    for attempt in reflection.attempts:
-        msg_parts.append(f"\n  [{attempt['attempt']}] {attempt['reflection']}")
-    
-    return "".join(msg_parts)
+def extract_error_info(exception: Exception) -> dict:
+    error_str = str(exception)
+    if isinstance(exception, TimeoutError):
+        return {"code": "timeout", "message": error_str, "type": "timeout"}
+    code_match = re.search(r'code[=:]?\s*(\d+)', error_str, re.IGNORECASE)
+    if code_match:
+        code = int(code_match.group(1))
+        return {"code": code, "message": error_str, "type": f"api_{code}"}
+    return {"code": "unknown", "message": error_str, "type": "unknown"}
 
 
-# ─── Step 3: Create Task (Legacy Wrapper) ─────────────────────────────────────
+def build_contextual_diagnosis(error_info: dict,
+                               model_params: dict,
+                               current_params: dict | None,
+                               reflection: ReflectionLog | None = None) -> dict:
+    code = error_info.get("code")
+    raw_message = str(error_info.get("message") or "")
+    msg_lower = raw_message.lower()
+    model_name = model_params.get("model_name") or "unknown_model"
+    model_id = model_params.get("model_id") or "unknown_model_id"
+    current_params = current_params or {}
 
-def load_prefs() -> dict:
-    try:
-        with open(PREFS_PATH, encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+    removed_params: list[str] = []
+    attempts = 0
+    if reflection and reflection.attempts:
+        attempts = len(reflection.attempts)
+        for a in reflection.attempts:
+            removed_params.extend(a.get("removed_params", []))
+    removed_params = sorted(set(removed_params))
 
-
-def save_pref(user_id: str, model_params: dict):
-    os.makedirs(os.path.dirname(PREFS_PATH), exist_ok=True)
-    prefs = load_prefs()
-    key   = f"user_{user_id}"
-    prefs.setdefault(key, {})[TASK_TYPE] = {
-        "model_id":    model_params["model_id"],
-        "model_name":  model_params["model_name"],
-        "credit":      model_params["credit"],
-        "last_used":   datetime.now(timezone.utc).isoformat(),
+    diagnosis = {
+        "code": code,
+        "confidence": "medium",
+        "headline": "Music generation failed with current model configuration",
+        "reasoning": [],
+        "actions": [],
+        "model_name": model_name,
+        "model_id": model_id,
+        "task_type": TASK_TYPE,
+        "attempts": attempts,
     }
-    with open(PREFS_PATH, "w", encoding="utf-8") as f:
-        json.dump(prefs, f, ensure_ascii=False, indent=2)
+
+    if code == 401 or "unauthorized" in msg_lower:
+        diagnosis["confidence"] = "high"
+        diagnosis["headline"] = "API key is invalid or unauthorized"
+        diagnosis["actions"].append("Regenerate API key: https://www.imaclaw.ai/imaclaw/apikey")
+        diagnosis["actions"].append("Retry with the new key in IMA_API_KEY environment variable.")
+        return diagnosis
+
+    if code == 4008 or "insufficient points" in msg_lower:
+        diagnosis["confidence"] = "high"
+        diagnosis["headline"] = "Account points are not enough for this music request"
+        diagnosis["actions"].append("Top up credits: https://www.imaclaw.ai/imaclaw/subscription")
+        diagnosis["actions"].append("Or switch to a lower-cost model.")
+        return diagnosis
+
+    if code in (6009, 6010) or "attribute" in msg_lower or removed_params:
+        diagnosis["confidence"] = "high" if code in (6009, 6010) else "medium"
+        diagnosis["headline"] = "Current parameter set does not match this music model rules"
+        if removed_params:
+            diagnosis["reasoning"].append("Unsupported params observed in retries: " + ", ".join(removed_params[:6]))
+        if current_params:
+            preview = ", ".join(f"{k}={v}" for k, v in list(current_params.items())[:4])
+            diagnosis["reasoning"].append("Last attempted params: " + preview)
+        diagnosis["actions"].append("Remove custom params and retry with model defaults.")
+        diagnosis["actions"].append("Try another model via --list-models (e.g., sonic or GenBGM).")
+        return diagnosis
+
+    if code == "timeout" or "timed out" in msg_lower:
+        diagnosis["headline"] = "Music task exceeded polling timeout"
+        diagnosis["actions"].append("Retry with simpler prompt or default params.")
+        diagnosis["actions"].append("Check task status in dashboard: https://imagent.bot")
+        return diagnosis
+
+    if "lyrics" in msg_lower and ("format" in msg_lower or "invalid" in msg_lower):
+        diagnosis["confidence"] = "high"
+        diagnosis["headline"] = "Lyrics format is incompatible with current model requirements"
+        diagnosis["actions"].append("Simplify lyrics format or enable auto lyrics if supported.")
+        diagnosis["actions"].append("Retry with shorter structured prompt.")
+        return diagnosis
+
+    diagnosis["reasoning"].append(f"Model context: {model_name} ({model_id}), task={TASK_TYPE}.")
+    diagnosis["actions"].append("Retry with defaults and a simpler prompt.")
+    diagnosis["actions"].append("If repeated, switch model via --list-models.")
+    return diagnosis
 
 
-def get_preferred_model_id(user_id: str) -> str | None:
-    prefs = load_prefs()
-    entry = (prefs.get(f"user_{user_id}") or {}).get(TASK_TYPE)
-    return entry.get("model_id") if entry else None
+def format_user_failure_message(diagnosis: dict,
+                                attempts_used: int,
+                                max_attempts: int) -> str:
+    lines = [
+        f"Music task failed after {attempts_used}/{max_attempts} attempt(s).",
+        f"Model: {diagnosis.get('model_name')} ({diagnosis.get('model_id')})",
+        f"Likely cause ({diagnosis.get('confidence', 'medium')} confidence): {diagnosis.get('headline')}",
+    ]
+    reasoning = diagnosis.get("reasoning") or []
+    if reasoning:
+        lines.append("Why this diagnosis:")
+        for item in reasoning[:3]:
+            lines.append(f"- {item}")
+    actions = diagnosis.get("actions") or []
+    if actions:
+        lines.append("What to do next:")
+        for i, action in enumerate(actions[:4], 1):
+            lines.append(f"{i}. {action}")
+    code = diagnosis.get("code")
+    if code not in (None, "", "unknown"):
+        lines.append(f"Reference code: {code}")
+    lines.append("Technical details are shown in current stderr output.")
+    return "\n".join(lines)
+
+
+def generate_user_suggestion(reflection: ReflectionLog, model_params: dict) -> str:
+    if not reflection.attempts:
+        diagnosis = build_contextual_diagnosis(
+            {"code": "unknown", "message": "unknown", "type": "unknown"},
+            model_params,
+            {},
+            reflection,
+        )
+        return format_user_failure_message(diagnosis, 1, 3)
+    last = reflection.attempts[-1]
+    error_code = last.get("error_code")
+    error_info = {
+        "code": error_code if error_code is not None else "unknown",
+        "message": last.get("reflection", ""),
+        "type": f"api_{error_code}" if error_code is not None else "unknown",
+    }
+    diagnosis = build_contextual_diagnosis(
+        error_info=error_info,
+        model_params=model_params,
+        current_params=last.get("sent_params") or {},
+        reflection=reflection,
+    )
+    return format_user_failure_message(
+        diagnosis,
+        attempts_used=len(reflection.attempts),
+        max_attempts=max(3, len(reflection.attempts)),
+    )
 
 
 # ─── CLI Entry Point ──────────────────────────────────────────────────────────
@@ -803,39 +855,32 @@ def build_parser() -> argparse.ArgumentParser:
         epilog="""
 Examples:
   # Generate music with Suno (default, most powerful)
-  python3 ima_voice_create.py \\
-    --api-key ima_xxx \\
+  IMA_API_KEY=ima_xxx python3 ima_voice_create.py \\
     --model-id sonic \\
     --prompt "upbeat lo-fi hip hop, 90 BPM, no vocals"
 
   # Generate music with DouBao BGM (background music)
-  python3 ima_voice_create.py \\
-    --api-key ima_xxx \\
+  IMA_API_KEY=ima_xxx python3 ima_voice_create.py \\
     --model-id GenBGM \\
     --prompt "ambient chill, peaceful"
 
   # Generate song with DouBao Song
-  python3 ima_voice_create.py \\
-    --api-key ima_xxx \\
+  IMA_API_KEY=ima_xxx python3 ima_voice_create.py \\
     --model-id GenSong \\
     --prompt "pop ballad, female vocals"
 
   # List all available music models
-  python3 ima_voice_create.py \\
-    --api-key ima_xxx \\
+  IMA_API_KEY=ima_xxx python3 ima_voice_create.py \\
     --list-models
     
   # With extra Suno parameters
-  python3 ima_voice_create.py \\
-    --api-key ima_xxx \\
+  IMA_API_KEY=ima_xxx python3 ima_voice_create.py \\
     --model-id sonic \\
     --prompt "以后都用 Suno" \\
     --extra-params '{"custom_mode": true, "make_instrumental": false}'
 """,
     )
 
-    p.add_argument("--api-key",  required=False,
-                   help="IMA Open API key (starts with ima_). Can also use IMA_API_KEY env var")
     p.add_argument("--model-id",
                    help="Model ID: sonic (Suno), GenBGM (DouBao BGM), GenSong (DouBao Song)")
     p.add_argument("--version-id",
@@ -848,8 +893,6 @@ Examples:
                    help="Language for product labels (en/zh)")
     p.add_argument("--base-url", default=DEFAULT_BASE_URL,
                    help="API base URL")
-    p.add_argument("--user-id", default="default",
-                   help="User ID for preference memory")
     p.add_argument("--list-models", action="store_true",
                    help="List all available music models and exit")
     p.add_argument("--output-json", action="store_true",
@@ -862,16 +905,14 @@ def main():
     args   = build_parser().parse_args()
     base   = args.base_url
     
-    # Get API key from args or environment variable
-    apikey = args.api_key or os.getenv("IMA_API_KEY")
+    # API key is accepted only from environment variable
+    apikey = os.getenv("IMA_API_KEY")
     if not apikey:
-        logger.error("API key is required. Use --api-key or set IMA_API_KEY environment variable")
+        logger.error("API key is required. Set IMA_API_KEY environment variable")
         sys.exit(1)
 
     start_time = time.time()
-    masked_key = f"{apikey[:10]}..." if len(apikey) > 10 else "***"
-    logger.info(f"Script started: task_type={TASK_TYPE}, model_id={args.model_id or 'auto'}, "
-                f"api_key={masked_key}")
+    logger.info(f"Script started: task_type={TASK_TYPE}, model_id={args.model_id or 'auto'}")
 
     # ── 1. Query product list ──────────────────────────────────────────────────
     print(f"🔍 Querying music models: category={TASK_TYPE}", flush=True)
@@ -895,16 +936,8 @@ def main():
 
     # ── Resolve model_id ───────────────────────────────────────────────────────
     if not args.model_id:
-        # Check user preference
-        pref_model = get_preferred_model_id(args.user_id)
-        if pref_model:
-            args.model_id = pref_model
-            print(f"💡 Using your preferred model: {pref_model}", flush=True)
-        else:
-            print("❌ --model-id is required (no saved preference found)", file=sys.stderr)
-            print("   Run with --list-models to see available models", file=sys.stderr)
-            print("   Recommended: sonic (Suno), GenBGM (DouBao BGM), GenSong (DouBao Song)", file=sys.stderr)
-            sys.exit(1)
+        args.model_id = "sonic"
+        print("💡 --model-id not provided. Defaulting to sonic.", flush=True)
 
     if not args.prompt:
         print("❌ --prompt is required", file=sys.stderr)
@@ -954,11 +987,12 @@ def main():
         )
         
         # Show reflection log if there were retries
-        if len(reflection.attempts) > 1:
+        if task_id and len(reflection.attempts) > 1:
             print(f"\n🧠 反省日志 ({len(reflection.attempts)} 次尝试):")
             for attempt in reflection.attempts:
                 status = "✅" if attempt.get("error_code") is None else "❌"
-                print(f"   {status} [尝试 {attempt['attempt']}] {attempt['reflection']}")
+                action = attempt.get("action_taken") or "retry"
+                print(f"   {status} [尝试 {attempt['attempt']}] action={action}")
         
         if not task_id:
             # Generate user suggestion
@@ -968,7 +1002,22 @@ def main():
         
     except RuntimeError as e:
         logger.error(f"Task creation failed: {str(e)}")
-        print(f"❌ Create task failed: {e}", file=sys.stderr)
+        create_error = extract_error_info(e)
+        diagnosis = build_contextual_diagnosis(
+            error_info=create_error,
+            model_params=mp,
+            current_params=extra if extra else {},
+            reflection=None,
+        )
+        print(
+            "❌ "
+            + format_user_failure_message(
+                diagnosis=diagnosis,
+                attempts_used=1,
+                max_attempts=1,
+            ),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     print(f"✅ Task created: {task_id}", flush=True)
@@ -982,13 +1031,25 @@ def main():
         media = poll_task(base, apikey, task_id, estimated_max=est_max)
     except (TimeoutError, RuntimeError) as e:
         logger.error(f"Task polling failed: {str(e)}")
-        print(f"\n❌ {e}", file=sys.stderr)
+        poll_error = extract_error_info(e)
+        diagnosis = build_contextual_diagnosis(
+            error_info=poll_error,
+            model_params=mp,
+            current_params=extra if extra else {},
+            reflection=None,
+        )
+        print(
+            "\n❌ "
+            + format_user_failure_message(
+                diagnosis=diagnosis,
+                attempts_used=1,
+                max_attempts=1,
+            ),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
-    # ── 6. Save preference ────────────────────────────────────────────────────
-    save_pref(args.user_id, mp)
-
-    # ── 7. Output result ───────────────────────────────────────────────────────
+    # ── 6. Output result ───────────────────────────────────────────────────────
     result_url = media.get("url") or media.get("preview_url") or ""
     duration   = media.get("duration_str") or ""
 

@@ -3,11 +3,16 @@
   "slug": "ima-voice-ai",
   "displayName": "IMA Studio Music — Suno, DouBao",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1773331931263,
-    "commit": "https://github.com/openclaw/skills/commit/1c84bedcac384796e9e5677a9d45aedbb78edb6d"
+    "version": "1.0.11",
+    "publishedAt": 1773772332834,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1773331931263,
+      "commit": "https://github.com/openclaw/skills/commit/1c84bedcac384796e9e5677a9d45aedbb78edb6d"
+    },
     {
       "version": "1.0.4",
       "publishedAt": 1772815985602,
