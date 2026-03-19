@@ -3,9 +3,15 @@
   "slug": "hn-daily-brief",
   "displayName": "HN Daily Brief",
   "latest": {
-    "version": "0.7.0",
-    "publishedAt": 1772327576544,
-    "commit": "https://github.com/openclaw/skills/commit/257f3ca72fe79c89032d3611b6c545b4c569f329"
+    "version": "0.8.2",
+    "publishedAt": 1773907858890,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.7.0",
+      "publishedAt": 1772327576544,
+      "commit": "https://github.com/openclaw/skills/commit/257f3ca72fe79c89032d3611b6c545b4c569f329"
+    }
+  ]
 }

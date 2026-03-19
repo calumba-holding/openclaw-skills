@@ -6,6 +6,9 @@ description: Generate and deliver a Hacker News daily report (Top-N) with articl
 # HN Daily
 
 ## Release Notes
+- v0.8.2: Refresh publication for latest HN Daily Brief packaging and worker-oriented execution workflow.
+- v0.8.1: Tighten anti-padding controls for final write-up (ban repeated boilerplate tails, enforce anti-template validation before send).
+- v0.8.0: Run scheduled HN jobs in isolated cron sessions (`sessionTarget=isolated`, `payload.kind=agentTurn`) to avoid blocking main chat; keep 3-job retry ladder idempotent.
 - v0.7.0: Add concurrent retry profile for schedule reliability (primary run + immediate retry + delayed retry) with idempotent completion checks to avoid timeout-caused misses.
 - v0.6.0: Brand rename for distribution as "HN Daily Brief" + full copy cleanup to English-only wording.
 - v0.5.1: Language cleanup for public distribution (English-first docs; localized markers still supported).
@@ -54,6 +57,12 @@ description: Generate and deliver a Hacker News daily report (Top-N) with articl
 - Never send script draft markdown directly; user-facing report must come from LLM rewrite over materials JSON.
 - Output must use one language only: the selected `language` for the run (no bilingual/mixed-language output).
 - Real markdown newlines only; never output literal `\n` in user-visible content.
+- **Strict source/comment separation (mandatory):**
+  - `Source summary` must summarize only the original article/source content (title/url/snippet and source facts).
+  - `Comment viewpoint synthesis` must summarize only HN comments (`comments_raw`).
+  - Do not put community reactions, usernames, or comment conclusions into `Source summary`.
+  - Do not use source-only facts as a substitute for missing comment viewpoints.
+  - If source content is missing/blocked/too short, mark explicitly: `source is short / info limited`; do not fill the gap with comments.
 - Top-N structure per item:
   - Title
   - Link
@@ -68,6 +77,9 @@ description: Generate and deliver a Hacker News daily report (Top-N) with articl
 - Comment viewpoint summary target: zh>=80 chars (equivalent depth for others), with the same short-source exception.
 - When exception is used, explicitly mark "source is short / info limited" (or equivalent in selected language), prioritize verifiable facts + discussion context + actionable implications, and keep concise but information-dense output.
 - Never inflate length with generic filler text.
+- Hard anti-padding rule: do **not** append reusable stock tails (e.g., identical “this reflects ...” sentence) across viewpoints/items.
+- If the same tail sentence appears in 3+ comment viewpoints, the report is invalid and must be rewritten.
+- **Platform/channel constraints must NOT reduce content quality**: if a single message exceeds platform limits (e.g., Telegram 4096 chars), split into multiple sequential messages rather than compressing or shortening summaries/viewpoints to fit.
 
 ## Comment synthesis rules
 - Must be in selected `language`.
@@ -82,16 +94,25 @@ description: Generate and deliver a Hacker News daily report (Top-N) with articl
   1) Primary run at `reminderTime` (e.g. `HN Daily 06:50`)
   2) Immediate retry at `reminderTime + 1m` (e.g. `HN Daily 06:51 Retry`)
   3) Delayed retry at `reminderTime + 15m` (e.g. `HN Daily 07:05 Retry`)
+- **All HN cron jobs must run in isolated sessions**:
+  - `sessionTarget="isolated"`
+  - `payload.kind="agentTurn"`
+  - Never schedule HN generation on `sessionTarget="main"`.
+- Keep cron payload execution-oriented (not passive reminder), including idempotent checks and send/persist requirements.
 - All retry jobs must be idempotent via completion checks (see Mandatory execution order step 1 and step 5).
 - Keep job names aligned with schedule and retry role.
-- Cron payload must be execution-oriented (not passive reminder).
-- Rationale: cron has no built-in on-failure callback; this retry ladder is the required equivalent for timeout/failure recovery.
+- Rationale: cron has no built-in on-failure callback; this retry ladder is the required equivalent for timeout/failure recovery, and isolated execution avoids blocking normal user chat.
 
 ## Prompt template requirements (must include)
 - Generate directly in selected `language`.
 - Source summary length must meet selected-language threshold.
 - Each comment viewpoint summary must meet selected-language threshold.
 - Summaries must be article-specific and fact-based; avoid reusable boilerplate.
+- Enforce source/comment boundary explicitly in prompt:
+  - Source summary uses only article/source material.
+  - Comment viewpoints use only HN comments.
+  - Never mix the two sections.
+- Forbid repeated generic closers in comment viewpoints; every viewpoint must end with item-specific substance, not a shared stock sentence.
 - Comment section must synthesize viewpoints (not raw quote dumping), with usernames when available.
 
 ## Pre-send quality gate (mandatory)
@@ -99,8 +120,9 @@ description: Generate and deliver a Hacker News daily report (Top-N) with articl
   - zh summary default >=300 chars per item;
   - zh comment viewpoint default >=80 chars per viewpoint.
 - Recommended command:
-  - `scripts/validate_report.py --report <final_report_path> --language <language>`
+  - `scripts/validate_report.py --report <final_report_path> --language <language> --ban-phrase "这也反映了社区对可执行细节与长期影响的关注" --ban-phrase-max 0 --max-repeated-tail 2`
 - If an item/viewpoint is below default threshold, it must explicitly include a short-source marker (e.g. `source is short / info limited`).
+- If anti-padding checks fail (banned phrase repetition or repeated tail sentence), rewrite and re-check.
 - If gate fails, rewrite and re-check; do not send failing report.
 
 ## Guardrail
