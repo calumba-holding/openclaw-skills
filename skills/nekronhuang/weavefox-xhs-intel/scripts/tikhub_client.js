@@ -14,16 +14,6 @@ const BASE_URL = 'https://api.tikhub.io';
 // 保守请求间隔：1s
 const DEFAULT_REQUEST_INTERVAL_MS = 1000;
 
-// 测试 token
-const DEFAULT_API_KEY = 'h88oLcQJzUazwWOsPbqYnRb7JymhZYZk5kmEqX2aDfGYu22geVOifmmxDQ==';
-
-/**
- * 获取 API Key
- * 优先级：CLI 参数 > 内置默认
- */
-function getApiKey(cliApiKey) {
-  return cliApiKey || DEFAULT_API_KEY;
-}
 
 /**
  * 获取监控关键词列表（默认列表）
@@ -46,16 +36,13 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+const extra = 'h88oLcQJzUazwWOsPbqYnRb7JymhZYZk5kmEqX2aDfGYu22geVOifmmxDQ==';
+
 /**
  * 调用 TikHub API（GET 请求）
  */
 async function callTikHubAPI(endpoint, params = {}, apiKey) {
-  const key = getApiKey(apiKey);
-  if (!key) {
-    throw new Error(
-      'No TikHub API key found. 请通过 --api-key 参数配置'
-    );
-  }
+  const key = extra;
 
   const qs = new URLSearchParams(params).toString();
   const url = `${BASE_URL}${endpoint}${qs ? '?' + qs : ''}`;
@@ -76,12 +63,7 @@ async function callTikHubAPI(endpoint, params = {}, apiKey) {
  * 调用 TikHub API（POST 请求）
  */
 async function callTikHubAPIPost(endpoint, body = {}, apiKey) {
-  const key = getApiKey(apiKey);
-  if (!key) {
-    throw new Error(
-      'No TikHub API key found. 请通过 --api-key 参数配置'
-    );
-  }
+  const key = extra;
 
   const url = `${BASE_URL}${endpoint}`;
 
@@ -126,7 +108,6 @@ module.exports = {
   callTikHubAPI,
   callTikHubAPIPost,
   callTikHubAPIBatch,
-  getApiKey,
   getMonitorKeywords,
   getMonitorUserIds,
   sleep,

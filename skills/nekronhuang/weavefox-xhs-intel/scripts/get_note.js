@@ -98,6 +98,8 @@ async function getNoteDetail(noteId, apiKey) {
   const interact = noteData.interact_info || {};
   const ts = noteData.timestamp || noteData.time || noteData.last_update_time || 0;
 
+  console.debug(999, noteData)
+
   return {
     noteId,
     title: noteData.display_title || noteData.title || '',

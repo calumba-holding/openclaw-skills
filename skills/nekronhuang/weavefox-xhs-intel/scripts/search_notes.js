@@ -21,6 +21,7 @@ function normalizeNote(item) {
   const note = item.note || item.note_card || item;
   const user = note.user || {};
   const noteId = note.note_id || note.id || item.id || '';
+  const sec = note.xsec_token || '';
 
   // 互动数据：优先扁平字段（app_v2），fallback interact_info（旧格式）
   const interact = note.interact_info || {};
@@ -44,7 +45,7 @@ function normalizeNote(item) {
     author: user.nickname || user.name || '',
     authorId: user.user_id || user.userid || user.id || '',
     createTime: ts ? new Date(ts * 1000).toISOString() : '',
-    url: noteId ? `https://www.xiaohongshu.com/explore/${noteId}` : '',
+    url: noteId ? `https://www.xiaohongshu.com/explore/${noteId}?xsec_token=${sec}` : '',
   };
 }
 
@@ -54,24 +55,32 @@ const SEARCH_ENDPOINTS = [
   {
     endpoint: '/api/v1/xiaohongshu/app_v2/search_notes',
     buildParams: (kw, sort) => ({
-      keyword: kw, page: 1,
+      keyword: kw || '',
+      page: 1,
       sort_type: sort || 'general',
-      note_type: '不限', time_filter: '不限',
-      source: 'explore_feed', ai_mode: 0,
+      note_type: '不限',
+      time_filter: '不限',
+      source: 'explore_feed',
+      ai_mode: 0,
+      // search_id: '',
+      // search_session_id: '',
     }),
   },
   {
     endpoint: '/api/v1/xiaohongshu/app/search_notes',
     buildParams: (kw, sort) => ({
-      keyword: kw, page: 1,
+      keyword: kw,
+      page: 1,
       sort_type: sort || 'general',
-      filter_note_type: '不限', filter_note_time: '不限',
+      filter_note_type: '不限',
+      filter_note_time: '不限',
     }),
   },
   {
     endpoint: '/api/v1/xiaohongshu/web_v2/fetch_search_notes',
     buildParams: (kw, sort) => ({
-      keywords: kw, page: 1,
+      keywords: kw,
+      page: 1,
       sort_type: sort || 'general',
       note_type: '0',
     }),
@@ -88,7 +97,7 @@ async function searchNotes(keyword, sort, apiKey) {
       // 响应结构：data.data.items (app_v2/app) 或 data.items (web_v2)
       const inner = data.data?.data?.items || data.data?.items || data.data?.notes || data.items || [];
       return inner
-        .filter(item => item.model_type === 'note' || item.note_card || item.note || item.note_id || item.id)
+        .filter((item) => item.model_type === 'note' || item.note_card || item.note || item.note_id || item.id)
         .map(normalizeNote);
     } catch (e) {
       lastError = e;
@@ -131,10 +140,16 @@ Examples:
     }
 
     const notes = await searchNotes(values.keyword, values.sort, values['api-key']);
-    console.log(JSON.stringify({
-      success: true,
-      data: { keyword: values.keyword, count: notes.length, notes },
-    }, null, 2));
+    console.log(
+      JSON.stringify(
+        {
+          success: true,
+          data: { keyword: values.keyword, count: notes.length, notes },
+        },
+        null,
+        2,
+      ),
+    );
     return 0;
   } catch (e) {
     console.error(JSON.stringify({ success: false, error: e.message }, null, 2));
@@ -144,8 +159,13 @@ Examples:
 
 if (require.main === module) {
   main()
-    .then(exitCode => { process.exitCode = exitCode; })
-    .catch(err => { console.error(err); process.exitCode = 1; });
+    .then((exitCode) => {
+      process.exitCode = exitCode;
+    })
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    });
 }
 
 module.exports = { searchNotes, normalizeNote };
