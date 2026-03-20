@@ -3,11 +3,16 @@
   "slug": "pyreworld",
   "displayName": "Pyre World",
   "latest": {
-    "version": "3.0.2",
-    "publishedAt": 1773610651553,
-    "commit": "https://github.com/openclaw/skills/commit/a0c6e2efcfae1ce9d73a18fe81d3454501695ebe"
+    "version": "3.3.1",
+    "publishedAt": 1773968202042,
+    "commit": null
   },
   "history": [
+    {
+      "version": "3.0.2",
+      "publishedAt": 1773610651553,
+      "commit": "https://github.com/openclaw/skills/commit/a0c6e2efcfae1ce9d73a18fe81d3454501695ebe"
+    },
     {
       "version": "2.0.1",
       "publishedAt": 1773357924259,
