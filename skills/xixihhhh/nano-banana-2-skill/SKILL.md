@@ -3,13 +3,13 @@ name: nano-banana-2
 description: "Generate and edit images using Google's Nano Banana 2 (Imagen) model — the latest high-quality image generation AI. Supports text-to-image generation and image editing with up to 14 reference images. Two provider modes: Atlas Cloud and Google AI Studio. Use this skill whenever the user wants to generate images, create AI art, edit photos with AI, do image-to-image transformation, create illustrations, make visual content, or mentions Nano Banana, Imagen, Gemini image, or Google image generation. Also trigger when users ask to create sprites, thumbnails, banners, logos, product photos, concept art, or any visual asset using AI."
 source: "https://github.com/AtlasCloudAI/nano-banana-2-skill"
 homepage: "https://github.com/AtlasCloudAI/nano-banana-2-skill"
-env_vars:
-  ATLASCLOUD_API_KEY:
-    description: "Atlas Cloud API key — required if using Atlas Cloud provider"
-    required: false
-  GEMINI_API_KEY:
-    description: "Google AI Studio API key — required if using Google AI Studio provider"
-    required: false
+metadata:
+  openclaw:
+    requires:
+      env:
+        - ATLASCLOUD_API_KEY
+        - GEMINI_API_KEY
+    primaryEnv: ATLASCLOUD_API_KEY
 ---
 
 # Nano Banana 2 Image Generation
@@ -78,6 +78,44 @@ The user needs an Atlas Cloud API key. Guide them to:
 1. Sign up at https://www.atlascloud.ai
 2. Go to Console → API Keys → Create new key
 3. Set environment variable: `export ATLASCLOUD_API_KEY="your-key"`
+
+### Script Usage
+
+This skill includes a Python script for image generation. Zero external dependencies required.
+
+#### List available image models
+
+```bash
+python scripts/generate_image.py list-models
+```
+
+#### Generate an image
+
+```bash
+python scripts/generate_image.py generate \
+  --model "MODEL_ID" \
+  --prompt "Your prompt here" \
+  --output ./output
+```
+
+#### Upload a local image (for editing)
+
+```bash
+python scripts/generate_image.py upload ./local-image.jpg
+```
+
+#### Edit an image
+
+```bash
+python scripts/generate_image.py generate \
+  --model "MODEL_ID" \
+  --prompt "Edit instruction" \
+  --image "https://...uploaded-url..."
+```
+
+Run `python scripts/generate_image.py generate --help` for all options. Extra model params can be passed as key=value (e.g. `aspect_ratio=16:9 resolution=2k`).
+
+---
 
 ### Text-to-Image Generation
 
