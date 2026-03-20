@@ -3,11 +3,16 @@
   "slug": "ab-test-analyzer",
   "displayName": "Ab Test Analyzer",
   "latest": {
-    "version": "1.0.51",
-    "publishedAt": 1773632843539,
-    "commit": "https://github.com/openclaw/skills/commit/82f0e860f87dfb8eb65fa087031571ea2b8e3f73"
+    "version": "1.0.52",
+    "publishedAt": 1773632949828,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.51",
+      "publishedAt": 1773632843539,
+      "commit": "https://github.com/openclaw/skills/commit/82f0e860f87dfb8eb65fa087031571ea2b8e3f73"
+    },
     {
       "version": "1.0.41",
       "publishedAt": 1773631475914,
