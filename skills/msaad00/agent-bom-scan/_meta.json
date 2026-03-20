@@ -3,11 +3,16 @@
   "slug": "agent-bom-scan",
   "displayName": "agent-bom scan",
   "latest": {
-    "version": "0.71.0",
-    "publishedAt": 1773645923136,
-    "commit": "https://github.com/openclaw/skills/commit/770d74bd48aafdb1158996ab378f6b5fe3fdabfb"
+    "version": "0.72.0",
+    "publishedAt": 1773900517224,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.71.0",
+      "publishedAt": 1773645923136,
+      "commit": "https://github.com/openclaw/skills/commit/770d74bd48aafdb1158996ab378f6b5fe3fdabfb"
+    },
     {
       "version": "0.70.10",
       "publishedAt": 1773550137880,

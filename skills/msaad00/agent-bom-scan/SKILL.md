@@ -5,7 +5,7 @@ description: >-
   checks packages for CVEs (OSV, NVD, EPSS, KEV), maps blast radius, and generates
   remediation plans. Use when the user mentions vulnerability scanning, dependency
   security, CVE lookup, blast radius analysis, or AI supply chain risk.
-version: 0.71.0
+version: 0.71.4
 license: Apache-2.0
 compatibility: >-
   Requires Python 3.11+. Install via pipx or pip. Optional: Grype/Syft for
@@ -20,7 +20,7 @@ metadata:
   install:
     pipx: agent-bom
     pip: agent-bom
-    docker: ghcr.io/msaad00/agent-bom:0.71.0
+    docker: ghcr.io/msaad00/agent-bom:0.71.4
   openclaw:
     requires:
       bins: []
@@ -39,7 +39,7 @@ metadata:
       - darwin
       - linux
       - windows
-    file_reads_note: "Reads MCP client config files to discover AI tool server configurations across 22 clients. Only server names, commands, args, and URLs are extracted — env var values are NEVER stored or transmitted, they are replaced with ***REDACTED*** by sanitize_env_vars() before any processing. Verify: https://github.com/msaad00/agent-bom/blob/main/src/agent_bom/security.py#L159"
+    file_reads_note: "Reads MCP client config files to discover AI tool server configurations across 30 clients. Only server names, commands, args, and URLs are extracted — env var values are NEVER stored or transmitted, they are replaced with ***REDACTED*** by sanitize_env_vars() before any processing. Verify: https://github.com/msaad00/agent-bom/blob/main/src/agent_bom/security.py#L159"
     credential_handling: "Env var values are NEVER extracted from config files. sanitize_env_vars() replaces all env values with ***REDACTED*** BEFORE any config data is processed or stored. Only structural data (server names, commands, URLs) passes through. Source: https://github.com/msaad00/agent-bom/blob/main/src/agent_bom/security.py#L159"
     data_flow: "All scanning is local-first. Only public package names and CVE IDs are sent to vulnerability databases (OSV, NVD, EPSS, GitHub Advisories). Verify no-exfiltration behavior by reviewing the installed code before providing production credentials."
     install_verification: "VERIFY BEFORE running with any config files: (1) pip install agent-bom; (2) Review sanitize_env_vars() at security.py#L159 — confirms env value redaction; (3) Review discovery/__init__.py — confirms only structural config data extracted; (4) agent-bom verify agent-bom — Sigstore provenance check; (5) Only then run agent-bom scan"
@@ -200,6 +200,6 @@ Only public package names and CVE IDs are sent to vulnerability databases.
 ## Verification
 
 - **Source**: [github.com/msaad00/agent-bom](https://github.com/msaad00/agent-bom) (Apache-2.0)
-- **Sigstore signed**: `agent-bom verify agent-bom@0.71.0
+- **Sigstore signed**: `agent-bom verify agent-bom@0.71.4
 - **6,040+ tests** with CodeQL + OpenSSF Scorecard
 - **No telemetry**: Zero tracking, zero analytics
