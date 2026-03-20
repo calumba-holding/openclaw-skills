@@ -1,0 +1,11 @@
+{
+  "owner": "roojenkins",
+  "slug": "uplo-github",
+  "displayName": "Uplo Github",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1774010796218,
+    "commit": null
+  },
+  "history": []
+}
