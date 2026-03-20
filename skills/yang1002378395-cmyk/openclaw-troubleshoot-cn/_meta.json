@@ -3,9 +3,15 @@
   "slug": "openclaw-troubleshoot-cn",
   "displayName": "Openclaw Troubleshoot Cn",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1773492531649,
-    "commit": "https://github.com/openclaw/skills/commit/bfa568d35dc071df368e4e1a4d9611a64758489d"
+    "version": "1.0.1",
+    "publishedAt": 1773523921422,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1773492531649,
+      "commit": "https://github.com/openclaw/skills/commit/bfa568d35dc071df368e4e1a4d9611a64758489d"
+    }
+  ]
 }
