@@ -61,9 +61,16 @@ TOKEN0 = CFG["token0"]
 TOKEN1 = CFG["token1"]
 ETH_ADDR = TOKEN0["address"]
 USDC_ADDR = TOKEN1["address"]
-CHAIN_ID = "8453"  # Base
+CHAIN_ID = CFG.get("chain_id", "8453")
+PLATFORM_ID = CFG.get("platform_id", "68")  # onchainos defi platform ID
+NATIVE_TOKEN = CFG.get("native_token", "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 
-RANGE_MULT = CFG["range_mult"]
+_rm = CFG["range_mult"]
+RANGE_MULT = (
+    _rm
+    if isinstance(_rm, dict)
+    else {"low": _rm * 0.75, "medium": _rm, "high": _rm * 1.25, "extreme": _rm * 1.5}
+)
 MIN_RANGE_PCT = CFG["min_range_pct"]
 MAX_RANGE_PCT = CFG["max_range_pct"]
 ASYM_FACTOR = CFG["asym_factor"]
@@ -250,7 +257,7 @@ def get_position_detail(token_id: str) -> dict:
             "--chain",
             POOL_CHAIN,
             "--platform-id",
-            "68",  # Uniswap V3
+            PLATFORM_ID,
         ],
         timeout=20,
     )
@@ -279,6 +286,39 @@ def get_position_detail(token_id: str) -> dict:
 def get_position_value(token_id: str) -> float:
     """Get current LP position value in USD (backward compat wrapper)."""
     return get_position_detail(token_id)["value"]
+
+
+def find_latest_token_id() -> str:
+    """Query position-detail to find the latest LP token ID for this pool."""
+    if not WALLET_ADDR:
+        return ""
+    data = onchainos_cmd(
+        [
+            "defi",
+            "position-detail",
+            "--address",
+            WALLET_ADDR,
+            "--chain",
+            POOL_CHAIN,
+            "--platform-id",
+            PLATFORM_ID,
+        ],
+        timeout=20,
+    )
+    if not data or not data.get("ok") or not data.get("data"):
+        return ""
+    try:
+        for platform in data["data"]:
+            for wallet in platform.get("walletIdPlatformDetailList", []):
+                for network in wallet.get("networkHoldVoList", []):
+                    for invest in network.get("investTokenBalanceVoList", []):
+                        positions = invest.get("positionList", [])
+                        if positions:
+                            # Return the last (newest) position's tokenId
+                            return str(positions[-1].get("tokenId", ""))
+    except (KeyError, ValueError, TypeError):
+        pass
+    return ""
 
 
 # ── K-line / OHLC Data ──────────────────────────────────────────────────────
@@ -675,16 +715,76 @@ def run_risk_checks(
 # ── DeFi Operations (onchainos defi commands) ──────────────────────────────
 
 
-def defi_claim_fees(token_id: str) -> dict | None:
+def _broadcast_defi_txs(data: dict, label: str) -> bool:
+    """Broadcast all transactions from a defi command response.
+    Returns True if all transactions were broadcast successfully."""
+    result = data.get("data")
+    if not result:
+        log(f"  {label}: no tx data to broadcast")
+        return False
+    # Handle both {"dataList": [...]} and direct list formats
+    tx_list = []
+    if isinstance(result, dict):
+        tx_list = result.get("dataList", [])
+    elif isinstance(result, list):
+        tx_list = result
+    if not tx_list:
+        log(f"  {label}: empty tx list")
+        return False
+    for i, tx in enumerate(tx_list):
+        tx_type = tx.get("callDataType", f"tx_{i}")
+        to_addr = tx.get("to", "")
+        calldata = tx.get("serializedData", "") or tx.get("data", "0x")
+        value = tx.get("value", "0x0")
+        if not to_addr or not calldata:
+            log(f"  {label} [{tx_type}]: missing to/data, skip")
+            continue
+        # Convert hex value to decimal ETH
+        value_wei = int(value, 16) if value.startswith("0x") else int(value)
+        value_eth = str(value_wei / 1e18) if value_wei > 0 else "0"
+        broadcast_data = onchainos_cmd(
+            [
+                "wallet",
+                "contract-call",
+                "--to",
+                to_addr,
+                "--chain",
+                CHAIN_ID,
+                "--input-data",
+                calldata,
+                "--value",
+                value_eth,
+            ],
+            timeout=60,
+        )
+        if broadcast_data and broadcast_data.get("ok") and broadcast_data.get("data"):
+            r = broadcast_data["data"]
+            if isinstance(r, list):
+                r = r[0] if r else {}
+            tx_hash = r.get("txHash") or r.get("hash") or r.get("orderId")
+            log(f"  {label} [{tx_type}] broadcast OK: {tx_hash}")
+        else:
+            detail = (
+                json.dumps(broadcast_data)[:200] if broadcast_data else "no response"
+            )
+            log(f"  {label} [{tx_type}] broadcast failed: {detail}")
+            return False
+        time.sleep(2)  # wait between txs
+    return True
+
+
+def defi_claim_fees(token_id: str) -> bool:
     """Claim accumulated fees from V3 position."""
     if not token_id:
-        return None
+        return False
     data = onchainos_cmd(
         [
             "defi",
             "claim",
             "--address",
             WALLET_ADDR,
+            "--chain",
+            POOL_CHAIN,
             "--reward-type",
             "V3_FEE",
             "--id",
@@ -695,16 +795,16 @@ def defi_claim_fees(token_id: str) -> dict | None:
         timeout=45,
     )
     if data and data.get("ok"):
-        log(f"Fees claimed for token_id={token_id}")
-        return data.get("data")
+        log(f"Fees claim calldata for token_id={token_id}")
+        return _broadcast_defi_txs(data, "claim")
     log(f"Claim fees failed: {json.dumps(data)[:200] if data else 'no response'}")
-    return None
+    return False
 
 
-def defi_redeem(token_id: str) -> dict | None:
+def defi_redeem(token_id: str) -> bool:
     """Remove all liquidity from V3 position."""
     if not token_id:
-        return None
+        return False
     data = onchainos_cmd(
         [
             "defi",
@@ -713,18 +813,20 @@ def defi_redeem(token_id: str) -> dict | None:
             INVESTMENT_ID,
             "--address",
             WALLET_ADDR,
+            "--chain",
+            POOL_CHAIN,
             "--token-id",
             token_id,
             "--percent",
-            "100",
+            "1",
         ],
         timeout=60,
     )
     if data and data.get("ok"):
-        log(f"Liquidity removed for token_id={token_id}")
-        return data.get("data")
+        log(f"Redeem calldata for token_id={token_id}")
+        return _broadcast_defi_txs(data, "redeem")
     log(f"Redeem failed: {json.dumps(data)[:200] if data else 'no response'}")
-    return None
+    return False
 
 
 def defi_calculate_entry(
@@ -741,6 +843,10 @@ def defi_calculate_entry(
             "calculate-entry",
             "--id",
             INVESTMENT_ID,
+            "--address",
+            WALLET_ADDR,
+            "--chain",
+            POOL_CHAIN,
             "--input-token",
             input_token,
             "--input-amount",
@@ -753,13 +859,28 @@ def defi_calculate_entry(
         timeout=30,
     )
     if data and data.get("ok"):
-        return data.get("data")
+        result = data.get("data")
+        # Extract investWithTokenList for deposit --user-input
+        if isinstance(result, dict) and "investWithTokenList" in result:
+            return result["investWithTokenList"]
+        return result
     log(f"Calculate entry failed: {json.dumps(data)[:200] if data else 'no response'}")
     return None
 
 
-def defi_deposit(user_input: str, tick_lower: int, tick_upper: int) -> dict | None:
+def defi_deposit(user_input: str, tick_lower: int, tick_upper: int) -> bool:
     """Deposit liquidity into V3 position at specified tick range."""
+    # Filter out zero-amount tokens — API rejects coinAmount "0"
+    try:
+        tokens = json.loads(user_input)
+        if isinstance(tokens, list):
+            tokens = [t for t in tokens if float(t.get("coinAmount", 0)) > 0]
+            if not tokens:
+                log("Deposit skipped: all token amounts are zero")
+                return False
+            user_input = json.dumps(tokens)
+    except (json.JSONDecodeError, ValueError):
+        pass
     data = onchainos_cmd(
         [
             "defi",
@@ -768,6 +889,8 @@ def defi_deposit(user_input: str, tick_lower: int, tick_upper: int) -> dict | No
             INVESTMENT_ID,
             "--address",
             WALLET_ADDR,
+            "--chain",
+            POOL_CHAIN,
             "--user-input",
             user_input,
             f"--tick-lower={tick_lower}",
@@ -776,16 +899,10 @@ def defi_deposit(user_input: str, tick_lower: int, tick_upper: int) -> dict | No
         timeout=60,
     )
     if data and data.get("ok"):
-        result = data.get("data")
-        token_id = None
-        if isinstance(result, dict):
-            token_id = result.get("tokenId") or result.get("token_id")
-        elif isinstance(result, list) and result:
-            token_id = result[0].get("tokenId") or result[0].get("token_id")
-        log(f"Deposit OK: token_id={token_id}")
-        return data.get("data")
+        log("Deposit calldata received")
+        return _broadcast_defi_txs(data, "deposit")
     log(f"Deposit failed: {json.dumps(data)[:200] if data else 'no response'}")
-    return None
+    return False
 
 
 # ── Swap (reused from grid-trading) ─────────────────────────────────────────
@@ -991,7 +1108,7 @@ def execute_rebalance(
 ) -> bool:
     """Execute full rebalance: claim -> redeem -> (swap) -> deposit.
     Returns True on success."""
-    position = state.get("position", {})
+    position = state.get("position") or {}
     token_id = position.get("token_id", "")
     old_tick_lower = position.get("tick_lower")
     old_tick_upper = position.get("tick_upper")
@@ -1032,90 +1149,33 @@ def execute_rebalance(
         log(f"  Balance too low after redeem: ${total_usd:.2f}")
         return False
 
-    # Step 4: Calculate entry to determine token ratio
-    # Use USDC as input token for calculate-entry
-    usdc_amount_str = str(int(usdc_bal * 1e6))
-    entry_data = defi_calculate_entry(
-        input_token=USDC_ADDR,
-        input_amount=usdc_amount_str,
-        token_decimal=TOKEN1["decimals"],
-        tick_lower=new_tick_lower,
-        tick_upper=new_tick_upper,
+    # Step 4: Deposit with USDC only — OKX adapter handles internal swap
+    usdc_deposit = int(usdc_bal * 0.95)  # 95% to leave buffer
+    log(f"  Balances: ETH={eth_bal:.6f} USDC={usdc_bal:.2f} deposit={usdc_deposit}")
+    user_input_json = json.dumps(
+        [
+            {
+                "chainIndex": CHAIN_ID,
+                "coinAmount": str(usdc_deposit),
+                "tokenAddress": USDC_ADDR,
+            }
+        ]
     )
 
-    user_input_json = "{}"
-    if entry_data:
-        if isinstance(entry_data, list) and entry_data:
-            user_input_json = json.dumps(entry_data[0])
-        elif isinstance(entry_data, dict):
-            user_input_json = json.dumps(entry_data)
-        log(f"  Entry calculated: {user_input_json[:200]}")
-
-        # Check if swap is needed for token ratio adjustment
-        needed = entry_data[0] if isinstance(entry_data, list) else entry_data
-        needed_eth = float(needed.get("token0Amount", 0)) / 10 ** TOKEN0["decimals"]
-        needed_usdc = float(needed.get("token1Amount", 0)) / 10 ** TOKEN1["decimals"]
-
-        # Simple ratio swap if needed
-        if needed_eth > 0 and available_eth < needed_eth * 0.95:
-            # Need more ETH — buy with USDC
-            deficit_eth = needed_eth - available_eth
-            swap_usdc = int(deficit_eth * price * 1.02 * 1e6)  # 2% buffer
-            if swap_usdc > 0 and usdc_bal > swap_usdc / 1e6:
-                log(
-                    f"  Ratio swap: buying {deficit_eth:.6f} ETH with ${swap_usdc / 1e6:.2f} USDC"
-                )
-                tx_hash, fail = execute_swap(USDC_ADDR, ETH_ADDR, swap_usdc, price)
-                if not tx_hash:
-                    log(f"  Ratio swap failed: {fail}")
-                time.sleep(3)
-                eth_bal, usdc_bal = get_balances()
-
-        elif needed_usdc > 0 and usdc_bal < needed_usdc * 0.95:
-            # Need more USDC — sell ETH
-            deficit_usdc = needed_usdc - usdc_bal
-            swap_eth = int((deficit_usdc / price) * 1.02 * 1e18)
-            if swap_eth > 0 and available_eth > swap_eth / 1e18:
-                log(
-                    f"  Ratio swap: selling {swap_eth / 1e18:.6f} ETH for ~${deficit_usdc:.2f} USDC"
-                )
-                tx_hash, fail = execute_swap(ETH_ADDR, USDC_ADDR, swap_eth, price)
-                if not tx_hash:
-                    log(f"  Ratio swap failed: {fail}")
-                time.sleep(3)
-                eth_bal, usdc_bal = get_balances()
-
-        # Recalculate entry with updated balances
-        usdc_amount_str = str(int(usdc_bal * 0.95 * 1e6))  # 95% to leave buffer
-        entry_data = defi_calculate_entry(
-            input_token=USDC_ADDR,
-            input_amount=usdc_amount_str,
-            token_decimal=TOKEN1["decimals"],
-            tick_lower=new_tick_lower,
-            tick_upper=new_tick_upper,
-        )
-        if entry_data:
-            if isinstance(entry_data, list) and entry_data:
-                user_input_json = json.dumps(entry_data[0])
-            elif isinstance(entry_data, dict):
-                user_input_json = json.dumps(entry_data)
-
     # Step 5: Deposit at new range
+    log(f"  Deposit input: {user_input_json[:200]}")
     deposit_result = defi_deposit(user_input_json, new_tick_lower, new_tick_upper)
     if not deposit_result:
         log("  Deposit failed — attempting emergency wide deposit")
         return _emergency_deposit(state, price, trigger)
 
-    # Extract new token_id
-    new_token_id = ""
-    if isinstance(deposit_result, dict):
-        new_token_id = str(
-            deposit_result.get("tokenId") or deposit_result.get("token_id") or ""
-        )
-    elif isinstance(deposit_result, list) and deposit_result:
-        new_token_id = str(
-            deposit_result[0].get("tokenId") or deposit_result[0].get("token_id") or ""
-        )
+    # Deposit returns bool; recover token_id from on-chain position-detail
+    time.sleep(5)  # wait for chain confirmation
+    new_token_id = find_latest_token_id()
+    if new_token_id:
+        log(f"  Found token_id from position-detail: {new_token_id}")
+    else:
+        log("  Warning: deposit broadcast OK but token_id not found")
 
     # Update state
     now_iso = datetime.now().isoformat()
@@ -1158,11 +1218,8 @@ def execute_rebalance(
 def _emergency_deposit(state: dict, price: float, trigger: dict) -> bool:
     """Emergency fallback: deposit with extra-wide range."""
     log("EMERGENCY: deploying with wide range")
-    atr_pct = 3.0  # assume medium
-    regime = classify_volatility(atr_pct)
-    mult = RANGE_MULT.get(regime, 3.0) * EMERGENCY_RANGE_MULT
-    half_width = atr_pct * mult
-    half_width = min(half_width, MAX_RANGE_PCT * 3)
+    # MAX_RANGE_PCT is in percentage points (10 = 10%), same as calc_optimal_range
+    half_width = MAX_RANGE_PCT * EMERGENCY_RANGE_MULT  # e.g. 10 * 2.0 = 20%
 
     lower_price = price * (1 - half_width / 100)
     upper_price = price * (1 + half_width / 100)
@@ -1170,31 +1227,29 @@ def _emergency_deposit(state: dict, price: float, trigger: dict) -> bool:
     tick_upper = price_to_tick(upper_price)
 
     eth_bal, usdc_bal = get_balances()
-    usdc_amount_str = str(int(usdc_bal * 0.9 * 1e6))
-
-    entry_data = defi_calculate_entry(
-        USDC_ADDR, usdc_amount_str, TOKEN1["decimals"], tick_lower, tick_upper
+    usdc_deposit = int(usdc_bal * 0.9)
+    if usdc_deposit < MIN_TRADE_USD:
+        log(f"  Emergency: USDC balance too low ({usdc_bal:.2f})")
+        return False
+    user_input = json.dumps(
+        [
+            {
+                "chainIndex": CHAIN_ID,
+                "coinAmount": str(usdc_deposit),
+                "tokenAddress": USDC_ADDR,
+            }
+        ]
     )
-    user_input = "{}"
-    if entry_data:
-        if isinstance(entry_data, list) and entry_data:
-            user_input = json.dumps(entry_data[0])
-        elif isinstance(entry_data, dict):
-            user_input = json.dumps(entry_data)
 
     deposit_result = defi_deposit(user_input, tick_lower, tick_upper)
     if deposit_result:
-        new_token_id = ""
-        if isinstance(deposit_result, dict):
-            new_token_id = str(
-                deposit_result.get("tokenId") or deposit_result.get("token_id") or ""
-            )
-        elif isinstance(deposit_result, list) and deposit_result:
-            new_token_id = str(
-                deposit_result[0].get("tokenId")
-                or deposit_result[0].get("token_id")
-                or ""
-            )
+        time.sleep(5)
+        new_token_id = find_latest_token_id()
+        if new_token_id:
+            log(f"  Found token_id from position-detail: {new_token_id}")
+        else:
+            new_token_id = ""
+            log("  Warning: emergency deposit OK but token_id not found")
 
         state["position"] = {
             "token_id": new_token_id,
@@ -1203,7 +1258,7 @@ def _emergency_deposit(state: dict, price: float, trigger: dict) -> bool:
             "lower_price": round(lower_price, 2),
             "upper_price": round(upper_price, 2),
             "created_at": datetime.now().isoformat(),
-            "created_atr_pct": atr_pct,
+            "created_atr_pct": round(half_width * 100, 1),  # store as percentage
         }
         log(
             f"  Emergency deposit OK: [{tick_lower},{tick_upper}] "
@@ -1408,6 +1463,12 @@ def tick():
     position = state.get("position")
     lp_value = 0.0
     unclaimed_fee = 0.0
+    # Recover token_id if missing but position exists
+    if position and not position.get("token_id") and position.get("tick_lower"):
+        recovered_id = find_latest_token_id()
+        if recovered_id:
+            position["token_id"] = recovered_id
+            log(f"Recovered token_id: {recovered_id}")
     if position and position.get("token_id"):
         pos_detail = get_position_detail(position["token_id"])
         lp_value = pos_detail["value"]
@@ -1588,7 +1649,7 @@ def tick():
     save_state(state)
 
     # Output
-    has_event = tick_status not in ("in_range", "no_action")
+    has_event = tick_status not in ("in_range", "no_action", "risk_rejected")
     should_print = True
     if not has_event:
         last_quiet = state.get("last_quiet_report")
@@ -1670,7 +1731,7 @@ def _print_tick_output(
     if position and position.get("lower_price"):
         range_str = f"${position['lower_price']:.2f}-${position['upper_price']:.2f}"
 
-    has_event = tick_status not in ("in_range", "no_action")
+    has_event = tick_status not in ("in_range", "no_action", "risk_rejected")
 
     if has_event:
         action_cn = {
