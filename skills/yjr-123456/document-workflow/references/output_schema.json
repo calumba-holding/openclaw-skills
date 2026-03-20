@@ -14,7 +14,13 @@
     "metrics": [
       {
         "name": "string — Metric name (e.g., FID, BLEU, mAP)",
-        "description": "string — Brief description of what this metric measures"
+        "description": "string — description of what this metric measures",
+        "definition": "string — Mathematical definition or formula for the metric"
+      },
+      {
+        "name": "string — Metric name (e.g., FID, BLEU, mAP)",
+        "description": "string — description of what this metric measures",
+        "definition": "string — Mathematical definition or formula for the metric"
       }
     ],
     "results": [

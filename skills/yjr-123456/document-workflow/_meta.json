@@ -3,9 +3,15 @@
   "slug": "document-workflow",
   "displayName": "Document Workflow",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1772779158987,
-    "commit": "https://github.com/openclaw/skills/commit/8abd8b1c8da47f1065cc9b4b055d34b4110e30e9"
+    "version": "1.3.1",
+    "publishedAt": 1773709790682,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1772779158987,
+      "commit": "https://github.com/openclaw/skills/commit/8abd8b1c8da47f1065cc9b4b055d34b4110e30e9"
+    }
+  ]
 }
