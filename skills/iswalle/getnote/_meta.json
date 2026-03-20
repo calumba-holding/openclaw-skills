@@ -3,11 +3,16 @@
   "slug": "getnote",
   "displayName": "Getnote Openclaw",
   "latest": {
-    "version": "1.5.0",
-    "publishedAt": 1773916298580,
-    "commit": "https://github.com/openclaw/skills/commit/b42e69dedf3d0a6ad40da7aa715b3db2d0893549"
+    "version": "1.5.1",
+    "publishedAt": 1773978430325,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.5.0",
+      "publishedAt": 1773916298580,
+      "commit": "https://github.com/openclaw/skills/commit/b42e69dedf3d0a6ad40da7aa715b3db2d0893549"
+    },
     {
       "version": "1.3.1",
       "publishedAt": 1773661030324,
