@@ -1,80 +1,80 @@
 ---
-description: Compare before-vs-after agent behavior, detect regressions,
-  and return a deterministic release verdict with prioritized fixes.
 name: agent-regression-check
+description: Evaluate whether an agent change introduced regressions by comparing matched before vs after case results. Use when reviewing prompt updates, model switches, tool integrations, retrieval changes, hotfixes, or release readiness. Also covers deterministic release gates, failure clustering, confidence scoring, and JSON-ready verdicts.
+user-invocable: true
+metadata: {"openclaw":{"emoji":"🧪","os":["linux","darwin","win32"]}}
 ---
 
 # Agent Regression Check
 
-## What this skill does
+Evaluate whether an agent change introduced regressions.
 
-Use this skill to evaluate whether an agent change introduced
-regressions.
+Compare matched before vs after case results, score degradation with a
+deterministic rubric, apply release gates, and return one verdict:
 
-It compares **before vs after** behavior across a defined case suite,
-identifies what got worse, applies deterministic release gates, and
-returns a clear verdict:
+```text
+go
+conditional_go
+no_go
+rollback
+This is an offline regression-check skill. It does not replace
+production monitoring, live experiments, or telemetry.
 
--   go
--   conditional_go
--   no_go
--   rollback
+When to Use
+Use this skill when the user asks:
 
-This is an **offline regression-check skill**. It does not replace
-production monitoring or live experiments.
+Did this update break anything
 
-------------------------------------------------------------------------
+Compare before and after
 
-# Best use cases
+Is this safe to deploy
 
-Use this skill for:
+Check regressions after a model change
 
--   prompt updates
--   model switches
--   tool integration changes
--   retrieval changes
--   orchestration changes
--   hotfix verification
--   pre-release quality checks
+Validate prompt, retrieval, tool, or orchestration updates
 
-Typical user requests:
+Verify a hotfix before release
 
--   "Did this update break anything?"
--   "Compare before and after."
--   "Is this safe to deploy?"
--   "Check for regressions after the model change."
--   "Should we roll this back?"
--   "Which failures got worse?"
+Decide whether to roll back
 
-------------------------------------------------------------------------
+When Not to Use
+Do not use this skill when:
 
-# When not to use
+there is no comparable before/after evidence
 
-Do not use this skill if:
+case sets cannot be matched reliably
 
--   there is no comparable before/after evidence
--   the case sets differ and cannot be matched reliably
--   the suite is too small to support a release decision
--   the task requires online experimentation
--   the user wants brainstorming instead of deterministic assessment
+the suite is too small for a release decision
+
+online experimentation is required
+
+the user wants brainstorming rather than deterministic assessment
 
 If evidence quality is weak, say so explicitly and lower confidence.
 
-------------------------------------------------------------------------
+Modes
+text
+regcheck [change summary]
+regcheck --strict [change summary]
+regcheck --high-risk [change summary]
+regcheck --json [change summary]
+regcheck --verdict-only [change summary]
+If no mode is specified, use the default evaluation flow.
 
-# Required inputs
+Inputs
+Required whenever possible:
 
-Provide these whenever possible:
+text
+change_summary
+before_cases
+after_cases
+risk_level   | low / medium / high
+Preferred payload:
 
--   change_summary
--   before_cases
--   after_cases
--   risk_level (low, medium, high)
-
-Example input:
-
-``` json
+json
 {
+  "change_summary": "Switched model and simplified system prompt",
+  "risk_level": "medium",
   "cases": [
     {
       "id": "case_001",
@@ -89,279 +89,356 @@ Example input:
     }
   ]
 }
-```
+Optional:
 
-------------------------------------------------------------------------
-
-# Optional inputs
-
-These improve evaluation quality:
-
--   suite_manifest
--   thresholds
--   strict_mode
--   output_path
-
-------------------------------------------------------------------------
-
-# Matching rules
-
-Cases must match by **stable id**.
+text
+suite_manifest
+thresholds
+tool_traces
+strict_mode
+output_path
+Matching Rules
+Match cases by stable id.
 
 If IDs do not match:
 
--   flag suite inconsistency
--   reduce confidence
--   avoid aligning by position unless explicitly requested
+text
+- flag suite inconsistency
+- lower confidence
+- do not align by position unless explicitly requested
+Scoring Rubric
+Score each case across four dimensions.
 
-------------------------------------------------------------------------
+Correctness
 
-# Deterministic scoring rubric
-
-Each case is scored across four dimensions.
-
-## Correctness
-
-2 = correct\
-1 = partially correct\
+text
+2 = correct
+1 = partially correct
 0 = incorrect
+Relevance
 
-## Relevance
-
-2 = fully relevant\
-1 = somewhat relevant\
+text
+2 = fully relevant
+1 = somewhat relevant
 0 = off-target
+Actionability
 
-## Actionability
-
-2 = actionable\
-1 = partially actionable\
+text
+2 = actionable
+1 = partially actionable
 0 = not actionable
+Tool Reliability
 
-## Tool reliability
-
-2 = correct tool usage\
-1 = minor tool issue\
+text
+2 = correct tool usage
+1 = minor tool issue
 0 = tool failure
+Case Outcomes
+pass
 
-------------------------------------------------------------------------
+text
+correctness >= 2
+relevance >= 1
+actionability >= 1
+tool_reliability >= 1
+soft_fail
 
-# Case outcome rules
+text
+usable answer, but quality degraded
+fail
 
-### pass
+text
+- correctness = 0
+- missing required fallback
+- tool failure
+- after is materially worse than before
+Any fail on a critical case is high severity.
 
-correctness ≥ 2\
-relevance ≥ 1\
-actionability ≥ 1\
-tool reliability ≥ 1
+Aggregated Metrics
+Always compute:
 
-### soft_fail
-
-usable answer but degraded quality.
-
-### fail
-
--   correctness = 0
--   safety/fallback missing
--   tool failure
--   after worse than before
-
-Any fail on a **critical case** is high severity.
-
-------------------------------------------------------------------------
-
-# Aggregated metrics
-
-Compute:
-
--   overall_pass_rate
--   critical_pass_rate
--   soft_fail_rate
--   tool_reliability_rate
--   average_correctness
--   average_relevance
--   average_actionability
-
+text
+overall_pass_rate
+critical_pass_rate
+soft_fail_rate
+tool_reliability_rate
+average_correctness
+average_relevance
+average_actionability
 Also compute deltas:
 
--   overall_pass_rate_delta
--   critical_pass_rate_delta
--   tool_reliability_delta
-
+text
+overall_pass_rate_delta
+critical_pass_rate_delta
+tool_reliability_delta
 Never hide negative deltas.
 
-------------------------------------------------------------------------
+Release Gates
+Low Risk
 
-# Default release gates
+text
+overall_pass_rate >= 0.90
+critical_pass_rate >= 0.95
+Medium Risk
 
-## Low risk
+text
+overall_pass_rate >= 0.95
+critical_pass_rate = 1.00
+tool_reliability_rate >= 0.95
+High Risk
 
-overall_pass_rate ≥ 0.90\
-critical_pass_rate ≥ 0.95
-
-## Medium risk
-
-overall_pass_rate ≥ 0.95\
-critical_pass_rate = 1.00\
-tool_reliability ≥ 0.95
-
-## High risk
-
-overall_pass_rate ≥ 0.98\
-critical_pass_rate = 1.00\
-tool_reliability ≥ 0.98
-
-Human review recommended.
-
-------------------------------------------------------------------------
-
-# Verdict rules
-
+text
+overall_pass_rate >= 0.98
+critical_pass_rate = 1.00
+tool_reliability_rate >= 0.98
+human review recommended
+Verdict Rules
 Return exactly one verdict.
 
-## go
+go
 
+text
 All gates pass.
+conditional_go
 
-## conditional_go
+text
+Minor issues exist, but no critical regressions block release.
+no_go
 
-Minor issues but no critical regressions.
+text
+Release gates fail. Fixes required before deployment.
+rollback
 
-## no_go
+text
+Critical regressions or material degradation on critical paths.
+Failure Clustering
+Group regressions by likely cause.
 
-Gates fail. Fixes required.
+Example clusters:
 
-## rollback
+text
+instruction_following_drift
+factuality_drop
+retrieval_miss
+tool_call_failure
+format_noncompliance
+missing_fallback
+hallucinated_capability
+For each cluster include:
 
-Critical regressions detected.
-
-------------------------------------------------------------------------
-
-# Failure clustering
-
-Group failures by likely cause.
-
-Examples:
-
--   instruction_following_drift
--   factuality_drop
--   retrieval_miss
--   tool_call_failure
--   format_noncompliance
--   missing_fallback
--   hallucinated_capability
-
-Each cluster should include:
-
--   name
--   severity
--   affected cases
--   likely cause
--   suggested fix direction
-
-------------------------------------------------------------------------
-
-# Anti-gaming rules
-
+text
+- name
+- severity
+- affected cases
+- likely cause
+- suggested fix direction
+Anti-Gaming Rules
 Flag explicitly:
 
--   different case sets before/after
--   missing critical cases
--   incomplete tool traces
--   changed expectations
--   too few cases for a release decision
-
+text
+- different case sets before vs after
+- missing critical cases
+- incomplete tool traces
+- changed expectations
+- too few cases for a release decision
 If detected:
 
--   lower confidence
--   explain limitations
+text
+- lower confidence
+- explain the limitation
+- avoid overconfident verdicts
+Confidence
+Return one level:
 
-------------------------------------------------------------------------
+text
+high
+medium
+low
+Base confidence on:
 
-# Confidence levels
+text
+- suite size
+- representativeness
+- matching quality
+- tool trace completeness
+- expectation consistency
+Workflow
+Step 1 — Validate Evidence
 
-Return:
+Check:
 
--   high
--   medium
--   low
+text
+- suite completeness
+- matching IDs
+- before/after comparability
+- critical case coverage
+- relevant tool traces
+Step 2 — Score Cases
 
-Confidence depends on:
+For each case evaluate:
 
--   suite size
--   representativeness
--   case matching quality
--   tool trace completeness
+text
+- correctness
+- relevance
+- actionability
+- tool reliability
+- before vs after delta
+- severity if degraded
+Step 3 — Compute Metrics
 
-------------------------------------------------------------------------
+Aggregate:
 
-# Output contract
+text
+- pass rates
+- averages
+- critical-case outcomes
+- tool reliability
+- deltas
+Step 4 — Cluster Regressions
 
-Return results in this structure:
+Group failures by likely mechanism, not only surface symptom.
 
-``` json
+Step 5 — Apply Release Gates
+
+Use the declared risk_level, or default to medium if not specified.
+
+Step 6 — Return Verdict
+
+Always return:
+
+text
+- executive summary
+- scorecard
+- top regressions
+- failure clusters
+- verdict
+- recommended fixes
+- confidence
+Output Template
+text
+## Executive Summary
+[Short before/after assessment]
+
+## Suite Summary
+- Total cases:
+- Critical cases:
+- Matching quality:
+
+## Scorecard
+- Overall pass rate:
+- Critical pass rate:
+- Soft-fail rate:
+- Tool reliability rate:
+- Average correctness:
+- Average relevance:
+- Average actionability:
+
+## Deltas
+- Overall pass rate delta:
+- Critical pass rate delta:
+- Tool reliability delta:
+
+## Top Regressions
+- case_id:
+  - what worsened
+  - severity
+  - likely cause
+
+## Failure Clusters
+### cluster_name
+- severity:
+- affected cases:
+- likely cause:
+- suggested fix:
+
+## Verdict
+go | conditional_go | no_go | rollback
+
+## Recommended Fixes
+- Fix 1
+- Fix 2
+- Fix 3
+
+## Confidence
+high | medium | low
+
+## Limitations
+- limitation 1
+- limitation 2
+JSON Output
+json
 {
-  "change_summary": "Switched model and simplified system prompt",
+  "change_summary": "",
   "risk_level": "medium",
   "confidence": "medium",
   "suite_summary": {
-    "total_cases": 18,
-    "critical_cases": 6
+    "total_cases": 0,
+    "critical_cases": 0,
+    "matching_quality": "good"
   },
   "scorecard": {
-    "overall_pass_rate": 0.89,
-    "critical_pass_rate": 0.83,
-    "tool_reliability_rate": 0.94
+    "overall_pass_rate": 0.0,
+    "critical_pass_rate": 0.0,
+    "soft_fail_rate": 0.0,
+    "tool_reliability_rate": 0.0,
+    "average_correctness": 0.0,
+    "average_relevance": 0.0,
+    "average_actionability": 0.0
   },
   "deltas": {
-    "overall_pass_rate_delta": -0.08
+    "overall_pass_rate_delta": 0.0,
+    "critical_pass_rate_delta": 0.0,
+    "tool_reliability_delta": 0.0
   },
   "verdict": "no_go",
   "top_regressions": [
     {
-      "case_id": "case_003",
-      "summary": "Fallback step missing"
+      "case_id": "",
+      "summary": "",
+      "severity": "high"
     }
   ],
-  "recommended_fixes": [
-    "Restore fallback instruction",
-    "Retest critical FAQ flows"
-  ]
+  "failure_clusters": [
+    {
+      "name": "",
+      "severity": "medium",
+      "affected_cases": [],
+      "likely_cause": "",
+      "suggested_fix_direction": ""
+    }
+  ],
+  "recommended_fixes": [],
+  "limitations": []
 }
-```
+Limits
+This skill does not:
 
-------------------------------------------------------------------------
+guarantee production improvement
 
-# Response format
+replace monitoring or experiments
 
-Responses should include:
+infer exact user impact from a small suite
 
-1.  executive summary
-2.  scorecard
-3.  regressions
-4.  clusters
-5.  verdict
-6.  recommended fixes
-7.  confidence
-
-------------------------------------------------------------------------
-
-# Limitations
-
-This skill cannot:
-
--   guarantee production improvement
--   replace monitoring
--   perfectly infer user impact from a small suite
+compensate for weak or mismatched test data
 
 High-risk changes should still involve human review.
 
-------------------------------------------------------------------------
+Tips
+Keep stable case IDs across releases.
 
-# Implementation note
+Mark critical cases before comparison.
 
-If a scorer script exists, use it.
+Include expected behavior, not only raw outputs.
 
-Otherwise apply this rubric manually.
+Save tool traces when tool reliability matters.
 
-Never suppress regressions. Never skip failing cases.
+Use medium risk if risk is unclear.
+
+Negative deltas matter even when absolute scores look acceptable.
+
+Re-run with the same suite after fixes to preserve comparability.
+
+Separate regression checking from redesign discussion.
+
+Author
+Vassiliy Lakhonin
