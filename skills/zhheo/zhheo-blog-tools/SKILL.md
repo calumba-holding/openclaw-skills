@@ -1,8 +1,14 @@
+---
+name: zhheo-blog-tools
+description: >-
+  与张洪Heo的智能体（洪墨AI）进行聊天或搜索文章。支持文章搜索、今日热门、标签/分类获取、装备与项目查询。
+  触发词：张洪Heo、博客、博主、张洪、Heo。
+---
 # Skill: zhheo-blog-tools
 
 与张洪Heo的智能体（洪墨AI）进行聊天或搜索文章。
 
-**触发词**：张洪Heo、博客、博主
+**触发词**：张洪Heo、博客、博主、张洪、Heo
 
 ## 数据源
 
