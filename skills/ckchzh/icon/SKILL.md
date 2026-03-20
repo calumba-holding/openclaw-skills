@@ -1,7 +1,7 @@
 ---
 name: icon
-description: "Generate SVG icons, create sprite sheets, convert between ICO/PNG/SVG, and build favicon sets."
-version: "3.2.0"
+description: "Generate and convert icons. Use when creating SVGs, building sprite sheets, converting ICO/PNG/SVG, or generating favicon sets."
+version: "3.4.0"
 author: BytesAgain
 homepage: https://bytesagain.com
 source: https://github.com/bytesagain/ai-skills
