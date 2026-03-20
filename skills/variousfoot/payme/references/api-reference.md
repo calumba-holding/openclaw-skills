@@ -8,14 +8,14 @@ All authenticated endpoints require: `Authorization: Bearer <agentToken>`
 
 ## POST /api/agent/create-account
 
-Create a new PayMe wallet instantly. No auth header needed. The user chooses their own PIN — this is for their future web/Telegram login, not something the agent stores or reuses.
+Create a new PayMe wallet instantly. No auth header needed. The user **chooses a new PIN** they invent on the spot — this is for their future web/Telegram login. The agent never stores, reuses, or asks for this PIN again.
 
 **Request:**
 ```json
 { "pin": "1234" }
 ```
 
-- `pin`: string, 4-6 digits (chosen by the user, ask them to delete the message after)
+- `pin`: string, 4-6 digits (a **new** PIN chosen by the user — ask them to delete the message after)
 
 **Response (200):**
 ```json
@@ -283,6 +283,30 @@ Execute a previously prepared payment.
 
 ---
 
+## GET /api/agent/search?q={query}
+
+**Scope:** `contacts:read`
+
+Search for PayMe users and saved contacts by partial name or username. Useful when the user provides a name that doesn't match exactly, or when they want to find someone.
+
+**Query params:**
+- `q` — Search query (min 2 characters). Partial, case-insensitive.
+
+**Response (200):**
+```json
+{
+  "results": [
+    { "type": "contact", "name": "chris lee", "address": "0x..." },
+    { "type": "user", "username": "chrislee", "address": "0x..." }
+  ]
+}
+```
+
+**Errors:**
+- `400` — Query too short (< 2 chars)
+
+---
+
 ## POST /api/agent/revoke
 
 Revokes the current agent token. Only requires a valid Bearer token (no scope needed).
@@ -293,6 +317,132 @@ Revokes the current agent token. Only requires a valid Bearer token (no scope ne
 ```
 
 ---
+
+# Vendor Trade Management Endpoints
+
+These endpoints are only accessible to users who are registered P2P vendors.
+
+---
+
+## GET /api/agent/vendor/orders
+
+**Scope:** `wallet:read`
+
+List orders assigned to the vendor. Returns active orders by default.
+
+**Query params:**
+- `status` (optional) — Filter: `escrow_locked`, `accepted`, `fiat_sent`, `completed`, `cancelled`, `disputed`
+
+**Response (200):**
+```json
+{
+  "orders": [
+    {
+      "orderId": "abc12345-...",
+      "status": "escrow_locked",
+      "amount": "50.00 USDC",
+      "fiat": "₦85,000",
+      "reroutes": 0,
+      "createdAt": "2026-03-17T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## POST /api/agent/vendor/orders/:id/accept
+
+**Scope:** `wallet:read`
+
+Accept a trade assigned to you. Only works on `escrow_locked` orders.
+
+**Response (200):**
+```json
+{ "success": true }
+```
+
+**Errors:**
+- Order not found, not assigned to you, or wrong status
+
+---
+
+## POST /api/agent/vendor/orders/:id/reject
+
+**Scope:** `wallet:read`
+
+Decline a trade. The order is rerouted to the next available vendor.
+
+**Response (200):**
+```json
+{ "success": true }
+```
+
+---
+
+## POST /api/agent/vendor/orders/:id/mark-paid
+
+**Scope:** `wallet:read`
+
+Mark that fiat payment has been sent to the buyer. Only works on `accepted` orders.
+
+**Response (200):**
+```json
+{ "success": true }
+```
+
+---
+
+## POST /api/agent/vendor/orders/:id/cancel
+
+**Scope:** `wallet:read`
+
+Cancel an order after accepting. Refunds buyer escrow. Warning: 3 consecutive cancellations trigger a temporary vendor cooldown.
+
+**Request (optional):**
+```json
+{ "reason": "Out of funds" }
+```
+
+**Response (200):**
+```json
+{ "success": true }
+```
+
+---
+
+## GET /api/p2p/vendor/insights
+
+**Scope:** `wallet:read` (vendor only)
+
+Returns live marketplace intelligence for the vendor dashboard: demand signal, rate competitiveness rank per token, and performance benchmarks vs peers.
+
+**Response (200):**
+```json
+{
+  "demand": {
+    "activeBuyers24h": 12,
+    "ordersLastHour": 3,
+    "avgRateUSDC": 1620,
+    "avgRateUSDT": 1615,
+    "totalOnlineVendors": 5
+  },
+  "rateRank": {
+    "USDC": { "rank": 2, "total": 8, "diff": 15 },
+    "USDT": { "rank": 1, "total": 6, "diff": null }
+  },
+  "benchmarks": {
+    "speedPercentile": 80,
+    "completionPercentile": 90,
+    "ratingPercentile": 75,
+    "missedOrders7d": 1
+  }
+}
+```
+
+- `rateRank.diff`: amount to add to your rate to reach #1 (null if already #1)
+- `benchmarks.*Percentile`: percentage of vendors you are better than (higher = better)
+- `missedOrders7d`: cancelled orders in the last 7 days
 
 ---
 
@@ -376,9 +526,13 @@ Public endpoint (no auth required).
       "maxOrderUsd": 500,
       "totalDisputes": 2,
       "disputesWon": 1,
-      "disputesLost": 1
+      "disputesLost": 1,
+      "tradesToday": 8,
+      "lastTradeAgoSecs": 120
     }
-  ]
+  ],
+  "avgSpeed": { "seconds": 180, "label": "3 minutes or less" },
+  "socialProof": { "tradesLastHour": 12, "volumeToday": 45000 }
 }
 ```
 
