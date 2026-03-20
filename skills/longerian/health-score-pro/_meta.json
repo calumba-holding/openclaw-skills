@@ -3,11 +3,16 @@
   "slug": "health-score-pro",
   "displayName": "Health Score Pro",
   "latest": {
-    "version": "1.4.3",
-    "publishedAt": 1773653717924,
-    "commit": "https://github.com/openclaw/skills/commit/64772f1a9fd486b4b54d415d96998e6d0faa45c4"
+    "version": "1.4.6",
+    "publishedAt": 1773665395642,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.4.3",
+      "publishedAt": 1773653717924,
+      "commit": "https://github.com/openclaw/skills/commit/64772f1a9fd486b4b54d415d96998e6d0faa45c4"
+    },
     {
       "version": "1.3.5",
       "publishedAt": 1773648841440,

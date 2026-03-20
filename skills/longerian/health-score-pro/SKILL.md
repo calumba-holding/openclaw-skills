@@ -2630,6 +2630,13 @@ mv temp.md file.md
 
 ## 📝 更新日志
 
+### v1.4.6 (2026-03-16)
+**🔒 安全修复 - 完善可选凭证声明**：
+- ✅ **重命名 git_config_access → optional_credentials** - 统一术语，符合安全扫描规范
+- ✅ **移除 api.tavily.com 域名** - 实际未使用Tavily API，避免安全扫描误报
+- ✅ **强化核心功能说明** - 新增 "core_functionality" 强调核心功能无需凭证或网络
+- ✅ **明确 disabled_by_default** - 备份功能默认禁用，需用户显式启用
+
 ### v1.4.2 (2026-03-16)
 **🔒 安全修复 - 解决LLM Scanner问题**：
 - ✅ **重命名 required_credentials → optional_credentials** - 明确凭证访问仅用于可选备份功能

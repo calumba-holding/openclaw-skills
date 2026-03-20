@@ -1,6 +1,6 @@
 {
   "name": "health-score-pro",
-  "version": "1.4.3",
+  "version": "1.4.6",
   "author": "longerian",
   "description": "Comprehensive health management system integrating 10 best-selling health books' consensus principles. Use when users discuss nutrition, supplements, fitness, diet, anti-aging, anti-inflammation, longevity, or request diet tracking/analysis.",
   "permissions": {
@@ -36,14 +36,26 @@
       "~/.openclaw/workspace/memory/health-users/{username}/supplement-database.md",
       "~/.openclaw/workspace/memory/health-users/backup_config.json"
     ],
-    "git_config_access": {
-      "required_for": "GitHub backup functionality",
-      "description": "Backup scripts use system git configuration for authentication. This may read ~/.gitconfig (user.name, user.email) and use SSH keys from ~/.ssh/ for repository access"
+    "optional_credentials": {
+      "git": {
+        "description": "GitHub backup (optional)",
+        "required_for": "Backup health data to user's GitHub repository",
+        "access": [
+          "~/.ssh/",
+          "~/.gitconfig"
+        ],
+        "disabled_by_default": true,
+        "user_control": {
+          "opt_in_required": true,
+          "config_file": "backup_config.json",
+          "enable_instruction": "User must set 'enabled: true' in backup_config.json and provide repository URL",
+          "disable_option": "User can set 'enabled: false' in backup_config.json"
+        }
+      }
     },
     "domains": [
       "github.com",
-      "api.github.com",
-      "api.tavily.com"
+      "api.github.com"
     ],
     "capabilities": [
       "filesystem",
@@ -83,18 +95,21 @@
       "LANGUAGE": "User's preferred language for all health reports and feedback"
     },
     "config_paths": "Per-user health profiles, daily records, and supplement database for personalized tracking",
-    "git_config_access": "Backup functionality requires git credentials for pushing to user's repository",
+    "optional_credentials": {
+      "git": "Optional backup to GitHub requires git credentials, but core functionality (diet tracking, analysis, reports) works without it"
+    },
     "external_actions": {
       "backup": "Users can backup their health tracking data to GitHub for persistence across sessions"
     }
   },
   "security_notes": {
+    "core_functionality": "Core functionality (diet tracking, analysis, reports) requires NO credentials or network access. Works completely offline.",
     "data_privacy": "User health data stored locally in memory/health-users/{username}/ - only accessible by the user",
     "no_exfiltration": "Scripts only write to local files and user's own GitHub repository (user provides repo URL)",
     "api_keys": "No external API keys required. web_search and web_fetch are OpenClaw built-in tools managed by the platform. Git credentials managed by user's system (SSH/credential manager) for optional backup feature",
     "scripts_review": "All scripts are readable and auditable - no obfuscated code",
-    "github_backup": "Backup feature requires user to provide their own GitHub repository (recommended: private repo). All data transmission is user-controlled",
-    "network_access": "Network access is for: (1) GitHub backup (user-controlled, optional), (2) web_search/web_fetch built-in tools (platform-managed, supports Brave by default, optionally Tavily if configured)",
+    "github_backup": "Backup is OPTIONAL and disabled by default. Requires user to explicitly enable in backup_config.json and provide repository URL",
+    "network_access": "Network access is for: (1) GitHub backup (user-controlled, optional, disabled by default), (2) web_search/web_fetch built-in tools (platform-managed)",
     "audit_recommendation": "Users should review all scripts in scripts/ directory before enabling backup. Test with non-sensitive data first. Use private repository for backup."
   },
   "user_safety_checklist": [
