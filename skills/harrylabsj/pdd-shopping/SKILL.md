@@ -1,9 +1,9 @@
 ---
 name: PDD Shopping
 slug: pdd-shopping
-version: 1.1.1
+version: 2.0.0
 homepage: https://clawic.com/skills/pdd
-description: Navigate Pinduoduo (拼多多) with smart group buying strategies, seller vetting, bargain hunting techniques, and browser-based subsidy/detail checks.
+description: Navigate Pinduoduo (拼多多) with browser automation for search, group buying, seller vetting, cart operations, and bargain hunting. Supports logged-in workflows for browsing, adding to cart, checking 百亿补贴, and order preview while keeping checkout/payment for user control.
 metadata:
   clawdbot:
     emoji: "🛒"
@@ -16,6 +16,34 @@ metadata:
 
 User wants to shop on Pinduoduo (拼多多). Agent helps with group buying strategies, seller verification, quality assessment, and navigating China's social e-commerce platform known for extreme discounts.
 
+## Capabilities
+
+### v2.0 - Browser Automation Support
+
+| Operation | Auth Required | Description |
+|-----------|---------------|-------------|
+| **Search** | Optional | Search products, filter by category/price |
+| **百亿补贴** | Optional | Browse platform-subsidized deals |
+| **拼团** | Optional | View group buying options, join existing groups |
+| **Seller Vetting** | Optional | Check store ratings, reviews, badges |
+| **Product Detail** | Optional | View specs, prices, service guarantees |
+| **Add to Cart** | ✅ Required | Add items to shopping cart |
+| **View Cart** | ✅ Required | Review cart contents |
+| **Join Group Buy** | ✅ Required | Initiate or join 拼团 |
+| **Apply Coupons** | ✅ Required | Check and apply platform/seller coupons |
+| **Generate Order Preview** | ✅ Required | Calculate final price with subsidies |
+| **Payment** | ❌ Blocked | User must complete payment manually |
+
+**Safety Rule**: Agent stops before payment. User retains full control over final purchase.
+
+### Legacy: Guidance-Only Mode (No Browser)
+
+- Group buying strategies
+- Seller vetting guidance
+- Quality assessment tips
+- 百亿补贴 navigation
+- Category-specific advice
+
 ## Quick Reference
 
 | Topic | File |
@@ -23,6 +51,38 @@ User wants to shop on Pinduoduo (拼多多). Agent helps with group buying strat
 | Group buying guide | `groupbuy.md` |
 | Seller vetting | `sellers.md` |
 | Quality assessment | `quality.md` |
+| Browser automation | `browser-workflow.md` |
+
+## Workflow
+
+### Phase 1: Discovery (Agent-Assisted)
+1. **Search** - Agent searches PDD for target products
+2. **百亿补贴** - Check platform-subsidized deals
+3. **Filter & Sort** - Apply filters (price, sales, ratings)
+4. **Seller Vetting** - Agent checks store badges, ratings, reviews
+5. **Group Buy Options** - View 拼团 prices vs solo prices
+
+### Phase 2: Selection (Agent-Assisted)
+1. **Product Detail** - Agent opens selected product page
+2. **Price Analysis** - Compare 当前价 / 百亿补贴价 / 拼团价
+3. **Service Verification** - Check 假一赔十, 退货包运费, 品质险
+4. **Review Check** - Read recent reviews, photo reviews
+5. **Group Decision** - Solo buy vs join group vs start group
+
+### Phase 3: Cart & Pre-Order (Agent-Assisted with Login)
+1. **Add to Cart** - Agent adds item to cart (requires login)
+2. **Group Buy Action** - Initiate or join 拼团 (requires login)
+3. **Cart Review** - Agent shows cart contents
+4. **Coupon Application** - Agent checks platform + seller coupons
+5. **Order Summary** - Agent generates complete order preview
+
+### Phase 4: Checkout (User-Controlled)
+1. **Handoff** - Agent presents final order details
+2. **User Review** - User confirms all details
+3. **Payment** - ⚠️ **User completes payment manually**
+4. **Confirmation** - User shares order confirmation if desired
+
+**Agent Boundary**: Stops at Phase 3. Never executes payment or final order submission.
 
 ## Browser Workflow Upgrade
 
@@ -215,13 +275,124 @@ Key browser extraction order on PDD:
 - Willing to research sellers
 - Agricultural products
 
+## Agent Execution Guide
+
+### When User Says "帮我买..." / "帮我下单..."
+
+```
+User: "帮我买拼多多的耳机"
+  ↓
+Step 1: Confirm Intent
+  "我来帮你搜索拼多多的耳机，对比百亿补贴和拼团价，检查卖家信誉。
+   最后需要你确认订单并完成支付。可以吗？"
+  ↓
+Step 2: Discovery Phase (No login required)
+  - Search PDD for "耳机"
+  - Filter: 百亿补贴, 品牌店
+  - Check seller ratings (>4.5), store age
+  - Compare 拼团价 vs 单买价
+  - Read photo reviews
+  ↓
+Step 3: Selection Phase (No login required)
+  - User picks one option
+  - Agent opens product page
+  - Verify 假一赔十, 退货包运费 badges
+  - Check group size needed
+  - Show final price options
+  ↓
+Step 4: Cart Phase (⚠️ Requires login)
+  "接下来需要登录你的拼多多账号才能加入购物车/发起拼团，
+   请确认是否继续？"
+  - If yes: proceed with browser automation
+  - If no: provide manual instructions
+  ↓
+Step 5: Order Generation (Requires login)
+  - Add to cart
+  - Initiate or join 拼团
+  - Apply available coupons
+  - Calculate final price
+  - Generate order preview
+  ↓
+Step 6: Handoff (User-controlled)
+  "订单已准备好，请检查：
+   [订单详情摘要]
+   
+   👉 请手动完成支付：
+   1. 打开拼多多 App
+   2. 进入购物车/拼团页面
+   3. 点击结算
+   4. 确认地址和优惠券
+   5. 提交订单并支付"
+```
+
+### Browser Automation Rules
+
+**Always announce before action:**
+- "正在搜索..."
+- "正在检查百亿补贴..."
+- "正在验证卖家信誉..."
+- "正在发起/加入拼团..."
+
+**Snapshot key information:**
+- Product title, 当前价, 百亿补贴价, 拼团价
+- Store badges (品牌/旗舰店/假一赔十)
+- Store rating, sales count, review count
+- Group size needed, current participants
+- Service guarantees (退货包运费/品质险)
+- Recent photo reviews
+
+**Stop conditions:**
+- Before any payment screen
+- When CAPTCHA appears (hand to user)
+- When login is required (ask first)
+- When seller rating <4.5 (warn user)
+
+### Login Handling
+
+**Option A: User already logged in (Chrome profile)**
+```
+browser navigates to PDD
+If user profile has active session → proceed
+If session expired → prompt user to login manually first
+```
+
+**Option B: Manual mode (no login)**
+```
+Agent provides:
+- Exact search keywords
+- 百亿补贴 filter tips
+- Seller vetting checklist
+- Step-by-step manual instructions
+User executes manually
+```
+
+## Quality Bar
+
+### Do:
+- ✅ Focus on seller vetting and quality assessment
+- ✅ Explain 拼团 strategies
+- ✅ Use browser automation for search/cart
+- ✅ Add to cart and initiate/join groups (with consent)
+- ✅ Generate order preview with all discounts
+- ✅ Stay honest about not doing payment operations
+
+### Do Not:
+- ❌ Pretend to log in (ask first)
+- ❌ Recommend sellers with rating <4.5
+- ❌ Store user data persistently
+- ❌ **Execute payment or final order submission**
+- ❌ Guarantee 百亿补贴 authenticity without verification
+
 ## Related Skills
 
 Install with `clawhub install <slug>` if user confirms:
 - `taobao` - Taobao marketplace guide
-- `jd-shopping` - JD.com shopping
+- `jd-shopping` - JD.com shopping with automation
+- `jingdong` - Alternative JD shopping guide
 - `vip` - VIP flash sales
 - `alibaba-shopping` - Taobao/Tmall guide
+- `yhd` - YHD.com shopping
+- `freshippo` - Freshippo fresh grocery
 
 ## Feedback
 
