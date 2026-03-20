@@ -3,11 +3,16 @@
   "slug": "crawler",
   "displayName": "Crawler",
   "latest": {
-    "version": "1.0.6",
-    "publishedAt": 1773673653359,
-    "commit": "https://github.com/openclaw/skills/commit/a97f55d51ded05c86259c1e3c3f895460cafb0d4"
+    "version": "2.0.1",
+    "publishedAt": 1773830365830,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.6",
+      "publishedAt": 1773673653359,
+      "commit": "https://github.com/openclaw/skills/commit/a97f55d51ded05c86259c1e3c3f895460cafb0d4"
+    },
     {
       "version": "1.0.5",
       "publishedAt": 1773661368860,
