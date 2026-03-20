@@ -1,54 +1,70 @@
 ---
 name: openclaw-pc-security
-description: OpenClaw personal-PC security self-check (Windows posture + local audit + optional target probing). Use this skill whenever the user needs to check Windows security posture, detect outdated OpenClaw/npm versions, or investigate security risks like token leaks and exposed ports.
+description: Local security self-check for your Windows PC and OpenClaw server setup (password protection, port, and exposure), producing a local report.
 compatibility: "requests>=2.28"
 ---
 
-# OpenClaw PC Security (Windows)
+# OpenClaw PC Security
 
 ## Description
 
-Security self-check and risk alerting for personal computers running OpenClaw, focusing on:
-- Windows posture (version, last security update date, support status, patch lag)
-- OpenClaw/npm outdated warnings
-- Optional port probing and weak-credential/exposure checks for local/LAN OpenClaw targets (authorized use only)
-
-Currently the Windows posture path is the primary completed scope; other OS and more checks can be added later.
+Security self-check and risk alerting for:
+- Windows baseline (version/build, last security update date, support status, patch lag)
+- Local OpenClaw CLI version vs latest (optional online check)
+- OpenClaw server configuration safety (password protection, default port use, public exposure)
+- Optional OpenClaw target checks (authorized use only)
 
 ## When to use
 
 Use this skill when you need to:
-- Check whether Windows is out of support or significantly behind patch cadence
-- Detect outdated OpenClaw/npm versions that may cause security concerns
-- Investigate token/config leaks, exposed ports, and weak-password brute-force risks
+- Check whether Windows is out of support or significantly behind updates
+- Confirm whether OpenClaw is up to date on your machine
+- If you deployed OpenClaw on a VPS/personal server, verify the setup is safe (password protection on, avoid default port, restrict exposure)
+- Generate a local HTML/JSON report for your own reference (do not upload publicly)
 
 ## Input
-- Local Windows information (version/build, last hotfix date)
-- Optional target host/IP and ports for OpenClaw probing
+- Local machine information (Windows version/build, last update date)
+- Optional OpenClaw config file path for server-side checks (e.g., config.json)
+- Optional target host/IP and ports for OpenClaw probing (authorized environments only)
 
 ## Output
 - Severity-based findings (Info/Medium/High/Critical)
-- HTML/JSON report under `openclaw-pc-security/output/`
-  - `openclaw-pc-security/output/scan_report.html`
-  - `openclaw-pc-security/output/scan_report.json`
+- HTML/JSON report under `output/`
+  - `output/audit_report.html` / `output/audit_report.json`
+  - `output/scan_report.html` / `output/scan_report.json`
+- Finding types include:
+  - `defender_status`, `browser_outdated`, `browser_info`, `windows_support_status`
+  - `server_config_not_found`, `server_auth_disabled`, `server_auth_enabled`
+  - `server_default_port`, `server_custom_port`, `server_exposed_public`, `server_local_only`
+  - `openclaw_outdated`, `openclaw_version_mismatch`, `windows_patch_lag`, `weak_credentials`
 
 ## Steps
 
 ### 1) Local audit
 ```bash
-python scripts/main.py --audit --npm-view-latest-openclaw --out-dir openclaw-pc-security/output
+python scripts/run_audit.py --npm-view-latest-openclaw --out-dir output
+```
+
+Optional: if you know your OpenClaw config file path:
+```bash
+python scripts/run_audit.py --server-config-path "<path-to-config.json>" --out-dir output
 ```
 
 ### 2) Scan a target (authorized environments only)
 ```bash
-python scripts/main.py <target-ip> --ports 18789,18790,18792 --out-dir openclaw-pc-security/output
+python scripts/run_scan.py <target-ip> --ports 18789,18790,18792 --out-dir output
+```
+
+Optional: enable active checks explicitly (disabled by default)
+```bash
+python scripts/run_scan.py <target-ip> --ports 18789,18790,18792 --enable-cred-check --enable-leak-check --out-dir output
 ```
 
 ## Notes
-- **Critical**: The active probing functionality (including port scanning, weak credential testing, and sensitive path exposure checks) is intrusive by design and must ONLY be used in authorized environments where you have explicit permission to test the target systems.
-- **DO NOT** use the scanning functionality against any system you do not own or have explicit authorization to test.
+- The server configuration checks are performed locally and do not send data to external services.
+- The HTML report supports CN/EN toggle and Simple/Detailed mode.
+- Active network checks must ONLY be used on systems you own or have explicit authorization to test.
 - **DO NOT** upload tokens, credentials, or reports (output/) to public repositories.
-- Reports are written under `openclaw-pc-security/output/` when using the provided scripts.
-- If Windows 10 is detected: consider upgrading to Windows 11; if not eligible, enroll in Windows 10 ESU to continue receiving updates until 2026-10.
+- Reports are written under `output/` when using the provided scripts.
 - If OpenClaw is outdated: after upgrading, some or all functions may be unavailable; assess carefully.
 - After the HTML report is generated, print the report path in the chat for the user's reference. Do NOT upload or send the report file unless the user explicitly requests it and provides a secure destination. Reports may contain sensitive information, so always handle them with caution.

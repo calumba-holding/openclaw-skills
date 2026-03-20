@@ -3,9 +3,15 @@
   "slug": "openclaw-pc-security",
   "displayName": "openclaw-pc-security",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1773293382452,
-    "commit": "https://github.com/openclaw/skills/commit/eebe4844a96dc8416cb30d6d961d0e52a73c474a"
+    "version": "2.0.1",
+    "publishedAt": 1773743282133,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1773293382452,
+      "commit": "https://github.com/openclaw/skills/commit/eebe4844a96dc8416cb30d6d961d0e52a73c474a"
+    }
+  ]
 }

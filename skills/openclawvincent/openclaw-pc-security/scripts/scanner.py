@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-TARGET_PORTS = [18789, 18790, 18792, 80, 443, 22]
+TARGET_PORTS = [18789, 18790, 18792]
 
 def check_port(ip, port, timeout_s):
     try:
@@ -79,29 +79,6 @@ def _probe_http(session, base_url, timeout_s, verify):
 def identify_service(ip, port, http_timeout_s=2, insecure=False):
     if insecure:
         warnings.simplefilter("ignore", InsecureRequestWarning)
-    # SSH banner probe
-    if port == 22:
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(http_timeout_s)
-                s.connect((ip, port))
-                banner = s.recv(200).decode(errors="ignore")
-            # Typical banner: SSH-2.0-OpenSSH_8.7
-            b = (banner or "").strip()
-            if "OpenSSH" in b:
-                ver = "unknown"
-                try:
-                    # Extract after 'OpenSSH_'
-                    idx = b.find("OpenSSH_")
-                    if idx != -1:
-                        ver = b[idx + len("OpenSSH_"):].split()[0]
-                except Exception:
-                    pass
-                return {"service": "OpenSSH", "version": ver, "url": f"ssh://{ip}:{port}", "port": port, "scheme": "ssh", "evidence": b}
-            elif b.startswith("SSH-"):
-                return {"service": "SSH", "version": "unknown", "url": f"ssh://{ip}:{port}", "port": port, "scheme": "ssh", "evidence": b}
-        except Exception:
-            pass
 
     with requests.Session() as session:
         session.trust_env = False
