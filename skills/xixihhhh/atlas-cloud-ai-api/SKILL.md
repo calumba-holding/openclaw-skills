@@ -1,10 +1,12 @@
 ---
 name: ai-image-video-llm-api
 description: "AI image generation, video generation, and LLM chat API — call Nano Banana 2, Seedream, Kling, Seedance, Qwen, DeepSeek and more through one unified API key via Atlas Cloud. Use this skill when the user needs to: generate images with AI (text-to-image, image editing, Nano Banana, Imagen, Seedream, Flux, DALL-E, Qwen-Image), generate videos with AI (text-to-video, image-to-video, Kling, Seedance, Vidu, Wan), call LLM chat APIs (Qwen, DeepSeek, GLM, Kimi, MiniMax, OpenAI-compatible format), integrate AI generation into their project, compare AI model pricing, or find a cheap AI API. Also trigger when users ask about AI API integration, serverless AI inference, or need a single API for multiple AI providers. Even if Atlas Cloud is not mentioned by name, consider this skill whenever the user wants to call AI generation or LLM APIs."
-env_vars:
-  ATLASCLOUD_API_KEY:
-    description: "Atlas Cloud API key for AI image/video generation and LLM access. Get one at https://www.atlascloud.ai/console/api-keys"
-    required: true
+metadata:
+  openclaw:
+    requires:
+      env:
+        - ATLASCLOUD_API_KEY
+    primaryEnv: ATLASCLOUD_API_KEY
 source: "https://github.com/AtlasCloudAI/nano-banana-2-skill"
 homepage: "https://github.com/AtlasCloudAI/nano-banana-2-skill"
 ---
@@ -31,6 +33,37 @@ One API key to generate images, videos, and call LLMs — covering Nano Banana 2
 ```bash
 export ATLASCLOUD_API_KEY="your-api-key-here"
 ```
+
+---
+
+## Script Usage
+
+This skill includes Python scripts for image and video generation. Zero external dependencies required.
+
+### List available models
+```bash
+python scripts/generate_image.py list-models
+python scripts/generate_video.py list-models
+```
+
+### Generate an image
+```bash
+python scripts/generate_image.py generate \
+  --model "MODEL_ID" \
+  --prompt "Your prompt" \
+  --output ./output
+```
+
+### Generate a video
+```bash
+python scripts/generate_video.py generate \
+  --model "MODEL_ID" \
+  --prompt "Your prompt" \
+  --output ./output \
+  duration=5
+```
+
+Run `python scripts/generate_image.py generate --help` or `python scripts/generate_video.py generate --help` for all options.
 
 ---
 
