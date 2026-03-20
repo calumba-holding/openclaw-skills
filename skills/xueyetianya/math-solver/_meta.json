@@ -3,11 +3,16 @@
   "slug": "math-solver",
   "displayName": "Math Solver",
   "latest": {
-    "version": "1.0.6",
-    "publishedAt": 1773666435831,
-    "commit": "https://github.com/openclaw/skills/commit/8c01ab75eb66ee7d06a2e3990f88d9461de7fdac"
+    "version": "2.0.0",
+    "publishedAt": 1773774201964,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.6",
+      "publishedAt": 1773666435831,
+      "commit": "https://github.com/openclaw/skills/commit/8c01ab75eb66ee7d06a2e3990f88d9461de7fdac"
+    },
     {
       "version": "2.2.0",
       "publishedAt": 1773421505126,
