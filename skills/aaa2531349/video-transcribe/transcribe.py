@@ -59,15 +59,28 @@ def check_ffmpeg():
 
 
 def install_whisper():
-    """提示用户安装 whisper"""
-    print("❌ 未检测到 Whisper，请先安装：")
+    """自动安装 whisper"""
     print("")
-    print("  pip3 install openai-whisper")
+    print("🔧 首次使用，正在安装 Whisper 引擎（约 300MB，一次性）...")
     print("")
-    print("或使用清华镜像源（推荐）：")
-    print("  pip3 install openai-whisper -i https://pypi.tuna.tsinghua.edu.cn/simple")
-    print("")
-    sys.exit(1)
+    try:
+        # 使用 pip 模块安装方式，更可靠
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", 
+            "openai-whisper",
+            "-i", "https://pypi.tuna.tsinghua.edu.cn/simple",
+            "--break-system-packages", "--user"
+        ])
+        print("")
+        print("✅ Whisper 安装完成！开始转录...\n")
+        return True
+    except subprocess.CalledProcessError as e:
+        print("")
+        print("❌ Whisper 安装失败，请手动安装：")
+        print("")
+        print("  pip3 install openai-whisper -i https://pypi.tuna.tsinghua.edu.cn/simple")
+        print("")
+        sys.exit(1)
 
 
 def install_ffmpeg():
@@ -327,7 +340,11 @@ def main():
         install_ffmpeg()
     
     if not check_whisper():
-        install_whisper()
+        install_whisper()  # 自动安装
+        # 安装后重新检查
+        if not check_whisper():
+            print("❌ Whisper 安装后仍未检测到，请手动运行：pip3 install openai-whisper")
+            sys.exit(1)
     
     print("✅ 依赖检查通过")
     print("")

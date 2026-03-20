@@ -1,5 +1,5 @@
 ---
-name: video-transcribe-v1-0-2
+name: video-transcribe-v1-0-3
 description: 本地视频转文字 - 使用 OpenAI Whisper 进行语音识别，完全免费、离线运行、保护隐私
 ---
 
@@ -25,13 +25,9 @@ description: 本地视频转文字 - 使用 OpenAI Whisper 进行语音识别，
 
 ## 📦 安装依赖
 
-首次使用前，需要安装 Whisper：
+**v1.0.3+ 无需手动安装！** 首次运行时会自动检测并安装 Whisper 引擎（约 300MB，一次性）。
 
-```bash
-pip3 install openai-whisper
-```
-
-**或者使用国内镜像源（推荐）：**
+如果自动安装失败，可手动安装：
 
 ```bash
 pip3 install openai-whisper -i https://pypi.tuna.tsinghua.edu.cn/simple
@@ -122,12 +118,17 @@ whisper video.mp4 --verbose True
 遇到问题或有建议？欢迎反馈！
 
 **作者：** Seven  
-**版本：** 1.0.2  
-**更新时间：** 2026-03-16
+**版本：** 1.0.3  
+**更新时间：** 2026-03-18
 
 ---
 
 ## 📋 更新日志
+
+### v1.0.3 (2026-03-18)
+- ✨ **新增**：首次运行时自动安装 Whisper 依赖，无需手动执行 pip 命令
+- 🔧 优化：使用清华镜像源自动安装，国内用户更快
+- 📝 更新：SKILL.md 说明文档，告知用户自动安装行为
 
 ### v1.0.2 (2026-03-16)
 - 🐛 **修复**：添加 YAML front matter 到 SKILL.md，修复技能在 OpenClaw 中无法显示的问题

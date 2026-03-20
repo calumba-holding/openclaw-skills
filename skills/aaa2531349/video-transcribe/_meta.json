@@ -3,9 +3,15 @@
   "slug": "video-transcribe",
   "displayName": "Video Transcribe - 视频转文字",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1773635526717,
-    "commit": "https://github.com/openclaw/skills/commit/7c5a8b3e2609bfe361807b8bc9b950771bac1fd6"
+    "version": "1.0.3",
+    "publishedAt": 1773829011000,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1773635526717,
+      "commit": "https://github.com/openclaw/skills/commit/7c5a8b3e2609bfe361807b8bc9b950771bac1fd6"
+    }
+  ]
 }
