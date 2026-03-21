@@ -28,7 +28,22 @@
 5. patch the runtime usage path so it can prefer the intended session-selected profile
 6. re-test `/status`
 
-## 4) Restore correct display semantics
+If you need exact per-profile evidence, run:
+
+```bash
+python3 scripts/codex_usage_report.py
+python3 scripts/codex_usage_report.py --profile secondary --profile tertiary
+```
+
+## 4) Diagnose suspiciously identical usage across profiles
+
+1. fetch live usage directly for the compared profiles
+2. compare `user_id`, `account_id`, `email`, and reset times
+3. if `account_id` matches but `user_id` differs, treat them as separate members in the same workspace
+4. inspect whether the local code hard-pinned the target profile or only passed a soft preference
+5. if the mismatch was intermittent, suspect provider-order fallback or wrong-token selection before assuming the backend merged quotas
+
+## 5) Restore correct display semantics
 
 1. decide whether the surface should show preferred profile, effective runtime profile, or usage source profile
 2. verify the displayed id comes from the intended state layer

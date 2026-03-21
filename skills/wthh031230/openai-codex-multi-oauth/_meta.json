@@ -3,9 +3,15 @@
   "slug": "openai-codex-multi-oauth",
   "displayName": "OpenAI Codex Multi OAuth",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1773625711921,
-    "commit": "https://github.com/openclaw/skills/commit/a1655a1b243e2359e23a51fdcd73d3552943d67f"
+    "version": "1.2.1",
+    "publishedAt": 1773754399738,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1773625711921,
+      "commit": "https://github.com/openclaw/skills/commit/a1655a1b243e2359e23a51fdcd73d3552943d67f"
+    }
+  ]
 }

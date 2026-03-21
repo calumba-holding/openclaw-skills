@@ -7,12 +7,33 @@ description: Manage and debug multiple OpenAI Codex OAuth profiles inside OpenCl
 
 Support and debug more than one `openai-codex` OAuth login inside OpenClaw.
 
+## Human-facing overview
+
+This skill is also meant to help a human operator understand the setup, not only help an agent patch code.
+
+What humans usually want to know:
+
+- which Codex profile the current chat is using
+- whether the current chat has its own pinned profile override
+- whether OpenClaw auto-switched after rate limits
+- whether `/status` usage matches the profile they expected
+- why two profiles may look similar even when they should stay distinct
+
+Common user-facing surfaces in real deployments:
+
+- `/status` — confirm the current chat's selected model, profile semantics, and usage summary
+- `/codex_profile` — an optional helper command in some setups for viewing or switching the current Codex profile
+- `/codex_usage` — an optional helper command in some setups for comparing live usage across profiles
+
+Treat `/codex_profile` and `/codex_usage` as common patterns, not guaranteed OpenClaw built-ins.
+
 ## Start here
 
 1. Run `python3 scripts/summarize_codex_profiles.py`.
-2. Classify the bug before patching anything.
-3. Change the smallest wrong layer.
-4. Re-test after every change.
+2. If usage is involved, also run `python3 scripts/codex_usage_report.py`.
+3. Classify the bug before patching anything.
+4. Change the smallest wrong layer.
+5. Re-test after every change.
 
 If the target setup includes a local helper command or router script, reproduce through that real entrypoint at least once. Synthetic env-injected tests can miss session-sync bugs.
 
@@ -75,8 +96,17 @@ Check:
 2. the effective runtime profile for the current chat
 3. whether the usage loader resolves auth from generic provider order instead of the current session profile
 4. whether the UI is mixing preferred-profile and effective-profile semantics
+5. whether the usage fetch hard-pins the exact inspected profile or only passes a soft preference
 
-### 4) A profile works sometimes but not always
+### 4) Two profiles show the same usage unexpectedly
+
+Check:
+1. whether they share the same `accountId` because they are in the same team workspace
+2. whether `user_id` is still different in the live `wham/usage` response
+3. whether the local code accidentally fetched usage with the wrong token because provider-order fallback overrode the intended profile
+4. whether the same-looking result was intermittent, which usually points to local selection/fallback bugs rather than backend quota semantics
+
+### 5) A profile works sometimes but not always
 
 Check:
 1. cooldown / last-good logic
@@ -111,6 +141,8 @@ Then verify every layer against that semantic before patching.
   - `openai-codex:tertiary`
   - `openai-codex:account-N`
 - Do not blur preferred profile, effective runtime profile, and usage source profile.
+- Hard-pin the exact profile credential when implementing per-profile usage inspection; a provider-level preference is not always a guarantee.
+- A Telegram menu entry alone does not create a real executable command. Wire any `/codex_usage`-style surface into the actual command handler path.
 - If an external repo exists, treat it as a separate layer instead of silently merging it into runtime state.
 
 ## Validation checklist
@@ -125,11 +157,28 @@ After each change, verify all of these:
 6. usage matches the intended semantic, or the difference is explicitly understood
 7. any helper command resolves the same profile id the runtime is using
 
+## Common operator examples
+
+Use examples like these when explaining the setup to a human:
+
+- "Use `/codex_profile` to inspect or switch the profile for this chat if your deployment exposes that helper."
+- "Use `/status` to confirm which profile the current chat prefers and whether usage looks aligned."
+- "If a `/codex_usage` helper exists, compare profiles directly when usage looks suspicious."
+- "If OpenClaw auto-rotated after rate limits, explain that the runtime may have switched profiles even if the user did not do it manually."
+
+When documenting commands, always say whether they are:
+
+- built into OpenClaw
+- local helper commands added by a specific deployment
+- examples that another operator may need to adapt
+
 ## Bundled resources
 
 - Read `references/runtime-files.md` for the file families that usually matter.
 - Read `references/workflows.md` for concrete repair workflows and rollback points.
+- Read `references/usage-debugging.md` when the bug involves usage mismatches, same-workspace confusion, or a new `/codex_usage`-style command.
 - Run `scripts/summarize_codex_profiles.py` before and after changes.
+- Run `scripts/codex_usage_report.py` when you need exact per-profile live usage evidence.
 
 ## Guardrails
 
