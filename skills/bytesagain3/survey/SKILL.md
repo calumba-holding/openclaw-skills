@@ -2,9 +2,11 @@
 name: survey
 version: "2.0.0"
 author: BytesAgain
+homepage: https://bytesagain.com
+source: https://github.com/bytesagain/ai-skills
 license: MIT-0
 tags: [survey, tool, utility]
-description: "Survey - command-line tool for everyday use"
+description: "Build surveys, collect responses, and analyze results. Use when creating forms, checking responses, converting data, analyzing trends, generating reports."
 ---
 
 # Survey
