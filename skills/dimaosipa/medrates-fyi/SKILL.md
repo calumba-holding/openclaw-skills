@@ -94,13 +94,14 @@ For outpatient procedures (MRIs, CTs, colonoscopies, minor surgeries), independe
 | `lng` | float | yes | Patient longitude |
 | `radius_miles` | float | no | Search radius (default 25) |
 | `payer` | string | no | Insurance payer name |
+| `plan_category` | string | no | Plan category filter: "Commercial", "Medicare", "Medicaid", or "Other" |
 | `plan_type` | string | no | Plan type, e.g. "PPO", "HMO", "EPO" |
 | `plan_name` | string | no | Exact plan name |
 | `drg_codes` | string | no | Comma-separated MS-DRG codes for inpatient bundled pricing |
 | `include_bundle` | bool | no | Include ancillary codes (anesthesia, facility fees) in estimate |
 | `limit` | int | no | Max hospitals (default 5) |
 
-**Response:** Hospitals sorted by `total_estimate` (cheapest first). Each hospital has `items[]` with per-code prices, `total_estimate`, `distance_miles`, and `in_network` status.
+**Response:** Hospitals sorted by `total_estimate` (cheapest first). Each hospital has `items[]` with per-code prices, `total_estimate`, `distance_miles`, and `in_network` status. Negotiated/estimated-rate items include `plan_category` (Commercial, Medicare, Medicaid, Other) when a payer is specified; cash/standard-charge-only items will not have this field.
 
 ### 3. Text Search — `GET /api/search`
 
