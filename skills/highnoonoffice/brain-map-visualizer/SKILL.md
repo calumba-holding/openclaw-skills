@@ -1,6 +1,6 @@
 ---
 name: brain-map-visualizer
-version: 2.1.0
+version: 2.5.1
 description: "Visualize your OpenClaw's cognition as a live, interactive, force-directed graph. Every markdown file in your workspace is a node. The closer to center, the more often it gets accessed. Moving dots show information flow: upstream files feed downstream ones. Watch cognition happen. Built on D3.js + React. Zero vertical specificity."
 homepage: https://github.com/highnoonoffice/hno-skills
 source: https://github.com/highnoonoffice/hno-skills/tree/main/oc-brain-map
@@ -183,6 +183,33 @@ journal / general: 0
 ```
 
 Higher tier = upstream. Ties broken by access count.
+
+---
+
+## Security
+
+**Scope:** This skill reads markdown files in your vault directory and session journals to build a graph. It writes one JSON file (`brain-map-graph.json`) as output. No network calls are made beyond fetching the graph data from your own API route. No credentials are requested, stored, or transmitted.
+
+**Tooltip rendering:** The interactive graph component renders tooltips as structured React elements (filename, group, session counts). No `dangerouslySetInnerHTML` or raw HTML injection is used anywhere in the component.
+
+**Filesystem access:** The journal parser script (`references/journal-parser.md`) reads `.md` files recursively under your configured vault directory. It writes one output file. The read scope is intentional — this is what builds the graph. Run it only from a trusted working directory.
+
+**API access control:** The route that serves graph data (`app/api/brain-map/graph/route.ts`) supports optional token-based access control via environment variable:
+
+```bash
+# In your .env.local or deployment environment
+BRAIN_MAP_SECRET=your-secret-key-here
+```
+
+Then pass the key in requests from your component:
+
+```typescript
+fetch('/api/brain-map/graph', {
+  headers: { 'x-brain-map-key': process.env.NEXT_PUBLIC_BRAIN_MAP_SECRET }
+})
+```
+
+If `BRAIN_MAP_SECRET` is not set, the route is open — suitable for localhost development only. For any networked deployment, set the secret.
 
 ---
 

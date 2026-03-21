@@ -1,11 +1,17 @@
 {
   "owner": "highnoonoffice",
   "slug": "brain-map-visualizer",
-  "displayName": "Oc Brain Map",
+  "displayName": "Brain Map Visualizer",
   "latest": {
-    "version": "2.1.0",
-    "publishedAt": 1773812536005,
-    "commit": "https://github.com/openclaw/skills/commit/b697d79ed4f014d0fec2d675d2cb7ba09632736a"
+    "version": "2.5.1",
+    "publishedAt": 1774044614529,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.1.0",
+      "publishedAt": 1773812536005,
+      "commit": "https://github.com/openclaw/skills/commit/b697d79ed4f014d0fec2d675d2cb7ba09632736a"
+    }
+  ]
 }
