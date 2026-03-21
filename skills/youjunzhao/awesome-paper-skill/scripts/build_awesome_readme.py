@@ -25,9 +25,7 @@ def has_published_venue(p):
 
 
 def badge(label, link, color):
-    if link:
-        return f"[![{label}](https://img.shields.io/badge/{label}-{color}.svg)]({link})"
-    return f"[![{label}](https://img.shields.io/badge/{label}-Not%20Found-lightgrey)](#)"
+    return f"[![{label}](https://img.shields.io/badge/{label}-{color}.svg)]({link})"
 
 
 def venue_tag(p):
@@ -93,15 +91,20 @@ def main():
             primary = p.get("url") or p.get("arxiv") or "#"
             date = p.get("date") or "Unknown"
             arxiv = p.get("arxiv") or ""
-            github = ""
-            website = ""
+            github = (p.get("github") or "").strip()
 
             lines.append(f"+ [{title}]({primary})")
 
-            venue_prefix = f"{venue_tag(p)} " if has_published_venue(p) else ""
-            lines.append(f"  {venue_prefix}{badge('arXiv', arxiv, 'b31b1b')}")
-            lines.append("  " + badge("GitHub", github, "9cf"))
-            lines.append("  " + badge("Website", website, "9cf") + f" **({date})**")
+            if has_published_venue(p):
+                lines.append(f"  {venue_tag(p)}")
+
+            if arxiv:
+                lines.append(f"  {badge('arXiv', arxiv, 'b31b1b')}")
+
+            if github:
+                lines.append("  " + badge("GitHub", github, "9cf"))
+
+            lines.append(f"  ({date})")
             lines.append("")
 
     with open(args.output, "w", encoding="utf-8") as f:
