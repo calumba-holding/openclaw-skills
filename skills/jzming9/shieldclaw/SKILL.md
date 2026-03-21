@@ -2,111 +2,116 @@
 name: shieldclaw
 description: "Security suite for OpenClaw. Provides security scanning, real-time protection, audit logging, and sensitive data encryption. Use this skill when users need security-related operations, threat detection, or data protection."
 metadata:
-  {
-    "copaw":
-      {
-        "emoji": "🛡️",
-        "requires": {}
-      }
-  }
+  emoji: "🛡️"
+  requires: {}
 ---
 
 # ShieldClaw Security Suite
 
-Use this skill when users need security-related operations in OpenClaw, including:
-- Scanning Skills for security risks
-- Monitoring and blocking suspicious operations
-- Encrypting sensitive data
-- Generating security audit reports
+## Overview
 
-## Core Capabilities
+ShieldClaw is a security skill suite for OpenClaw, providing four core capabilities:
 
-### 1. Security Scan (scan)
-Scan OpenClaw Skills for potential security risks.
+- **Scan** - Security scanning
+- **Guard** - Real-time protection
+- **Audit** - Audit logging
+- **Vault** - Sensitive data encryption
 
-**When to use:**
-- User wants to check if a Skill is safe
-- Before installing a new Skill
-- Regular security audits
+## Usage Scenarios
 
-**Usage:**
-```typescript
-// Perform security scan
-scanSkill(skillPath: string): ScanReport
+### 1. Security Scan (Scan)
 
-// Check specific risk types
-checkPermissions(skillId: string): PermissionRisk[]
-checkNetworkDomains(skillId: string): DomainRisk[]
-```
+Perform security checks before installing or using a Skill.
 
-### 2. Real-time Guard (guard)
-Monitor and intercept suspicious operations in real-time.
+**Users might say:**
+- "Scan this Skill for security issues"
+- "Check if ~/projects/my-skill is safe"
+- "Are there any risks in Skills in this directory"
+- "Scan all Skills in the current directory"
 
-**When to use:**
-- User wants to protect sensitive files/directories
-- Blocking dangerous API calls
-- Enforcing security policies
+**Capabilities:**
+- Detect dangerous function calls
+- Discover hardcoded keys/passwords
+- Evaluate permission risks
+- Identify suspicious network requests
+- Provide risk score (0-100)
 
-**Usage:**
-```typescript
-// Register protection rules
-registerGuardRule(rule: GuardRule): void
+### 2. Real-time Guard (Guard)
 
-// Check if operation is allowed
-validateOperation(context: OperationContext): boolean
-```
+Monitor and intercept suspicious file/network/process operations.
 
-### 3. Data Vault (vault)
-Encrypt and securely store sensitive data.
+**Users might say:**
+- "Enable file protection"
+- "Protect ~/.ssh directory from access"
+- "Block access to sensitive files"
+- "View protection interception records"
+- "Add /data/secrets to protection list"
 
-**When to use:**
-- User needs to store passwords, API keys, or credentials
-- Masking sensitive data in logs
-- Secure data transmission
+**Capabilities:**
+- File system monitoring
+- Network request interception
+- Process execution control
+- Real-time alerts
 
-**Usage:**
-```typescript
-// Encrypt sensitive data
-encrypt(data: string, type: DataType): VaultEntry
+### 3. Data Vault (Vault)
 
-// Decrypt when needed
-decrypt(vaultId: string): string
+Encrypt and securely store sensitive data, with auto-detection and masking.
 
-// Auto-detect and mask sensitive data
-maskSensitiveData(text: string): ProcessResult
-```
+**Users might say:**
+- "Encrypt this API Key"
+- "Store this password for me"
+- "Securely store this private key"
+- "Mask sensitive data in this text"
+- "View my saved sensitive data"
 
-### 4. Audit & Reporting (audit)
-Log operations and generate security reports.
+**Capabilities:**
+- AES-256-GCM encryption
+- Auto-detect sensitive information (phone, ID, email, etc.)
+- Smart masking display
+- System keychain for key storage
 
-**When to use:**
-- User needs security reports
-- Security incident investigation
-- Operation history review
+### 4. Security Audit (Audit)
 
-**Usage:**
-```typescript
-// Log security event
-logAudit(event: AuditEvent): void
+Record operation logs and generate security reports.
 
-// Generate security report
-generateReport(options: ReportOptions): AuditReport
-```
+**Users might say:**
+- "Generate security report"
+- "View recent security events"
+- "Export audit logs"
+- "View intercepted suspicious operations"
+- "What security risks this month"
 
-## Safety Guidelines
+**Capabilities:**
+- Complete operation audit trail
+- Visualized reports
+- PDF/Excel export
+- Compliance checking
 
-- Always scan third-party Skills before installation
-- Use Vault for any sensitive data (passwords, keys, tokens)
-- Enable Guard for critical directories (SSH keys, config files)
-- Regularly review audit logs for suspicious activities
+## Configuration
 
-## Limitations
+ShieldClaw supports the following configuration options:
 
-- Vault encryption keys are stored in system keychain
-- Some features require manual configuration
+| Option | Description | Default |
+|--------|-------------|---------|
+| scan.enabled | Enable scanning | true |
+| scan.autoScanOnInstall | Auto-scan on install | true |
+| guard.enabled | Enable protection | true |
+| guard.strictMode | Strict mode (more sensitive) | false |
+| guard.sensitivePaths | Protected paths list | ["~/.ssh", "~/.aws"] |
+| audit.enabled | Enable audit | true |
+| audit.retentionDays | Log retention days | 180 |
+| vault.enabled | Enable encryption | true |
 
-## Related Skills
+## Security Recommendations
 
-- browser_use: For web-based security checks
-- file_reader: For reading security reports
-- execute_shell_command: For system-level security operations
+1. **Scan before install**: Scan all third-party Skills before installation
+2. **Encrypt sensitive data**: Use Vault for passwords, API Keys, private keys
+3. **Protect critical directories**: Enable Guard for SSH keys, AWS credentials
+4. **Regular audits**: Review security reports and audit logs regularly
+
+## Notes
+
+- Encryption keys are auto-managed in system keychain
+- Audit logs stored in local SQLite database
+- Some advanced features may require manual configuration
+- Supports Windows, macOS, Linux platforms
