@@ -1,11 +1,17 @@
 {
   "owner": "harrylabsj",
   "slug": "hum2song",
-  "displayName": "Hum2Song 哼唱成曲",
+  "displayName": "Hum2Song",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1773828415376,
-    "commit": "https://github.com/openclaw/skills/commit/7e8d01c982d41ea589fe0f1fd01d2cca23b84007"
+    "version": "2.0.0",
+    "publishedAt": 1773923053634,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1773828415376,
+      "commit": "https://github.com/openclaw/skills/commit/7e8d01c982d41ea589fe0f1fd01d2cca23b84007"
+    }
+  ]
 }
