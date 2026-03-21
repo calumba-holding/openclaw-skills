@@ -1,0 +1,11 @@
+{
+  "owner": "krishnakumarmahadevan-cmd",
+  "slug": "cloud-misconfig-scanner",
+  "displayName": "Cloud Misconfig Scanner",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1774079716441,
+    "commit": null
+  },
+  "history": []
+}
