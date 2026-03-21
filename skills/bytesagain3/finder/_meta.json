@@ -3,9 +3,15 @@
   "slug": "finder",
   "displayName": "Finder",
   "latest": {
-    "version": "1.0.4",
-    "publishedAt": 1773663725391,
-    "commit": "https://github.com/openclaw/skills/commit/02cef55e5d46399338c8fac95d163bf9d496383e"
+    "version": "3.0.0",
+    "publishedAt": 1773925356745,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.4",
+      "publishedAt": 1773663725391,
+      "commit": "https://github.com/openclaw/skills/commit/02cef55e5d46399338c8fac95d163bf9d496383e"
+    }
+  ]
 }
