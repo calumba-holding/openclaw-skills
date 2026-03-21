@@ -13,19 +13,7 @@ const fs           = require('fs');
 const path         = require('path');
 const { execFile } = require('child_process');
 const os           = require('os');
-const { handleOnboarding, isSetupDone, getStoredModel } = require('./onboarding');
-
-// ─────────────────────────────────────────────
-// 配置加载
-// ─────────────────────────────────────────────
-
-const CONFIG_PATH = path.join(__dirname, '../config.json');
-
-function loadConfig() {
-  if (!fs.existsSync(CONFIG_PATH)) return {};
-  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')); }
-  catch (_) { return {}; }
-}
+const { handleReviewReply } = require('./review_reminder');
 
 
 // ─────────────────────────────────────────────
@@ -101,110 +89,6 @@ const MULTIMODAL_PROMPT = `
 如果图片模糊无法识别，返回：{"error": "图片无法识别"}
 `.trim();
 
-function inferProvider(modelName) {
-  if (/claude/.test(modelName))                           return 'anthropic';
-  if (/gpt|o1|o3|o4/.test(modelName))                    return 'openai';
-  if (/gemini/.test(modelName))                           return 'google';
-  if (/qwen|tongyi/.test(modelName))                      return 'dashscope';
-  if (/kimi|moonshot/.test(modelName))                    return 'moonshot';
-  if (/glm|chatglm/.test(modelName))                      return 'zhipu';
-  if (/minimax/.test(modelName))                          return 'minimax';
-  if (/deepseek/.test(modelName))                         return 'deepseek';
-  return 'openai';  // 默认走 OpenAI 兼容接口
-}
-
-function inferBaseUrl(provider) {
-  const urls = {
-    'anthropic':  'https://api.anthropic.com/v1/messages',
-    'openai':     'https://api.openai.com/v1/chat/completions',
-    'google':     'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    'dashscope':  'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-    'moonshot':   'https://api.moonshot.cn/v1/chat/completions',
-    'zhipu':      'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-    'minimax':    'https://api.minimax.chat/v1/text/chatcompletion_v2',
-    'deepseek':   'https://api.deepseek.com/v1/chat/completions',
-  };
-  return urls[provider] || 'https://api.openai.com/v1/chat/completions';
-}
-
-async function runMultimodalModel(imageBase64, caption, config) {
-  const modelName = (config.multimodal?.model || '').toLowerCase();
-
-  // API key 从 OpenClaw 运行环境取，key 名根据模型推断
-  // 用户只需在 OpenClaw 的 workspace 里配好对应的 auth-profile 即可
-  const provider = inferProvider(modelName);
-  const model    = config.multimodal?.model || 'claude-sonnet-4-6';
-  const apiKey   = process.env[`${provider.toUpperCase().replace(/-/g,'_')}_API_KEY`]
-                   || process.env.MULTIMODAL_API_KEY
-                   || '';
-  const baseUrl  = inferBaseUrl(provider);
-
-  const promptWithCaption = caption
-    ? `${MULTIMODAL_PROMPT}\n\n用户附带说明：「${caption}」`
-    : MULTIMODAL_PROMPT;
-
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-
-    // 根据不同提供商设置 header
-    if (provider === 'anthropic') {
-      headers['x-api-key']         = apiKey;
-      headers['anthropic-version'] = '2023-06-01';
-    } else {
-      headers['Authorization'] = `Bearer ${apiKey}`;
-    }
-
-    // Anthropic 用原生格式，其余统一走 OpenAI 兼容格式
-    const body = provider === 'anthropic'
-      ? {
-          model, max_tokens: 3000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
-              { type: 'text', text: promptWithCaption },
-            ],
-          }],
-        }
-      : {
-          model, max_tokens: 3000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
-              { type: 'text', text: promptWithCaption },
-            ],
-          }],
-        };
-
-    const response = await fetch(baseUrl, {
-      method: 'POST', headers,
-      body: JSON.stringify(body),
-    });
-    const data    = await response.json();
-    const rawText = provider === 'anthropic'
-      ? data.content?.[0]?.text
-      : data.choices?.[0]?.message?.content;
-
-    const parsed = JSON.parse((rawText || '').replace(/```json|```/g, '').trim());
-    if (parsed.error) return { success: false, error: parsed.error };
-
-    return {
-      success:           true,
-      source_engine:     `multimodal:${provider}/${model}`,
-      module:            normalizeModule(parsed.module) ?? parsed.module,
-      subtype:           parsed.subtype            ?? '未识别',
-      question_text:     parsed.question_text      ?? '',
-      visual_description: parsed.visual_description ?? null,
-      answer:            parsed.answer             ?? null,
-      user_annotation:   parsed.user_annotation    ?? null,
-      error_reason:      parsed.error_reason_hint  ?? '未说明',
-      keywords:          parsed.keywords           ?? [],
-    };
-  } catch (e) {
-    return { success: false, error: `多模态模型调用失败: ${e.message}` };
-  }
-}
 
 // ─────────────────────────────────────────────
 // 图片识别结果 → 统一结构
@@ -265,14 +149,41 @@ function extractKeywords(text, module) {
 // 图片消息主入口
 // ─────────────────────────────────────────────
 
-async function parseImageInput(imageBase64, caption = '') {
-  const model = getStoredModel();
-
-  const engineResult = await runMultimodalModel(imageBase64, caption, { multimodal: { model } });
-  if (!engineResult.success) {
+async function parseImageInput(imageBase64, caption, agentCall) {
+  // agentCall 是 OpenClaw 注入的模型调用函数（使用 workspace 里配置的模型）
+  // 如果没有注入（模型不支持图片），直接返回降级提示
+  if (typeof agentCall !== 'function') {
     return {
       success:         false,
-      error:           engineResult.error,
+      error:           'no_vision',
+      fallback_prompt: '没识别出来，可以把题目文字复制过来发给我，一样能整理。',
+    };
+  }
+
+  let engineResult;
+  try {
+    const promptWithCaption = caption
+      ? `${MULTIMODAL_PROMPT}\n\n用户附带说明：「${caption}」`
+      : MULTIMODAL_PROMPT;
+    const raw    = await agentCall({ image: imageBase64, text: promptWithCaption });
+    const parsed = JSON.parse((raw || '').replace(/```json|```/g, '').trim());
+    if (parsed.error) throw new Error(parsed.error);
+    engineResult = {
+      success:            true,
+      source_engine:      'openclaw-agent',
+      module:             normalizeModule(parsed.module) ?? parsed.module,
+      subtype:            parsed.subtype             ?? '未识别',
+      question_text:      parsed.question_text       ?? '',
+      visual_description: parsed.visual_description  ?? null,
+      answer:             parsed.answer              ?? null,
+      user_annotation:    parsed.user_annotation     ?? null,
+      error_reason:       parsed.error_reason_hint   ?? '未说明',
+      keywords:           parsed.keywords            ?? [],
+    };
+  } catch (e) {
+    return {
+      success:         false,
+      error:           e.message,
       fallback_prompt: '没识别出来，可以把题目文字复制过来发给我，一样能整理。',
     };
   }
@@ -281,9 +192,136 @@ async function parseImageInput(imageBase64, caption = '') {
     ...engineResult,
     date:          new Date().toISOString().slice(0, 10),
     source:        'image',
-    raw_image_b64: imageBase64,   // 保留原图，供 xlsx 嵌入使用（见 export_xlsx.js）
+    raw_image_b64: await compressImageAsync(imageBase64),  // 压缩到 800px 宽再存
     needs_confirm: buildConfirmPrompt(engineResult.module, engineResult.error_reason, caption),
   };
+}
+
+
+// ─────────────────────────────────────────────
+// 图片压缩（存储前缩至 800px 宽，减少 JSON 体积）
+// ─────────────────────────────────────────────
+
+/**
+ * 用 Canvas API（Node 18+ 没有，走 sharp 或直接限制尺寸）。
+ * OpenClaw 运行在 Node 环境，这里用 sharp 如果可用，否则原样返回。
+ * 安装：npm install sharp（可选，未安装时跳过压缩）
+ */
+function compressImage(base64) {
+  try {
+    const sharp = require('sharp');  // 可选依赖，未安装时 catch
+    const buf   = Buffer.from(base64, 'base64');
+    // sharp 是异步的，这里同步包装（仅在图片很大时才值得）
+    // 实际使用时建议改为 async 版本
+    return base64;  // 占位，下方 compressImageAsync 是真正的异步版本
+  } catch (_) {
+    return base64;  // sharp 未安装，原样返回
+  }
+}
+
+/**
+ * 异步版本（推荐在 parseImageInput 中使用）。
+ * 将图片压缩到宽度 ≤800px，质量 80，减少存储体积约 60-80%。
+ */
+async function compressImageAsync(base64) {
+  try {
+    const sharp  = require('sharp');
+    const buf    = Buffer.from(base64, 'base64');
+    const out    = await sharp(buf)
+      .resize({ width: 800, withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    return out.toString('base64');
+  } catch (_) {
+    return base64;  // sharp 未安装或压缩失败，原样返回
+  }
+}
+
+// ─────────────────────────────────────────────
+// 快捷录入模式
+// ─────────────────────────────────────────────
+
+/**
+ * 识别快捷格式：「科目-题型-原因-状态」
+ * 例：资料-乘积增长-公式不熟-待二刷
+ *     判断-逻辑判断-粗心
+ *     言语-主旨-没时间
+ *
+ * @returns {object|null} 解析结果，null 表示不是快捷格式
+ */
+function parseQuickEntry(text) {
+  // 快捷格式：至少两段用 - 或 — 分隔，第一段是科目关键词
+  const parts = text.split(/[-—·\/]/);
+  if (parts.length < 2) return null;
+
+  const module = normalizeModule(parts[0].trim());
+  if (!module) return null;
+
+  // 第二段：题型（可选）
+  const subtype = parts[1]?.trim() || '';
+
+  // 第三段：原因（可选，做关键词匹配）
+  const reasonRaw  = parts[2]?.trim() || '';
+  const error_reason = inferErrorReason(reasonRaw) !== '未说明'
+    ? inferErrorReason(reasonRaw)
+    : (reasonRaw || '未说明');
+
+  // 第四段：状态（可选）
+  const statusRaw = parts[3]?.trim() || '';
+  const status    = /掌握|搞懂|会了/.test(statusRaw) ? '已掌握' : '待二刷';
+
+  // 自动提取知识点标签
+  const keywords = extractKeywords(`${subtype} ${reasonRaw}`, module);
+
+  return {
+    source:        'quick',
+    date:          new Date().toISOString().slice(0, 10),
+    module,
+    subtype:       subtype || guessSubtype(reasonRaw),
+    question_text: text,   // 保留原始快捷文字
+    error_reason,
+    keywords,
+    status,
+    needs_confirm: null,   // 快捷模式不追问
+  };
+}
+
+
+// ─────────────────────────────────────────────
+// 导出筛选指令解析
+// ─────────────────────────────────────────────
+
+/**
+ * 识别用户是否在请求筛选导出，返回筛选参数或 null。
+ * 支持：
+ *   "导出错题本" / "导出全部"
+ *   "只导出待二刷的"
+ *   "导出判断推理的错题"
+ *   "导出最近两周的" / "导出最近30天"
+ *   "只导出待二刷的资料分析题"
+ */
+function parseExportCommand(text) {
+  if (!/导出|错题本|生成报告/.test(text)) return null;
+
+  const pending = /待二刷|未掌握/.test(text);
+
+  // 科目匹配
+  const module = normalizeModule(text);
+
+  // 时间匹配：最近N天 / 最近X周
+  let days = null;
+  const daysMatch = text.match(/最近\s*(\d+)\s*天/);
+  const weeksMatch = text.match(/最近\s*(\d+)\s*周/);
+  const monthMatch = text.match(/最近\s*(\d+)\s*个?月/);
+  if (daysMatch)  days = parseInt(daysMatch[1]);
+  if (weeksMatch) days = parseInt(weeksMatch[1]) * 7;
+  if (monthMatch) days = parseInt(monthMatch[1]) * 30;
+  // 口语化时间
+  if (/上周|这周|本周/.test(text))   days = 7;
+  if (/本月|这个月/.test(text))      days = 30;
+  if (/两周|两个周/.test(text))      days = 14;
+
+  return { _export: true, pendingOnly: pending, moduleFilter: module, daysFilter: days };
 }
 
 // ─────────────────────────────────────────────
@@ -291,6 +329,10 @@ async function parseImageInput(imageBase64, caption = '') {
 // ─────────────────────────────────────────────
 
 function parseStudyInput(message) {
+  // 优先尝试快捷录入格式：资料-乘积增长-公式不熟-待二刷
+  const quick = parseQuickEntry(message);
+  if (quick) return quick;
+
   const result = {
     date:                new Date().toISOString().slice(0, 10),
     source:              'text',
@@ -331,21 +373,29 @@ function parseStudyInput(message) {
 // OpenClaw 统一入口
 // ─────────────────────────────────────────────
 
-async function handleMessage(message, { webSearch, sendMessage } = {}) {
-  // Onboarding 拦截：setup 未完成，所有消息交给 onboarding
-  if (!isSetupDone()) {
-    const consumed = await handleOnboarding(
-      message.text ?? message.caption ?? '',
-      webSearch,
-      sendMessage
-    );
-    if (consumed) return { _onboarding: true };
+async function handleMessage(message, { agentCall, sendMessage } = {}) {
+  const text = message.text ?? message.caption ?? '';
+
+  // 1. 二刷回复拦截（优先级最高，避免"记得"被当成普通消息）
+  if (message.type === 'text' && sendMessage) {
+    const reviewReply = handleReviewReply(text);
+    if (reviewReply !== null) {
+      await sendMessage(reviewReply);
+      return { _review: true };
+    }
   }
 
+  // 2. 图片消息
   if (message.type === 'image') {
-    return parseImageInput(message.imageBase64, message.caption ?? '');
+    return parseImageInput(message.imageBase64, message.caption ?? '', agentCall);
   }
-  return parseStudyInput(message.text ?? '');
+
+  // 3. 导出筛选指令
+  const exportCmd = parseExportCommand(text);
+  if (exportCmd) return exportCmd;
+
+  // 4. 普通文字消息
+  return parseStudyInput(text);
 }
 
 module.exports = { handleMessage, parseStudyInput, parseImageInput, normalizeModule, detectMood };
