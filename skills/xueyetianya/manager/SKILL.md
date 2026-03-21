@@ -1,56 +1,57 @@
 ---
-name: manager
-version: "2.0.0"
-author: BytesAgain
-license: MIT-0
-tags: [manager, tool, utility]
-description: "Manager - command-line tool for everyday use"
+name: "manager"
+version: "3.0.0"
+description: "Manage tasks and projects with priorities and status tracking. Use when organizing work."
+author: "BytesAgain"
+homepage: "https://bytesagain.com"
 ---
 
-# Manager
+# manager
 
-Resource manager — track, organize, list, and maintain any collection of items.
+Manage tasks and projects with priorities and status tracking. Use when organizing work.
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `manager help` | Show usage info |
-| `manager run` | Run main task |
-| `manager status` | Check current state |
-| `manager list` | List items |
-| `manager add <item>` | Add new item |
-| `manager export <fmt>` | Export data |
-
-## Usage
+### `add`
 
 ```bash
-manager help
-manager run
-manager status
+scripts/script.sh add <task priority>
 ```
 
-## Examples
+### `list`
 
 ```bash
-# Get started
-manager help
-
-# Run default task
-manager run
-
-# Export as JSON
-manager export json
+scripts/script.sh list <status>
 ```
 
-## Output
+### `done`
 
-Results go to stdout. Save with `manager run > output.txt`.
+```bash
+scripts/script.sh done <id>
+```
 
-## Configuration
+### `remove`
 
-Set `MANAGER_DIR` to change data directory. Default: `~/.local/share/manager/`
+```bash
+scripts/script.sh remove <id>
+```
+
+### `stats`
+
+```bash
+scripts/script.sh stats
+```
+
+### `export`
+
+```bash
+scripts/script.sh export <file>
+```
+
+## Data Storage
+
+Data stored in `~/.local/share/manager/`.
 
 ---
-*Powered by BytesAgain | bytesagain.com*
-*Feedback & Feature Requests: https://bytesagain.com/feedback*
+
+*Powered by BytesAgain | bytesagain.com | hello@bytesagain.com*
