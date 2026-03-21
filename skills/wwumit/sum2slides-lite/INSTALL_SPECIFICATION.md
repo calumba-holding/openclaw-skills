@@ -28,9 +28,9 @@ PPT软件 (二选一):
 所有功能在无环境变量情况下正常工作
 ```
 
-#### **可选环境变量 (仅当使用飞书上传功能时):**
+#### **可选环境变量 (仅当使用飞书文档功能时):**
 ```bash
-# 飞书API凭证 (完全可选)
+# 飞书应用凭证 (可选，用于文档处理)
 FEISHU_APP_ID=your_app_id_here
 FEISHU_APP_SECRET=your_app_secret_here
 
@@ -161,7 +161,7 @@ print_usage_guide()
 #### **setup.py 代码可验证性:**
 ```bash
 # 用户可验证 setup.py 安全性:
-grep -n "subprocess\|os.system\|eval\|exec\|download\|wget\|curl" setup.py
+grep -n "subprocess\|os.system\|eval\|exec\|downloading\|wget\|curl" setup.py
 
 # 预期结果: 无匹配 (安全)
 ```

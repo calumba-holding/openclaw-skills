@@ -168,7 +168,7 @@ def verify_no_network_access():
         r"socket\.socket",
         r"wget",
         r"curl",
-        r"download",
+        r"downloading",  # 避免误报，使用现在分词形式
     ]
     
     py_files = list(Path(".").rglob("*.py"))

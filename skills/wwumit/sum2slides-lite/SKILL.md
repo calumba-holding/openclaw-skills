@@ -1,279 +1,214 @@
 ---
 name: sum2slides-lite
-description: 对话总结成专业PPT，支持飞书上传
+description: 对话总结成专业PPT，支持纯本地处理和可选飞书上传 (v1.1.6)
 metadata:
   openclaw:
     requires:
-      env: ["FEISHU_APP_ID", "FEISHU_APP_SECRET"]
+      env: []  # 基础功能不需要环境变量，飞书凭证是可选的
 ---
 
-# Sum2Slides Lite - 对话总结成PPT
+# Sum2Slides Lite v1.1.6 - 对话总结成PPT
 
 ## 🎯 简介
 
-**Sum2Slides Lite** 是一个免费的对话总结成PPT工具，特别适合OpenClaw用户将对话、会议记录、讨论内容快速总结成专业的演示文稿。
+**Sum2Slides Lite v1.1.6** 是一个智能对话总结成PPT工具，支持纯本地处理和可选飞书上传。
+
+## 🔒 安全使用指南 (ClawHub审查建议整合)
+
+### **📋 安装前必须做:**
+1. **检查代码** - 如果可以，审查所有代码文件
+2. **运行验证** - 运行 `INSTALL_VERIFICATION.py` 和 `quick_permission_check.py`
+3. **安全测试** - 在安全目录运行 `simple_sum2slides_test.py`
+
+### **🔑 飞书凭证安全:**
+- **仅设置可信应用** - 只为你信任的飞书应用设置 `FEISHU_APP_ID` / `FEISHU_APP_SECRET`
+- **凭证权限** - 这些凭证允许上传到你的飞书租户
+- **谨慎使用** - 如果不信任技能作者，不要设置飞书凭证
+
+### **🌐 网络活动控制:**
+- **纯本地模式** - 保持 `feishu.enabled=false` 且不设置 `FEISHU_*` 环境变量
+- **无网络活动** - 这样技能将完全在本地运行
+- **用户选择** - 你可以选择是否启用飞书上传功能
+
+### **📁 安全安装方法:**
+- **手动复制** - 如果不完全信任包作者，使用手动复制/符号链接方法
+- **用户控制** - 这样你可以控制何时将文件添加到技能文件夹
+- **逐步验证** - 在启用上传功能前逐步验证所有操作
 
 ## ✨ 核心功能
 
-### 🧠 智能对话分析
-- 自动提取关键决策和行动项
-- 识别重要要点和问题
-- 智能生成标题和结构
+### **纯本地处理:**
+- ✅ 智能对话分析
+- ✅ 专业PPT生成 (PowerPoint/WPS)
+- ✅ 多种模板支持
+- ✅ 标准 .pptx 格式
 
-### 🎨 专业PPT生成
-- 支持 **PowerPoint** 和 **WPS Office**
-- 多种专业模板 (商务/技术/教育)
-- 标准 .pptx 格式，兼容性好
-
-### ☁️ 飞书平台集成
-- 自动上传到飞书云盘
-- 生成文件分享链接
-- 团队协作支持
-
-### 🔒 权限友好设计
-- **优雅降级方案**: 无权限也能生成文件
-- 自动检测系统权限
-- 清晰的权限说明
+### **可选飞书上传:**
+- ⚠️ 需要设置 `FEISHU_APP_ID` / `FEISHU_APP_SECRET`
+- ⚠️ 数据会上传到你的飞书租户
+- ⚠️ 需要网络连接
 
 ## 🚀 快速开始
 
-### 🎯 版本说明: v1.1.2
+### **🎯 版本: v1.1.5 (安全审查整合版)**
 
-**标准安装方式**: 本版本采用ClawHub Skills标准安装方式，无需复杂的安装脚本。
-
-### 📋 安装前必读
-请选择适合你的安装方式:
-
-#### **方式A: 手动复制 (最安全，推荐)**
+### **方式A: 纯本地使用 (推荐，最安全)**
 ```bash
-# 1. 解压后手动复制文件
-unzip sum2slides-lite-v1.2.0-noflag.zip
-cd sum2slides-lite-v1.2.0-noflag
-cp -r * ~/.openclaw/skills/sum2slides-lite/
-```
+# 1. 解压文件
+unzip sum2slides-lite-v1.1.6.zip
+cd sum2slides-lite-v1.1.6
 
-#### **方式B: 符号链接 (开发者友好)**
-```bash
-# 保持源文件位置，创建符号链接
-ln -s /path/to/sum2slides-lite-v1.2.0-noflag ~/.openclaw/skills/sum2slides-lite
-```
-
-#### **方式C: pip安装 (标准Python包)**
-```bash
-cd sum2slides-lite-v1.2.0-noflag
-pip install -e .  # 可编辑安装
-```
-
-### 🔒 安全验证 (安装前建议)
-```bash
-# 1. 检查所有代码
-find . -name "*.py" -exec head -20 {} \;
-
-# 2. 验证无隐藏操作
-grep -r "subprocess\|os.system\|eval\|exec\|download" . --include="*.py"
+# 2. 不设置任何环境变量 (保持纯本地)
+# FEISHU_APP_ID 和 FEISHU_APP_SECRET 是可选的，不设置即可禁用网络功能
+# 保持 feishu.enabled=false (默认)
 
 # 3. 运行安全验证
 python INSTALL_VERIFICATION.py
-```
-
-### ⚙️ 环境配置 (可选)
-```bash
-# 仅当使用飞书上传时需要
-export FEISHU_APP_ID="your_app_id"
-export FEISHU_APP_SECRET="your_app_secret"
-
-# 安装Python依赖 (仅当需要PPT生成时)
-pip install python-pptx>=0.6.21
-```
-
-### ✅ 验证安装
-```bash
-# 运行权限检查
 python quick_permission_check.py
 
-# 运行功能测试
+# 4. 测试功能
 python simple_sum2slides_test.py
+
+# 5. 安装
+mkdir -p ~/.openclaw/skills/sum2slides-lite
+cp -r * ~/.openclaw/skills/sum2slides-lite/
 ```
 
-### 📚 详细安装指南
-请参阅: [INSTALL_WITHOUT_SETUP.md](INSTALL_WITHOUT_SETUP.md) - 无脚本安装详细指南
+### **方式B: 飞书上传模式 (需要凭证)**
+```bash
+# 1. 解压文件
+unzip sum2slides-lite-v1.1.6.zip
+cd sum2slides-lite-v1.1.6
 
-其他重要文档:
-- [SECURE_INSTALLATION_GUIDE.md](SECURE_INSTALLATION_GUIDE.md) - 安全使用指南
-- [INSTALL_VERIFICATION.py](INSTALL_VERIFICATION.py) - 安装验证脚本
-- [docs/SECURITY_GUIDE.md](docs/SECURITY_GUIDE.md) - 完整安全指南
+# 2. 设置可选飞书凭证 (仅当信任时)
+export FEISHU_APP_ID="your_trusted_app_id"
+export FEISHU_APP_SECRET="your_trusted_app_secret"
 
-### 基本使用
-```python
-from sum2slides import sum2slides
+# 3. 启用飞书功能
+# 编辑 config/config.yaml 设置 feishu.enabled=true
 
-# 将对话总结成PPT
-result = sum2slides(
-    conversation_text="你的对话内容...",
-    title="会议总结",
-    software="powerpoint"  # 或 "wps"
-)
+# 4. 运行完整验证
+python INSTALL_VERIFICATION.py --full
+python quick_permission_check.py
+python simple_sum2slides_test.py --feishu-test
 
-if result['success']:
-    print(f"PPT已生成: {result['ppt_info']['file_path']}")
+# 5. 安装
+mkdir -p ~/.openclaw/skills/sum2slides-lite
+cp -r * ~/.openclaw/skills/sum2slides-lite/
 ```
 
-## 🔧 详细配置
+### **方式C: 符号链接 (开发者)**
+```bash
+# 保持源文件位置，便于更新和审查
+ln -s "$(pwd)" ~/.openclaw/skills/sum2slides-lite
+```
 
-### 配置文件
-编辑 `config/config.yaml`:
+## ⚙️ 配置说明
+
+### **config/config.yaml 关键设置:**
 ```yaml
 basic:
-  output_dir: "~/Desktop/Sum2Slides"
-  default_software: "powerpoint"
-  default_template: "business"
+  output_dir: "~/Desktop/Sum2Slides"  # 输出目录
+  default_software: "powerpoint"       # powerpoint 或 wps
 
 feishu:
-  enabled: false
-  app_id: ""
-  app_secret: ""
+  enabled: false  # ⚠️ 设置为 true 启用飞书上传
+  app_id: ""      # 从环境变量读取
+  app_secret: ""  # 从环境变量读取
 ```
 
-### 环境变量
-复制 `.env.example` 为 `.env` 并填写:
+### **🔑 环境变量说明 (重要澄清)**
+
+#### **注册表元数据澄清:**
+- **SKILL.md元数据**: 正确标记为 `requires: env: []` (基础功能不需要环境变量)
+- **实际使用**: `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET` 是可选的
+- **修复问题**: v1.1.6修复了之前版本元数据不一致的问题
+
+#### **环境变量使用:**
 ```bash
-FEISHU_APP_ID=your_app_id_here
-FEISHU_APP_SECRET=your_app_secret_here
-OUTPUT_DIR=~/Desktop/Sum2Slides
+# ⚠️ FEISHU_APP_ID 和 FEISHU_APP_SECRET 是可选的
+# 仅当使用飞书上传功能时需要设置
+export FEISHU_APP_ID="your_app_id"        # 可选
+export FEISHU_APP_SECRET="your_app_secret" # 可选
+
+# 输出目录 (可选)
+export OUTPUT_DIR="~/Desktop/Sum2Slides"   # 可选
 ```
 
-## 📊 使用场景
-
-### 1. 会议总结
+#### **纯本地模式 (推荐):**
 ```
-会议讨论 → 自动分析 → PPT报告
-```
-
-### 2. 学习笔记整理
-```
-学习内容 → 要点提取 → 教学PPT
+✅ 不设置 FEISHU_* 环境变量
+✅ 保持 feishu.enabled=false
+✅ 完全无网络活动
+✅ 数据100%在本地
 ```
 
-### 3. 项目汇报
+## 📊 使用模式
+
+### **模式1: 完全本地 (最安全)**
 ```
-项目进展 → 数据整理 → 汇报PPT
+输入 → 本地处理 → 本地PPT文件
 ```
+- ❌ 无网络连接
+- ✅ 数据完全在本地
+- ✅ 无需API凭证
 
-## 🛠️ 技术架构
-
-### 模块化设计
+### **模式2: 飞书上传 (需要信任)**
 ```
-sum2slides-lite/
-├── core/          # 核心功能 (可复用)
-│   ├── base_generator.py
-│   ├── pptx_generator.py
-│   ├── wps_generator.py
-│   └── content_planner.py
-├── platforms/     # 平台集成 (可扩展)
-│   ├── base_platform.py
-│   └── feishu/feishu_platform.py
-├── config/       # 配置管理
-├── utils/        # 工具函数
-└── examples/     # 使用示例
+输入 → 本地处理 → 飞书云盘
 ```
+- ✅ 网络连接 (飞书API)
+- ⚠️ 数据上传到飞书
+- ⚠️ 需要API凭证
 
-### 兼容性
-- **操作系统**: macOS, Windows, Linux
-- **Python**: 3.7+
-- **PPT软件**: PowerPoint 2010+, WPS Office 10+
-- **平台**: 飞书
+## 🔧 验证工具
 
-## 🔒 权限说明与操作风险
-
-### 必需权限
-1. **文件系统**: 写入桌面目录的权限
-2. **网络**: 访问飞书API的权限
-
-### 可选权限 (macOS)
-- AppleScript自动化权限 (增强功能)
-- 系统偏好设置 → 安全性与隐私 → 隐私 → 自动化
-
-### 优雅降级方案
-**核心优势: 用户永远能得到可用的PPT文件**
-
-| 权限状态 | PPT生成能力 | 结果 |
-|---------|------------|------|
-| **完全授权** | ✅ 全自动化 | 功能完整，体验最佳 |
-| **无AppleScript** | ✅ 标准生成 | 生成标准 .pptx，两种软件都能打开 |
-| **无网络权限** | ✅ 本地保存 | 文件保存在桌面，可手动分享 |
-| **无文件权限** | ⚠️ 提示更改目录 | 用户选择有权限的目录 |
-
-## ⚠️ 操作风险与不一致性说明
-
-### 平台功能不一致
-- **AppleScript自动化**: 仅支持macOS系统
-- **PowerPoint集成**: 需要软件安装
-- **跨平台支持**: 功能在不同平台有差异
-
-### 配置行为不一致
-- **默认软件无安装**: 自动降级到WPS Office
-- **模板文件缺失**: 使用内置基本模板
-- **输出目录问题**: 提示用户选择目录
-
-### 详细风险说明
-请查看 `docs/OPERATIONAL_RISKS.md` 了解完整的操作风险和缓解措施。
-
-## 📁 文件清单
-
-### 核心文件
-```
-📄 sum2slides.py                 # 主程序
-📄 __init__.py                  # 包初始化
-📄 quick_permission_check.py    # 权限检测
-📄 simple_sum2slides_test.py    # 功能测试
-📄 setup_info.py                # 安装信息文件
-📄 SKILL.md                     # 本文档
-```
-
-### 文档文件
-```
-📄 docs/PERMISSIONS.md          # 权限说明
-📄 docs/USER_GUIDE.md           # 用户指南
-📄 README.md                    # 项目说明
-📄 .env.example                 # 环境变量示例
-📄 clawhub.json                 # Claw Hub配置
-```
-
-## 🔧 工具函数
-
-### 权限检测
+### **安全验证:**
 ```bash
-# 检查系统权限
+# 1. 安装验证
+python INSTALL_VERIFICATION.py
+
+# 2. 权限检查
 python quick_permission_check.py
-```
 
-### 功能测试
-```bash
-# 测试核心功能
+# 3. 功能测试
 python simple_sum2slides_test.py
+
+# 4. 网络检查 (可选)
+grep -r "requests\|urllib" . --include="*.py"
 ```
 
-### 使用示例
+### **飞书功能验证:**
 ```bash
-# 运行示例
-python examples/basic_usage.py
+# 仅当启用飞书时运行
+python examples/basic_usage.py --feishu-test
 ```
 
-## 🤝 支持与贡献
+## 📁 文件说明
 
-### 问题反馈
-- **GitHub Issues**: 问题报告和功能建议
-- **Discord社区**: 实时支持和讨论
+### **核心文件:**
+- `sum2slides.py` - 主程序
+- `core/` - PPT生成核心
+- `platforms/feishu/` - 飞书平台集成 (可选)
 
-### 文档资源
-- **使用指南**: `docs/USER_GUIDE.md`
-- **权限说明**: `docs/PERMISSIONS.md`
-- **API文档**: 查看代码注释
+### **验证工具:**
+- `INSTALL_VERIFICATION.py` - 安装验证 (必须运行)
+- `quick_permission_check.py` - 权限检查
+- `simple_sum2slides_test.py` - 功能测试
 
-### 开源社区
-- **许可证**: MIT License
-- **贡献**: 欢迎提交PR和功能建议
-- **反馈**: 收集用户使用体验
+### **安全文档:**
+- `SECURE_INSTALLATION_GUIDE.md` - 安全使用指南
+- `docs/SECURITY_GUIDE.md` - 完整安全指南
+
+## 🤝 支持与反馈
+
+### **安全报告:**
+- 发现安全问题立即报告
+- 通过官方渠道反馈
+
+### **使用帮助:**
+- 参考 `docs/USER_GUIDE.md`
+- 查看 `examples/` 目录
 
 ## 📄 许可证
 
@@ -281,18 +216,6 @@ MIT License - 详见 LICENSE 文件
 
 ---
 
-**Sum2Slides Lite** - 让对话总结变得简单高效！ 🚀
+**Sum2Slides Lite v1.1.5** - 智能对话总结，安全可控
 
-## 🔄 更新日志
-
-### 版本 1.0.0 (2026-03-18)
-- 初始版本发布
-- 核心对话分析功能
-- PPT生成支持 (PowerPoint/WPS)
-- 飞书平台集成
-- 权限检测系统
-- 完整文档和示例
-
----
-
-**开始使用 Sum2Slides Lite，提升你的工作效率！**
+**重要提醒:** 本技能提供两种使用模式，用户可以根据安全需求选择。建议首次使用时选择纯本地模式，熟悉后再考虑是否启用飞书上传功能。
