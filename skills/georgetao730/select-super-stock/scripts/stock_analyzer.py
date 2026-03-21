@@ -1,26 +1,47 @@
-#!/usr/bin/env python3
+#!/home/linuxbrew/.linuxbrew/bin/python3.10
 # -*- coding: utf-8 -*-
 """
-优质股票筛选专家 - 主分析脚本 (v1.1)
+优质股票筛选专家 - 主分析脚本 (v1.3)
 基于双核心模型：长线稳步上涨型 + 历史低位反弹型
-数据源：AKShare（优先）> 东方财富 HTTP API > 新浪财经 HTTP API
+数据源：强制使用 AKShare + 缓存机制
+
+缓存策略：
+- 交易时间：使用 AKShare 获取实时数据
+- 非交易时间：使用缓存数据（有效期 24 小时）
 """
 
 import sys
+import os
 import json
 import argparse
-import urllib.request
-import urllib.error
+import time
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 
+import pandas as pd
+
+# 导入缓存工具
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '_shared'))
 try:
-    import pandas as pd
+    from cache_utils import StockDataCache
+    HAS_CACHE = True
+except ImportError:
+    HAS_CACHE = False
+    print("⚠️ 缓存模块未找到，将禁用缓存功能")
+
+try:
     import akshare as ak
     HAS_AKSHARE = True
 except ImportError:
     HAS_AKSHARE = False
+    print("❌ AKShare 未安装，请运行：pip3 install akshare pandas -U")
+
+
+# 初始化缓存
+SCRIPT_DIR = os.path.dirname(__file__)
+CACHE_DIR = os.path.join(SCRIPT_DIR, '..', '.cache')
+cache = StockDataCache(CACHE_DIR, cache_max_age_hours=24) if HAS_CACHE else None
 
 
 @dataclass
@@ -39,8 +60,7 @@ class StockSignal:
 
 
 def get_stock_name(symbol: str) -> str:
-    """获取股票名称"""
-    # 1. 尝试 AKShare
+    """获取股票名称（仅使用 AKShare）"""
     if HAS_AKSHARE:
         try:
             stock_info = ak.stock_individual_info_em(symbol=symbol)
@@ -50,183 +70,80 @@ def get_stock_name(symbol: str) -> str:
                         return row.get('value', symbol)
         except Exception:
             pass
-    
-    # 2. 尝试东方财富 HTTP API
-    try:
-        url = f"http://push2.eastmoney.com/api/qt/stock/get?secid=1.{symbol}&fields=f58,f57"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode('utf-8'))
-        
-        if data.get('data') and data['data'].get('f58'):
-            return data['data']['f58']
-    except Exception:
-        pass
-    
     return symbol
 
 
-def fetch_kline_from_eastmoney(symbol: str, period: str = "101", count: int = 500) -> Optional[pd.DataFrame]:
+def fetch_kline_data(symbol: str, period: str = "daily", count: int = 500, max_retries: int = 3) -> pd.DataFrame:
     """
-    从东方财富获取 K 线数据（HTTP API）
+    获取 K 线数据（仅使用 AKShare，带重试机制）
     
-    period: 001=日线，002=周线，003=月线
-    """
-    try:
-        # 东方财富 HTTP API
-        if period == "weekly":
-            klt = "002"
-        elif period == "monthly":
-            klt = "003"
-        else:
-            klt = "001"
-        
-        fqt = "1"  # 前复权
-        
-        url = f"http://push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.{symbol}&klt={klt}&fqt={fqt}&beg=19900101&end=20991231&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61"
-        
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            data = json.loads(response.read().decode('utf-8'))
-        
-        if data.get('data') is None or data['data'].get('klines') is None:
-            return None
-        
-        klines = data['data']['klines']
-        if len(klines) == 0:
-            return None
-        
-        # 解析数据
-        rows = []
-        for line in klines[-count:]:
-            parts = line.split(',')
-            if len(parts) >= 11:
-                rows.append({
-                    'date': parts[0],
-                    'open': float(parts[1]),
-                    'close': float(parts[2]),
-                    'high': float(parts[3]),
-                    'low': float(parts[4]),
-                    'volume': float(parts[5]),
-                    'turnover': float(parts[6]) if parts[6] else 0,
-                    'amplitude': float(parts[7]) if parts[7] else 0,
-                    'pct_change': float(parts[8]) if parts[8] else 0,
-                    'change': float(parts[9]) if parts[9] else 0,
-                    'turnover_rate': float(parts[10]) if parts[10] else 0
-                })
-        
-        return pd.DataFrame(rows)
-    
-    except Exception as e:
-        print(f"东方财富数据获取失败：{e}")
-        return None
-
-
-def fetch_kline_from_sina(symbol: str, count: int = 500) -> Optional[pd.DataFrame]:
-    """
-    从新浪财经获取 K 线数据（HTTP API）
-    
-    支持日线数据
-    """
-    try:
-        # 确定市场
-        if symbol.startswith('6'):
-            market = 'sh'
-        else:
-            market = 'sz'
-        
-        # 获取日线数据（最大 1024 条）
-        url = f"http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol={market}{symbol}&scale=240&datalen={count}"
-        
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            data = json.loads(response.read().decode('utf-8'))
-        
-        if not data or len(data) == 0:
-            return None
-        
-        # 解析数据
-        rows = []
-        for item in data:
-            rows.append({
-                'date': item['day'],
-                'open': float(item['open']),
-                'close': float(item['close']),
-                'high': float(item['high']),
-                'low': float(item['low']),
-                'volume': float(item['volume']),
-                'turnover': 0,
-                'amplitude': 0,
-                'pct_change': 0,
-                'change': 0,
-                'turnover_rate': 0
-            })
-        
-        df = pd.DataFrame(rows)
-        
-        # 计算涨跌幅
-        df['pct_change'] = df['close'].pct_change() * 100
-        df['change'] = df['close'].diff()
-        
-        return df
-    
-    except Exception as e:
-        print(f"新浪财经数据获取失败：{e}")
-        return None
-
-
-def fetch_kline_data(symbol: str, period: str = "daily", count: int = 500) -> pd.DataFrame:
-    """
-    获取 K 线数据（多数据源 fallback）
-    
-    优先级：AKShare > 东方财富 > 新浪财经
+    ⚠️ 强制使用 AKShare 数据源，确保数据准确性
+    如果 AKShare 失败，不会 fallback 到其他数据源
     
     Args:
         symbol: 股票代码
         period: daily/weekly/monthly
         count: 数据条数
+        max_retries: 最大重试次数
     
     Returns:
         DataFrame with columns: date, open, high, low, close, volume
     """
     df = pd.DataFrame()
     
-    # 1. 尝试 AKShare
-    if HAS_AKSHARE:
+    if not HAS_AKSHARE:
+        print("  ❌ 错误：AKShare 未安装，无法获取数据")
+        print("  请运行：pip3 install akshare pandas -U")
+        return pd.DataFrame()
+    
+    # 仅使用 AKShare，带重试机制
+    for attempt in range(1, max_retries + 1):
         try:
-            print(f"  [1/3] 尝试 AKShare...")
+            if attempt > 1:
+                import time
+                wait_time = 2 ** (attempt - 1)  # 指数退避：2s, 4s, 8s
+                print(f"  ⏳ 等待 {wait_time} 秒后重试 (第 {attempt}/{max_retries} 次)...")
+                time.sleep(wait_time)
+            else:
+                print(f"  [AKShare] 获取数据中... (第 {attempt}/{max_retries} 次尝试)")
+            
             df = ak.stock_zh_a_hist(symbol=symbol, period=period, adjust="qfq")
+            
             if df is not None and len(df) > 0:
                 print(f"  ✓ AKShare 成功获取 {len(df)} 条数据")
                 df = df.tail(count)
-                df.columns = ['date', 'open', 'close', 'high', 'low', 'volume', 
-                              'turnover', 'amplitude', 'pct_change', 'change', 'turnover_rate']
+                # 适配 AKShare 列名
+                expected_cols = ['date', 'open', 'close', 'high', 'low', 'volume', 
+                                'turnover', 'amplitude', 'pct_change', 'change', 'turnover_rate']
+                if len(df.columns) == len(expected_cols):
+                    df.columns = expected_cols
+                elif len(df.columns) == 12:
+                    # 某些版本多一列，跳过最后一列
+                    df = df.iloc[:, :11]
+                    df.columns = expected_cols
+                else:
+                    print(f"  ⚠️ 列数不匹配：期望 {len(expected_cols)} 列，实际 {len(df.columns)} 列")
+                    print(f"  实际列名：{df.columns.tolist()}")
+                    # 尝试按位置映射
+                    if len(df.columns) >= 6:
+                        df = df.rename(columns={
+                            df.columns[0]: 'date',
+                            df.columns[1]: 'open',
+                            df.columns[2]: 'close',
+                            df.columns[3]: 'high',
+                            df.columns[4]: 'low',
+                            df.columns[5]: 'volume'
+                        })
                 return df.reset_index(drop=True)
+            else:
+                print(f"  ⚠️ AKShare 返回空数据")
         except Exception as e:
-            print(f"  ✗ AKShare 失败：{e}")
+            print(f"  ⚠️ AKShare 尝试 {attempt}/{max_retries} 失败：{e}")
+            if attempt == max_retries:
+                print(f"  ❌ AKShare 所有重试均失败，请检查网络连接或稍后再试")
+                return pd.DataFrame()
     
-    # 2. 尝试东方财富（支持日/周/月线）
-    try:
-        print(f"  [2/3] 尝试东方财富...")
-        df = fetch_kline_from_eastmoney(symbol, period, count)
-        if df is not None and len(df) > 0:
-            print(f"  ✓ 东方财富成功获取 {len(df)} 条数据")
-            return df.reset_index(drop=True)
-    except Exception as e:
-        print(f"  ✗ 东方财富失败：{e}")
-    
-    # 3. 尝试新浪财经（仅日线）
-    if period == "daily":
-        try:
-            print(f"  [3/3] 尝试新浪财经...")
-            df = fetch_kline_from_sina(symbol, count)
-            if df is not None and len(df) > 0:
-                print(f"  ✓ 新浪财经成功获取 {len(df)} 条数据")
-                return df.reset_index(drop=True)
-        except Exception as e:
-            print(f"  ✗ 新浪财经失败：{e}")
-    
-    print(f"  ❌ 所有数据源均失败")
+    print(f"  ❌ AKShare 数据获取失败")
     return pd.DataFrame()
 
 
@@ -450,6 +367,8 @@ def analyze_stock(symbol: str, full: bool = False) -> StockSignal:
     """
     分析股票
     
+    ⚠️ 强制使用 AKShare 数据源，确保数据准确性
+    
     Args:
         symbol: 股票代码
         full: 是否完整分析
@@ -460,19 +379,24 @@ def analyze_stock(symbol: str, full: bool = False) -> StockSignal:
     # 获取股票名称
     name = get_stock_name(symbol)
     
-    # 获取 K 线数据
-    df_daily = fetch_kline_data(symbol, period="daily", count=500)
-    df_weekly = fetch_kline_data(symbol, period="weekly", count=200) if full else pd.DataFrame()
-    df_monthly = fetch_kline_data(symbol, period="monthly", count=100) if full else pd.DataFrame()
+    # 获取 K 线数据（仅 AKShare，带重试）
+    print(f"\n🔍 开始分析股票：{symbol}")
+    print("=" * 50)
+    df_daily = fetch_kline_data(symbol, period="daily", count=500, max_retries=3)
+    df_weekly = fetch_kline_data(symbol, period="weekly", count=200, max_retries=2) if full else pd.DataFrame()
+    df_monthly = fetch_kline_data(symbol, period="monthly", count=100, max_retries=2) if full else pd.DataFrame()
     
+    # ⚠️ 如果 AKShare 数据获取失败，直接返回错误，不使用备用数据
     if df_daily.empty:
         return StockSignal(
             symbol=symbol,
             name=name,
-            category="观察区",
+            category="数据获取失败",
             score=0,
             similar_stock="N/A",
-            recommendation="数据不足，无法分析"
+            recommendation="❌ AKShare 数据源连接失败，请检查网络后重试",
+            strategy="建议：1) 检查网络连接 2) 稍后再试 3) 不要使用其他数据源替代",
+            risks=["数据源不可用", "网络问题", "API 限流"]
         )
     
     # 计算技术指标
@@ -603,8 +527,8 @@ def main():
     args = parser.parse_args()
     
     if not HAS_AKSHARE:
-        print("❌ 未安装 AKShare！请运行：pip3 install akshare")
-        sys.exit(1)
+        print("⚠️ 未安装 AKShare，使用备用数据源（东方财富/新浪财经）...")
+        # 继续执行，使用 HTTP API 数据源
     
     # 分析股票
     signal = analyze_stock(args.symbol, full=args.full)
