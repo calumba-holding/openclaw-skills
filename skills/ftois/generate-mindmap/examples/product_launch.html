@@ -135,6 +135,9 @@ svg{width:100%;height:100%;display:block;}
       <button class="btn layout-btn" id="layout-btn-2" onclick="switchLayout(2)" title="向右树形">&#x27A1; 树形</button>
       <button class="btn layout-btn" id="layout-btn-3" onclick="switchLayout(3)" title="垂直向下">&#x1F333; 垂直</button>
       <button class="btn layout-btn" id="layout-btn-4" onclick="switchLayout(4)" title="力导向动画">&#x26A1; 力导向</button>
+      <button class="btn layout-btn" id="layout-btn-5" onclick="switchLayout(5)" title="时间线">&#x23E9; 时间线</button>
+      <button class="btn layout-btn" id="layout-btn-6" onclick="switchLayout(6)" title="鱼骨图">&#x1F41F; 鱼骨</button>
+      <button class="btn layout-btn" id="layout-btn-7" onclick="switchLayout(7)" title="括弧图">&#x7D; 括弧</button>
     </div>
     <span class="meta">右键菜单 &nbsp;·&nbsp; Tab 添加子节点 &nbsp;·&nbsp; Del 删除 &nbsp;·&nbsp; Ctrl+Z 撤销</span>
   </div>
@@ -166,7 +169,7 @@ svg{width:100%;height:100%;display:block;}
 </div>
 <div id="toast"></div>
 <script>
-const RAW   = {"central": "产品发布 v2.0", "branches": [{"label": "需求分析", "color": "#4A90D9", "children": [{"label": "用户调研", "children": [{"label": "问卷设计", "children": []}, {"label": "用户访谈", "children": []}, {"label": "数据分析", "children": []}]}, {"label": "竞品分析", "children": [{"label": "功能对比", "children": []}, {"label": "定价策略", "children": []}]}, {"label": "需求优先级排序", "children": []}, {"label": "PRD 文档", "children": []}]}, {"label": "设计阶段", "color": "#1ABC9C", "children": [{"label": "UI 设计", "children": [{"label": "线框图", "children": []}, {"label": "视觉稿", "children": []}, {"label": "设计规范", "children": []}]}, {"label": "UX 设计", "children": [{"label": "用户流程", "children": []}, {"label": "交互原型", "children": []}]}, {"label": "设计评审", "children": []}, {"label": "可用性测试", "children": []}]}, {"label": "研发阶段", "color": "#E86C3A", "children": [{"label": "前端开发", "children": [{"label": "组件库", "children": []}, {"label": "页面实现", "children": []}, {"label": "性能优化", "children": []}]}, {"label": "后端开发", "children": [{"label": "API 设计", "children": []}, {"label": "数据库", "children": []}, {"label": "微服务", "children": []}]}, {"label": "测试", "children": [{"label": "单元测试", "children": []}, {"label": "集成测试", "children": []}, {"label": "压力测试", "children": []}]}, {"label": "代码评审", "children": []}]}, {"label": "上线准备", "color": "#9B59B6", "children": [{"label": "灰度发布", "children": [{"label": "内测用户", "children": []}, {"label": "A/B 测试", "children": []}]}, {"label": "运维保障", "children": [{"label": "监控告警", "children": []}, {"label": "回滚预案", "children": []}]}, {"label": "文档更新", "children": []}, {"label": "客服培训", "children": []}]}, {"label": "推广运营", "color": "#F39C12", "children": [{"label": "市场推广", "children": [{"label": "发布会", "children": []}, {"label": "媒体公关", "children": []}, {"label": "社交媒体", "children": []}]}, {"label": "数据追踪", "children": [{"label": "DAU/MAU", "children": []}, {"label": "转化率", "children": []}, {"label": "留存率", "children": []}]}, {"label": "用户反馈收集", "children": []}, {"label": "迭代规划", "children": []}]}]};
+const RAW   = {"central": "产品发布 v2.0", "branches": [{"label": "📦 需求分析", "color": "#4A90D9", "children": [{"label": "用户调研", "children": [{"label": "问卷设计", "children": []}, {"label": "用户访谈", "children": []}, {"label": "数据分析", "children": []}]}, {"label": "竞品分析", "children": [{"label": "功能对比", "children": []}, {"label": "定价策略", "children": []}]}, {"label": "需求优先级排序", "children": []}, {"label": "PRD 文档", "children": []}]}, {"label": "📅 设计阶段", "color": "#1ABC9C", "children": [{"label": "UI 设计", "children": [{"label": "线框图", "children": []}, {"label": "视觉稿", "children": []}, {"label": "设计规范", "children": []}]}, {"label": "UX 设计", "children": [{"label": "用户流程", "children": []}, {"label": "交互原型", "children": []}]}, {"label": "设计评审", "children": []}, {"label": "可用性测试", "children": []}]}, {"label": "📅 研发阶段", "color": "#E86C3A", "children": [{"label": "前端开发", "children": [{"label": "组件库", "children": []}, {"label": "页面实现", "children": []}, {"label": "性能优化", "children": []}]}, {"label": "后端开发", "children": [{"label": "API 设计", "children": []}, {"label": "数据库", "children": []}, {"label": "微服务", "children": []}]}, {"label": "测试", "children": [{"label": "单元测试", "children": []}, {"label": "集成测试", "children": []}, {"label": "压力测试", "children": []}]}, {"label": "代码评审", "children": []}]}, {"label": "🔸 上线准备", "color": "#9B59B6", "children": [{"label": "灰度发布", "children": [{"label": "内测用户", "children": []}, {"label": "A/B 测试", "children": []}]}, {"label": "运维保障", "children": [{"label": "监控告警", "children": []}, {"label": "回滚预案", "children": []}]}, {"label": "文档更新", "children": []}, {"label": "客服培训", "children": []}]}, {"label": "📈 推广运营", "color": "#F39C12", "children": [{"label": "市场推广", "children": [{"label": "发布会", "children": []}, {"label": "媒体公关", "children": []}, {"label": "社交媒体", "children": []}]}, {"label": "数据追踪", "children": [{"label": "DAU/MAU", "children": []}, {"label": "转化率", "children": []}, {"label": "留存率", "children": []}]}, {"label": "用户反馈收集", "children": []}, {"label": "迭代规划", "children": []}]}]};
 const TITLE = "产品发布 v2.0";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const CFG = [
@@ -618,7 +621,212 @@ function edgePath4(px,py,cx,cy){
 function drawSpine3(){
   document.querySelectorAll(".circ-ring,.fd-ring").forEach(e=>e.remove());
   document.getElementById("fishbone-spine")?.remove();
+  document.getElementById("timeline-axis")?.remove();
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LAYOUT 5 — 时间线（Timeline / 水平流程）
+   · 中心节点在最左侧
+   · 主分支从左到右等间距水平排列
+   · 子节点垂直向下展开
+   · 主分支之间有水平时间轴主干线
+══════════════════════════════════════════════════════════════════════════ */
+function subtreeH5(node){
+  const vg=12;
+  const kids=visKids(node); if(!kids.length) return node._h;
+  return node._h + 60 + kids.reduce((s,k)=>s+k._h+vg,0) - vg;
+}
+function layout5(tree){
+  pos={};
+  const branches=tree.branches||[];
+  // root at far left
+  pos[tree._id]={x:0, y:0, parentId:null, side:1};
+  if(!branches.length) return;
+
+  const H_STEP = 220;  // horizontal distance between branch columns
+  const V_TOP  = 90;   // vertical distance from timeline axis to first child
+
+  // Place branches horizontally
+  branches.forEach((b,i)=>{
+    const bx = tree._w/2 + H_STEP * (i+1);
+    pos[b._id]={x:bx, y:0, parentId:tree._id, side:1};
+
+    // Children stacked vertically below
+    const kids=visKids(b); if(!kids.length) return;
+    let curY = V_TOP;
+    kids.forEach(kid=>{
+      pos[kid._id]={x:bx, y:curY, parentId:b._id, side:1};
+      // Grandchildren further right
+      const gkids=visKids(kid); if(!gkids.length){ curY+=kid._h+12; return; }
+      let gy=curY;
+      gkids.forEach(gk=>{
+        pos[gk._id]={x:bx+kid._w/2+80+gk._w/2, y:gy, parentId:kid._id, side:1};
+        gy+=gk._h+8;
+      });
+      curY=Math.max(curY+kid._h+12, gy);
+    });
+  });
+}
+
+function edgePath5(px,py,pw,cx,cy,cw,depth){
+  if(depth===1){
+    // Timeline axis: horizontal straight line
+    const x1=px+pw/2, x2=cx-cw/2;
+    return `M${x1},${py} L${x2},${cy}`;
+  }
+  // Branch to children: vertical drop then horizontal
+  if(Math.abs(cx-px)<3){
+    // Straight down
+    const y1=py+20, y2=cy-cw/4;
+    return `M${px},${y1} L${cx},${y2}`;
+  }
+  // Horizontal bezier for grandchildren
+  const x1=px+pw/2, x2=cx-cw/2;
+  const mid=(x1+x2)/2;
+  if(Math.abs(cy-py)<3) return `M${x1},${py} L${x2},${cy}`;
+  return `M${x1},${py} C${mid},${py} ${mid},${cy} ${x2},${cy}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LAYOUT 6 — 鱼骨图（Fishbone / Ishikawa）
+   · 中心节点（鱼头）在右侧
+   · 水平主干（鱼脊）从右向左延伸
+   · 主分支交替从上下两侧 45° 斜向伸出（鱼骨）
+   · 子节点沿鱼骨方向排列
+══════════════════════════════════════════════════════════════════════════ */
+function layout6(tree){
+  pos={};
+  const branches=tree.branches||[];
+  // Fish head (root) on the right
+  pos[tree._id]={x:0, y:0, parentId:null, side:1};
+  if(!branches.length) return;
+
+  const SPINE_STEP = 180;   // distance between bones along spine
+  const BONE_LEN   = 130;   // length of each bone (diagonal)
+  const SUB_GAP    = 36;    // gap between sub-nodes along bone
+  const ANGLE      = Math.PI * 0.38; // ~68° from horizontal
+
+  branches.forEach((b,i)=>{
+    const spineX = -(tree._w/2 + 80 + SPINE_STEP * i);
+    const upDown = (i % 2 === 0) ? -1 : 1;  // alternate up/down
+    const bx = spineX - Math.cos(ANGLE) * BONE_LEN;
+    const by = upDown * Math.sin(ANGLE) * BONE_LEN;
+    pos[b._id]={x:bx, y:by, parentId:tree._id, side:-1, _spineX:spineX};
+
+    // Children along the bone direction
+    const kids=visKids(b); if(!kids.length) return;
+    const dx = Math.cos(ANGLE) * SUB_GAP * upDown * 0;
+    const dirX = -Math.cos(ANGLE);
+    const dirY = upDown * Math.sin(ANGLE);
+    kids.forEach((kid,j)=>{
+      const dist = SUB_GAP * (j+1) + kid._w/2;
+      const kx = bx + dirX * dist * 0.3;
+      const ky = by + dirY * dist;
+      pos[kid._id]={x:kx, y:ky, parentId:b._id, side:-1};
+
+      // Grandchildren
+      const gkids=visKids(kid); if(!gkids.length) return;
+      gkids.forEach((gk,gi)=>{
+        pos[gk._id]={
+          x: kx - gk._w/2 - kid._w/2 - 30,
+          y: ky + (gi - (gkids.length-1)/2) * (gk._h + 6),
+          parentId:kid._id, side:-1
+        };
+      });
+    });
+  });
+}
+
+function edgePath6(px,py,pw,cx,cy,cw,depth,node){
+  if(depth===1){
+    // Bone: from spine attachment point to branch node
+    const spineX = pos[node?._id]?._spineX;
+    if(spineX !== undefined){
+      // Draw: spine point → branch node
+      return `M${spineX},${py} L${cx},${cy}`;
+    }
+    return `M${px},${py} L${cx},${cy}`;
+  }
+  // Sub-bones: straight lines
+  return `M${px},${py} L${cx},${cy}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LAYOUT 7 — 括弧图（Brace Map / 层级分解）
+   · 中心节点在最左侧
+   · 父节点与子节点之间绘制 SVG 大括号 "}"
+   · 大括号的尖端对准父节点右侧，两端包裹所有子节点
+   · 强调 整体 → { 部分1, 部分2, ... } 的分解关系
+══════════════════════════════════════════════════════════════════════════ */
+function subtreeH7(node){
+  const vg=16;
+  const kids=visKids(node); if(!kids.length) return node._h;
+  return Math.max(node._h, kids.reduce((s,k)=>s+subtreeH7(k),0)+vg*(kids.length-1));
+}
+function layout7(tree){
+  pos={};
+  pos[tree._id]={x:0, y:0, parentId:null, side:1};
+  const branches=tree.branches||[]; if(!branches.length) return;
+
+  const BRACE_W = 40;   // width of the brace symbol area
+  const H_GAP_7 = 36;   // gap between parent right edge and brace
+  const H_GAP_C = 20;   // gap between brace and children left edge
+
+  function placeChildren(node, nodeRightX, cy){
+    const kids=visKids(node); if(!kids.length) return;
+    const vg=16;
+    const maxCW = Math.max(...kids.map(k=>k._w));
+    const childLX = nodeRightX + H_GAP_7 + BRACE_W + H_GAP_C;
+    const childCX = childLX + maxCW/2;
+    const heights = kids.map(k=>subtreeH7(k));
+    const totalH = heights.reduce((a,b)=>a+b,0) + vg*(kids.length-1);
+    let curY = cy - totalH/2;
+    kids.forEach((kid,i)=>{
+      const kcy = curY + heights[i]/2;
+      pos[kid._id]={x:childCX, y:kcy, parentId:node._id, side:1};
+      placeChildren(kid, childLX + maxCW/2, kcy);
+      curY += heights[i] + vg;
+    });
+  }
+
+  const maxBW = Math.max(...branches.map(b=>b._w));
+  const branchLX = tree._w/2 + H_GAP_7 + BRACE_W + H_GAP_C;
+  const branchCX = branchLX + maxBW/2;
+  const heights = branches.map(b=>subtreeH7(b));
+  const totalH = heights.reduce((a,b)=>a+b,0) + 16*(branches.length-1);
+  let curY = -totalH/2;
+  branches.forEach((b,i)=>{
+    const bcy = curY + heights[i]/2;
+    pos[b._id]={x:branchCX, y:bcy, parentId:tree._id, side:1};
+    placeChildren(b, branchLX + maxBW/2, bcy);
+    curY += heights[i] + 16;
+  });
+}
+
+function edgePath7(px,py,pw,cx,cy,cw,depth){
+  /*  Brace Map edge: smooth cubic Bezier with a visible "step" shape.
+      Unlike tree layout's S-curve (which goes directly from parent to child),
+      the brace path goes:  parent → horizontal exit → step down/up → horizontal enter → child
+      This creates the visual "}" bracket grouping effect.
+      Uses only C (cubic bezier) commands — no Q or L — for clean anti-aliased rendering.
+  */
+  const x1 = px + pw/2;       // parent right edge
+  const x2 = cx - cw/2;       // child left edge
+  const midX = x1 + (x2 - x1) * 0.42;  // vertical transit x
+
+  // Same height → simple S-curve
+  if(Math.abs(cy - py) < 4){
+    const cp = x1 + (x2 - x1) * 0.5;
+    return `M${x1},${py} C${cp},${py} ${cp},${cy} ${x2},${cy}`;
+  }
+
+  // Two-segment cubic bezier: parent→midpoint, midpoint→child
+  // Segment 1: horizontal exit from parent, curve down/up to midX
+  // Segment 2: from midX, curve horizontally into child
+  return `M${x1},${py} C${midX},${py} ${midX},${py} ${midX},${(py+cy)/2} `
+       + `C${midX},${cy} ${midX},${cy} ${x2},${cy}`;
+}
+
 
 /* ══════════════════════════════════════════════════════════════════════════
    LAYOUT DISPATCHER
@@ -630,6 +838,9 @@ function layout(tree){
   else if(currentLayout===1) layout1(tree);
   else if(currentLayout===2) layout2(tree);
   else if(currentLayout===3) layout3(tree);
+  else if(currentLayout===5) layout5(tree);
+  else if(currentLayout===6) layout6(tree);
+  else if(currentLayout===7) layout7(tree);
 }
 
 function edgePath(px,py,pw,cx,cy,cw,depth,side){
@@ -638,15 +849,17 @@ function edgePath(px,py,pw,cx,cy,cw,depth,side){
   if(currentLayout===2) return edgePath2(px,py,pw,cx,cy,cw,depth);
   if(currentLayout===3) return edgePath3(px,py,pw,cx,cy,cw,depth);
   if(currentLayout===4) return edgePath4(px,py,cx,cy);
+  if(currentLayout===5) return edgePath5(px,py,pw,cx,cy,cw,depth);
+  if(currentLayout===6) return edgePath6(px,py,pw,cx,cy,cw,depth);
+  if(currentLayout===7) return edgePath7(px,py,pw,cx,cy,cw,depth);
   return edgePath0(px,py,pw,cx,cy,cw,depth,side);
 }
 
 function switchLayout(n){
   stopFD();
   currentLayout=n;
-  // 切换布局只重置位置锁定，保留折叠状态
   Object.values(nodeMap).forEach(node=>{node._pinned=false;node._px=null;node._py=null;});
-  for(let i=0;i<5;i++){
+  for(let i=0;i<8;i++){
     const btn=document.getElementById("layout-btn-"+i);
     if(btn) btn.classList.toggle("active",i===n);
   }

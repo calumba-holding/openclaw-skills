@@ -18,56 +18,89 @@ Usage:
         --data '{"central":"...","branches":[...]}' [--format html]
 """
 
-import argparse, json, math, sys, zipfile, io, uuid, os, platform
+import argparse, json, math, sys, zipfile, io, uuid, os, platform, subprocess
 from datetime import datetime
 from pathlib import Path
+
+
+def _ensure_pillow():
+    """Try to import Pillow; if missing, auto-install via pip and retry."""
+    try:
+        from PIL import Image  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    print("[mindmap] Pillow not found, installing automatically …", file=sys.stderr)
+    try:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "pillow", "--quiet",
+             "--disable-pip-version-check", "--break-system-packages"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # Retry without --break-system-packages (older pip)
+        try:
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "pillow", "--quiet",
+                 "--disable-pip-version-check"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+        except Exception:
+            print("[mindmap] ⚠ Auto-install failed. Please run manually:", file=sys.stderr)
+            print("    pip install pillow", file=sys.stderr)
+            return False
+    try:
+        from PIL import Image  # noqa: F401
+        print("[mindmap] ✅ Pillow installed successfully.", file=sys.stderr)
+        return True
+    except ImportError:
+        print("[mindmap] ⚠ Install succeeded but import still fails.", file=sys.stderr)
+        return False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Cross-platform path helpers
 # ─────────────────────────────────────────────────────────────────────────────
 def resolve_output(raw_path: str, fmt: str) -> str:
-    """Expand ~, $HOME, %USERPROFILE%, create parent dirs, fix extension."""
+    """Expand ~, $HOME, %USERPROFILE%, create parent dirs, fix extension.
+
+    If the path is just a filename without directory (e.g. 'mindmap.png'),
+    it is placed under ~/.openclaw/workspace/ instead of the current dir.
+    """
     p = Path(os.path.expandvars(os.path.expanduser(raw_path)))
     ext_map = {"html":".html","svg":".svg","png":".png",
                "jpg":".jpg","pdf":".pdf","xmind":".xmind"}
     expected = ext_map.get(fmt, "")
     if expected and p.suffix.lower() != expected:
         p = p.with_suffix(expected)
+
+    # If only a bare filename was given (no directory), use default workspace
+    if p.parent == Path(".") or str(p.parent) == ".":
+        workspace = Path.home() / ".openclaw" / "workspace"
+        workspace.mkdir(parents=True, exist_ok=True)
+        p = workspace / p.name
+
     p.parent.mkdir(parents=True, exist_ok=True)
     return str(p)
 
 
 def default_output(fmt: str) -> str:
-    """Return a sensible default output path for the current OS."""
+    """Return a sensible default output path for the current OS.
+
+    Default: ~/.openclaw/workspace/  (cross-platform, auto-adapts to username)
+      - Windows:  C:\\Users\\<username>\\.openclaw\\workspace\\
+      - macOS:    /Users/<username>/.openclaw/workspace/
+      - Linux:    /home/<username>/.openclaw/workspace/
+    """
     ext_map = {"html":".html","svg":".svg","png":".png",
                "jpg":".jpg","pdf":".pdf","xmind":".xmind"}
     ts  = datetime.now().strftime("%Y%m%d_%H%M%S")
     ext = ext_map.get(fmt, ".html")
     name = f"mindmap_{ts}{ext}"
-    system = platform.system()
 
-    if system == "Darwin":   # macOS
-        d = Path.home() / "Desktop"
-        return str((d if d.exists() else Path.home()) / name)
-
-    if system == "Linux":
-        # Desktop may not exist on headless servers
-        for candidate in [
-            Path.home() / "Desktop",
-            Path(os.environ.get("XDG_DOCUMENTS_DIR", "__none__")),
-            Path.home() / "Documents",
-            Path.home(),
-        ]:
-            try:
-                if candidate.exists():
-                    return str(candidate / name)
-            except Exception:
-                continue
-        return str(Path.home() / name)
-
-    # Windows / unknown
-    return str(Path.home() / name)
+    workspace = Path.home() / ".openclaw" / "workspace"
+    workspace.mkdir(parents=True, exist_ok=True)
+    return str(workspace / name)
 
 
 DEFAULT_COLORS = [
@@ -101,7 +134,7 @@ def parse_args():
         description="OpenClaw Mind Map Generator — cross-platform (macOS / Linux / Windows)"
     )
     p.add_argument("--title",   required=True,  help="Mind map title")
-    p.add_argument("--output",  default=None,   help="Output file path (default: ~/Desktop/mindmap_<ts>.<ext>)")
+    p.add_argument("--output",  default=None,   help="Output file path (default: ~/.openclaw/workspace/mindmap_<ts>.<ext>)")
     p.add_argument("--data",    required=True,  help="JSON string describing the mind map structure")
     p.add_argument("--format",  default="html",
                    choices=["html","svg","png","jpg","pdf","xmind"],
@@ -133,8 +166,201 @@ def build_tree(data):
     for i, b in enumerate(data.get("branches", [])):
         nb = normalize_node(b)
         nb.setdefault("color", DEFAULT_COLORS[i % len(DEFAULT_COLORS)])
+        # ── Auto-inject emoji if branch label doesn't start with one ──
+        _auto_inject_emoji(nb, i)
         branches.append(nb)
     return {"central": data["central"], "branches": branches}
+
+
+# ── Emoji auto-injection (Dual-Coding Theory) ────────────────────────────
+# If the AI didn't add emoji to branch labels, the script selects an emoji
+# by matching the label text against a semantic keyword dictionary.
+# This ensures the emoji visually represents the *meaning* of the branch,
+# not just its color.
+
+# Semantic keyword → emoji mapping (Chinese + English, ordered by specificity)
+# More specific keywords must come before general ones.
+_SEMANTIC_EMOJI = [
+    # ── 人物/角色 ──
+    (["人物", "角色", "团队", "成员", "员工", "用户", "画像", "character", "people", "team", "user", "member", "staff", "player", "persona"], "👥"),
+    (["作者", "作家", "创始人", "author", "writer", "founder", "creator"], "✍️"),
+    (["领导", "管理层", "CEO", "leader", "management", "executive"], "👔"),
+    (["客户", "顾客", "消费者", "受众", "customer", "client", "consumer", "audience"], "🧑‍💼"),
+    (["合作", "伙伴", "联盟", "协作", "partner", "collaborat", "alliance", "cooperat"], "🤝"),
+    # ── 时间/历史 ──
+    (["历史", "背景", "起源", "演变", "发展史", "history", "background", "origin", "evolution", "heritage"], "🏛️"),
+    (["时间", "阶段", "时期", "年代", "时间线", "timeline", "period", "phase", "era", "date", "schedule"], "📅"),
+    (["未来", "趋势", "展望", "预测", "前景", "future", "trend", "forecast", "outlook", "vision"], "🔮"),
+    # ── 技术/科学 ──
+    (["技术", "科技", "研发", "算法", "tech", "technology", "algorithm", "engineering", "R&D"], "🔬"),
+    (["AI", "人工智能", "机器学习", "深度学习", "模型", "artificial intelligence", "machine learning", "neural", "GPT", "LLM"], "🤖"),
+    (["代码", "编程", "开发", "软件", "code", "programming", "software", "develop", "API", "debug"], "💻"),
+    (["数据", "数据库", "统计", "指标", "data", "database", "analytics", "statistics", "metric", "KPI"], "📊"),
+    (["网络", "互联网", "通信", "社交媒体", "社交", "social media", "network", "internet", "communication", "web", "online"], "🌐"),
+    (["安全", "加密", "隐私", "防护", "security", "encryption", "privacy", "cyber", "protect"], "🔒"),
+    # ── 商业/金融 ──
+    (["商业", "盈利", "收入", "营收", "利润", "变现", "business", "revenue", "profit", "income", "monetiz"], "💰"),
+    (["市场", "营销", "推广", "品牌", "口碑", "传播", "market", "marketing", "brand", "promotion", "advertis", "PR"], "📈"),
+    (["销售", "卖点", "转化", "获客", "增长", "拉新", "sale", "conver", "acquisition", "growth", "retain", "funnel"], "📊"),
+    (["竞争", "对手", "竞品", "壁垒", "competi", "rival", "barrier"], "⚔️"),
+    (["成本", "费用", "预算", "投资", "融资", "cost", "budget", "invest", "expense", "funding", "capital"], "💵"),
+    (["价格", "定价", "收费", "报价", "price", "pricing", "fee", "charge", "quota"], "🏷️"),
+    (["战略", "策略", "规划", "布局", "strategy", "strategic", "planning", "roadmap"], "🎯"),
+    (["产品", "功能", "特性", "需求", "product", "feature", "function", "requirement", "spec"], "📦"),
+    (["渠道", "分发", "分销", "平台", "channel", "distribut", "platform"], "🔗"),
+    (["供应链", "供应", "采购", "库存", "procurement", "supply", "inventory", "sourcing", "vendor"], "🏭"),
+    (["运营", "运维", "运作", "operation", "ops", "maintain"], "⚙️"),
+    # ── 客户服务 ──
+    (["服务", "客服", "售后", "保障", "支持", "service", "support", "after-sale", "warranty", "helpdesk"], "🎧"),
+    (["体验", "满意度", "反馈", "口碑", "评价", "experience", "satisfaction", "feedback", "review", "NPS", "UX"], "⭐"),
+    (["留存", "复购", "忠诚", "黏性", "retention", "loyalty", "repeat", "churn", "stickiness"], "🔁"),
+    # ── 教育/学习 ──
+    (["学习", "教育", "课程", "培训", "教学", "learn", "education", "course", "training", "teach", "study"], "🎓"),
+    (["知识", "概念", "理论", "原理", "knowledge", "concept", "theory", "principle"], "📚"),
+    (["考试", "测试", "评估", "评价", "评分", "exam", "test", "assessment", "evaluation", "grading"], "📝"),
+    (["启蒙", "早教", "入门", "基础", "beginner", "fundamental", "basic", "introduct", "primer"], "🌟"),
+    # ── 职业/求职 ──
+    (["职业", "求职", "面试", "简历", "career", "job", "interview", "resume", "CV", "hiring", "recruit"], "💼"),
+    (["薪资", "工资", "薪酬", "待遇", "salary", "wage", "compensation", "pay", "bonus"], "💳"),
+    (["晋升", "升职", "成长", "发展", "职级", "promotion", "advancement", "career path", "growth"], "📶"),
+    (["技能", "能力", "技巧", "skill", "ability", "competenc", "expertise", "proficienc"], "🎯"),
+    # ── 文学/艺术 ──
+    (["作品", "文学", "小说", "著作", "文章", "writing", "literature", "novel", "book", "article"], "📖"),
+    (["艺术", "风格", "美学", "art", "style", "aesthetic"], "🎨"),
+    (["音乐", "歌曲", "music", "song", "melody", "album"], "🎵"),
+    (["电影", "视频", "影视", "film", "movie", "video", "cinema"], "🎬"),
+    (["文化", "传统", "文明", "民俗", "culture", "tradition", "civilization", "folk"], "🌍"),
+    (["摄影", "拍摄", "相机", "镜头", "photo", "camera", "lens", "shoot", "image"], "📷"),
+    (["设计", "UI", "UX", "排版", "视觉", "design", "layout", "visual", "graphic", "typograph"], "🎨"),
+    # ── 结构/组织 ──
+    (["结构", "组织", "架构", "框架", "structure", "organization", "framework", "architect"], "🏗️"),
+    (["流程", "步骤", "过程", "方法", "工艺", "process", "step", "procedure", "method", "workflow", "SOP"], "🔄"),
+    (["分类", "类型", "类别", "种类", "category", "type", "classification", "kind", "taxonomy"], "🗂️"),
+    (["情节", "故事", "叙事", "剧情", "plot", "story", "narrative", "chapter"], "📜"),
+    (["标准", "规范", "验收", "准则", "质检", "standard", "specification", "criteria", "QA", "QC", "inspect", "quality"], "✅"),
+    # ── 问题/风险 ──
+    (["问题", "挑战", "困难", "障碍", "痛点", "problem", "challenge", "difficult", "obstacle", "issue", "pain point"], "⚠️"),
+    (["风险", "危险", "威胁", "risk", "danger", "threat", "hazard"], "🚨"),
+    (["限制", "缺点", "不足", "局限", "短板", "limitation", "disadvantage", "weakness", "restrict", "drawback"], "🚧"),
+    (["监管", "法规", "合规", "政策", "法律", "regulat", "compliance", "policy", "law", "legal", "govern"], "⚖️"),
+    # ── 成果/价值 ──
+    (["成果", "成就", "成功", "价值", "优势", "亮点", "achievement", "success", "value", "advantage", "benefit", "highlight"], "🏆"),
+    (["目标", "愿景", "使命", "goal", "objective", "mission", "OKR", "KR"], "🎯"),
+    (["创新", "突破", "改进", "优化", "innovati", "breakthrough", "improve", "optimiz"], "💡"),
+    (["影响", "效果", "作用", "成效", "impact", "effect", "influence", "outcome", "result"], "💫"),
+    (["应用", "实践", "案例", "场景", "用途", "application", "practice", "case", "scenario", "use case", "usage"], "🛠️"),
+    # ── 资源/工具 ──
+    (["资源", "工具", "设备", "器材", "装备", "resource", "tool", "equipment", "instrument", "gear", "device"], "🔧"),
+    (["材料", "原料", "物料", "素材", "material", "ingredient", "raw material", "substance", "fabric"], "📦"),
+    (["环境", "生态", "自然", "绿色", "environment", "ecology", "nature", "climate", "green", "sustain"], "🌱"),
+    # ── 健康/医疗 ──
+    (["健康", "医疗", "疾病", "治疗", "症状", "health", "medical", "disease", "treatment", "clinical", "symptom", "diagnosis"], "🏥"),
+    (["营养", "饮食", "膳食", "维生素", "nutrition", "diet", "vitamin", "supplement", "calorie"], "🥗"),
+    (["疫苗", "免疫", "防疫", "vaccine", "immuniz", "prevention"], "💉"),
+    (["健身", "运动", "锻炼", "体能", "fitness", "workout", "exercise", "gym", "training"], "💪"),
+    (["减肥", "瘦身", "体重", "weight loss", "slim", "body fat"], "⚖️"),
+    (["睡眠", "休息", "作息", "sleep", "rest", "insomnia", "nap"], "😴"),
+    (["压力", "焦虑", "减压", "放松", "stress", "anxiety", "relax", "mindful", "meditation"], "🧘"),
+    # ── 地理/旅游 ──
+    (["地理", "地点", "位置", "区域", "国家", "geography", "location", "region", "country", "city"], "🗺️"),
+    (["旅游", "旅行", "攻略", "出行", "度假", "travel", "trip", "tour", "vacation", "journey", "itinerary"], "✈️"),
+    (["住宿", "酒店", "民宿", "hotel", "accommodation", "hostel", "lodging", "Airbnb"], "🏨"),
+    (["景点", "景区", "名胜", "观光", "sight", "attraction", "landmark", "scenic", "destination"], "🏞️"),
+    (["交通", "物流", "运输", "出行", "transport", "logistics", "shipping", "commut", "transit"], "🚚"),
+    # ── 食物/烹饪 ──
+    (["食物", "美食", "菜肴", "菜谱", "烹饪", "做菜", "food", "cuisine", "cooking", "recipe", "meal", "dish", "chef"], "🍽️"),
+    # ── 家庭/育儿 ──
+    (["育儿", "孩子", "儿童", "宝宝", "亲子", "parent", "child", "baby", "kid", "toddler", "nurtur"], "👶"),
+    (["家庭", "家居", "家装", "居家", "family", "home", "household", "domestic"], "🏠"),
+    (["装修", "装饰", "翻新", "改造", "renovati", "decorat", "interior", "remodel", "furnish"], "🏠"),
+    # ── 宠物 ──
+    (["宠物", "猫", "狗", "喂养", "兽医", "pet", "cat", "dog", "vet", "animal", "breed", "groom"], "🐾"),
+    # ── 体育/运动 ──
+    (["体育", "赛事", "联赛", "比赛", "竞技", "sport", "league", "competition", "athletic", "tournament", "championship"], "⚽"),
+    # ── 法律/制度 ──
+    (["制度", "规则", "条例", "法案", "条款", "system", "rule", "regulation", "act", "institution", "clause"], "📜"),
+    # ── 情感/心理 ──
+    (["情感", "心理", "性格", "认知", "行为", "personality", "emotion", "psychology", "mental", "character", "cognitive", "behavior"], "🧠"),
+    # ── 建筑/空间 ──
+    (["建筑", "空间", "场所", "场地", "building", "space", "place", "architecture", "venue", "facility"], "🏗️"),
+    # ── 财务/理财 ──
+    (["理财", "投资", "基金", "股票", "债券", "保险", "finance", "invest", "fund", "stock", "bond", "insurance", "portfolio"], "💹"),
+    (["税", "税务", "纳税", "报税", "tax", "taxation", "fiscal"], "🧾"),
+    (["退休", "养老", "pension", "retire", "annuity"], "🏖️"),
+    (["资产", "财富", "净值", "asset", "wealth", "net worth", "estate", "property"], "🏦"),
+    # ── 制造/生产 ──
+    (["制造", "生产", "工厂", "产线", "manufactur", "production", "factory", "assembly", "fabricat"], "🏭"),
+    (["包装", "封装", "标签", "packaging", "labeling", "wrapping", "container"], "📦"),
+    (["检测", "测量", "检验", "校准", "detect", "measure", "inspect", "calibrat", "monitor"], "🔎"),
+    (["配方", "研发", "recipe", "formul", "R&D", "develop"], "🧪"),
+    # ── 概述/介绍/总结 ──
+    (["概述", "简介", "总结", "综述", "overview", "introduction", "summary", "abstract", "brief", "recap"], "📋"),
+    # ── 军事/战争 ──
+    (["战役", "战争", "军事", "战斗", "作战", "攻防", "battle", "war", "military", "combat", "warfare", "campaign"], "⚔️"),
+    # ── 思想/哲学 ──
+    (["思想", "哲学", "主题", "观点", "理念", "意识形态", "thought", "philosophy", "theme", "ideology", "idea", "viewpoint"], "💭"),
+    # ── 研究/学术 ──
+    (["研究", "学术", "流派", "论文", "学科", "实验", "research", "academic", "paper", "discipline", "experiment", "scholar"], "🔍"),
+    # ── 版本/变更 ──
+    (["版本", "变更", "更新", "迭代", "修订", "version", "update", "revision", "iteration", "changelog"], "📄"),
+    # ── 护理/日常 ──
+    (["护理", "保养", "维护", "保健", "日常", "care", "maintenance", "routine", "daily", "upkeep", "hygiene"], "🧴"),
+    # ── 沟通/表达 ──
+    (["沟通", "表达", "演讲", "谈判", "对话", "communicat", "express", "speech", "negotiat", "dialog", "present"], "🗣️"),
+    # ── 选择/推荐/对比 ──
+    (["选择", "推荐", "对比", "评测", "排名", "选型", "choose", "recommend", "compare", "review", "rank", "select", "pick", "best"], "🔖"),
+    # ── 指南/攻略/技巧 ──
+    (["指南", "攻略", "技巧", "诀窍", "要点", "秘诀", "guide", "tip", "trick", "hack", "how-to", "tutorial", "cheat sheet"], "📌"),
+    # ── 构图/光线 (摄影/视觉) ──
+    (["构图", "光线", "色彩", "曝光", "composit", "lighting", "exposure", "color", "tone", "contrast"], "🖼️"),
+    # ── 后期/编辑 ──
+    (["后期", "编辑", "修图", "剪辑", "渲染", "edit", "post-process", "retouch", "render", "montage"], "✂️"),
+]
+
+_FALLBACK_EMOJIS = ["📌", "📎", "🔹", "🔸", "▪️", "🔻", "🔺", "💠", "🔘", "📍"]
+
+
+def _has_emoji_prefix(text):
+    """Check if text starts with an emoji (Unicode emoji range)."""
+    if not text:
+        return False
+    cp = ord(text[0])
+    if cp >= 0x1F300:  return True
+    if 0x2600 <= cp <= 0x27BF: return True
+    if 0x2300 <= cp <= 0x23FF: return True
+    if 0xFE00 <= cp <= 0xFEFF: return True
+    if 0x200D <= cp <= 0x200D: return True
+    if len(text) > 1:
+        cp2 = ord(text[1])
+        if cp2 >= 0x1F300 or cp2 == 0xFE0F or cp2 == 0x20E3:
+            return True
+    return False
+
+
+def _match_emoji_by_semantic(label):
+    """Match an emoji by scanning the label against the keyword dictionary."""
+    text = label.lower()
+    for keywords, emoji in _SEMANTIC_EMOJI:
+        for kw in keywords:
+            if kw.lower() in text:
+                return emoji
+    return None
+
+
+def _auto_inject_emoji(branch, index):
+    """Add semantically matched emoji prefix to branch label if missing."""
+    label = branch.get("label", "")
+    if _has_emoji_prefix(label):
+        return  # already has emoji
+
+    # 1. Try semantic keyword matching
+    emoji = _match_emoji_by_semantic(label)
+
+    # 2. Fallback: use index-based neutral emoji
+    if not emoji:
+        emoji = _FALLBACK_EMOJIS[index % len(_FALLBACK_EMOJIS)]
+
+    branch["label"] = f"{emoji} {label}"
 
 
 def measure_w(text, depth):
@@ -284,30 +510,23 @@ def build_color_map(tree):
 # ─────────────────────────────────────────────────────────────────────────────
 def edge_path(px, py, pw, cx, cy, cw, depth):
     """
-    depth-1 (root→branch): smooth S-curve Bezier
-    depth≥2 (branch→leaf): elbow connector (horizontal arm → vertical drop → horizontal arm)
+    All depths: smooth cubic Bezier from parent side-edge to child side-edge.
+    Matches the HTML interactive version (edgePath0) — elegant S-curves
+    instead of hard elbow connectors.
     """
-    if depth == 1:
-        # S-curve from root centre-right/left edge to branch centre-left/right edge
-        if cx >= px:  # right side
-            x1, x2 = px + pw/2, cx - cw/2
-        else:          # left side
-            x1, x2 = px - pw/2, cx + cw/2
-        mx = (x1 + x2) / 2
-        return f"M{x1:.1f},{py:.1f} C{mx:.1f},{py:.1f} {mx:.1f},{cy:.1f} {x2:.1f},{cy:.1f}"
-    else:
-        # Elbow: exit parent horizontally, then drop vertically, enter child horizontally
-        if cx >= px:  # right
-            p_exit = px + pw/2
-            c_enter = cx - cw/2
-        else:          # left
-            p_exit = px - pw/2
-            c_enter = cx + cw/2
-        mid_x = (p_exit + c_enter) / 2
-        return (f"M{p_exit:.1f},{py:.1f} "
-                f"L{mid_x:.1f},{py:.1f} "
-                f"L{mid_x:.1f},{cy:.1f} "
-                f"L{c_enter:.1f},{cy:.1f}")
+    if cx >= px:  # right side
+        x1, x2 = px + pw/2, cx - cw/2
+    else:          # left side
+        x1, x2 = px - pw/2, cx + cw/2
+
+    # Nearly horizontal alignment → straight line
+    if abs(cy - py) < 3:
+        return f"M{x1:.1f},{py:.1f} L{x2:.1f},{cy:.1f}"
+
+    # Tension: depth-1 uses 0.5 (standard S-curve), deeper levels tighten slightly
+    t = 0.5 if depth == 1 else 0.45
+    cpx = x1 + (x2 - x1) * t
+    return f"M{x1:.1f},{py:.1f} C{cpx:.1f},{py:.1f} {cpx:.1f},{cy:.1f} {x2:.1f},{cy:.1f}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -668,6 +887,9 @@ svg{width:100%;height:100%;display:block;}
       <button class="btn layout-btn" id="layout-btn-2" onclick="switchLayout(2)" title="向右树形">&#x27A1; 树形</button>
       <button class="btn layout-btn" id="layout-btn-3" onclick="switchLayout(3)" title="垂直向下">&#x1F333; 垂直</button>
       <button class="btn layout-btn" id="layout-btn-4" onclick="switchLayout(4)" title="力导向动画">&#x26A1; 力导向</button>
+      <button class="btn layout-btn" id="layout-btn-5" onclick="switchLayout(5)" title="时间线">&#x23E9; 时间线</button>
+      <button class="btn layout-btn" id="layout-btn-6" onclick="switchLayout(6)" title="鱼骨图">&#x1F41F; 鱼骨</button>
+      <button class="btn layout-btn" id="layout-btn-7" onclick="switchLayout(7)" title="括弧图">&#x7D; 括弧</button>
     </div>
     <span class="meta">右键菜单 &nbsp;·&nbsp; Tab 添加子节点 &nbsp;·&nbsp; Del 删除 &nbsp;·&nbsp; Ctrl+Z 撤销</span>
   </div>
@@ -1151,7 +1373,212 @@ function edgePath4(px,py,cx,cy){
 function drawSpine3(){
   document.querySelectorAll(".circ-ring,.fd-ring").forEach(e=>e.remove());
   document.getElementById("fishbone-spine")?.remove();
+  document.getElementById("timeline-axis")?.remove();
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LAYOUT 5 — 时间线（Timeline / 水平流程）
+   · 中心节点在最左侧
+   · 主分支从左到右等间距水平排列
+   · 子节点垂直向下展开
+   · 主分支之间有水平时间轴主干线
+══════════════════════════════════════════════════════════════════════════ */
+function subtreeH5(node){
+  const vg=12;
+  const kids=visKids(node); if(!kids.length) return node._h;
+  return node._h + 60 + kids.reduce((s,k)=>s+k._h+vg,0) - vg;
+}
+function layout5(tree){
+  pos={};
+  const branches=tree.branches||[];
+  // root at far left
+  pos[tree._id]={x:0, y:0, parentId:null, side:1};
+  if(!branches.length) return;
+
+  const H_STEP = 220;  // horizontal distance between branch columns
+  const V_TOP  = 90;   // vertical distance from timeline axis to first child
+
+  // Place branches horizontally
+  branches.forEach((b,i)=>{
+    const bx = tree._w/2 + H_STEP * (i+1);
+    pos[b._id]={x:bx, y:0, parentId:tree._id, side:1};
+
+    // Children stacked vertically below
+    const kids=visKids(b); if(!kids.length) return;
+    let curY = V_TOP;
+    kids.forEach(kid=>{
+      pos[kid._id]={x:bx, y:curY, parentId:b._id, side:1};
+      // Grandchildren further right
+      const gkids=visKids(kid); if(!gkids.length){ curY+=kid._h+12; return; }
+      let gy=curY;
+      gkids.forEach(gk=>{
+        pos[gk._id]={x:bx+kid._w/2+80+gk._w/2, y:gy, parentId:kid._id, side:1};
+        gy+=gk._h+8;
+      });
+      curY=Math.max(curY+kid._h+12, gy);
+    });
+  });
+}
+
+function edgePath5(px,py,pw,cx,cy,cw,depth){
+  if(depth===1){
+    // Timeline axis: horizontal straight line
+    const x1=px+pw/2, x2=cx-cw/2;
+    return `M${x1},${py} L${x2},${cy}`;
+  }
+  // Branch to children: vertical drop then horizontal
+  if(Math.abs(cx-px)<3){
+    // Straight down
+    const y1=py+20, y2=cy-cw/4;
+    return `M${px},${y1} L${cx},${y2}`;
+  }
+  // Horizontal bezier for grandchildren
+  const x1=px+pw/2, x2=cx-cw/2;
+  const mid=(x1+x2)/2;
+  if(Math.abs(cy-py)<3) return `M${x1},${py} L${x2},${cy}`;
+  return `M${x1},${py} C${mid},${py} ${mid},${cy} ${x2},${cy}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LAYOUT 6 — 鱼骨图（Fishbone / Ishikawa）
+   · 中心节点（鱼头）在右侧
+   · 水平主干（鱼脊）从右向左延伸
+   · 主分支交替从上下两侧 45° 斜向伸出（鱼骨）
+   · 子节点沿鱼骨方向排列
+══════════════════════════════════════════════════════════════════════════ */
+function layout6(tree){
+  pos={};
+  const branches=tree.branches||[];
+  // Fish head (root) on the right
+  pos[tree._id]={x:0, y:0, parentId:null, side:1};
+  if(!branches.length) return;
+
+  const SPINE_STEP = 180;   // distance between bones along spine
+  const BONE_LEN   = 130;   // length of each bone (diagonal)
+  const SUB_GAP    = 36;    // gap between sub-nodes along bone
+  const ANGLE      = Math.PI * 0.38; // ~68° from horizontal
+
+  branches.forEach((b,i)=>{
+    const spineX = -(tree._w/2 + 80 + SPINE_STEP * i);
+    const upDown = (i % 2 === 0) ? -1 : 1;  // alternate up/down
+    const bx = spineX - Math.cos(ANGLE) * BONE_LEN;
+    const by = upDown * Math.sin(ANGLE) * BONE_LEN;
+    pos[b._id]={x:bx, y:by, parentId:tree._id, side:-1, _spineX:spineX};
+
+    // Children along the bone direction
+    const kids=visKids(b); if(!kids.length) return;
+    const dx = Math.cos(ANGLE) * SUB_GAP * upDown * 0;
+    const dirX = -Math.cos(ANGLE);
+    const dirY = upDown * Math.sin(ANGLE);
+    kids.forEach((kid,j)=>{
+      const dist = SUB_GAP * (j+1) + kid._w/2;
+      const kx = bx + dirX * dist * 0.3;
+      const ky = by + dirY * dist;
+      pos[kid._id]={x:kx, y:ky, parentId:b._id, side:-1};
+
+      // Grandchildren
+      const gkids=visKids(kid); if(!gkids.length) return;
+      gkids.forEach((gk,gi)=>{
+        pos[gk._id]={
+          x: kx - gk._w/2 - kid._w/2 - 30,
+          y: ky + (gi - (gkids.length-1)/2) * (gk._h + 6),
+          parentId:kid._id, side:-1
+        };
+      });
+    });
+  });
+}
+
+function edgePath6(px,py,pw,cx,cy,cw,depth,node){
+  if(depth===1){
+    // Bone: from spine attachment point to branch node
+    const spineX = pos[node?._id]?._spineX;
+    if(spineX !== undefined){
+      // Draw: spine point → branch node
+      return `M${spineX},${py} L${cx},${cy}`;
+    }
+    return `M${px},${py} L${cx},${cy}`;
+  }
+  // Sub-bones: straight lines
+  return `M${px},${py} L${cx},${cy}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LAYOUT 7 — 括弧图（Brace Map / 层级分解）
+   · 中心节点在最左侧
+   · 父节点与子节点之间绘制 SVG 大括号 "}"
+   · 大括号的尖端对准父节点右侧，两端包裹所有子节点
+   · 强调 整体 → { 部分1, 部分2, ... } 的分解关系
+══════════════════════════════════════════════════════════════════════════ */
+function subtreeH7(node){
+  const vg=16;
+  const kids=visKids(node); if(!kids.length) return node._h;
+  return Math.max(node._h, kids.reduce((s,k)=>s+subtreeH7(k),0)+vg*(kids.length-1));
+}
+function layout7(tree){
+  pos={};
+  pos[tree._id]={x:0, y:0, parentId:null, side:1};
+  const branches=tree.branches||[]; if(!branches.length) return;
+
+  const BRACE_W = 40;   // width of the brace symbol area
+  const H_GAP_7 = 36;   // gap between parent right edge and brace
+  const H_GAP_C = 20;   // gap between brace and children left edge
+
+  function placeChildren(node, nodeRightX, cy){
+    const kids=visKids(node); if(!kids.length) return;
+    const vg=16;
+    const maxCW = Math.max(...kids.map(k=>k._w));
+    const childLX = nodeRightX + H_GAP_7 + BRACE_W + H_GAP_C;
+    const childCX = childLX + maxCW/2;
+    const heights = kids.map(k=>subtreeH7(k));
+    const totalH = heights.reduce((a,b)=>a+b,0) + vg*(kids.length-1);
+    let curY = cy - totalH/2;
+    kids.forEach((kid,i)=>{
+      const kcy = curY + heights[i]/2;
+      pos[kid._id]={x:childCX, y:kcy, parentId:node._id, side:1};
+      placeChildren(kid, childLX + maxCW/2, kcy);
+      curY += heights[i] + vg;
+    });
+  }
+
+  const maxBW = Math.max(...branches.map(b=>b._w));
+  const branchLX = tree._w/2 + H_GAP_7 + BRACE_W + H_GAP_C;
+  const branchCX = branchLX + maxBW/2;
+  const heights = branches.map(b=>subtreeH7(b));
+  const totalH = heights.reduce((a,b)=>a+b,0) + 16*(branches.length-1);
+  let curY = -totalH/2;
+  branches.forEach((b,i)=>{
+    const bcy = curY + heights[i]/2;
+    pos[b._id]={x:branchCX, y:bcy, parentId:tree._id, side:1};
+    placeChildren(b, branchLX + maxBW/2, bcy);
+    curY += heights[i] + 16;
+  });
+}
+
+function edgePath7(px,py,pw,cx,cy,cw,depth){
+  /*  Brace Map edge: smooth cubic Bezier with a visible "step" shape.
+      Unlike tree layout's S-curve (which goes directly from parent to child),
+      the brace path goes:  parent → horizontal exit → step down/up → horizontal enter → child
+      This creates the visual "}" bracket grouping effect.
+      Uses only C (cubic bezier) commands — no Q or L — for clean anti-aliased rendering.
+  */
+  const x1 = px + pw/2;       // parent right edge
+  const x2 = cx - cw/2;       // child left edge
+  const midX = x1 + (x2 - x1) * 0.42;  // vertical transit x
+
+  // Same height → simple S-curve
+  if(Math.abs(cy - py) < 4){
+    const cp = x1 + (x2 - x1) * 0.5;
+    return `M${x1},${py} C${cp},${py} ${cp},${cy} ${x2},${cy}`;
+  }
+
+  // Two-segment cubic bezier: parent→midpoint, midpoint→child
+  // Segment 1: horizontal exit from parent, curve down/up to midX
+  // Segment 2: from midX, curve horizontally into child
+  return `M${x1},${py} C${midX},${py} ${midX},${py} ${midX},${(py+cy)/2} `
+       + `C${midX},${cy} ${midX},${cy} ${x2},${cy}`;
+}
+
 
 /* ══════════════════════════════════════════════════════════════════════════
    LAYOUT DISPATCHER
@@ -1163,6 +1590,9 @@ function layout(tree){
   else if(currentLayout===1) layout1(tree);
   else if(currentLayout===2) layout2(tree);
   else if(currentLayout===3) layout3(tree);
+  else if(currentLayout===5) layout5(tree);
+  else if(currentLayout===6) layout6(tree);
+  else if(currentLayout===7) layout7(tree);
 }
 
 function edgePath(px,py,pw,cx,cy,cw,depth,side){
@@ -1171,15 +1601,17 @@ function edgePath(px,py,pw,cx,cy,cw,depth,side){
   if(currentLayout===2) return edgePath2(px,py,pw,cx,cy,cw,depth);
   if(currentLayout===3) return edgePath3(px,py,pw,cx,cy,cw,depth);
   if(currentLayout===4) return edgePath4(px,py,cx,cy);
+  if(currentLayout===5) return edgePath5(px,py,pw,cx,cy,cw,depth);
+  if(currentLayout===6) return edgePath6(px,py,pw,cx,cy,cw,depth);
+  if(currentLayout===7) return edgePath7(px,py,pw,cx,cy,cw,depth);
   return edgePath0(px,py,pw,cx,cy,cw,depth,side);
 }
 
 function switchLayout(n){
   stopFD();
   currentLayout=n;
-  // 切换布局只重置位置锁定，保留折叠状态
   Object.values(nodeMap).forEach(node=>{node._pinned=false;node._px=null;node._py=null;});
-  for(let i=0;i<5;i++){
+  for(let i=0;i<8;i++){
     const btn=document.getElementById("layout-btn-"+i);
     if(btn) btn.classList.toggle("active",i===n);
   }
@@ -1955,26 +2387,419 @@ def render_html(title, js_data):
             .replace("__DATE__",       datetime.now().strftime("%Y-%m-%d %H:%M")))
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  IMAGE / PDF EXPORT  —  Two backends, auto-selected by availability:
+#
+#    1. Playwright  (best quality — renders full interactive HTML in Chromium)
+#    2. Pillow      (pure Python — works everywhere, only needs `pip install pillow`)
+#
+#  The script tries each backend in order and uses the first one that works.
+#  On a typical Windows machine only Pillow is available, and that's fine.
+#  Pillow is auto-installed if missing.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-# Dependency install hints (platform-aware)
+# Font discovery  (cross-platform: Windows / macOS / Linux)
 # ─────────────────────────────────────────────────────────────────────────────
-def _print_cairo_install_hint():
+_FONT_SEARCH_PATHS = {
+    "Windows": [
+        # CJK fonts commonly found on Windows
+        r"C:\Windows\Fonts\msyh.ttc",        # 微软雅黑
+        r"C:\Windows\Fonts\msyhbd.ttc",       # 微软雅黑 Bold
+        r"C:\Windows\Fonts\simhei.ttf",       # 黑体
+        r"C:\Windows\Fonts\simsun.ttc",       # 宋体
+        r"C:\Windows\Fonts\simkai.ttf",       # 楷体
+        r"C:\Windows\Fonts\STFANGSO.TTF",     # 华文仿宋
+        r"C:\Windows\Fonts\STSONG.TTF",       # 华文宋体
+        r"C:\Windows\Fonts\malgun.ttf",       # Malgun Gothic (Korean but has CJK)
+        r"C:\Windows\Fonts\meiryo.ttc",       # Meiryo (Japanese but has CJK)
+        r"C:\Windows\Fonts\segoeui.ttf",      # Fallback: Segoe UI (no CJK)
+        r"C:\Windows\Fonts\arial.ttf",        # Fallback: Arial
+    ],
+    "Darwin": [  # macOS
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/Library/Fonts/Arial Unicode MS.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+    ],
+    "Linux": [
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJKsc-Regular.otf",
+        "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+        "/usr/share/fonts/opentype/unifont/unifont.otf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ],
+}
+
+_font_cache = {}  # (size, bold) → ImageFont
+
+
+def _find_system_font():
+    """Return the path to the best available font for the current OS."""
     system = platform.system()
-    print("[mindmap] ERROR: cairosvg is required for PNG/JPG/PDF export.", file=sys.stderr)
-    if system == "Darwin":
-        print("[mindmap] Install on macOS:", file=sys.stderr)
-        print("  brew install cairo pango libffi", file=sys.stderr)
-        print("  pip3 install cairosvg", file=sys.stderr)
-    elif system == "Linux":
-        print("[mindmap] Install on Linux:", file=sys.stderr)
-        print("  # Debian/Ubuntu:", file=sys.stderr)
-        print("  sudo apt-get install libcairo2-dev libpango1.0-dev libgdk-pixbuf2.0-dev", file=sys.stderr)
-        print("  pip install cairosvg --break-system-packages", file=sys.stderr)
-        print("  # Fedora/RHEL:", file=sys.stderr)
-        print("  sudo dnf install cairo-devel pango-devel", file=sys.stderr)
-        print("  pip install cairosvg --break-system-packages", file=sys.stderr)
+    candidates = _FONT_SEARCH_PATHS.get(system, [])
+    # Also merge Linux paths as generic fallback
+    if system != "Linux":
+        candidates = candidates + _FONT_SEARCH_PATHS["Linux"]
+    for p in candidates:
+        if Path(p).is_file():
+            return p
+    return None
+
+
+def _get_font(size, bold=False):
+    """Get a PIL ImageFont at the given size, with caching."""
+    key = (size, bold)
+    if key in _font_cache:
+        return _font_cache[key]
+
+    from PIL import ImageFont
+
+    font_path = _find_system_font()
+    if font_path:
+        try:
+            # For .ttc files, index 0 is usually Regular, index 1 is Bold
+            idx = 1 if bold and font_path.endswith((".ttc", ".TTC")) else 0
+            fnt = ImageFont.truetype(font_path, size, index=idx)
+            _font_cache[key] = fnt
+            return fnt
+        except Exception:
+            try:
+                fnt = ImageFont.truetype(font_path, size)
+                _font_cache[key] = fnt
+                return fnt
+            except Exception:
+                pass
+
+    # Ultimate fallback: Pillow default bitmap font
+    fnt = ImageFont.load_default()
+    _font_cache[key] = fnt
+    return fnt
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Backend 1:  Playwright  (best quality — renders full interactive HTML)
+# ─────────────────────────────────────────────────────────────────────────────
+def _has_playwright():
+    try:
+        from playwright.sync_api import sync_playwright as _sp  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def _export_image_playwright(html_str: str, out: str, fmt: str,
+                             scale: float = 2.0, quality: int = 92):
+    import tempfile, shutil
+
+    pw_paths = [
+        os.environ.get("PLAYWRIGHT_BROWSERS_PATH", ""),
+        "/opt/pw-browsers",
+        str(Path.home() / ".cache" / "ms-playwright"),
+    ]
+    for p in pw_paths:
+        if p and Path(p).is_dir():
+            os.environ["PLAYWRIGHT_BROWSERS_PATH"] = p
+            break
+
+    from playwright.sync_api import sync_playwright
+
+    tmp_dir = tempfile.mkdtemp(prefix="mindmap_")
+    tmp_html = os.path.join(tmp_dir, "mindmap.html")
+    with open(tmp_html, "w", encoding="utf-8") as f:
+        f.write(html_str)
+
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True, args=[
+                "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
+            ])
+            dpr = max(1.0, min(scale, 4.0))
+            page = browser.new_page(
+                viewport={"width": 2560, "height": 1440},
+                device_scale_factor=dpr,
+            )
+            page.goto(f"file://{tmp_html}", wait_until="networkidle")
+            page.wait_for_selector("#nodes-g .nd", timeout=8000)
+            page.wait_for_timeout(600)
+
+            bbox = page.evaluate(r"""() => {
+                const nodesG = document.getElementById('nodes-g');
+                const edgesG = document.getElementById('edges-g');
+                if (!nodesG) return null;
+                let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+                for (const g of [nodesG, edgesG]) {
+                    if (!g) continue;
+                    for (const el of g.querySelectorAll('rect,text,path,circle')) {
+                        const r = el.getBoundingClientRect();
+                        if (r.width===0 && r.height===0) continue;
+                        if (r.left<minX) minX=r.left; if (r.top<minY) minY=r.top;
+                        if (r.right>maxX) maxX=r.right; if (r.bottom>maxY) maxY=r.bottom;
+                    }
+                }
+                if (minX===Infinity) return null;
+                const pad=40;
+                return {x:Math.max(0,minX-pad),y:Math.max(0,minY-pad),
+                        width:maxX-minX+pad*2,height:maxY-minY+pad*2};
+            }""")
+
+            clip = bbox if (bbox and bbox["width"] > 0) else None
+            if not clip:
+                wrap = page.query_selector("#wrap")
+                clip = wrap.bounding_box() if wrap else None
+
+            png_bytes = page.screenshot(type="png", clip=clip) if clip else page.screenshot(type="png")
+            browser.close()
+
+        from PIL import Image as PILImage
+        img = PILImage.open(io.BytesIO(png_bytes))
+        if fmt == "jpg":
+            if img.mode in ("RGBA", "P"):
+                bg = PILImage.new("RGB", img.size, (13, 15, 26))
+                if img.mode == "P": img = img.convert("RGBA")
+                bg.paste(img, mask=img.split()[3]); img = bg
+            elif img.mode != "RGB":
+                img = img.convert("RGB")
+            img.save(out, "JPEG", quality=quality, optimize=True)
+        else:
+            img.save(out, "PNG", optimize=True)
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Backend 2:  Pure Pillow  (works everywhere — only needs `pip install pillow`)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _pillow_measure_text(text, font):
+    """Measure text width and height using the font."""
+    bbox = font.getbbox(str(text))
+    return bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+
+def _strip_emoji_for_pillow(text):
+    """Remove emoji characters that Pillow/system fonts can't render.
+    Keeps the text content after the emoji prefix."""
+    if not text:
+        return text
+    result = []
+    i = 0
+    while i < len(text):
+        cp = ord(text[i])
+        # Skip emoji code points
+        if (cp >= 0x1F300 or                    # Misc Symbols & Pictographs+
+            0x2600 <= cp <= 0x27BF or           # Misc Symbols, Dingbats
+            0x2300 <= cp <= 0x23FF or           # Misc Technical
+            cp == 0xFE0F or cp == 0xFE0E or     # Variation Selectors
+            cp == 0x200D or                     # Zero Width Joiner
+            0xE0020 <= cp <= 0xE007F or         # Tags
+            0x1F900 <= cp <= 0x1F9FF or         # Supplemental Symbols
+            0x1FA00 <= cp <= 0x1FA6F or         # Chess Symbols
+            0x1FA70 <= cp <= 0x1FAFF or         # Symbols Extended-A
+            0x2702 <= cp <= 0x27B0 or           # Dingbats
+            0x231A <= cp <= 0x231B or           # Watch, Hourglass
+            cp == 0x2B50 or cp == 0x2B55 or     # Star, Circle
+            0x2934 <= cp <= 0x2935 or           # Arrows
+            0x25AA <= cp <= 0x25FE or           # Geometric Shapes
+            0x2190 <= cp <= 0x21FF or           # Arrows
+            0x20E3 == cp):                      # Keycap
+            i += 1
+            continue
+        result.append(text[i])
+        i += 1
+    return "".join(result).strip()
+
+
+def _hex_to_rgb(h):
+    """Convert '#RRGGBB' or '#RRGGBBAA' to (R,G,B) or (R,G,B,A)."""
+    h = h.lstrip("#")
+    if len(h) == 8:
+        return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), int(h[6:8], 16))
+    if len(h) == 6:
+        return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+    return (128, 128, 128)
+
+
+def _blend_alpha(fg_hex, bg_rgb=(13, 15, 26)):
+    """Blend a hex color with alpha (e.g. '#4A90D930') onto a background."""
+    c = _hex_to_rgb(fg_hex)
+    if len(c) == 4:
+        r, g, b, a = c
+        af = a / 255.0
+        return (
+            int(r * af + bg_rgb[0] * (1 - af)),
+            int(g * af + bg_rgb[1] * (1 - af)),
+            int(b * af + bg_rgb[2] * (1 - af)),
+        )
+    return c[:3]
+
+
+def _export_image_pillow(tree, positions, out: str, fmt: str,
+                         scale: float = 2.0, quality: int = 92):
+    """
+    Render the mind map to PNG/JPG/PDF using only Pillow.
+    Zero system dependencies — works on Windows/macOS/Linux with just
+    `pip install pillow`.
+    """
+    from PIL import Image, ImageDraw
+
+    BG_COLOR = (13, 15, 26)  # #0d0f1a
+
+    nodes = flatten_tree(tree)
+    cmap  = build_color_map(tree)
+    minx, miny, maxx, maxy = bounding_box(positions, nodes, pad=80)
+    W = maxx - minx
+    H = maxy - miny
+
+    # Apply scale
+    s = scale
+    img_w, img_h = int(W * s), int(H * s)
+    img = Image.new("RGB", (img_w, img_h), BG_COLOR)
+    draw = ImageDraw.Draw(img, "RGBA")  # RGBA for alpha blending
+
+    def tx(x): return (x - minx) * s
+    def ty(y): return (y - miny) * s
+
+    # ── Draw edges ────────────────────────────────────────────────────────
+    for node in nodes:
+        p = positions.get(node["_id"])
+        if not p or p.get("parent_id") is None:
+            continue
+        pp = positions.get(p["parent_id"])
+        if not pp:
+            continue
+        pnode = next((n for n in nodes if n["_id"] == p["parent_id"]), None)
+        if not pnode:
+            continue
+
+        color_hex = cmap.get(node["_id"], "#888888")
+        depth = node["_depth"]
+
+        # Opacity simulation: blend with background
+        if depth == 1:
+            alpha = 0.85
+        elif depth == 2:
+            alpha = 0.6
+        else:
+            alpha = 0.4
+        ec = _hex_to_rgb(color_hex)[:3]
+        edge_color = tuple(int(ec[i] * alpha + BG_COLOR[i] * (1 - alpha)) for i in range(3))
+
+        sw = max(1, int((2.5 if depth == 1 else (1.8 if depth == 2 else 1.3)) * s))
+
+        # Draw edge as a series of line segments approximating the Bezier
+        px_s, py_s = tx(pp["x"]), ty(pp["y"])
+        cx_s, cy_s = tx(p["x"]), ty(p["y"])
+        pw_s = pnode["_w"] * s / 2
+        cw_s = node["_w"] * s / 2
+
+        if cx_s >= px_s:
+            x1 = px_s + pw_s
+            x2 = cx_s - cw_s
+        else:
+            x1 = px_s - pw_s
+            x2 = cx_s + cw_s
+
+        # Draw cubic Bezier approximation (matching SVG/HTML edge_path)
+        # Tension: depth-1 → 0.5, deeper → 0.45
+        tension = 0.5 if depth == 1 else 0.45
+        cpx = x1 + (x2 - x1) * tension
+        steps = 24
+        pts = []
+        for t in range(steps + 1):
+            t_f = t / steps
+            # Cubic Bezier: P0=(x1,py), P1=(cpx,py), P2=(cpx,cy), P3=(x2,cy)
+            u = 1 - t_f
+            bx = u**3 * x1 + 3 * u**2 * t_f * cpx + 3 * u * t_f**2 * cpx + t_f**3 * x2
+            by = u**3 * py_s + 3 * u**2 * t_f * py_s + 3 * u * t_f**2 * cy_s + t_f**3 * cy_s
+            pts.append((bx, by))
+        for i in range(len(pts) - 1):
+            draw.line([pts[i], pts[i + 1]], fill=edge_color, width=sw)
+
+    # ── Draw nodes ────────────────────────────────────────────────────────
+    # Root gradient colors
+    ROOT_GRAD_START = (76, 95, 219)   # #4c5fdb
+    ROOT_GRAD_END   = (124, 140, 248) # #7c8cf8
+
+    for node in nodes:
+        p = positions.get(node["_id"])
+        if not p:
+            continue
+        depth = node["_depth"]
+        c = CFG[min(depth, len(CFG) - 1)]
+        w_raw, h_raw = node["_w"], node["_h"]
+        w_s, h_s = w_raw * s, h_raw * s
+        nx = tx(p["x"]) - w_s / 2
+        ny = ty(p["y"]) - h_s / 2
+        rx = int(c["rx"] * s)
+        color_hex = cmap.get(node["_id"], "#888888")
+        label = node.get("label") or node.get("central", "")
+
+        if depth == 0:
+            # Root: gradient-like fill (approximate with solid blend)
+            root_color = tuple((ROOT_GRAD_START[i] + ROOT_GRAD_END[i]) // 2 for i in range(3))
+            # Glow effect: draw a larger, blurred rect behind
+            glow_pad = 6 * s
+            glow_color = root_color + (60,)
+            draw.rounded_rectangle(
+                [nx - glow_pad, ny - glow_pad, nx + w_s + glow_pad, ny + h_s + glow_pad],
+                radius=rx + int(glow_pad), fill=glow_color,
+            )
+            draw.rounded_rectangle([nx, ny, nx + w_s, ny + h_s], radius=rx, fill=root_color)
+            text_color = (255, 255, 255)
+        elif depth == 1:
+            fill_color = _blend_alpha(color_hex + "30", BG_COLOR)
+            outline_color = _hex_to_rgb(color_hex)[:3]
+            ow = max(1, int(2 * s))
+            draw.rounded_rectangle([nx, ny, nx + w_s, ny + h_s], radius=rx,
+                                   fill=fill_color, outline=outline_color, width=ow)
+            text_color = (255, 255, 255)
+        elif depth == 2:
+            fill_color = _blend_alpha(color_hex + "18", BG_COLOR)
+            outline_color = _blend_alpha(color_hex + "bb", BG_COLOR)
+            ow = max(1, int(1.5 * s))
+            draw.rounded_rectangle([nx, ny, nx + w_s, ny + h_s], radius=rx,
+                                   fill=fill_color, outline=outline_color, width=ow)
+            text_color = (224, 228, 240)
+        else:
+            fill_color = _blend_alpha(color_hex + "0e", BG_COLOR)
+            outline_color = _blend_alpha(color_hex + "77", BG_COLOR)
+            ow = max(1, int(1 * s))
+            draw.rounded_rectangle([nx, ny, nx + w_s, ny + h_s], radius=rx,
+                                   fill=fill_color, outline=outline_color, width=ow)
+            text_color = (168, 176, 200)
+
+        # ── Draw text ─────────────────────────────────────────────────
+        font_size = int(c["fs"] * s)
+        is_bold = c["fw"] in ("bold", "600", "700")
+        font = _get_font(font_size, bold=is_bold)
+
+        # Strip emoji for Pillow (system fonts can't render color emoji)
+        render_label = _strip_emoji_for_pillow(label)
+        tw, th = _pillow_measure_text(render_label, font)
+        text_x = tx(p["x"]) - tw / 2
+        text_y = ty(p["y"]) - th / 2
+        draw.text((text_x, text_y), render_label, fill=text_color, font=font)
+
+    # ── Save ──────────────────────────────────────────────────────────────
+    if fmt == "jpg":
+        img = img.convert("RGB")
+        img.save(out, "JPEG", quality=quality, optimize=True)
+    elif fmt == "pdf":
+        # Embed the rendered image into a single-page PDF via Pillow
+        # Pillow can save PDF directly from an Image object
+        img = img.convert("RGB")
+        img.save(out, "PDF", resolution=72.0 * s)
     else:
-        print("[mindmap] Install: pip install cairosvg", file=sys.stderr)
+        img.save(out, "PNG", optimize=True)
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1983,7 +2808,6 @@ def _print_cairo_install_hint():
 def main():
     args = parse_args()
 
-    # ── Resolve output path (cross-platform) ──────────────────────────────
     fmt = args.format.lower()
     if args.output is None:
         out = default_output(fmt)
@@ -1999,43 +2823,47 @@ def main():
     except ValueError as e:
         print(f"[mindmap] ERROR: {e}", file=sys.stderr); sys.exit(1)
 
+    # ── XMind  (pure Python, no deps) ────────────────────────────────────
     if fmt == "xmind":
         open(out, "wb").write(build_xmind(tree, args.title))
         print(f"[mindmap] ✅ XMind → {out}"); return
 
-    if fmt in ("svg", "png", "jpg", "pdf"):
+    # ── SVG  (static, pure Python) ───────────────────────────────────────
+    if fmt == "svg":
         _nid[0] = 0
         tree["_depth"] = 0; tree["label"] = tree["central"]
         annotate(tree, 0)
         positions = compute_layout(tree)
-        svg_str   = render_svg_static(tree, positions, include_xml_header=(fmt == "svg"))
+        svg_str = render_svg_static(tree, positions, include_xml_header=True)
+        open(out, "w", encoding="utf-8").write(svg_str)
+        print(f"[mindmap] ✅ SVG → {out}"); return
 
-        if fmt == "svg":
-            open(out, "w", encoding="utf-8").write(svg_str)
-            print(f"[mindmap] ✅ SVG → {out}"); return
+    # ── PNG / JPG / PDF  — auto-select best available backend ────────────
+    if fmt in ("png", "jpg", "pdf"):
 
-        try:
-            import cairosvg
-        except ImportError:
-            _print_cairo_install_hint()
+        # Backend 1: Playwright  (best quality for png/jpg)
+        if fmt in ("png", "jpg") and _has_playwright():
+            html_str = render_html(args.title, json.dumps(tree, ensure_ascii=False))
+            _export_image_playwright(html_str, out, fmt,
+                                     scale=args.scale, quality=args.quality)
+            print(f"[mindmap] ✅ {fmt.upper()} → {out}  (via Playwright)"); return
+
+        # Backend 2: Pillow  (pure Python, works everywhere)
+        # Auto-install if missing
+        if not _ensure_pillow():
+            print("[mindmap] ERROR: Cannot export image — Pillow is required.", file=sys.stderr)
+            print("[mindmap] Please run:  pip install pillow", file=sys.stderr)
             sys.exit(1)
 
-        svg_b = svg_str.encode("utf-8")
-        if fmt == "pdf":
-            cairosvg.svg2pdf(bytestring=svg_b, write_to=out, scale=args.scale)
-        elif fmt == "png":
-            cairosvg.svg2png(bytestring=svg_b, write_to=out, scale=args.scale)
-        elif fmt == "jpg":
-            png_b = cairosvg.svg2png(bytestring=svg_b, scale=args.scale)
-            try:
-                from PIL import Image
-                Image.open(io.BytesIO(png_b)).convert("RGB").save(
-                    out, "JPEG", quality=args.quality)
-            except ImportError:
-                open(out, "wb").write(png_b)
-        print(f"[mindmap] ✅ {fmt.upper()} → {out}"); return
+        _nid[0] = 0
+        tree["_depth"] = 0; tree["label"] = tree["central"]
+        annotate(tree, 0)
+        positions = compute_layout(tree)
+        _export_image_pillow(tree, positions, out, fmt,
+                             scale=args.scale, quality=args.quality)
+        print(f"[mindmap] ✅ {fmt.upper()} → {out}  (via Pillow)"); return
 
-    # HTML
+    # ── HTML  (default) ──────────────────────────────────────────────────
     html = render_html(args.title, json.dumps(tree, ensure_ascii=False))
     open(out, "w", encoding="utf-8").write(html)
     print(f"[mindmap] ✅ HTML → {out}")
