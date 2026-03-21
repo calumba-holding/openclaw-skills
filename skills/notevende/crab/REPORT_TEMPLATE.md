@@ -19,16 +19,20 @@
 
 ## 📌 Basic Information
 
+<!--
+  This table is FLEXIBLE — add/remove rows based on available data.
+  Only include rows where data was actually collected.
+  Do NOT pad with "N/A" or placeholder rows.
+  Examples of additional rows: Audit Firm, Launch Date, TVL, DEX Listings, etc.
+-->
+
 | Item | Content |
 | :--- | :--- |
 | **Project Name** | **{Project Name}** |
 | **Official Site** | [{url}]({url}) |
 | **Social Media** | Twitter: [@{username}]({url}) `(Followers: {N})` |
-| **Development** | GitHub: [{owner/repo}]({url}) `(Stars: {N})` |
 | **Smart Contract** | `{Chain}` : `{address}` |
-| **Market Data** | **{Token Name}** (${Symbol}) • Price: **${N}** • MC: **${N}** |
-| **Infrastructure** | {Ethereum / BSC / Solana / Base...} |
-| **Resources** | [Telegram]({url}) / [Discord]({url}) |
+| ... | *agent adds/removes rows based on collected data* |
 
 ---
 
@@ -61,11 +65,29 @@
 
 | Dimension | Source A says | Source B says | Severity |
 | :--- | :--- | :--- | :---: |
-| {e.g. TVL} | {Website: "$10M TVL"} | {On-chain: $500K actual} | 🔴 |
-| {e.g. Team location} | {Twitter: "Based in US"} | {GitHub: commits all UTC+8} | 🟡 |
-| {e.g. Token supply} | {Docs: "100M fixed"} | {Contract: mintable, no cap} | 🔴 |
+| {e.g. TVL} | Website: "$10M TVL" [[N]]({url}) | On-chain: $500K actual [[N]]({url}) | 🔴 |
+| {e.g. Team location} | Twitter: "Based in US" [[N]]({url}) | GitHub: commits all UTC+8 [[N]]({url}) | 🟡 |
+| {e.g. Token supply} | Docs: "100M fixed" [[N]]({url}) | Contract: mintable, no cap [[N]]({url}) | 🔴 |
 
 > *If no contradictions found, state: "No cross-source contradictions detected."*
+
+#### Key Dispute Analysis
+*For each 🔴 contradiction or community accusation, provide detailed evidence chain.*
+
+**{Dispute title, e.g. "Token supply mismatch"}**
+
+| Step | Evidence | Source |
+| :--- | :--- | :--- |
+| Project claims | {"Max supply 100M, deflationary"} | Docs page [[N]]({url}) |
+| On-chain reality | {Contract has `mint()` with no cap, owner can mint unlimited} | Contract code [[N]]({url}) |
+| Technical analysis | {Community analyst @sec_researcher: "this mint function bypasses the cap check via proxy delegate call, same pattern as $SCAM_TOKEN rug in 2024"} | Analysis thread [[N]]({url}) |
+| On-chain forensics | {Deployer wallet 0xABC sent 500 ETH to Tornado Cash 3 days after launch, then received tokens from 5 fresh wallets — circular flow pattern} | Tx [[N]]({explorer_url}) |
+| Community reaction | {"@user_a: classic rug setup" — 245 likes, 89 replies} | Tweet reply [[N]]({url}) |
+| KOL stance | {"@kol_b quoted: 'team needs to explain this immediately'"} | Quote tweet [[N]]({url}) |
+| Counter-argument | {Team: "mint is for staking rewards only, will renounce after launch"} | Team tweet [[N]]({url}) |
+| **Verdict** | {**Unresolved** — mint function exists, team promise is unenforceable on-chain. Community analysis corroborates the risk.} | — |
+
+> *Repeat this block for each major dispute. Only disputes with 🔴 severity or active community accusations require detailed analysis. Include community technical analysis (code reviews, on-chain forensics, tokenomics breakdowns) whenever available.*
 
 ### Information Gaps
 *What could not be verified and why — absence of data is also a signal.*
@@ -103,7 +125,7 @@
 ### 📈 Social Signals
 * **KOL Followers:** `{notable names from kol-followers API}`
 * **Anomalies:** `{e.g. bot-like follower spikes, deleted tweets}`
-* **Community Sentiment:** `{from Gork analysis}`
+* **Community Sentiment:** `{from search/tweet analysis}`
 
 ### 📅 Project Timeline
 *Cross-source chronological reconstruction — abnormal timing patterns are high-value signals.*
@@ -147,11 +169,19 @@
 ---
 
 ## 📂 References
-<!-- Number must match inline citations [[N]](url) used throughout the report -->
-1. [{source title}]({url}) - *{description}*
-2. [{source title}]({url}) - *{description}*
-3. ...
-<!-- Include all sources cited inline. Every [[N]] in the report must have a corresponding entry here. -->
+<!--
+  Citation rules (like academic papers):
+  - Every factual claim, data point, or quote in the report MUST have a [[N]] inline citation
+  - Every [[N]] in the report body MUST have a matching entry in this list
+  - Every entry in this list MUST be cited at least once in the report body
+  - Number sequentially from 1, in order of first appearance
+  - One source may be cited multiple times with the same [[N]]
+-->
+| # | Source | Type | URL |
+| :---: | :--- | :--- | :--- |
+| 1 | {source title} | {Twitter / Website / On-chain / GitHub / Docs} | [{url}]({url}) |
+| 2 | {source title} | {type} | [{url}]({url}) |
+| 3 | ... | ... | ... |
 
 ---
 <p align="center">

@@ -49,10 +49,59 @@ Fields: `chain` + `contract` (lowercase: `bnb`/`eth`/`base`/`sol`)
 
 ---
 
+---
+
+## 3. Onchain Explorer API (explorer)
+
+`POST https://crab-skill.opsat.io/api/explorer/*` (requires Crab signature)
+
+See `API_EXPLORER.md` for full parameter and response details.
+
+### 3a. Contract ABI / Source Code
+
+**Endpoint**: `/api/explorer/contract`
+
+Fields: `chain` (`ETH` or `BSC`) + `address`
+
+| Key field | Description |
+|-----------|-------------|
+| `verified` | Contract is open-source and verified on Etherscan |
+| `contractName` | Contract name |
+| `compilerVersion` | Solidity compiler version |
+| `optimizationUsed` | Whether optimization was enabled |
+| `abi` | Contract ABI array |
+| `sourceCode` | Source code (string, or object for multi-file) |
+| `licenseType` | License type |
+| `proxy` | Is this a proxy contract |
+| `implementation` | Implementation address (proxy only) |
+
+Returns `{ verified: false }` for unverified contracts.
+
+### 3b. Token Transfer History
+
+**Endpoint**: `/api/explorer/token-history`
+
+Fields: `chain` (`ETH` / `BSC` / `SOL`) + `address` + optional pagination/filter
+
+- **ETH/BSC**: pagination via `outPageKey` / `inPageKey`; each record has `hash`, `from`, `to`, `value`, `asset`, `category`, `blockNum`, `blockTimestamp`
+- **SOL**: filter by `type` (SWAP/TRANSFER/BURN/...) and `source` (JUPITER/RAYDIUM/...); paginate via `before`; each record has `signature`, `timestamp`, `type`, `source`, `fee`, `nativeTransfers`, `tokenTransfers`, `events`
+
+### 3c. SOL Address Overview
+
+**Endpoint**: `/api/explorer/sol-address`
+
+Fields: `address` + optional `txLimit` (default 10)
+
+Returns: native SOL balance (lamports + USD), SPL token list, recent transfer records.
+
+---
+
 ## Fallback Behavior
 
-| Scenario                     | Behavior                     |
-|-----------------------------|------------------------------|
-| Unknown contract chain      | Skip audit                   |
-| No token search results     | Skip token search            |
-| Wallet chain not supported  | Skip wallet query            |
+| Scenario                        | Behavior                                    |
+|---------------------------------|---------------------------------------------|
+| Unknown contract chain          | Skip audit                                  |
+| No token search results         | Skip token search                           |
+| Wallet chain not supported      | Skip wallet query                           |
+| Contract not verified (explorer)| Note as unverified, skip ABI/source display |
+| Explorer upstream unavailable   | Skip, continue with other sources           |
