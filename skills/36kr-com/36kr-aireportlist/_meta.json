@@ -3,11 +3,16 @@
   "slug": "36kr-aireportlist",
   "displayName": "[36kr]获取36氪自助报道栏目文章",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1773806198294,
-    "commit": "https://github.com/openclaw/skills/commit/e028a304224f85e5d4b7ad3d192c9b679bb65664"
+    "version": "1.0.5",
+    "publishedAt": 1773924641247,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1773806198294,
+      "commit": "https://github.com/openclaw/skills/commit/e028a304224f85e5d4b7ad3d192c9b679bb65664"
+    },
     {
       "version": "1.0.2",
       "publishedAt": 1773745736448,

@@ -7,24 +7,17 @@ fetch_aireport.py — 36kr 自助报道栏目文章查询工具
     python fetch_aireport.py 2026-03-10          # 查询指定日期
     python fetch_aireport.py --top 5             # 只显示前 5 篇
     python fetch_aireport.py --json              # 输出原始 JSON
-    python fetch_aireport.py --csv out.csv       # 导出 CSV
     python fetch_aireport.py --recent 7          # 查询最近 7 天去重汇总
 
-依赖:
-    pip install httpx
+依赖: Python 3 标准库（无需额外安装）
 """
 
 import argparse
-import csv
 import datetime
 import json
 import sys
-
-try:
-    import httpx
-except ImportError:
-    print("[ERROR] 缺少依赖，请先执行: pip install httpx")
-    sys.exit(1)
+import urllib.error
+import urllib.request
 
 BASE_URL = "https://openclaw.36krcdn.com/media/aireport/{date}/ai_report_articles.json"
 DEFAULT_TIMEOUT = 10
@@ -34,6 +27,17 @@ MAX_FALLBACK_DAYS = 3
 def build_url(date: str) -> str:
     """构造指定日期的 API URL。"""
     return BASE_URL.format(date=date)
+
+
+def _http_get(url: str, timeout: int = DEFAULT_TIMEOUT):
+    """通过标准库 urllib 发起 GET 请求，返回 (status_code, json_data_or_none)。"""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            return resp.status, json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        return e.code, None
+    except Exception:
+        return None, None
 
 
 def fetch(date: str = None, auto_fallback: bool = True) -> dict | None:
@@ -60,26 +64,22 @@ def fetch(date: str = None, auto_fallback: bool = True) -> dict | None:
     for i in range(attempts):
         query_date = check_date - datetime.timedelta(days=i)
         url = build_url(query_date.isoformat())
-        try:
-            resp = httpx.get(url, timeout=DEFAULT_TIMEOUT)
-            if resp.status_code == 200:
-                if i > 0:
-                    print(f"[INFO] 当日无数据，已回退至 {query_date}")
-                return resp.json()
-            elif resp.status_code == 404:
-                if auto_fallback:
-                    print(f"[WARN] {query_date} 无数据，尝试前一天...")
-                else:
-                    print(f"[WARN] {query_date} 的自助报道数据不存在（404）")
-                    return None
-            else:
-                print(f"[ERROR] HTTP {resp.status_code}: {url}")
-                return None
-        except httpx.TimeoutException:
-            print(f"[ERROR] 请求超时: {url}")
+        status, data = _http_get(url)
+        if status is None:
+            print(f"[ERROR] 请求失败或超时: {url}")
             return None
-        except httpx.RequestError as e:
-            print(f"[ERROR] 请求失败: {e}")
+        if status == 200:
+            if i > 0:
+                print(f"[INFO] 当日无数据，已回退至 {query_date}")
+            return data
+        elif status == 404:
+            if auto_fallback:
+                print(f"[WARN] {query_date} 无数据，尝试前一天...")
+            else:
+                print(f"[WARN] {query_date} 的自助报道数据不存在（404）")
+                return None
+        else:
+            print(f"[ERROR] HTTP {status}: {url}")
             return None
 
     print(f"[ERROR] 连续 {attempts} 天均无数据，放弃查询")
@@ -102,17 +102,12 @@ def fetch_recent(days: int = 7) -> list:
     for i in range(days):
         date = (today - datetime.timedelta(days=i)).isoformat()
         url = build_url(date)
-        try:
-            resp = httpx.get(url, timeout=DEFAULT_TIMEOUT)
-            if resp.status_code == 200:
-                for article in resp.json().get("data", []):
-                    if article.get("url") not in seen_urls:
-                        seen_urls.add(article["url"])
-                        all_articles.append(article)
-            elif resp.status_code == 404:
-                pass  # 静默跳过无数据日期
-        except Exception:
-            pass
+        status, data = _http_get(url)
+        if status == 200 and data:
+            for article in data.get("data", []):
+                if article.get("url") not in seen_urls:
+                    seen_urls.add(article["url"])
+                    all_articles.append(article)
 
     # 按发布时间倒序
     all_articles.sort(key=lambda x: x.get("publishTime", ""), reverse=True)
@@ -168,18 +163,6 @@ def print_recent_table(articles: list, top: int = None):
     print(f"{'─' * 70}")
 
 
-def export_csv(data: dict, filepath: str):
-    """将自助报道文章导出为 CSV 文件。"""
-    articles = data.get("data", [])
-    fields = ["rank", "title", "author", "publishTime", "url"]
-
-    with open(filepath, "w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(articles)
-
-    print(f"[OK] 已导出 {len(articles)} 条记录 → {filepath}")
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -198,7 +181,6 @@ def main():
     parser.add_argument("date", nargs="?", default=None, help="日期 YYYY-MM-DD，默认今日")
     parser.add_argument("--top", type=int, default=None, help="只显示前 N 篇")
     parser.add_argument("--json", action="store_true", help="输出原始 JSON")
-    parser.add_argument("--csv", metavar="FILE", help="导出 CSV 到指定文件")
     parser.add_argument("--no-fallback", action="store_true", help="不自动回退到前一天")
     parser.add_argument("--recent", type=int, metavar="DAYS", help="查询最近 N 天去重汇总")
 
@@ -220,8 +202,6 @@ def main():
 
     if args.json:
         print(json.dumps(data, ensure_ascii=False, indent=2))
-    elif args.csv:
-        export_csv(data, args.csv)
     else:
         print_table(data, top=args.top)
 
@@ -238,10 +218,10 @@ def demo_basic():
     """Demo 1: 最简单的查询"""
     today = datetime.date.today().isoformat()
     url = BASE_URL.format(date=today)
-    resp = httpx.get(url, timeout=10)
-    articles = resp.json()["data"]
-    for a in articles:
-        print(f"#{a['rank']} {a['title']} — {a['author']}")
+    _, data = _http_get(url)
+    if data:
+        for a in data["data"]:
+            print(f"#{a['rank']} {a['title']} — {a['author']}")
 
 
 def demo_top3():

@@ -142,7 +142,7 @@ fetch_recent_titles() {
     today=$(date +%Y-%m-%d)
 
     python3 - "$BASE_URL" "$FILE_NAME" "$days" "$today" <<'PYEOF'
-import sys, httpx, datetime
+import sys, json, datetime, urllib.request, urllib.error
 
 base_url  = sys.argv[1]
 file_name = sys.argv[2]
@@ -157,12 +157,14 @@ for i in range(days):
     d = (today - datetime.timedelta(days=i)).isoformat()
     url = f"{base_url}/{d}/{file_name}"
     try:
-        resp = httpx.get(url, timeout=10)
-        if resp.status_code == 200:
-            for item in resp.json().get("data", []):
-                if item.get("url") not in seen:
-                    seen.add(item["url"])
-                    results.append(item)
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            if resp.status == 200:
+                for item in json.loads(resp.read().decode("utf-8")).get("data", []):
+                    if item.get("url") not in seen:
+                        seen.add(item["url"])
+                        results.append(item)
+    except urllib.error.HTTPError:
+        pass
     except Exception:
         pass
 
