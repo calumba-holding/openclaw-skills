@@ -1,8 +1,10 @@
 ---
 name: "Vitamin"
-description: "Terminal-first Vitamin manager. Keep your health & wellness data organized with simple commands."
+description: "Track vitamin and supplement intake with goals and reminders. Use when logging supplements, setting nutrition goals, reviewing history, or scheduling doses."
 version: "2.0.0"
 author: "BytesAgain"
+homepage: https://bytesagain.com
+source: https://github.com/bytesagain/ai-skills
 tags: ["vitamin", "tracking", "daily", "self-care", "monitor"]
 ---
 

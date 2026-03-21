@@ -3,9 +3,15 @@
   "slug": "vitamin",
   "displayName": "Vitamin",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1773674143920,
-    "commit": "https://github.com/openclaw/skills/commit/c1bd3f746149d804ace3339bd5f3386d620bb3e4"
+    "version": "2.0.1",
+    "publishedAt": 1773798301531,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1773674143920,
+      "commit": "https://github.com/openclaw/skills/commit/c1bd3f746149d804ace3339bd5f3386d620bb3e4"
+    }
+  ]
 }
