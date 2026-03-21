@@ -1,77 +1,97 @@
 ---
 name: resource-hunter
-description: "🎯 全路径资源猎手 — 一个命令找到任何资源。聚合搜索阿里云盘/夸克/百度/115/UC 等 10+ 云盘分享链接，TPB/EZTV/Nyaa 磁力种子，B站/YouTube 等 1000+ 网站视频下载。智能类型识别，并发搜索，画质优先排序。无需 API Key，完全免费。"
-metadata: {"openclaw":{"emoji":"🎯"}}
+description: Find the best public download route for movies, TV, anime, music, software, books, pan links, magnets, and public video URLs. Uses high-recall routing, quality-aware ranking, source health, and stable JSON output without login, cookies, or API keys.
 ---
 
-# 🎯 Resource Hunter — 全路径资源猎手
+# Resource Hunter
 
-> 一个命令，找到任何资源。网盘 + 种子 + 视频下载，三路并举，无需 API Key。
+Public resource discovery for agents.  
+Use it to find the best public download route, not to bypass access controls.
 
-## ✨ 特性
+## Use this skill when the user wants to
 
-- **10+ 云盘聚合** — 阿里云盘、夸克、百度、115、UC、PikPak、123网盘等同时搜索
-- **3大种子引擎** — TPB、EZTV（美剧专用）、Nyaa（动漫专用）并发搜索
-- **1000+ 视频网站** — B站、抖音、YouTube、TikTok 等直链下载
-- **智能识别** — 自动判断电影/动漫/美剧/音乐/软件，选择最优搜索策略
-- **画质优先** — REMUX > 4K/UHD > BluRay > 1080p 智能排序
-- **自动提取密码** — 网盘分享链接密码自动识别提取
-- **无需 API Key** — 全部使用免费公开接口
-- **并发高速** — 网盘+种子同时搜索，4秒内出结果
+- Find public pan links, torrent results, or magnets
+- Compare releases for quality, confidence, and source health
+- Search movies, TV, anime, music, software, or books
+- Inspect a public video URL and optionally download it if the machine is ready
+- Get compact chat output or structured JSON for downstream tools
 
-## 🚀 快速开始
+## Do not use this skill for
+
+- Login-only sites, private accounts, cookies, invite-only trackers, or private libraries
+- DRM, captchas, bypassing access controls, or restricted content
+- Guarantees about legality, permanence, or long-term availability
+
+## What this skill gives the agent
+
+- High-recall multi-source search across pan and torrent channels
+- Tiered ranking: `top`, `related`, and suppressed risky recall
+- Quality-aware sorting with title-family matching, season/episode checks, and release parsing
+- Live source health, degraded-source penalties, and circuit breaking
+- JSON v3 output with `canonical_identity`, `evidence`, `source_health`, and `upstream_source`
+
+## Main entrypoint
 
 ```bash
 SKILL_DIR="$(openclaw skills path resource-hunter)/scripts"
-
-# 搜索电影（中英文混合效果最佳）
-python3 "$SKILL_DIR/hunt.py" '流浪地球2 The Wandering Earth 2023' --movie
-
-# 搜索动漫
-python3 "$SKILL_DIR/hunt.py" '进击的巨人 Attack on Titan' --anime
-
-# 搜索音乐（自动加无损关键词）
-python3 "$SKILL_DIR/hunt.py" '周杰伦' --music
-
-# 搜索软件
-python3 "$SKILL_DIR/hunt.py" 'Adobe Photoshop 2024' --software
-
-# 视频链接直接下载
-python3 "$SKILL_DIR/hunt.py" 'https://www.bilibili.com/video/BV1xx...'
+python3 "$SKILL_DIR/hunt.py" search "<query>"
 ```
 
-## 📋 参数说明
-
-| 参数 | 说明 |
-|------|------|
-| `--movie` | 电影模式 |
-| `--anime` | 动漫模式（启用 Nyaa）|
-| `--tv` | 美剧模式（启用 EZTV）|
-| `--music` | 音乐模式（自动加无损）|
-| `--software` | 软件模式 |
-| `--quick` | 快速模式（每云盘1条，更简洁）|
-| `--sub` | 优先带中文字幕版本 |
-| `--4k` | 优先4K版本 |
-| `--pan-only` | 只搜网盘 |
-| `--torrent-only` | 只搜种子（建议英文关键词）|
-| `--page N` | 翻页查看更多结果 |
-
-## 🔧 依赖
-
-- **网盘/种子搜索**：无需任何依赖，开箱即用
-- **视频下载**：需安装 [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+## Quick start
 
 ```bash
-# 安装 yt-dlp（可选，仅视频下载需要）
-curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ~/.local/bin/yt-dlp && chmod +x ~/.local/bin/yt-dlp
+python3 "$SKILL_DIR/hunt.py" search "Oppenheimer 2023" --4k
+python3 "$SKILL_DIR/hunt.py" search "Breaking Bad S01E01" --tv
+python3 "$SKILL_DIR/hunt.py" search "Attack on Titan" --anime --sub
+python3 "$SKILL_DIR/hunt.py" search "Jay Chou Fantasy lossless" --music
+python3 "$SKILL_DIR/hunt.py" search "Adobe Photoshop 2024" --software --channel pan
+python3 "$SKILL_DIR/hunt.py" video probe "https://www.bilibili.com/video/BV..."
+python3 "$SKILL_DIR/hunt.py" benchmark
 ```
 
-## 📊 数据来源
+## Default routing
 
-| 功能 | 数据源 | 费用 |
-|------|--------|------|
-| 网盘搜索 | 2fun.live PanSou | 免费 |
-| 种子搜索 | The Pirate Bay | 免费 |
-| 美剧种子 | EZTV | 免费 |
-| 动漫种子 | Nyaa.si | 免费 |
-| 视频下载 | yt-dlp | 免费 |
+- Movie: pan first, torrent second
+- TV: EZTV/TPB first, then pan supplements
+- Anime: Nyaa first, then pan supplements
+- Music, software, book: pan first, torrent fallback
+- Public video URL: skip search and route directly to `video probe` / `video info`
+
+## Output contract
+
+- Default text: only `top` and `related` results are shown
+- Risky recall stays suppressed in text and is still available in JSON
+- `--json`: JSON v3 with `schema_version`, `query`, `intent`, `plan`, `results`, `suppressed`, `warnings`, `source_status`, and `meta`
+- `--json-version 2`: temporary compatibility mode for older consumers
+
+## Runtime requirements
+
+- Search, ranking, and source diagnostics: no API keys required
+- Public video inspect/probe: `yt-dlp` optional but recommended
+- Public video download/subtitle: requires both `yt-dlp` and `ffmpeg`
+
+## Agent rules
+
+- Prefer the main `hunt.py` entrypoint over lower-level wrappers
+- Use `--quick` when the user wants a short answer
+- Use `--json` when another tool or script will consume the output
+- If the input is a public video URL, do not search pan/torrent first; go straight to the video pipeline
+- If the user asks to actually download a public video URL, first verify `yt-dlp` and `ffmpeg` are installed; otherwise return the route plus the missing dependency requirement
+- If the user wants only pan or only torrent, set `--channel pan` or `--channel torrent`
+- Prefer benchmark-backed changes over heuristic tweaks without regression coverage
+
+## Legacy compatibility
+
+Legacy wrappers still exist for one compatibility cycle:
+
+```bash
+python3 "$SKILL_DIR/pansou.py" "<query>"
+python3 "$SKILL_DIR/torrent.py" "<query>"
+python3 "$SKILL_DIR/video.py" info "<url>"
+```
+
+## References
+
+- Detailed usage: `references/usage.md`
+- Internal architecture and JSON schema: `references/architecture.md`
+- Source coverage and routing notes: `references/sources.md`
