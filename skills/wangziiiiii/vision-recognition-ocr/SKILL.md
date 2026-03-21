@@ -5,6 +5,8 @@ description: "Vehicle/animal/plant recognition plus OCR for screenshots, photos,
 
 # Vision Recognition + OCR
 
+> Cross-platform Python: on Windows prefer `py -3.11`; on Linux/macOS prefer `python3`; if plain `python` already points to Python 3, it also works.
+
 Recognize vehicles, animals, and plants, or extract text from screenshots, photos, invoices, and tables via Baidu vision APIs.
 This skill combines lightweight classification and OCR workflows in one place.
 
@@ -26,11 +28,11 @@ Use this skill when you want to:
 Run from the installed skill directory:
 
 ```bash
-python3 scripts/ocr_general_basic.py '{"url":"https://baidu-ai.bj.bcebos.com/ocr/general.png"}'
+py -3.11 scripts/ocr_general_basic.py '{"url":"https://baidu-ai.bj.bcebos.com/ocr/general.png"}'
 ```
 
 ```bash
-python3 scripts/car_recognize.py '{"image_path":"/path/to/car.jpg"}'
+py -3.11 scripts/car_recognize.py '{"image_path":"/path/to/car.jpg"}'
 ```
 
 ## Not the best fit
@@ -103,14 +105,14 @@ Auth priority:
 
 快速自检：
 ```bash
-python3 scripts/ocr_general_basic.py '{"url":"https://baidu-ai.bj.bcebos.com/ocr/general.png"}'
+py -3.11 scripts/ocr_general_basic.py '{"url":"https://baidu-ai.bj.bcebos.com/ocr/general.png"}'
 ```
 若能返回识别结果或标准错误码（非鉴权错误），即配置成功。
 
 ## OCR examples
 
 ```bash
-python3 scripts/ocr_general_basic.py '{
+py -3.11 scripts/ocr_general_basic.py '{
   "url": "https://baidu-ai.bj.bcebos.com/ocr/general.png",
   "detect_direction": false,
   "detect_language": false,
@@ -118,7 +120,7 @@ python3 scripts/ocr_general_basic.py '{
   "probability": false
 }'
 
-python3 scripts/ocr_accurate_basic.py '{
+py -3.11 scripts/ocr_accurate_basic.py '{
   "url": "https://baidu-ai.bj.bcebos.com/ocr/general.png",
   "detect_direction": false,
   "paragraph": false,
@@ -126,7 +128,7 @@ python3 scripts/ocr_accurate_basic.py '{
   "multidirectional_recognize": false
 }'
 
-python3 scripts/ocr_handwriting.py '{
+py -3.11 scripts/ocr_handwriting.py '{
   "url": "https://baidu-ai.bj.bcebos.com/ocr/handwriting.jpeg",
   "eng_granularity": "letter",
   "detect_direction": false,
@@ -134,7 +136,7 @@ python3 scripts/ocr_handwriting.py '{
   "detect_alteration": false
 }'
 
-python3 scripts/ocr_table.py '{
+py -3.11 scripts/ocr_table.py '{
   "url": "https://b0.bdstatic.com/ugc/CVzjffcaizcBDqTK_zwMEQbbd344224206285ae3b5015e2e17f62c.jpg",
   "cell_contents": false,
   "return_excel": false
