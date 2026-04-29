@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "aml-data-generator",
-  "displayName": "aml-data-generator",
+  "displayName": "Aml Data Generator",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776876858556,
-    "commit": "https://github.com/openclaw/skills/commit/8124dd9e62d8da87cc9d6240dda7afa60f630f7a"
+    "version": "0.3.3",
+    "publishedAt": 1776954203588,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776876858556,
+      "commit": "https://github.com/openclaw/skills/commit/8124dd9e62d8da87cc9d6240dda7afa60f630f7a"
+    }
+  ]
 }
