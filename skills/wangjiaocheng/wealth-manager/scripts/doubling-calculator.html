@@ -21,6 +21,9 @@
   label { font-size: 14px; color: #8899aa; white-space: nowrap; }
   input[type="range"] { width: 130px; accent-color: #f0b90b; cursor: pointer; }
   .val { color: #f0b90b; font-weight: bold; font-size: 16px; min-width: 60px; display: inline-block; }
+  input[type="number"] { width: 80px; padding: 3px 6px; background: #0f172a; color: #f0b90b; border: 1px solid #334155; border-radius: 4px; font-size: 13px; font-weight: bold; text-align: right; outline: none; }
+  input[type="number"]:focus { border-color: #f0b90b; }
+  input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
   select { background: #1e2a3a; color: #e0e0e0; border: 1px solid #2a3a4a; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; }
 
   .formula-box { background: #111822; border: 1px solid #2a3a4a; border-radius: 10px; padding: 14px 20px; margin-bottom: 16px; text-align: center; }
@@ -79,36 +82,19 @@
 
 <div class="controls">
   <div class="control-group">
-    <label>起点本金:</label>
-    <select id="principal">
-      <option value="100">100万美元</option>
-      <option value="500">500万美元</option>
-      <option value="1000" selected>1000万美元</option>
-      <option value="5000">5000万美元</option>
-      <option value="10000">1亿美元</option>
-    </select>
+    <label>起点本金(万$):</label>
+    <input type="range" id="principal" min="1" max="1000000" value="1000" step="1">
+    <input type="number" id="principalNum" min="1" max="1000000" value="1000" step="1">
   </div>
   <div class="control-group">
-    <label>月收益率:</label>
-    <input type="range" id="rateSlider" min="1" max="50" value="10" step="0.5">
-    <span class="val" id="rateVal">10%</span>
+    <label>月收益率(%):</label>
+    <input type="range" id="rateSlider" min="0.01" max="100" value="10" step="0.01">
+    <input type="number" id="rateSliderNum" min="0.01" max="100" value="10" step="0.01">
   </div>
   <div class="control-group">
-    <label>终点模式:</label>
-    <select id="modeSelect">
-      <option value="fixed1638">固定16384倍终点</option>
-      <option value="custom">自定义目标金额</option>
-    </select>
-  </div>
-  <div class="control-group" id="customTargetGroup" style="display:none">
-    <label>目标:</label>
-    <select id="targetCustom">
-      <option value="100">100亿美元</option>
-      <option value="500">500亿美元</option>
-      <option value="1000">1000亿美元</option>
-      <option value="5000">5000亿美元</option>
-      <option value="10000">1万亿美元</option>
-    </select>
+    <label>目标金额(亿$):</label>
+    <input type="range" id="targetAmount" min="0.1" max="1000000" value="1638.4" step="0.1">
+    <input type="number" id="targetAmountNum" min="0.1" max="1000000" value="1638.4" step="0.1">
   </div>
 </div>
 
@@ -171,26 +157,23 @@ function toYearMonth(totalMonths) {
   return y + '年' + m + '月';
 }
 
-const END_MULTIPLIER = 16384; // 2^14 = 16384倍：1000万$ → 16384亿$ = 1638.4亿美元
-
 function calc() {
   const principal = parseFloat(document.getElementById('principal').value); // 万美元
   const monthlyRate = parseFloat(document.getElementById('rateSlider').value);
-  const mode = document.getElementById('modeSelect').value;
+  const targetAmountYi = parseFloat(document.getElementById('targetAmount').value); // 亿美元
+  const targetAmountWan = targetAmountYi * 10000; // 万美元
+  const targetMultiplier = targetAmountWan / principal;
 
-  document.getElementById('rateVal').textContent = monthlyRate + '%';
+  // 同步滑块值到输入框
+  document.getElementById('principalNum').value = principal;
+  document.getElementById('rateSliderNum').value = monthlyRate;
+  document.getElementById('targetAmountNum').value = targetAmountYi;
 
   // === 核心公式：固定周期翻倍 ===
   const cycleMonths = 100 / monthlyRate;
   const annualEquivalent = Math.pow(1 + monthlyRate/100, 12) - 1;
 
-  // 目标换算为倍数
-  const targetMultiplier = (mode === 'fixed1638') ? END_MULTIPLIER : (parseFloat(document.getElementById('targetCustom').value) * 10000 / principal);
   const doublesNeeded = Math.log(targetMultiplier) / Math.log(2);
-
-  // 目标金额（万美元）— 跟随实际选择的目标
-  const targetAmountWan = principal * targetMultiplier;
-  const targetAmountYi = targetAmountWan / 10000;
 
   // 总时间（精确月数）
   const totalMonths = doublesNeeded * cycleMonths;
@@ -299,15 +282,23 @@ function renderPhaseBar(doublesNeeded, cycleMonths, finalYi) {
   });
 }
 
-// 切换模式时显示/隐藏自定义目标
-document.getElementById('modeSelect').addEventListener('change', function() {
-  document.getElementById('customTargetGroup').style.display = this.value === 'custom' ? 'flex' : 'none';
-  calc();
+// 双向绑定滑块和输入框
+const sliderIds = ['principal', 'rateSlider', 'targetAmount'];
+sliderIds.forEach(id => {
+  const slider = document.getElementById(id);
+  const numInput = document.getElementById(id + 'Num');
+  slider.addEventListener('input', calc);
+  numInput.addEventListener('input', function() {
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    let v = parseFloat(this.value);
+    if (!isNaN(v)) {
+      v = Math.max(min, Math.min(max, v));
+      slider.value = v;
+      calc();
+    }
+  });
 });
-
-document.getElementById('rateSlider').addEventListener('input', calc);
-document.getElementById('principal').addEventListener('change', calc);
-document.getElementById('targetCustom').addEventListener('change', calc);
 
 calc();
 </script>
