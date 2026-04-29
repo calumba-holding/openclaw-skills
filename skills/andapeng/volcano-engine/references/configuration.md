@@ -164,13 +164,14 @@ VOLCANO_ENGINE_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## Region Configuration
 
-Volcano Engine supports multiple regions:
+Volcano Engine supports two verified API regions:
 
-| Region | Endpoint (General) | Endpoint (Coding) |
-|--------|-------------------|-------------------|
-| Beijing (default) | `ark.cn-beijing.volces.com/api/v3` | `ark.cn-beijing.volces.com/api/coding/v3` |
-| Shanghai | `ark.cn-shanghai.volces.com/api/v3` | `ark.cn-shanghai.volces.com/api/coding/v3` |
-| Guangzhou | `ark.cn-guangzhou.volces.com/api/v3` | `ark.cn-guangzhou.volces.com/api/coding/v3` |
+| Region | General Endpoint | Verified |
+|--------|-----------------|----------|
+| **Beijing** (default) | `ark.cn-beijing.volces.com/api/v3` | ✅ 115 models |
+| **Shanghai** | `ark.cn-shanghai.volces.com/api/v3` | ✅ 115 models (same as Beijing) |
+
+> **Note**: These are the only two regions validated as of 2026-04-25. Candidates like Guangzhou, Shenzhen, Hangzhou, Hong Kong, Singapore, and US West were tested and did not resolve. Both regions expose identical models (115 total).
 
 To change region, update `baseUrl` in provider config:
 
@@ -181,6 +182,18 @@ To change region, update `baseUrl` in provider config:
     // ... rest of config
   }
 }
+```
+
+### Script: Apply Regional Config
+
+Use the helper script to switch regions:
+
+```powershell
+# Switch to Shanghai (faster for eastern China)
+pwsh ./scripts/regional-config.ps1 -Region Shanghai
+
+# Switch back to Beijing (default)
+pwsh ./scripts/regional-config.ps1 -Region Beijing
 ```
 
 ## Model Aliases Best Practices

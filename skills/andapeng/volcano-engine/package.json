@@ -1,18 +1,20 @@
 {
   "name": "openclaw-skill-volcengine",
-  "version": "1.0.0",
-  "description": "Volcano Engine (Volcengine) integration skill for OpenClaw. Supports Doubao, GLM, Kimi, DeepSeek models with OpenAI-compatible API endpoints.",
+  "version": "1.1.2",
+  "description": "Volcano Engine (Volcengine) integration skill for OpenClaw. Supports Doubao Seed 2.0, GLM, DeepSeek, Qwen models with full multimodal support.",
   "keywords": [
     "openclaw",
     "skill",
     "volcengine",
     "volcano-engine",
     "doubao",
-    "glm",
-    "kimi",
+    "seed",
     "deepseek",
+    "glm",
+    "qwen",
     "ai",
     "llm",
+    "vlm",
     "api"
   ],
   "author": {
@@ -45,8 +47,7 @@
     "LICENSE",
     "README.md",
     "references/",
-    "scripts/",
-    "recon/"
+    "scripts/"
   ],
   "scripts": {
     "test": "pwsh ./scripts/run-tests.ps1",
@@ -61,7 +62,7 @@
   },
   "skill": {
     "id": "volcengine",
-    "name": "Volcano Engine",
+    "name": "Volcengine (Volcano Engine)",
     "category": "ai-providers",
     "tags": ["chinese", "multimodal", "coding", "enterprise"],
     "compatibility": {

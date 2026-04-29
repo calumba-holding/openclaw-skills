@@ -37,6 +37,7 @@
 - [x] 添加发布元数据 (`package.json`, `LICENSE`)
 - [x] 创建README.md文档
 - [x] 验证核心功能完整性
+- [x] 发布到ClawHub (2026-04-19)
 
 **预期收益**:
 - 技能可发布到ClawHub
@@ -44,6 +45,13 @@
 - 确保稳定性和可靠性
 
 **交付物**: `package.json`, `LICENSE`, `README.md`, `scripts/run-tests.ps1`
+
+**发布详情**:
+- **Slug**: `volcano-engine` (原`volcengine`已被占用)
+- **版本**: 1.0.0
+- **发布日期**: 2026-04-19
+- **发布ID**: k972kfgn0whmfrr3c954dqq5yd8551ae
+- **状态**: 已成功发布，可通过 `clawhub install volcano-engine` 安装
 
 ### 1. 完整API参数文档 ✅ 完成
 **优先级**: 🔴 高
@@ -60,19 +68,50 @@
 
 **交付物**: `references/api-parameters.md`
 
-### 2. 区域特定配置
+### 1b. 模型列表更新 (2026-04-25) ✅ 完成
+**优先级**: 🔴 高
+**目标**: 通过API刷新模型列表
+
+- [x] 调用火山引擎 List Models API 获取完整模型清单
+- [x] 更新 `SKILL.md` 中的模型表格（LLM/VLM/Video/Image分类）
+- [x] 完全重写 `references/models.md`
+- [x] 标注已废弃/下架的模型
+- [x] 记录 Seed 2.0 系列的完整规格参数
+
+**关键发现**:
+- Kimi 系列（K2/K2.5/K2-thinking）已全线下架
+- Seed 2.0 全系支持 video 输入
+- DeepSeek V3.2 是火山引擎可用的最新 DeepSeek 模型（V4不可用）
+- 共有 39 个活跃模型
+
+### 2. 区域特定配置 ✅ 完成
 **优先级**: 🟡 中
 **目标**: 验证并记录所有区域的Base URL
 
-- [ ] 验证上海区域Base URL
-- [ ] 验证广州区域Base URL
-- [ ] 添加区域选择指南
-- [ ] 记录区域特定限制
+- [x] 验证上海区域Base URL ✅ (288ms, 115 models)
+- [x] 验证广州区域Base URL ❌ DNS不存在
+- [x] 创建区域切换脚本 `scripts/regional-config.ps1`
+- [x] 更新区域选择指南
+- [x] 扫描所有候选区域 + 海外区域
+
+**验证结果 (2026-04-25)**:
+- **有效区域**: 仅北京(cn-beijing)和上海(cn-shanghai)
+- **无效区域**: 广州(cn-guangzhou) DNS不存在
+- **模型差异**: 两区域完全一致(115 models)
+- **延迟**: 上海~288ms < 北京~425ms (从华东测试)
+- **其他区域全部失败**: 深圳、杭州、香港、新加坡、美西
 
 **预期收益**:
-- 支持多区域部署
-- 优化延迟和性能
-- 符合数据合规要求
+- ✅ 支持多区域部署
+- ✅ 优化延迟和性能
+- ✅ 清除错误区域信息
+
+**交付物**:
+- `scripts/regional-config.ps1`
+- `configuration.md` Region Configuration更新
+- `SKILL.md` Custom Base URL更新
+
+**后续**: 火山引擎可能会在更多城市上线节点，届时需重新验证
 
 ### 3. SDK集成指南
 **优先级**: 🟡 中
@@ -193,7 +232,7 @@
 | Phase 1: PDF基础分析 | ✅ 完成 | 100% | 2026-04-15 |
 | Phase 2: 技能文档更新 | ✅ 完成 | 100% | 2026-04-15 |
 | Phase 3: 子agent提取 | ✅ 完成 | 100% | 2026-04-15 |
-| 短期计划 | 🔄 进行中 | 25% | 2026-04-30 |
+| 短期计划 | ✅ 已完成 | 100% | 2026-04-25 |
 | 中期计划 | ⏳ 待开始 | 0% | 2026-06-15 |
 | 长期计划 | ⏳ 待开始 | 0% | 2026-10-15 |
 

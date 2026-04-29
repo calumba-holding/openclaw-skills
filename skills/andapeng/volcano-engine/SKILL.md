@@ -1,6 +1,6 @@
 ---
 name: volcengine
-description: Configure and use Volcano Engine (Volcengine) models including Doubao, GLM, Kimi, and DeepSeek. Use when: (1) Setting up Volcengine API access in OpenClaw, (2) Choosing between general vs coding endpoints, (3) Configuring model aliases for easy access, (4) Troubleshooting authentication or connection issues with Volcengine providers.
+description: Configure and use Volcano Engine (Volcengine) models including Doubao (Seed 2.0), GLM, DeepSeek, and Qwen. Use when: (1) Setting up Volcengine API access in OpenClaw, (2) Choosing between LLM and VLM (multimodal) models, (3) Configuring model aliases for easy access, (4) Troubleshooting authentication or connection issues with Volcengine providers.
 ---
 
 # Volcengine Skill
@@ -41,13 +41,22 @@ Add to your `openclaw.json`:
         "apiKey": "your-api-key-here",
         "models": [
           {
-            "id": "doubao-seed-1-8-251228",
-            "name": "Doubao Seed 1.8",
+            "id": "doubao-seed-2-0-pro-260215",
+            "name": "Doubao Seed 2.0 Pro",
             "reasoning": false,
-            "input": ["text", "image"],
+            "input": ["text", "image", "video"],
             "cost": { "input": 0, "output": 0 },
-            "contextWindow": 256000,
-            "maxTokens": 8192
+            "contextWindow": 262144,
+            "maxTokens": 131072
+          },
+          {
+            "id": "doubao-seed-2-0-lite-260215",
+            "name": "Doubao Seed 2.0 Lite",
+            "reasoning": false,
+            "input": ["text", "image", "video"],
+            "cost": { "input": 0, "output": 0 },
+            "contextWindow": 262144,
+            "maxTokens": 131072
           },
           {
             "id": "glm-4-7-251222",
@@ -55,24 +64,26 @@ Add to your `openclaw.json`:
             "reasoning": false,
             "input": ["text", "image"],
             "cost": { "input": 0, "output": 0 },
-            "contextWindow": 200000,
-            "maxTokens": 8192
-          }
-        ]
-      },
-      "volcengine-plan": {
-        "baseUrl": "https://ark.cn-beijing.volces.com/api/coding/v3",
-        "api": "openai-completions",
-        "apiKey": "your-api-key-here",
-        "models": [
+            "contextWindow": 204800,
+            "maxTokens": 131072
+          },
           {
-            "id": "ark-code-latest",
-            "name": "Ark Coding Plan",
+            "id": "doubao-seed-2-0-mini-260215",
+            "name": "Doubao Seed 2.0 Mini",
+            "reasoning": false,
+            "input": ["text", "image", "video"],
+            "cost": { "input": 0, "output": 0 },
+            "contextWindow": 262144,
+            "maxTokens": 131072
+          },
+          {
+            "id": "deepseek-v3-2-251201",
+            "name": "DeepSeek V3.2",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0 },
-            "contextWindow": 256000,
-            "maxTokens": 8192
+            "contextWindow": 131072,
+            "maxTokens": 32768
           }
         ]
       }
@@ -90,11 +101,14 @@ For easier access, add aliases to `agents.defaults.models`:
   "agents": {
     "defaults": {
       "models": {
-        "volcengine/doubao-seed-1-8-251228": {
+        "volcengine/doubao-seed-2-0-pro-260215": {
+          "alias": "DoubaoPro"
+        },
+        "volcengine/doubao-seed-2-0-lite-260215": {
           "alias": "Doubao"
         },
-        "volcengine-plan/ark-code-latest": {
-          "alias": "ArkCode"
+        "volcengine/doubao-seed-2-0-mini-260215": {
+          "alias": "DoubaoMini"
         },
         "volcengine/glm-4-7-251222": {
           "alias": "GLM4"
@@ -107,49 +121,68 @@ For easier access, add aliases to `agents.defaults.models`:
 
 ## Available Models
 
-### General Models (volcengine provider)
+### LLM Models (Text Generation)
 
-| Model ID | Name | Input | Context | Description |
-|----------|------|-------|---------|-------------|
-| `doubao-seed-1-8-251228` | Doubao Seed 1.8 | text, image | 256,000 | ByteDance's flagship model |
-| `doubao-seed-code-preview-251028` | Doubao Seed Code Preview | text, image | 256,000 | Code-focused preview |
-| `kimi-k2-5-260127` | Kimi K2.5 | text, image | 256,000 | Moonshot AI's model |
-| `glm-4-7-251222` | GLM 4.7 | text, image | 200,000 | Zhipu AI's model |
-| `deepseek-v3-2-251201` | DeepSeek V3.2 | text, image | 128,000 | DeepSeek's model |
+| Model ID | Name | Input | Context | Max Output | Notes |
+|----------|------|-------|---------|------------|-------|
+| `doubao-1-5-pro-32k-250115` | Doubao 1.5 Pro 32K | text | 131,072 | 12,288 | Balanced flagship, function calling |
+| `doubao-1-5-lite-32k-250115` | Doubao 1.5 Lite 32K | text | 32,768 | 12,288 | Lightweight, lower cost |
+| `doubao-seed-character-251128` | Doubao Seed Character | text | 131,072 | 32,768 | Role-play optimized |
+| `glm-4-7-251222` | GLM 4.7 | text | 204,800 | 131,072 | Zhipu AI, strong Chinese |
+| `deepseek-v3-2-251201` | DeepSeek V3.2 | text | 131,072 | 32,768 | Cost-effective |
+| `glm-4-5-air-20250728` | GLM 4.5 Air | text | — | — | Third-party, lightweight |
+| `qwen3-32b-20250429` | Qwen 3 32B | text | — | — | Alibaba, deployed via volcengine |
 
-### Coding Models (volcengine-plan provider)
+### VLM Models (Multimodal: Text + Image + Video)
 
-| Model ID | Name | Input | Context | Description |
-|----------|------|-------|---------|-------------|
-| `ark-code-latest` | Ark Coding Plan | text | 256,000 | Optimized for coding tasks |
-| `doubao-seed-code` | Doubao Seed Code | text | 256,000 | ByteDance's coding model |
-| `glm-4.7` | GLM 4.7 Coding | text | 200,000 | Zhipu's coding model |
-| `kimi-k2-thinking` | Kimi K2 Thinking | text | 256,000 | Moonshot's reasoning model |
-| `kimi-k2.5` | Kimi K2.5 Coding | text | 256,000 | Moonshot's coding model |
+| Model ID | Name | Input | Context | Max Output | Notes |
+|----------|------|-------|---------|------------|-------|
+| `doubao-seed-2-0-pro-260215` | Doubao Seed 2.0 Pro | text, image, video | 262,144 | 131,072 | Latest flagship, recommended |
+| `doubao-seed-2-0-lite-260215` | Doubao Seed 2.0 Lite | text, image, video | 262,144 | 131,072 | Fast, balanced |
+| `doubao-seed-2-0-mini-260215` | Doubao Seed 2.0 Mini | text, image, video | 262,144 | 131,072 | Cost-efficient |
+| `doubao-seed-2-0-code-preview-260215` | Doubao Seed 2.0 Code | text, image, video | 262,144 | 131,072 | Code-optimized |
+| `doubao-seed-1-8-251228` | Doubao Seed 1.8 | text, image, video | 262,144 | 131,072 | Previous flagship |
+| `doubao-seed-1-6-*` | Doubao Seed 1.6 series | text, image, video | 262,144 | 131,072 | Flash/Vision variants |
+| `doubao-1-5-vision-pro-32k-250115` | Doubao 1.5 Vision Pro | text, image | 131,072 | 12,288 | Older vision model |
+
+### Video & Image Generation
+
+| Model ID | Name | Type | Input |
+|----------|------|------|-------|
+| `doubao-seedance-2-0-260128` | Seedance 2.0 | Video | text, image, video, audio |
+| `doubao-seedance-2-0-fast-260128` | Seedance 2.0 Fast | Video | text, image, video, audio |
+| `doubao-seedance-1-5-pro-251215` | Seedance 1.5 Pro | Video | text, image |
+| `doubao-seedream-5-0-260128` | Seedream 5.0 | Image | text |
+| `doubao-seedream-4-5-251128` | Seedream 4.5 | Image | text |
+
+See [`models.md`](references/models.md) for the complete list including deprecated models, 3D generation, embedding, and third-party models.
 
 ## Usage Examples
 
 ### Using via CLI
 
 ```bash
-# Use Doubao model
+# Use Doubao 2.0 Lite (daily use)
 openclaw --model Doubao "Hello, summarize this text"
 
-# Use Ark Code for programming
-openclaw --model ArkCode "Write a Python function to sort a list"
+# Use Doubao 2.0 Pro for complex tasks
+openclaw --model DoubaoPro "Explain quantum computing with examples"
 
 # Use full model reference
-openclaw --model volcengine/doubao-seed-1-8-251228 "Explain quantum computing"
+openclaw --model volcengine/doubao-seed-2-0-pro-260215 "Write a Python function"
+
+# Use GLM 4.7 for Chinese content
+openclaw --model GLM4 "写一篇关于人工智能的文章"
 ```
 
 ### Setting Default Model
 
 ```bash
 # Set Doubao as default
-openclaw configure --set agents.defaults.model.primary volcengine/doubao-seed-1-8-251228
+openclaw configure --set agents.defaults.model.primary volcengine/doubao-seed-2-0-pro-260215
 
-# Set Ark Code as default for coding tasks  
-openclaw configure --set agents.defaults.model.primary volcengine-plan/ark-code-latest
+# Set Doubao 2.0 Lite as default
+openclaw configure --set agents.defaults.model.primary volcengine/doubao-seed-2-0-lite-260215
 ```
 
 ## Advanced Configuration
@@ -166,9 +199,26 @@ export VOLCANO_ENGINE_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # 火山引�
 "apiKey": "VOLCANO_ENGINE_API_KEY"
 ```
 
-### Custom Base URL
+### Region Configuration
 
-If you need a different region:
+Volcano Engine API supports two regions (verified 2026-04-25):
+
+| Region | Endpoint | Recommendation |
+|--------|----------|----------------|
+| **Beijing** (default) | `ark.cn-beijing.volces.com/api/v3` | Stable default |
+| **Shanghai** | `ark.cn-shanghai.volces.com/api/v3` | Same models as Beijing |
+
+> Both regions expose the same 115 models. Pick whichever is geographically closer.
+> **Note**: `cn-guangzhou`, `cn-shenzhen`, `ap-southeast-1` and other regions were tested but do not resolve.
+
+To switch regions:
+
+```bash
+# Using helper script
+pwsh ./scripts/regional-config.ps1 -Region Shanghai
+
+# Or manually in config
+```
 
 ```json
 {
@@ -191,12 +241,12 @@ If you need a different region:
 2. **Connection timeout**
    - Verify network connectivity to `ark.cn-beijing.volces.com`
    - Check firewall settings
-   - Try different region endpoint
+   - Try switching to Shanghai region (`regional-config.ps1 -Region Shanghai`)
 
 3. **Model not found**
    - Verify model ID spelling
-   - Check if model is available in your region
-   - Ensure you're using correct provider (volcengine vs volcengine-plan)
+   - Both regions share the same models (no region-specific model differences detected)
+   - Ensure you're using the correct model ID
 
 4. **Rate limiting**
    - Check API usage quotas
@@ -211,7 +261,7 @@ curl -X POST https://ark.cn-beijing.volces.com/api/v3/chat/completions \
   -H "Authorization: Bearer $VOLCANO_ENGINE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "doubao-seed-1-8-251228",
+    "model": "doubao-seed-2-0-pro-260215",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```
@@ -228,9 +278,10 @@ To monitor usage:
 ## Best Practices
 
 1. **Model Selection**
-   - Use `volcengine-plan/*` for coding tasks
-   - Use `volcengine/*` for general conversation
-   - Consider context window size for long documents
+   - Use `doubao-seed-2-0-code-preview-260215` for coding tasks
+   - Use `doubao-seed-2-0-pro-260215` for complex general tasks
+   - Use `doubao-seed-2-0-lite-260215` or `doubao-seed-2-0-mini-260215` for daily/high-volume use
+   - Consider context window size for long documents (Seed 2.0 series supports 262K)
 
 2. **API Key Security**
    - Never commit API keys to version control
@@ -256,6 +307,11 @@ To monitor usage:
    - **API Key** (Recommended for most users): Simple bearer token authentication
    - **Access Key** (Enterprise): HMAC-SHA256 signature-based auth for fine-grained permissions
    - See [Configuration Guide](configuration.md#authentication-methods) for details
+
+6. **Subscription & Access**
+   - **Standard models**: All models listed above work with a standard API key through the volcengine provider
+   - **Code Plan**: For dedicated coding endpoint (`volcengine-plan`), a separate Code Plan subscription may be needed. Visit [Console](https://console.volcengine.com/ark) → Products & Services → Code Plan
+   - **Model availability**: Check the [Volcano Engine Console](https://console.volcengine.com/ark) to see which models are deployed for your account
 
 ## Documentation Validation
 
@@ -293,6 +349,17 @@ Based on high-priority page extraction from official PDFs:
 
 **Validation Status**: ✅ **High Confidence** - Configuration aligns with official documentation
 
+### 📋 Model Data Source Update (2026-04-25)
+
+Model information was refreshed via the Volcano Engine **List Models API** on 2026-04-25:
+- **Total active models**: 39 (including text, vision, video, image, 3D, embedding, router)
+- **Active LLM**: 7 models
+- **Active VLM**: 12 models
+- All Seed 2.0 models now support **video input** in addition to text and image
+- **Kimi models** (K2, K2.5, K2-thinking) are no longer available on the platform (Shutdown/Retiring)
+- **DeepSeek V3.2** (not V4) is the latest available DeepSeek model
+- See [`models.md`](references/models.md) for the complete detailed reference
+
 ## API Architecture
 
 Volcano Engine uses a dual-track API architecture:
@@ -320,4 +387,4 @@ Current API version: `2024-01-01`
 - [Community Support](https://forum.volcengine.com/)
 
 ---
-*Documentation validated against official Volcano Engine API Reference PDF (2026-04-15) - High confidence verification completed*
+*Model list last updated via API: 2026-04-25 | Core config validated against official PDF: 2026-04-15*
