@@ -1,0 +1,11 @@
+{
+  "owner": "doushen-cloud",
+  "slug": "trip-planner-cn",
+  "displayName": "Trip Planner CN",
+  "latest": {
+    "version": "1.0.3",
+    "publishedAt": 1777333870628,
+    "commit": null
+  },
+  "history": []
+}
