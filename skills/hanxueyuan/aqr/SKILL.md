@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 summary: "The academic quant fund — AQR's 25-year journey of turning Nobel Prize-winning research into $150B+ in assets under management."
 read_when:
   - "研究 AQR 的因子投资理论",

@@ -3,9 +3,15 @@
   "slug": "aqr",
   "displayName": "Aqr",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776931463999,
-    "commit": "https://github.com/openclaw/skills/commit/da75f8b6b750d657ee781d243a55085d65fd1533"
+    "version": "1.0.1",
+    "publishedAt": 1776963863402,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776931463999,
+      "commit": "https://github.com/openclaw/skills/commit/da75f8b6b750d657ee781d243a55085d65fd1533"
+    }
+  ]
 }
