@@ -1,11 +1,17 @@
 {
   "owner": "dizhu",
   "slug": "ppt-deck-master",
-  "displayName": "Skill Ppt Master",
+  "displayName": "Ppt Deck Master",
   "latest": {
-    "version": "1.4.0",
-    "publishedAt": 1776804147696,
-    "commit": "https://github.com/openclaw/skills/commit/f61691b4de41800fda48daae4d9e4f53e7ebde96"
+    "version": "1.5.0",
+    "publishedAt": 1777028463559,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.4.0",
+      "publishedAt": 1776804147696,
+      "commit": "https://github.com/openclaw/skills/commit/f61691b4de41800fda48daae4d9e4f53e7ebde96"
+    }
+  ]
 }

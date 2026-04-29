@@ -108,6 +108,60 @@ def assemble_pptx(output_dir, total_slides, output_file):
     print(f"PPTX saved: {output_file} ({len(prs.slides)} slides)")
 
 
+def validate_slides_json(path):
+    """校验 slides.json：合法 JSON + 发现中文内部双引号隐患"""
+    with open(path, "r") as f:
+        raw = f.read()
+    try:
+        config = json.loads(raw)
+    except json.JSONDecodeError as e:
+        # 自动尝试修复中文内部的 " 为 「」
+        print(f"WARN: slides.json JSON 错误 at pos {e.pos}；尝试自动修复中文内引号…")
+        result = []
+        for i, ch in enumerate(raw):
+            if ch == '"':
+                prev = raw[i-1] if i > 0 else ''
+                nxt = raw[i+1] if i+1 < len(raw) else ''
+                # structural quote: surrounded by whitespace/delimiters
+                structural = prev in '{[,:' or nxt in '},]:' or prev in ' \n\t' or nxt in ' \n\t'
+                escaped = i > 0 and raw[i-1] == '\\'
+                if structural or escaped:
+                    result.append(ch)
+                else:
+                    result.append('」')
+            else:
+                result.append(ch)
+        fixed = ''.join(result)
+        try:
+            config = json.loads(fixed)
+            with open(path, "w") as f:
+                f.write(fixed)
+            print("OK: 自动修复成功，已写回 slides.json")
+        except json.JSONDecodeError as e2:
+            print(f"ERROR: 自动修复失败 at pos {e2.pos}")
+            print(f"  Context: {fixed[max(0,e2.pos-60):e2.pos+60]}")
+            sys.exit(1)
+    return config
+
+
+def generate_with_retry(prompt, provider, api_key, max_attempts=3):
+    """带指数退避的自动重试"""
+    last_err = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            if provider == "ofox":
+                return generate_image_ofox(prompt, api_key)
+            else:
+                return generate_image_openrouter(prompt, api_key)
+        except Exception as e:
+            last_err = e
+            if attempt < max_attempts:
+                backoff = 10 * (2 ** (attempt - 1))  # 10s, 20s, 40s
+                print(f"  retry {attempt}/{max_attempts - 1} in {backoff}s: {str(e)[:80]}")
+                time.sleep(backoff)
+    raise last_err
+
+
 def main():
     parser = argparse.ArgumentParser(description="AI PPT 生成器")
     parser.add_argument("--slides", default=SLIDES_JSON, help="Slides JSON 文件路径")
@@ -116,11 +170,11 @@ def main():
     parser.add_argument("--output-dir", default=OUTPUT_DIR, help="图片输出目录")
     parser.add_argument("--assemble", action="store_true", help="生成完后自动组装 PPTX")
     parser.add_argument("--delay", type=int, default=3, help="每页间隔秒数")
+    parser.add_argument("--max-retries", type=int, default=3, help="每页最多重试次数")
     args = parser.parse_args()
 
-    # 读取 slides 定义
-    with open(args.slides, "r") as f:
-        config = json.load(f)
+    # 读取 + 校验 slides 定义
+    config = validate_slides_json(args.slides)
 
     style = config.get("style", "")
     slides = config.get("slides", [])
@@ -154,17 +208,13 @@ def main():
         print(f"[{i+1}/{len(to_gen)}] Generating slide {num:02d}...", flush=True)
 
         try:
-            if provider == "ofox":
-                img_bytes = generate_image_ofox(prompt, api_key)
-            else:
-                img_bytes = generate_image_openrouter(prompt, api_key)
-
+            img_bytes = generate_with_retry(prompt, provider, api_key, max_attempts=args.max_retries)
             with open(output_file, "wb") as f:
                 f.write(img_bytes)
             print(f"  Saved ({len(img_bytes)} bytes)")
             success += 1
         except Exception as e:
-            print(f"  ERROR: {e}")
+            print(f"  ERROR (all retries failed): {e}")
             failed += 1
 
         if slide != to_gen[-1]:
