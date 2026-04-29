@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: boston-consulting
 summary: 波士顿咨询公司(BCG)——战略管理咨询三巨头之一，BCG矩阵的创造者，数字化转型咨询的全球领导者。
 read_when:
