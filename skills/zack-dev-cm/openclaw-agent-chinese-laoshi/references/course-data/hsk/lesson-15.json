@@ -1,0 +1,66 @@
+{
+  "lesson_number": 15,
+  "lesson_slug": "lesson-15",
+  "title_en": "Seasons, Etiquette, Formal Address, and Family",
+  "hsk_level": "HSK 2+ bridge",
+  "petrov_stage": "Rework earlier material through polite address, etiquette, and family.",
+  "petrov_mission": "Run a polite greeting or apology exchange, then add one family or frequency sentence.",
+  "focus_targets": [
+    "Seasons are built with 天",
+    "Etiquette phrases are the true language core",
+    "Polite 您 replaces informal 你 in formal address",
+    "Family size uses 有 plus a classifier for people"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l15-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 春天, 夏天, 秋天, 冬天.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l15-listen-2",
+      "prompt": "Listen to a line that uses Seasons are built with 天 and Etiquette phrases are the true language core and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l15-read-1",
+      "prompt": "Match these lesson items to their meanings: 春天, 夏天, 秋天, 冬天.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l15-read-2",
+      "prompt": "Rebuild one short sentence that uses Seasons are built with 天 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l15-speak-1",
+      "prompt": "Run a polite greeting or apology exchange, then add one family or frequency sentence.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l15-speak-2",
+      "prompt": "Repeat the four seasons in order.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 春天, 夏天, 秋天, 冬天, 北 / 南 / 东 / 西.",
+    "Which lesson-15 adverb means sometimes?",
+    "Translate into Chinese: no problem."
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 春天, 夏天, 秋天.",
+    "Produces one correct spoken line using Seasons are built with 天.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

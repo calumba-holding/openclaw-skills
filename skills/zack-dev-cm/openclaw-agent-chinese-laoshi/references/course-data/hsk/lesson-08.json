@@ -1,0 +1,66 @@
+{
+  "lesson_number": 8,
+  "lesson_slug": "lesson-08",
+  "title_en": "Meeting People, Age, and Quantity Questions",
+  "hsk_level": "HSK 2",
+  "petrov_stage": "Turn the room outward into meeting people, age, and quantity dialogue.",
+  "petrov_mission": "Meet someone politely, ask age or quantity questions, and answer without freezing.",
+  "focus_targets": [
+    "认识 versus 知道",
+    "Age uses 岁, not 年",
+    "Quantity question with 多少",
+    "Age question with 多大"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l08-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 高兴, 知道, 认识, 高兴认识你.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l08-listen-2",
+      "prompt": "Listen to a line that uses 认识 versus 知道 and Age uses 岁, not 年 and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l08-read-1",
+      "prompt": "Match these lesson items to their meanings: 高兴, 知道, 认识, 高兴认识你.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l08-read-2",
+      "prompt": "Rebuild one short sentence that uses 认识 versus 知道 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l08-speak-1",
+      "prompt": "Meet someone politely, ask age or quantity questions, and answer without freezing.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l08-speak-2",
+      "prompt": "Say in Chinese: I am glad to meet you.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 高兴, 知道, 认识, 高兴认识你, 岁.",
+    "What does 高兴 mean?",
+    "Translate into Chinese: I do not have Chinese friends."
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 高兴, 知道, 认识.",
+    "Produces one correct spoken line using 认识 versus 知道.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

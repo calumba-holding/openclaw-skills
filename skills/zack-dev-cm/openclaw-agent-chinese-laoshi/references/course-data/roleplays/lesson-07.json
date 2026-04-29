@@ -1,0 +1,344 @@
+{
+  "lesson_number": 7,
+  "lesson_slug": "lesson-07",
+  "title_en": "How, Can, and Time-Sensitive Questions",
+  "readiness": "learner_ready",
+  "petrov_mission": "Ask how someone is, whether they can do something, and restate the line in another time frame.",
+  "scenarios": [
+    {
+      "id": "l07-mission-core",
+      "title": "Mission rehearsal",
+      "level": "core",
+      "learner_role": "answer as yourself",
+      "tutor_role": "lesson-bounded conversation partner",
+      "mission": "Ask how someone is, whether they can do something, and restate the line in another time frame.",
+      "setup": "Run the lesson mission with short replies before any freer chat.",
+      "target_patterns": [
+        "怎么 asks how",
+        "可以 marks possibility or permission",
+        "Verb matrix: plain, negated, completed, experiential, and future-intention forms",
+        "Context often carries time in Chinese",
+        "了 versus 过"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "怎么",
+          "zh_pinyin": "zenme",
+          "translation_en": "how"
+        },
+        {
+          "zh_hanzi": "不怎么样",
+          "zh_pinyin": "bu zenmeyang",
+          "translation_en": "not so well; so-so"
+        },
+        {
+          "zh_hanzi": "还",
+          "zh_pinyin": "hai",
+          "translation_en": "still; rather"
+        },
+        {
+          "zh_hanzi": "可以",
+          "zh_pinyin": "keyi",
+          "translation_en": "can; may; okay"
+        },
+        {
+          "zh_hanzi": "还可以",
+          "zh_pinyin": "hai keyi",
+          "translation_en": "not bad; okay"
+        },
+        {
+          "zh_hanzi": "来",
+          "zh_pinyin": "lai",
+          "translation_en": "to come"
+        },
+        {
+          "zh_hanzi": "看",
+          "zh_pinyin": "kan",
+          "translation_en": "to look; to watch; to read"
+        },
+        {
+          "zh_hanzi": "了",
+          "zh_pinyin": "le",
+          "translation_en": "completed-result particle"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Open with the safest lesson greeting or question.",
+          "learner_target": "Answer in one short lesson sentence.",
+          "fallback_hint": "Use the first target pattern and one allowed vocabulary item.",
+          "model_answer": "你现在怎么样？"
+        },
+        {
+          "tutor_cue": "Ask one follow-up from the current mission.",
+          "learner_target": "Reuse the same pattern and change only one detail.",
+          "fallback_hint": "Keep the sentence short; do not add new vocabulary.",
+          "model_answer": "你今天可以来吗？"
+        },
+        {
+          "tutor_cue": "Ask for one negative, choice, or question-form variation if the lesson supports it.",
+          "learner_target": "Produce a second version without reading.",
+          "fallback_hint": "Return to the model answer if the learner freezes.",
+          "model_answer": "我没看过。"
+        }
+      ],
+      "repair_prompts": [
+        "If the learner hesitates, reduce the task to one model phrase and one substitution.",
+        "If the reply is not usable Chinese, model Hanzi + pinyin + meaning and ask for one repeat.",
+        "If the learner succeeds twice, remove the English hint and keep pinyin only on corrections."
+      ],
+      "success_criteria": [
+        "The learner answers the mission without reading.",
+        "The learner reuses one target pattern with a changed detail.",
+        "The learner can recover after one correction without abandoning the scenario."
+      ],
+      "focus_issues": [
+        "confidence",
+        "sentence_building",
+        "vocabulary_recall"
+      ]
+    },
+    {
+      "id": "l07-question-ladder",
+      "title": "Teacher question ladder",
+      "level": "bridge",
+      "learner_role": "student in a fast teacher exchange",
+      "tutor_role": "teacher asking one narrow question at a time",
+      "mission": "Answer the lesson question chain with no long explanations.",
+      "setup": "Use the lesson question ladder as a live pressure drill.",
+      "target_patterns": [
+        "怎么 asks how",
+        "可以 marks possibility or permission",
+        "Verb matrix: plain, negated, completed, experiential, and future-intention forms",
+        "Context often carries time in Chinese",
+        "了 versus 过"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "怎么",
+          "zh_pinyin": "zenme",
+          "translation_en": "how"
+        },
+        {
+          "zh_hanzi": "不怎么样",
+          "zh_pinyin": "bu zenmeyang",
+          "translation_en": "not so well; so-so"
+        },
+        {
+          "zh_hanzi": "还",
+          "zh_pinyin": "hai",
+          "translation_en": "still; rather"
+        },
+        {
+          "zh_hanzi": "可以",
+          "zh_pinyin": "keyi",
+          "translation_en": "can; may; okay"
+        },
+        {
+          "zh_hanzi": "还可以",
+          "zh_pinyin": "hai keyi",
+          "translation_en": "not bad; okay"
+        },
+        {
+          "zh_hanzi": "来",
+          "zh_pinyin": "lai",
+          "translation_en": "to come"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "你怎么样？ — ni zenmeyang? — How are you?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "你现在怎么样？"
+        },
+        {
+          "tutor_cue": "你现在怎么样？ — ni xianzai zenmeyang? — How are you now? How are things right now?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "你今天可以来吗？"
+        },
+        {
+          "tutor_cue": "你今天可以来吗？ — ni jintian keyi lai ma? — Can you come today?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "我没看过。"
+        }
+      ],
+      "repair_prompts": [
+        "If meaning is weak, ask for a yes/no or either/or answer first.",
+        "If grammar breaks, repeat the same cue and freeze the word order.",
+        "If pronunciation breaks, switch to echo-only for one turn."
+      ],
+      "success_criteria": [
+        "The learner answers at least two teacher cues.",
+        "The answer stays inside lesson vocabulary.",
+        "The learner corrects one near miss immediately."
+      ],
+      "focus_issues": [
+        "listening",
+        "sentence_building",
+        "grammar_patterns"
+      ]
+    },
+    {
+      "id": "l07-repair-loop",
+      "title": "Repair and re-enter",
+      "level": "core",
+      "learner_role": "speaker repairing one weak point",
+      "tutor_role": "pronunciation and confidence coach",
+      "mission": "Repair one phrase, then put it back into the live exchange.",
+      "setup": "Start from 怎么 / 怎么样 and return to the mission only after the repeat is stable.",
+      "target_patterns": [
+        "怎么 asks how",
+        "可以 marks possibility or permission",
+        "Verb matrix: plain, negated, completed, experiential, and future-intention forms",
+        "Context often carries time in Chinese"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "怎么",
+          "zh_pinyin": "zenme",
+          "translation_en": "how"
+        },
+        {
+          "zh_hanzi": "不怎么样",
+          "zh_pinyin": "bu zenmeyang",
+          "translation_en": "not so well; so-so"
+        },
+        {
+          "zh_hanzi": "还",
+          "zh_pinyin": "hai",
+          "translation_en": "still; rather"
+        },
+        {
+          "zh_hanzi": "可以",
+          "zh_pinyin": "keyi",
+          "translation_en": "can; may; okay"
+        },
+        {
+          "zh_hanzi": "还可以",
+          "zh_pinyin": "hai keyi",
+          "translation_en": "not bad; okay"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Model the target phrase slowly.",
+          "learner_target": "Repeat exactly once.",
+          "fallback_hint": "Only copy the model; do not translate.",
+          "model_answer": "你现在怎么样？"
+        },
+        {
+          "tutor_cue": "Ask for the same phrase inside a tiny answer.",
+          "learner_target": "Say the phrase as part of one short sentence.",
+          "fallback_hint": "Keep the target phrase unchanged and add only one safe word.",
+          "model_answer": "你今天可以来吗？"
+        },
+        {
+          "tutor_cue": "Return to the mission with the repaired phrase.",
+          "learner_target": "Answer the original roleplay cue again.",
+          "fallback_hint": "If the repair falls apart, repeat the model once and stop.",
+          "model_answer": "我没看过。"
+        }
+      ],
+      "repair_prompts": [
+        "Model -> break -> repeat -> reinsert into the sentence.",
+        "Correct only the highest-value pronunciation or word-order issue.",
+        "Stop after one successful repaired sentence; do not over-explain."
+      ],
+      "success_criteria": [
+        "The learner repeats the model recognizably.",
+        "The learner inserts the repaired phrase into a short answer.",
+        "The learner leaves the loop with one successful live turn."
+      ],
+      "focus_issues": [
+        "pronunciation",
+        "listening",
+        "confidence"
+      ]
+    }
+  ],
+  "daily_sprint": {
+    "minutes": 5,
+    "steps": [
+      {
+        "label": "Warmup",
+        "task": "Recall and say these anchors without reading: 怎么, 不怎么样, 还, 可以, 还可以."
+      },
+      {
+        "label": "Frame",
+        "task": "Say in Chinese: How are you now?"
+      },
+      {
+        "label": "Roleplay",
+        "task": "Ask how someone is, whether they can do something, and restate the line in another time frame."
+      },
+      {
+        "label": "Repair",
+        "task": "Fix one issue only, then repeat the corrected sentence once."
+      },
+      {
+        "label": "Exit",
+        "task": "Give one final answer with no English support."
+      }
+    ]
+  },
+  "adaptive_rules": [
+    {
+      "if_issue": "pronunciation",
+      "adjustment": "switch to model-and-repeat before continuing the roleplay",
+      "repair_loop": [
+        "model",
+        "break out pinyin",
+        "repeat",
+        "put back into the sentence"
+      ]
+    },
+    {
+      "if_issue": "vocabulary_recall",
+      "adjustment": "freeze the grammar and swap only one known vocabulary item",
+      "repair_loop": [
+        "show two choices",
+        "ask for recall",
+        "reuse in the same cue"
+      ]
+    },
+    {
+      "if_issue": "grammar_patterns",
+      "adjustment": "return to one sentence frame and run two controlled variations",
+      "repair_loop": [
+        "model frame",
+        "learner fills one slot",
+        "ask the same frame again"
+      ]
+    },
+    {
+      "if_issue": "listening",
+      "adjustment": "shorten tutor cues and ask for meaning before production",
+      "repair_loop": [
+        "repeat cue",
+        "confirm meaning",
+        "ask for one short answer"
+      ]
+    },
+    {
+      "if_issue": "sentence_building",
+      "adjustment": "make the answer a fixed frame plus one variable",
+      "repair_loop": [
+        "give frame",
+        "choose variable",
+        "say full sentence"
+      ]
+    },
+    {
+      "if_issue": "confidence",
+      "adjustment": "use binary or one-word answers before returning to short sentences",
+      "repair_loop": [
+        "yes/no",
+        "one phrase",
+        "short sentence"
+      ]
+    }
+  ]
+}

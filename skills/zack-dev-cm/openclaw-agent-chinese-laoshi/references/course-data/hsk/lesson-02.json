@@ -1,0 +1,66 @@
+{
+  "lesson_number": 2,
+  "lesson_slug": "lesson-02",
+  "title_en": "Question Words, Identity, and Place",
+  "hsk_level": "HSK 1 foundation",
+  "petrov_stage": "Open the matrix into question words and personal identification.",
+  "petrov_mission": "Ask and answer a basic identity exchange with name, city, and place.",
+  "focus_targets": [
+    "Question words stay in slot",
+    "Copula 是 for identity",
+    "Name pattern with 叫",
+    "Residence with 住在"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l02-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 什么, 谁, 哪儿, 在.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l02-listen-2",
+      "prompt": "Listen to a line that uses Question words stay in slot and Copula 是 for identity and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l02-read-1",
+      "prompt": "Match these lesson items to their meanings: 什么, 谁, 哪儿, 在.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l02-read-2",
+      "prompt": "Rebuild one short sentence that uses Question words stay in slot with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l02-speak-1",
+      "prompt": "Ask and answer a basic identity exchange with name, city, and place.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l02-speak-2",
+      "prompt": "Say in Chinese: What is your name?",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 什么, 谁, 哪儿, 在, 是.",
+    "What does 你住在哪儿？ mean?",
+    "Which word in lesson 02 means 'to be called; to be named'?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 什么, 谁, 哪儿.",
+    "Produces one correct spoken line using Question words stay in slot.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

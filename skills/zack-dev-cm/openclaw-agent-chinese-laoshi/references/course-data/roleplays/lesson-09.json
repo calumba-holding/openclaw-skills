@@ -1,0 +1,344 @@
+{
+  "lesson_number": 9,
+  "lesson_slug": "lesson-09",
+  "title_en": "Greetings, Demonstratives, Classifiers, and Comparison",
+  "readiness": "learner_ready",
+  "petrov_mission": "Use this/that with a classifier and give one short comparison.",
+  "scenarios": [
+    {
+      "id": "l09-mission-core",
+      "title": "Mission rehearsal",
+      "level": "core",
+      "learner_role": "answer as yourself",
+      "tutor_role": "lesson-bounded conversation partner",
+      "mission": "Use this/that with a classifier and give one short comparison.",
+      "setup": "Run the lesson mission with short replies before any freer chat.",
+      "target_patterns": [
+        "Demonstratives and numbers need a classifier",
+        "个 is the default classifier, but some nouns use more specific ones",
+        "Comparison with 比",
+        "Too much with 太 + adjective",
+        "Superlative with 最"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "早上好",
+          "zh_pinyin": "zaoshang hao",
+          "translation_en": "good morning"
+        },
+        {
+          "zh_hanzi": "晚上好",
+          "zh_pinyin": "wanshang hao",
+          "translation_en": "good evening"
+        },
+        {
+          "zh_hanzi": "你好",
+          "zh_pinyin": "ni hao",
+          "translation_en": "hello"
+        },
+        {
+          "zh_hanzi": "好久不见",
+          "zh_pinyin": "haojiu bu jian",
+          "translation_en": "long time no see"
+        },
+        {
+          "zh_hanzi": "再见",
+          "zh_pinyin": "zaijian",
+          "translation_en": "goodbye"
+        },
+        {
+          "zh_hanzi": "这 / 那",
+          "zh_pinyin": "zhe / na",
+          "translation_en": "this / that"
+        },
+        {
+          "zh_hanzi": "这儿 / 那儿",
+          "zh_pinyin": "zher / nar",
+          "translation_en": "here / there"
+        },
+        {
+          "zh_hanzi": "个",
+          "zh_pinyin": "ge",
+          "translation_en": "general classifier"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Open with the safest lesson greeting or question.",
+          "learner_target": "Answer in one short lesson sentence.",
+          "fallback_hint": "Use the first target pattern and one allowed vocabulary item.",
+          "model_answer": "好久不见。"
+        },
+        {
+          "tutor_cue": "Ask one follow-up from the current mission.",
+          "learner_target": "Reuse the same pattern and change only one detail.",
+          "fallback_hint": "Keep the sentence short; do not add new vocabulary.",
+          "model_answer": "这个人爱你。"
+        },
+        {
+          "tutor_cue": "Ask for one negative, choice, or question-form variation if the lesson supports it.",
+          "learner_target": "Produce a second version without reading.",
+          "fallback_hint": "Return to the model answer if the learner freezes.",
+          "model_answer": "给我一杯咖啡。"
+        }
+      ],
+      "repair_prompts": [
+        "If the learner hesitates, reduce the task to one model phrase and one substitution.",
+        "If the reply is not usable Chinese, model Hanzi + pinyin + meaning and ask for one repeat.",
+        "If the learner succeeds twice, remove the English hint and keep pinyin only on corrections."
+      ],
+      "success_criteria": [
+        "The learner answers the mission without reading.",
+        "The learner reuses one target pattern with a changed detail.",
+        "The learner can recover after one correction without abandoning the scenario."
+      ],
+      "focus_issues": [
+        "confidence",
+        "sentence_building",
+        "vocabulary_recall"
+      ]
+    },
+    {
+      "id": "l09-question-ladder",
+      "title": "Teacher question ladder",
+      "level": "bridge",
+      "learner_role": "student in a fast teacher exchange",
+      "tutor_role": "teacher asking one narrow question at a time",
+      "mission": "Answer the lesson question chain with no long explanations.",
+      "setup": "Use the lesson question ladder as a live pressure drill.",
+      "target_patterns": [
+        "Demonstratives and numbers need a classifier",
+        "个 is the default classifier, but some nouns use more specific ones",
+        "Comparison with 比",
+        "Too much with 太 + adjective",
+        "Superlative with 最"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "早上好",
+          "zh_pinyin": "zaoshang hao",
+          "translation_en": "good morning"
+        },
+        {
+          "zh_hanzi": "晚上好",
+          "zh_pinyin": "wanshang hao",
+          "translation_en": "good evening"
+        },
+        {
+          "zh_hanzi": "你好",
+          "zh_pinyin": "ni hao",
+          "translation_en": "hello"
+        },
+        {
+          "zh_hanzi": "好久不见",
+          "zh_pinyin": "haojiu bu jian",
+          "translation_en": "long time no see"
+        },
+        {
+          "zh_hanzi": "再见",
+          "zh_pinyin": "zaijian",
+          "translation_en": "goodbye"
+        },
+        {
+          "zh_hanzi": "这 / 那",
+          "zh_pinyin": "zhe / na",
+          "translation_en": "this / that"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "你家有几口人？ — ni jia you ji kou ren? — How many people are there in your family?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "好久不见。"
+        },
+        {
+          "tutor_cue": "多少？ — duoshao? — How much?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "这个人爱你。"
+        },
+        {
+          "tutor_cue": "你喜欢什么颜色？ — ni xihuan shenme yanse? — What color do you like?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "给我一杯咖啡。"
+        }
+      ],
+      "repair_prompts": [
+        "If meaning is weak, ask for a yes/no or either/or answer first.",
+        "If grammar breaks, repeat the same cue and freeze the word order.",
+        "If pronunciation breaks, switch to echo-only for one turn."
+      ],
+      "success_criteria": [
+        "The learner answers at least two teacher cues.",
+        "The answer stays inside lesson vocabulary.",
+        "The learner corrects one near miss immediately."
+      ],
+      "focus_issues": [
+        "listening",
+        "sentence_building",
+        "grammar_patterns"
+      ]
+    },
+    {
+      "id": "l09-repair-loop",
+      "title": "Repair and re-enter",
+      "level": "core",
+      "learner_role": "speaker repairing one weak point",
+      "tutor_role": "pronunciation and confidence coach",
+      "mission": "Repair one phrase, then put it back into the live exchange.",
+      "setup": "Start from 好久不见 and return to the mission only after the repeat is stable.",
+      "target_patterns": [
+        "Demonstratives and numbers need a classifier",
+        "个 is the default classifier, but some nouns use more specific ones",
+        "Comparison with 比",
+        "Too much with 太 + adjective"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "早上好",
+          "zh_pinyin": "zaoshang hao",
+          "translation_en": "good morning"
+        },
+        {
+          "zh_hanzi": "晚上好",
+          "zh_pinyin": "wanshang hao",
+          "translation_en": "good evening"
+        },
+        {
+          "zh_hanzi": "你好",
+          "zh_pinyin": "ni hao",
+          "translation_en": "hello"
+        },
+        {
+          "zh_hanzi": "好久不见",
+          "zh_pinyin": "haojiu bu jian",
+          "translation_en": "long time no see"
+        },
+        {
+          "zh_hanzi": "再见",
+          "zh_pinyin": "zaijian",
+          "translation_en": "goodbye"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Model the target phrase slowly.",
+          "learner_target": "Repeat exactly once.",
+          "fallback_hint": "Only copy the model; do not translate.",
+          "model_answer": "好久不见。"
+        },
+        {
+          "tutor_cue": "Ask for the same phrase inside a tiny answer.",
+          "learner_target": "Say the phrase as part of one short sentence.",
+          "fallback_hint": "Keep the target phrase unchanged and add only one safe word.",
+          "model_answer": "这个人爱你。"
+        },
+        {
+          "tutor_cue": "Return to the mission with the repaired phrase.",
+          "learner_target": "Answer the original roleplay cue again.",
+          "fallback_hint": "If the repair falls apart, repeat the model once and stop.",
+          "model_answer": "给我一杯咖啡。"
+        }
+      ],
+      "repair_prompts": [
+        "Model -> break -> repeat -> reinsert into the sentence.",
+        "Correct only the highest-value pronunciation or word-order issue.",
+        "Stop after one successful repaired sentence; do not over-explain."
+      ],
+      "success_criteria": [
+        "The learner repeats the model recognizably.",
+        "The learner inserts the repaired phrase into a short answer.",
+        "The learner leaves the loop with one successful live turn."
+      ],
+      "focus_issues": [
+        "pronunciation",
+        "listening",
+        "confidence"
+      ]
+    }
+  ],
+  "daily_sprint": {
+    "minutes": 5,
+    "steps": [
+      {
+        "label": "Warmup",
+        "task": "Recall and say these anchors without reading: 早上好, 晚上好, 你好, 好久不见, 再见."
+      },
+      {
+        "label": "Frame",
+        "task": "Say in Chinese: Long time no see."
+      },
+      {
+        "label": "Roleplay",
+        "task": "Use this/that with a classifier and give one short comparison."
+      },
+      {
+        "label": "Repair",
+        "task": "Fix one issue only, then repeat the corrected sentence once."
+      },
+      {
+        "label": "Exit",
+        "task": "Give one final answer with no English support."
+      }
+    ]
+  },
+  "adaptive_rules": [
+    {
+      "if_issue": "pronunciation",
+      "adjustment": "switch to model-and-repeat before continuing the roleplay",
+      "repair_loop": [
+        "model",
+        "break out pinyin",
+        "repeat",
+        "put back into the sentence"
+      ]
+    },
+    {
+      "if_issue": "vocabulary_recall",
+      "adjustment": "freeze the grammar and swap only one known vocabulary item",
+      "repair_loop": [
+        "show two choices",
+        "ask for recall",
+        "reuse in the same cue"
+      ]
+    },
+    {
+      "if_issue": "grammar_patterns",
+      "adjustment": "return to one sentence frame and run two controlled variations",
+      "repair_loop": [
+        "model frame",
+        "learner fills one slot",
+        "ask the same frame again"
+      ]
+    },
+    {
+      "if_issue": "listening",
+      "adjustment": "shorten tutor cues and ask for meaning before production",
+      "repair_loop": [
+        "repeat cue",
+        "confirm meaning",
+        "ask for one short answer"
+      ]
+    },
+    {
+      "if_issue": "sentence_building",
+      "adjustment": "make the answer a fixed frame plus one variable",
+      "repair_loop": [
+        "give frame",
+        "choose variable",
+        "say full sentence"
+      ]
+    },
+    {
+      "if_issue": "confidence",
+      "adjustment": "use binary or one-word answers before returning to short sentences",
+      "repair_loop": [
+        "yes/no",
+        "one phrase",
+        "short sentence"
+      ]
+    }
+  ]
+}

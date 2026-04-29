@@ -1,0 +1,66 @@
+{
+  "lesson_number": 5,
+  "lesson_slug": "lesson-05",
+  "title_en": "Larger Numbers, Direction, and Going Somewhere",
+  "hsk_level": "HSK 1 to HSK 2 bridge",
+  "petrov_stage": "Stretch the language into larger numbers, direction, and destination statements.",
+  "petrov_mission": "Say where you want to go and combine a larger number with a place or direction line.",
+  "focus_targets": [
+    "Hundreds and thousands use 百 and 千",
+    "零 fills missing place values",
+    "Directional verbs 去 and 来",
+    "Completed action with 了"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l05-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 非常好, 百, 零, 千.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l05-listen-2",
+      "prompt": "Listen to a line that uses Hundreds and thousands use 百 and 千 and 零 fills missing place values and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l05-read-1",
+      "prompt": "Match these lesson items to their meanings: 非常好, 百, 零, 千.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l05-read-2",
+      "prompt": "Rebuild one short sentence that uses Hundreds and thousands use 百 and 千 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l05-speak-1",
+      "prompt": "Say where you want to go and combine a larger number with a place or direction line.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l05-speak-2",
+      "prompt": "Say in Chinese: I want to go to China.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 非常好, 百, 零, 千, 钱.",
+    "What does 喜欢 mean?",
+    "Translate into Chinese: Which country have you been to?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 非常好, 百, 零.",
+    "Produces one correct spoken line using Hundreds and thousands use 百 and 千.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

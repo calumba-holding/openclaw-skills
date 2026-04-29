@@ -1,0 +1,185 @@
+{
+  "version": 3,
+  "target": {
+    "pass": "HSK 1",
+    "readiness": "HSK 2"
+  },
+  "lesson_manifest": [
+    {
+      "lesson_number": 1,
+      "lesson_plan": "docs/lesson-plans/lesson-01.md",
+      "hsk_training": "data/hsk/lesson-01.json",
+      "roleplay_training": "data/roleplays/lesson-01.json",
+      "petrov_stage": "Build the first stable pronoun matrix and automate yes/no etiquette lines.",
+      "mission": "Greet someone, introduce yourself, and give one short positive or negative statement."
+    },
+    {
+      "lesson_number": 2,
+      "lesson_plan": "docs/lesson-plans/lesson-02.md",
+      "hsk_training": "data/hsk/lesson-02.json",
+      "roleplay_training": "data/roleplays/lesson-02.json",
+      "petrov_stage": "Open the matrix into question words and personal identification.",
+      "mission": "Ask and answer a basic identity exchange with name, city, and place."
+    },
+    {
+      "lesson_number": 3,
+      "lesson_plan": "docs/lesson-plans/lesson-03.md",
+      "hsk_training": "data/hsk/lesson-03.json",
+      "roleplay_training": "data/roleplays/lesson-03.json",
+      "petrov_stage": "Add high-frequency verbs without breaking the original pronoun frame.",
+      "mission": "Ask what someone wants to eat or drink and answer with one clear preference."
+    },
+    {
+      "lesson_number": 4,
+      "lesson_plan": "docs/lesson-plans/lesson-04.md",
+      "hsk_training": "data/hsk/lesson-04.json",
+      "roleplay_training": "data/roleplays/lesson-04.json",
+      "petrov_stage": "Move the same sentence logic into time, dates, and calendar talk.",
+      "mission": "Say a date, weekday, and birthday-style calendar line without reading."
+    },
+    {
+      "lesson_number": 5,
+      "lesson_plan": "docs/lesson-plans/lesson-05.md",
+      "hsk_training": "data/hsk/lesson-05.json",
+      "roleplay_training": "data/roleplays/lesson-05.json",
+      "petrov_stage": "Stretch the language into larger numbers, direction, and destination statements.",
+      "mission": "Say where you want to go and combine a larger number with a place or direction line."
+    },
+    {
+      "lesson_number": 6,
+      "lesson_plan": "docs/lesson-plans/lesson-06.md",
+      "hsk_training": "data/hsk/lesson-06.json",
+      "roleplay_training": "data/roleplays/lesson-06.json",
+      "petrov_stage": "Make time-of-day and knowing-language statements automatic.",
+      "mission": "Say when something happens, whether you know it, and what language you can or cannot speak."
+    },
+    {
+      "lesson_number": 7,
+      "lesson_plan": "docs/lesson-plans/lesson-07.md",
+      "hsk_training": "data/hsk/lesson-07.json",
+      "roleplay_training": "data/roleplays/lesson-07.json",
+      "petrov_stage": "Increase flexibility with how / can / still / already style questions.",
+      "mission": "Ask how someone is, whether they can do something, and restate the line in another time frame."
+    },
+    {
+      "lesson_number": 8,
+      "lesson_plan": "docs/lesson-plans/lesson-08.md",
+      "hsk_training": "data/hsk/lesson-08.json",
+      "roleplay_training": "data/roleplays/lesson-08.json",
+      "petrov_stage": "Turn the room outward into meeting people, age, and quantity dialogue.",
+      "mission": "Meet someone politely, ask age or quantity questions, and answer without freezing."
+    },
+    {
+      "lesson_number": 9,
+      "lesson_plan": "docs/lesson-plans/lesson-09.md",
+      "hsk_training": "data/hsk/lesson-09.json",
+      "roleplay_training": "data/roleplays/lesson-09.json",
+      "petrov_stage": "Stabilize demonstratives, classifiers, and comparison inside everyday talk.",
+      "mission": "Use this/that with a classifier and give one short comparison."
+    },
+    {
+      "lesson_number": 10,
+      "lesson_plan": "docs/lesson-plans/lesson-10.md",
+      "hsk_training": "data/hsk/lesson-10.json",
+      "roleplay_training": "data/roleplays/lesson-10.json",
+      "petrov_stage": "Push noun + color + classifier handling into shopping dialogue.",
+      "mission": "Ask for clothing or shoes by color, item type, and quantity."
+    },
+    {
+      "lesson_number": 11,
+      "lesson_plan": "docs/lesson-plans/lesson-11.md",
+      "hsk_training": "data/hsk/lesson-11.json",
+      "roleplay_training": "data/roleplays/lesson-11.json",
+      "petrov_stage": "Move the learner into restaurant choice and preference exchanges.",
+      "mission": "Order a food or drink item and state one preference between two choices."
+    },
+    {
+      "lesson_number": 12,
+      "lesson_plan": "docs/lesson-plans/lesson-12.md",
+      "hsk_training": "data/hsk/lesson-12.json",
+      "roleplay_training": "data/roleplays/lesson-12.json",
+      "petrov_stage": "Make service language and invitation dialogue polite and fast.",
+      "mission": "Call the waiter, order politely, and ask for the menu or bill."
+    },
+    {
+      "lesson_number": 13,
+      "lesson_plan": "docs/lesson-plans/lesson-13.md",
+      "hsk_training": "data/hsk/lesson-13.json",
+      "roleplay_training": "data/roleplays/lesson-13.json",
+      "petrov_stage": "Use dates, money, and experience talk without losing sentence control.",
+      "mission": "State a big number, a date, and one have-you-ever-done-it line."
+    },
+    {
+      "lesson_number": 14,
+      "lesson_plan": "docs/lesson-plans/lesson-14.md",
+      "hsk_training": "data/hsk/lesson-14.json",
+      "roleplay_training": "data/roleplays/lesson-14.json",
+      "petrov_stage": "Handle weather, temperature, and travel geography in live questions.",
+      "mission": "Describe the weather or temperature and ask or answer one travel-direction question."
+    },
+    {
+      "lesson_number": 15,
+      "lesson_plan": "docs/lesson-plans/lesson-15.md",
+      "hsk_training": "data/hsk/lesson-15.json",
+      "roleplay_training": "data/roleplays/lesson-15.json",
+      "petrov_stage": "Rework earlier material through polite address, etiquette, and family.",
+      "mission": "Run a polite greeting or apology exchange, then add one family or frequency sentence."
+    },
+    {
+      "lesson_number": 16,
+      "lesson_plan": "docs/lesson-plans/lesson-16.md",
+      "hsk_training": "data/hsk/lesson-16.json",
+      "roleplay_training": "data/roleplays/lesson-16.json",
+      "petrov_stage": "Collapse the whole course into biography, follow-up questions, and closing dialogue.",
+      "mission": "Give a short biography, ask one follow-up question, and close with a social formula or toast."
+    }
+  ],
+  "tracks": [
+    "listening",
+    "reading",
+    "speaking",
+    "recall_speed"
+  ],
+  "test_schedule": {
+    "mini_after_lessons": [
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        15,
+        16
+      ]
+    ],
+    "cumulative_after": [
+      4,
+      8,
+      12,
+      16
+    ]
+  }
+}

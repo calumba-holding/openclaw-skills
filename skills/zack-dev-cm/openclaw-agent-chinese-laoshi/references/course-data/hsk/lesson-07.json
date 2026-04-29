@@ -1,0 +1,66 @@
+{
+  "lesson_number": 7,
+  "lesson_slug": "lesson-07",
+  "title_en": "How, Can, and Time-Sensitive Questions",
+  "hsk_level": "HSK 2 grammar control",
+  "petrov_stage": "Increase flexibility with how / can / still / already style questions.",
+  "petrov_mission": "Ask how someone is, whether they can do something, and restate the line in another time frame.",
+  "focus_targets": [
+    "怎么 asks how",
+    "可以 marks possibility or permission",
+    "Verb matrix: plain, negated, completed, experiential, and future-intention forms",
+    "Context often carries time in Chinese"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l07-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 怎么, 不怎么样, 还, 可以.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l07-listen-2",
+      "prompt": "Listen to a line that uses 怎么 asks how and 可以 marks possibility or permission and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l07-read-1",
+      "prompt": "Match these lesson items to their meanings: 怎么, 不怎么样, 还, 可以.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l07-read-2",
+      "prompt": "Rebuild one short sentence that uses 怎么 asks how with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l07-speak-1",
+      "prompt": "Ask how someone is, whether they can do something, and restate the line in another time frame.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l07-speak-2",
+      "prompt": "Say in Chinese: How are you now?",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 怎么, 不怎么样, 还, 可以, 还可以.",
+    "What does 还可以 mean in this lesson?",
+    "Translate into Chinese: Have you been to China?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 怎么, 不怎么样, 还.",
+    "Produces one correct spoken line using 怎么 asks how.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

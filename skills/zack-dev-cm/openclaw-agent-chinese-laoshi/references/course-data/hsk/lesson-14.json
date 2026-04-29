@@ -1,0 +1,66 @@
+{
+  "lesson_number": 14,
+  "lesson_slug": "lesson-14",
+  "title_en": "Weather, Temperature, Travel, and Geography",
+  "hsk_level": "HSK 2",
+  "petrov_stage": "Handle weather, temperature, and travel geography in live questions.",
+  "petrov_mission": "Describe the weather or temperature and ask or answer one travel-direction question.",
+  "focus_targets": [
+    "Weather statements anchor on 今天 and 天气",
+    "Weather events behave like verb phrases",
+    "Temperature combines 气温 with 零上 or 零下 and 度",
+    "Travel by vehicle uses 坐 plus the transport noun"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l14-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 天气, 今天, 冷, 热.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l14-listen-2",
+      "prompt": "Listen to a line that uses Weather statements anchor on 今天 and 天气 and Weather events behave like verb phrases and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l14-read-1",
+      "prompt": "Match these lesson items to their meanings: 天气, 今天, 冷, 热.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l14-read-2",
+      "prompt": "Rebuild one short sentence that uses Weather statements anchor on 今天 and 天气 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l14-speak-1",
+      "prompt": "Describe the weather or temperature and ask or answer one travel-direction question.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l14-speak-2",
+      "prompt": "Say in Chinese: Today's weather is very cold.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 天气, 今天, 冷, 热, 很.",
+    "Which lesson-14 word means weather?",
+    "Which phrase means below zero?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 天气, 今天, 冷.",
+    "Produces one correct spoken line using Weather statements anchor on 今天 and 天气.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

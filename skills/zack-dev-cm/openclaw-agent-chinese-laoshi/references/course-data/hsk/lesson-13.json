@@ -1,0 +1,66 @@
+{
+  "lesson_number": 13,
+  "lesson_slug": "lesson-13",
+  "title_en": "Large Numbers, Money, Dates, and Experience",
+  "hsk_level": "HSK 2",
+  "petrov_stage": "Use dates, money, and experience talk without losing sentence control.",
+  "petrov_mission": "State a big number, a date, and one have-you-ever-done-it line.",
+  "focus_targets": [
+    "Chinese large numbers pivot on 万 and 亿",
+    "Big to small order governs dates",
+    "Sentence order stays subject, time, place, action, object",
+    "了 versus 过"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l13-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 万, 十万, 百万, 亿.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l13-listen-2",
+      "prompt": "Listen to a line that uses Chinese large numbers pivot on 万 and 亿 and Big to small order governs dates and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l13-read-1",
+      "prompt": "Match these lesson items to their meanings: 万, 十万, 百万, 亿.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l13-read-2",
+      "prompt": "Rebuild one short sentence that uses Chinese large numbers pivot on 万 and 亿 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l13-speak-1",
+      "prompt": "State a big number, a date, and one have-you-ever-done-it line.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l13-speak-2",
+      "prompt": "Say in Chinese: Have you ever been to China?",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 万, 十万, 百万, 亿, 十亿.",
+    "Which lesson-13 number unit means ten thousand?",
+    "Which particle in lesson 13 marks life experience rather than a completed result?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 万, 十万, 百万.",
+    "Produces one correct spoken line using Chinese large numbers pivot on 万 and 亿.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

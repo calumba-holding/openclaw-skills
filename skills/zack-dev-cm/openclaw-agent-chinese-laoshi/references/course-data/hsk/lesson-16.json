@@ -1,0 +1,66 @@
+{
+  "lesson_number": 16,
+  "lesson_slug": "lesson-16",
+  "title_en": "Final Biographies, Questions, and Closing Conversation",
+  "hsk_level": "HSK 1 pass / HSK 2 readiness",
+  "petrov_stage": "Collapse the whole course into biography, follow-up questions, and closing dialogue.",
+  "petrov_mission": "Give a short biography, ask one follow-up question, and close with a social formula or toast.",
+  "focus_targets": [
+    "Final biography mode chains simple clauses",
+    "Question exchange uses 有问题吗 and live follow-ups",
+    "为什么 ... 因为 ... remains the compact reasoning pair",
+    "Experience uses 去过 plus frequency counting"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l16-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 你们好, 你们今天都很美, 问题, 你们有问题吗？.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l16-listen-2",
+      "prompt": "Listen to a line that uses Final biography mode chains simple clauses and Question exchange uses 有问题吗 and live follow-ups and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l16-read-1",
+      "prompt": "Match these lesson items to their meanings: 你们好, 你们今天都很美, 问题, 你们有问题吗？.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l16-read-2",
+      "prompt": "Rebuild one short sentence that uses Final biography mode chains simple clauses with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l16-speak-1",
+      "prompt": "Give a short biography, ask one follow-up question, and close with a social formula or toast.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l16-speak-2",
+      "prompt": "Repeat the opening greeting and compliment as one smooth teacher chunk.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 你们好, 你们今天都很美, 问题, 你们有问题吗？, 颜色.",
+    "Which lesson-16 pair means why and because?",
+    "Translate into Chinese: What is your dog's name?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 你们好, 你们今天都很美, 问题.",
+    "Produces one correct spoken line using Final biography mode chains simple clauses.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

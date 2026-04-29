@@ -1,0 +1,18 @@
+# Roleplay Lesson Training
+
+- [Lesson 01 roleplay JSON](./lesson-01.json)
+- [Lesson 02 roleplay JSON](./lesson-02.json)
+- [Lesson 03 roleplay JSON](./lesson-03.json)
+- [Lesson 04 roleplay JSON](./lesson-04.json)
+- [Lesson 05 roleplay JSON](./lesson-05.json)
+- [Lesson 06 roleplay JSON](./lesson-06.json)
+- [Lesson 07 roleplay JSON](./lesson-07.json)
+- [Lesson 08 roleplay JSON](./lesson-08.json)
+- [Lesson 09 roleplay JSON](./lesson-09.json)
+- [Lesson 10 roleplay JSON](./lesson-10.json)
+- [Lesson 11 roleplay JSON](./lesson-11.json)
+- [Lesson 12 roleplay JSON](./lesson-12.json)
+- [Lesson 13 roleplay JSON](./lesson-13.json)
+- [Lesson 14 roleplay JSON](./lesson-14.json)
+- [Lesson 15 roleplay JSON](./lesson-15.json)
+- [Lesson 16 roleplay JSON](./lesson-16.json)

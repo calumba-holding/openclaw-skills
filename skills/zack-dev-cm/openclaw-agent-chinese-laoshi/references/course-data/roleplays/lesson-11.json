@@ -1,0 +1,344 @@
+{
+  "lesson_number": 11,
+  "lesson_slug": "lesson-11",
+  "title_en": "Restaurants, Food Choice, and Preference Language",
+  "readiness": "learner_ready",
+  "petrov_mission": "Order a food or drink item and state one preference between two choices.",
+  "scenarios": [
+    {
+      "id": "l11-mission-core",
+      "title": "Mission rehearsal",
+      "level": "core",
+      "learner_role": "answer as yourself",
+      "tutor_role": "lesson-bounded conversation partner",
+      "mission": "Order a food or drink item and state one preference between two choices.",
+      "setup": "Run the lesson mission with short replies before any freer chat.",
+      "target_patterns": [
+        "Venue words build from food or drink roots plus 馆",
+        "Food choice questions pivot around 还是",
+        "比较喜欢 expresses preference",
+        "最喜欢 marks strongest preference",
+        "Animal plus 肉 builds meat words"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "饭馆",
+          "zh_pinyin": "fanguan",
+          "translation_en": "restaurant; eating place"
+        },
+        {
+          "zh_hanzi": "馆",
+          "zh_pinyin": "guan",
+          "translation_en": "hall; establishment; venue suffix"
+        },
+        {
+          "zh_hanzi": "饭",
+          "zh_pinyin": "fan",
+          "translation_en": "meal; food"
+        },
+        {
+          "zh_hanzi": "酒",
+          "zh_pinyin": "jiu",
+          "translation_en": "alcohol; alcoholic drink"
+        },
+        {
+          "zh_hanzi": "肉",
+          "zh_pinyin": "rou",
+          "translation_en": "meat"
+        },
+        {
+          "zh_hanzi": "鱼",
+          "zh_pinyin": "yu",
+          "translation_en": "fish"
+        },
+        {
+          "zh_hanzi": "海",
+          "zh_pinyin": "hai",
+          "translation_en": "sea"
+        },
+        {
+          "zh_hanzi": "海鲜",
+          "zh_pinyin": "haixian",
+          "translation_en": "seafood"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Open with the safest lesson greeting or question.",
+          "learner_target": "Answer in one short lesson sentence.",
+          "fallback_hint": "Use the first target pattern and one allowed vocabulary item.",
+          "model_answer": "你比较喜欢肉还是鱼？"
+        },
+        {
+          "tutor_cue": "Ask one follow-up from the current mission.",
+          "learner_target": "Reuse the same pattern and change only one detail.",
+          "fallback_hint": "Keep the sentence short; do not add new vocabulary.",
+          "model_answer": "你想吃什么？你想喝什么？"
+        },
+        {
+          "tutor_cue": "Ask for one negative, choice, or question-form variation if the lesson supports it.",
+          "learner_target": "Produce a second version without reading.",
+          "fallback_hint": "Return to the model answer if the learner freezes.",
+          "model_answer": "北京烤鸭"
+        }
+      ],
+      "repair_prompts": [
+        "If the learner hesitates, reduce the task to one model phrase and one substitution.",
+        "If the reply is not usable Chinese, model Hanzi + pinyin + meaning and ask for one repeat.",
+        "If the learner succeeds twice, remove the English hint and keep pinyin only on corrections."
+      ],
+      "success_criteria": [
+        "The learner answers the mission without reading.",
+        "The learner reuses one target pattern with a changed detail.",
+        "The learner can recover after one correction without abandoning the scenario."
+      ],
+      "focus_issues": [
+        "confidence",
+        "sentence_building",
+        "vocabulary_recall"
+      ]
+    },
+    {
+      "id": "l11-question-ladder",
+      "title": "Teacher question ladder",
+      "level": "bridge",
+      "learner_role": "student in a fast teacher exchange",
+      "tutor_role": "teacher asking one narrow question at a time",
+      "mission": "Answer the lesson question chain with no long explanations.",
+      "setup": "Use the lesson question ladder as a live pressure drill.",
+      "target_patterns": [
+        "Venue words build from food or drink roots plus 馆",
+        "Food choice questions pivot around 还是",
+        "比较喜欢 expresses preference",
+        "最喜欢 marks strongest preference",
+        "Animal plus 肉 builds meat words"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "饭馆",
+          "zh_pinyin": "fanguan",
+          "translation_en": "restaurant; eating place"
+        },
+        {
+          "zh_hanzi": "馆",
+          "zh_pinyin": "guan",
+          "translation_en": "hall; establishment; venue suffix"
+        },
+        {
+          "zh_hanzi": "饭",
+          "zh_pinyin": "fan",
+          "translation_en": "meal; food"
+        },
+        {
+          "zh_hanzi": "酒",
+          "zh_pinyin": "jiu",
+          "translation_en": "alcohol; alcoholic drink"
+        },
+        {
+          "zh_hanzi": "肉",
+          "zh_pinyin": "rou",
+          "translation_en": "meat"
+        },
+        {
+          "zh_hanzi": "鱼",
+          "zh_pinyin": "yu",
+          "translation_en": "fish"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "你比较喜欢肉还是鱼？ — ni bijiao xihuan rou haishi yu? — Do you prefer meat or fish?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "你比较喜欢肉还是鱼？"
+        },
+        {
+          "tutor_cue": "你喜欢肉吗？ — ni xihuan rou ma? — Do you like meat?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "你想吃什么？你想喝什么？"
+        },
+        {
+          "tutor_cue": "你想吃什么？ / 你想喝什么？ — ni xiang chi shenme? / ni xiang he shenme? — What do you want to eat? / What do you want to drink?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "北京烤鸭"
+        }
+      ],
+      "repair_prompts": [
+        "If meaning is weak, ask for a yes/no or either/or answer first.",
+        "If grammar breaks, repeat the same cue and freeze the word order.",
+        "If pronunciation breaks, switch to echo-only for one turn."
+      ],
+      "success_criteria": [
+        "The learner answers at least two teacher cues.",
+        "The answer stays inside lesson vocabulary.",
+        "The learner corrects one near miss immediately."
+      ],
+      "focus_issues": [
+        "listening",
+        "sentence_building",
+        "grammar_patterns"
+      ]
+    },
+    {
+      "id": "l11-repair-loop",
+      "title": "Repair and re-enter",
+      "level": "core",
+      "learner_role": "speaker repairing one weak point",
+      "tutor_role": "pronunciation and confidence coach",
+      "mission": "Repair one phrase, then put it back into the live exchange.",
+      "setup": "Start from 鱼 / 语 and return to the mission only after the repeat is stable.",
+      "target_patterns": [
+        "Venue words build from food or drink roots plus 馆",
+        "Food choice questions pivot around 还是",
+        "比较喜欢 expresses preference",
+        "最喜欢 marks strongest preference"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "饭馆",
+          "zh_pinyin": "fanguan",
+          "translation_en": "restaurant; eating place"
+        },
+        {
+          "zh_hanzi": "馆",
+          "zh_pinyin": "guan",
+          "translation_en": "hall; establishment; venue suffix"
+        },
+        {
+          "zh_hanzi": "饭",
+          "zh_pinyin": "fan",
+          "translation_en": "meal; food"
+        },
+        {
+          "zh_hanzi": "酒",
+          "zh_pinyin": "jiu",
+          "translation_en": "alcohol; alcoholic drink"
+        },
+        {
+          "zh_hanzi": "肉",
+          "zh_pinyin": "rou",
+          "translation_en": "meat"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Model the target phrase slowly.",
+          "learner_target": "Repeat exactly once.",
+          "fallback_hint": "Only copy the model; do not translate.",
+          "model_answer": "你比较喜欢肉还是鱼？"
+        },
+        {
+          "tutor_cue": "Ask for the same phrase inside a tiny answer.",
+          "learner_target": "Say the phrase as part of one short sentence.",
+          "fallback_hint": "Keep the target phrase unchanged and add only one safe word.",
+          "model_answer": "你想吃什么？你想喝什么？"
+        },
+        {
+          "tutor_cue": "Return to the mission with the repaired phrase.",
+          "learner_target": "Answer the original roleplay cue again.",
+          "fallback_hint": "If the repair falls apart, repeat the model once and stop.",
+          "model_answer": "北京烤鸭"
+        }
+      ],
+      "repair_prompts": [
+        "Model -> break -> repeat -> reinsert into the sentence.",
+        "Correct only the highest-value pronunciation or word-order issue.",
+        "Stop after one successful repaired sentence; do not over-explain."
+      ],
+      "success_criteria": [
+        "The learner repeats the model recognizably.",
+        "The learner inserts the repaired phrase into a short answer.",
+        "The learner leaves the loop with one successful live turn."
+      ],
+      "focus_issues": [
+        "pronunciation",
+        "listening",
+        "confidence"
+      ]
+    }
+  ],
+  "daily_sprint": {
+    "minutes": 5,
+    "steps": [
+      {
+        "label": "Warmup",
+        "task": "Recall and say these anchors without reading: 饭馆, 馆, 饭, 酒, 肉."
+      },
+      {
+        "label": "Frame",
+        "task": "Ask in Chinese: Do you prefer meat or fish?"
+      },
+      {
+        "label": "Roleplay",
+        "task": "Order a food or drink item and state one preference between two choices."
+      },
+      {
+        "label": "Repair",
+        "task": "Fix one issue only, then repeat the corrected sentence once."
+      },
+      {
+        "label": "Exit",
+        "task": "Give one final answer with no English support."
+      }
+    ]
+  },
+  "adaptive_rules": [
+    {
+      "if_issue": "pronunciation",
+      "adjustment": "switch to model-and-repeat before continuing the roleplay",
+      "repair_loop": [
+        "model",
+        "break out pinyin",
+        "repeat",
+        "put back into the sentence"
+      ]
+    },
+    {
+      "if_issue": "vocabulary_recall",
+      "adjustment": "freeze the grammar and swap only one known vocabulary item",
+      "repair_loop": [
+        "show two choices",
+        "ask for recall",
+        "reuse in the same cue"
+      ]
+    },
+    {
+      "if_issue": "grammar_patterns",
+      "adjustment": "return to one sentence frame and run two controlled variations",
+      "repair_loop": [
+        "model frame",
+        "learner fills one slot",
+        "ask the same frame again"
+      ]
+    },
+    {
+      "if_issue": "listening",
+      "adjustment": "shorten tutor cues and ask for meaning before production",
+      "repair_loop": [
+        "repeat cue",
+        "confirm meaning",
+        "ask for one short answer"
+      ]
+    },
+    {
+      "if_issue": "sentence_building",
+      "adjustment": "make the answer a fixed frame plus one variable",
+      "repair_loop": [
+        "give frame",
+        "choose variable",
+        "say full sentence"
+      ]
+    },
+    {
+      "if_issue": "confidence",
+      "adjustment": "use binary or one-word answers before returning to short sentences",
+      "repair_loop": [
+        "yes/no",
+        "one phrase",
+        "short sentence"
+      ]
+    }
+  ]
+}

@@ -13,6 +13,12 @@ Use this reference when the task is operational rather than editorial.
    - learner-facing Markdown derived from lesson JSON
 4. `exports/drive`
    - compact local export bundles that can be copied to a managed Drive mount
+5. `references/course-data`
+   - sanitized lesson bundle, lesson plans, HSK practice, and roleplay payloads
+     included in the published GitHub/ClawHub skill artifact
+6. `references/system-prompts`
+   - public tutor prompt packs and the shared runtime contract mirrored from
+     the public repo `prompts/system` directory
 
 ## Command Handling
 
@@ -31,5 +37,7 @@ Use this reference when the task is operational rather than editorial.
 - Extraction is allowed to be ugly.
 - Editorial review is allowed to be slow.
 - Publication is not allowed to leak.
+- A published skill without `references/course-data` is not a valid release.
+- A published skill without `references/system-prompts` is not a valid release.
 - Missing audited commands are blockers. Do not improvise replacement network,
   Drive, transcription, media-extraction, or credential-discovery behavior.

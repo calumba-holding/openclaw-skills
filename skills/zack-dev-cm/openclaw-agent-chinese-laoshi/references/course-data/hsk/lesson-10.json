@@ -1,0 +1,66 @@
+{
+  "lesson_number": 10,
+  "lesson_slug": "lesson-10",
+  "title_en": "Clothing, Colors, and Shopping Classifiers",
+  "hsk_level": "HSK 2",
+  "petrov_stage": "Push noun + color + classifier handling into shopping dialogue.",
+  "petrov_mission": "Ask for clothing or shoes by color, item type, and quantity.",
+  "focus_targets": [
+    "Clothing often takes specific classifiers, not just 个",
+    "Long items use 条",
+    "Color attaches to nouns through 色的 or direct modifier position",
+    "Degree adjustment with 一点"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l10-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 衣服, 东西, 买东西, 穿.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l10-listen-2",
+      "prompt": "Listen to a line that uses Clothing often takes specific classifiers, not just 个 and Long items use 条 and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l10-read-1",
+      "prompt": "Match these lesson items to their meanings: 衣服, 东西, 买东西, 穿.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l10-read-2",
+      "prompt": "Rebuild one short sentence that uses Clothing often takes specific classifiers, not just 个 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l10-speak-1",
+      "prompt": "Ask for clothing or shoes by color, item type, and quantity.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l10-speak-2",
+      "prompt": "Say in Chinese: Today I am wearing blue clothes.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 衣服, 东西, 买东西, 穿, 个.",
+    "Which classifier does lesson 10 use for a shirt?",
+    "Which classifier does lesson 10 use for shoes?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 衣服, 东西, 买东西.",
+    "Produces one correct spoken line using Clothing often takes specific classifiers, not just 个.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

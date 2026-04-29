@@ -1,0 +1,344 @@
+{
+  "lesson_number": 16,
+  "lesson_slug": "lesson-16",
+  "title_en": "Final Biographies, Questions, and Closing Conversation",
+  "readiness": "learner_ready",
+  "petrov_mission": "Give a short biography, ask one follow-up question, and close with a social formula or toast.",
+  "scenarios": [
+    {
+      "id": "l16-mission-core",
+      "title": "Mission rehearsal",
+      "level": "core",
+      "learner_role": "answer as yourself",
+      "tutor_role": "lesson-bounded conversation partner",
+      "mission": "Give a short biography, ask one follow-up question, and close with a social formula or toast.",
+      "setup": "Run the lesson mission with short replies before any freer chat.",
+      "target_patterns": [
+        "Final biography mode chains simple clauses",
+        "Question exchange uses 有问题吗 and live follow-ups",
+        "为什么 ... 因为 ... remains the compact reasoning pair",
+        "Experience uses 去过 plus frequency counting",
+        "Preference speech is built on 喜欢 plus an object or activity"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "你们好",
+          "zh_pinyin": "nimen hao",
+          "translation_en": "hello everyone"
+        },
+        {
+          "zh_hanzi": "你们今天都很美",
+          "zh_pinyin": "nimen jintian dou hen mei",
+          "translation_en": "you all look beautiful today"
+        },
+        {
+          "zh_hanzi": "问题",
+          "zh_pinyin": "wenti",
+          "translation_en": "question; problem"
+        },
+        {
+          "zh_hanzi": "你们有问题吗？",
+          "zh_pinyin": "nimen you wenti ma?",
+          "translation_en": "Do you have any questions?"
+        },
+        {
+          "zh_hanzi": "颜色",
+          "zh_pinyin": "yanse",
+          "translation_en": "color"
+        },
+        {
+          "zh_hanzi": "为什么 / 因为",
+          "zh_pinyin": "weishenme / yinwei",
+          "translation_en": "why / because"
+        },
+        {
+          "zh_hanzi": "我很高兴认识你们",
+          "zh_pinyin": "wo hen gaoxing renshi nimen",
+          "translation_en": "I am very glad to meet you all"
+        },
+        {
+          "zh_hanzi": "我住在莫斯科",
+          "zh_pinyin": "wo zhu zai Mosike",
+          "translation_en": "I live in Moscow"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Open with the safest lesson greeting or question.",
+          "learner_target": "Answer in one short lesson sentence.",
+          "fallback_hint": "Use the first target pattern and one allowed vocabulary item.",
+          "model_answer": "你们好！你们今天都很美！"
+        },
+        {
+          "tutor_cue": "Ask one follow-up from the current mission.",
+          "learner_target": "Reuse the same pattern and change only one detail.",
+          "fallback_hint": "Keep the sentence short; do not add new vocabulary.",
+          "model_answer": "你们有问题吗？"
+        },
+        {
+          "tutor_cue": "Ask for one negative, choice, or question-form variation if the lesson supports it.",
+          "learner_target": "Produce a second version without reading.",
+          "fallback_hint": "Return to the model answer if the learner freezes.",
+          "model_answer": "我去过中国两次。"
+        }
+      ],
+      "repair_prompts": [
+        "If the learner hesitates, reduce the task to one model phrase and one substitution.",
+        "If the reply is not usable Chinese, model Hanzi + pinyin + meaning and ask for one repeat.",
+        "If the learner succeeds twice, remove the English hint and keep pinyin only on corrections."
+      ],
+      "success_criteria": [
+        "The learner answers the mission without reading.",
+        "The learner reuses one target pattern with a changed detail.",
+        "The learner can recover after one correction without abandoning the scenario."
+      ],
+      "focus_issues": [
+        "confidence",
+        "sentence_building",
+        "vocabulary_recall"
+      ]
+    },
+    {
+      "id": "l16-question-ladder",
+      "title": "Teacher question ladder",
+      "level": "bridge",
+      "learner_role": "student in a fast teacher exchange",
+      "tutor_role": "teacher asking one narrow question at a time",
+      "mission": "Answer the lesson question chain with no long explanations.",
+      "setup": "Use the lesson question ladder as a live pressure drill.",
+      "target_patterns": [
+        "Final biography mode chains simple clauses",
+        "Question exchange uses 有问题吗 and live follow-ups",
+        "为什么 ... 因为 ... remains the compact reasoning pair",
+        "Experience uses 去过 plus frequency counting",
+        "Preference speech is built on 喜欢 plus an object or activity"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "你们好",
+          "zh_pinyin": "nimen hao",
+          "translation_en": "hello everyone"
+        },
+        {
+          "zh_hanzi": "你们今天都很美",
+          "zh_pinyin": "nimen jintian dou hen mei",
+          "translation_en": "you all look beautiful today"
+        },
+        {
+          "zh_hanzi": "问题",
+          "zh_pinyin": "wenti",
+          "translation_en": "question; problem"
+        },
+        {
+          "zh_hanzi": "你们有问题吗？",
+          "zh_pinyin": "nimen you wenti ma?",
+          "translation_en": "Do you have any questions?"
+        },
+        {
+          "zh_hanzi": "颜色",
+          "zh_pinyin": "yanse",
+          "translation_en": "color"
+        },
+        {
+          "zh_hanzi": "为什么 / 因为",
+          "zh_pinyin": "weishenme / yinwei",
+          "translation_en": "why / because"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "你们有问题吗？ — nimen you wenti ma? — Do you have any questions?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "你们好！你们今天都很美！"
+        },
+        {
+          "tutor_cue": "什么音乐？ — shenme yinyue? — What music?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "你们有问题吗？"
+        },
+        {
+          "tutor_cue": "你的狗叫什么？ — ni de gou jiao shenme? — What is your dog's name?",
+          "learner_target": "Answer briefly, then repeat once with better pacing.",
+          "fallback_hint": "If stuck, answer with one known lesson word plus the safest grammar frame.",
+          "model_answer": "我去过中国两次。"
+        }
+      ],
+      "repair_prompts": [
+        "If meaning is weak, ask for a yes/no or either/or answer first.",
+        "If grammar breaks, repeat the same cue and freeze the word order.",
+        "If pronunciation breaks, switch to echo-only for one turn."
+      ],
+      "success_criteria": [
+        "The learner answers at least two teacher cues.",
+        "The answer stays inside lesson vocabulary.",
+        "The learner corrects one near miss immediately."
+      ],
+      "focus_issues": [
+        "listening",
+        "sentence_building",
+        "grammar_patterns"
+      ]
+    },
+    {
+      "id": "l16-repair-loop",
+      "title": "Repair and re-enter",
+      "level": "core",
+      "learner_role": "speaker repairing one weak point",
+      "tutor_role": "pronunciation and confidence coach",
+      "mission": "Repair one phrase, then put it back into the live exchange.",
+      "setup": "Start from 你们好 / 你们今天都很美 and return to the mission only after the repeat is stable.",
+      "target_patterns": [
+        "Final biography mode chains simple clauses",
+        "Question exchange uses 有问题吗 and live follow-ups",
+        "为什么 ... 因为 ... remains the compact reasoning pair",
+        "Experience uses 去过 plus frequency counting"
+      ],
+      "allowed_vocabulary": [
+        {
+          "zh_hanzi": "你们好",
+          "zh_pinyin": "nimen hao",
+          "translation_en": "hello everyone"
+        },
+        {
+          "zh_hanzi": "你们今天都很美",
+          "zh_pinyin": "nimen jintian dou hen mei",
+          "translation_en": "you all look beautiful today"
+        },
+        {
+          "zh_hanzi": "问题",
+          "zh_pinyin": "wenti",
+          "translation_en": "question; problem"
+        },
+        {
+          "zh_hanzi": "你们有问题吗？",
+          "zh_pinyin": "nimen you wenti ma?",
+          "translation_en": "Do you have any questions?"
+        },
+        {
+          "zh_hanzi": "颜色",
+          "zh_pinyin": "yanse",
+          "translation_en": "color"
+        }
+      ],
+      "turn_script": [
+        {
+          "tutor_cue": "Model the target phrase slowly.",
+          "learner_target": "Repeat exactly once.",
+          "fallback_hint": "Only copy the model; do not translate.",
+          "model_answer": "你们好！你们今天都很美！"
+        },
+        {
+          "tutor_cue": "Ask for the same phrase inside a tiny answer.",
+          "learner_target": "Say the phrase as part of one short sentence.",
+          "fallback_hint": "Keep the target phrase unchanged and add only one safe word.",
+          "model_answer": "你们有问题吗？"
+        },
+        {
+          "tutor_cue": "Return to the mission with the repaired phrase.",
+          "learner_target": "Answer the original roleplay cue again.",
+          "fallback_hint": "If the repair falls apart, repeat the model once and stop.",
+          "model_answer": "我去过中国两次。"
+        }
+      ],
+      "repair_prompts": [
+        "Model -> break -> repeat -> reinsert into the sentence.",
+        "Correct only the highest-value pronunciation or word-order issue.",
+        "Stop after one successful repaired sentence; do not over-explain."
+      ],
+      "success_criteria": [
+        "The learner repeats the model recognizably.",
+        "The learner inserts the repaired phrase into a short answer.",
+        "The learner leaves the loop with one successful live turn."
+      ],
+      "focus_issues": [
+        "pronunciation",
+        "listening",
+        "confidence"
+      ]
+    }
+  ],
+  "daily_sprint": {
+    "minutes": 5,
+    "steps": [
+      {
+        "label": "Warmup",
+        "task": "Recall and say these anchors without reading: 你们好, 你们今天都很美, 问题, 你们有问题吗？, 颜色."
+      },
+      {
+        "label": "Frame",
+        "task": "Repeat the opening greeting and compliment as one smooth teacher chunk."
+      },
+      {
+        "label": "Roleplay",
+        "task": "Give a short biography, ask one follow-up question, and close with a social formula or toast."
+      },
+      {
+        "label": "Repair",
+        "task": "Fix one issue only, then repeat the corrected sentence once."
+      },
+      {
+        "label": "Exit",
+        "task": "Give one final answer with no English support."
+      }
+    ]
+  },
+  "adaptive_rules": [
+    {
+      "if_issue": "pronunciation",
+      "adjustment": "switch to model-and-repeat before continuing the roleplay",
+      "repair_loop": [
+        "model",
+        "break out pinyin",
+        "repeat",
+        "put back into the sentence"
+      ]
+    },
+    {
+      "if_issue": "vocabulary_recall",
+      "adjustment": "freeze the grammar and swap only one known vocabulary item",
+      "repair_loop": [
+        "show two choices",
+        "ask for recall",
+        "reuse in the same cue"
+      ]
+    },
+    {
+      "if_issue": "grammar_patterns",
+      "adjustment": "return to one sentence frame and run two controlled variations",
+      "repair_loop": [
+        "model frame",
+        "learner fills one slot",
+        "ask the same frame again"
+      ]
+    },
+    {
+      "if_issue": "listening",
+      "adjustment": "shorten tutor cues and ask for meaning before production",
+      "repair_loop": [
+        "repeat cue",
+        "confirm meaning",
+        "ask for one short answer"
+      ]
+    },
+    {
+      "if_issue": "sentence_building",
+      "adjustment": "make the answer a fixed frame plus one variable",
+      "repair_loop": [
+        "give frame",
+        "choose variable",
+        "say full sentence"
+      ]
+    },
+    {
+      "if_issue": "confidence",
+      "adjustment": "use binary or one-word answers before returning to short sentences",
+      "repair_loop": [
+        "yes/no",
+        "one phrase",
+        "short sentence"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "lesson_number": 12,
+  "lesson_slug": "lesson-12",
+  "title_en": "Ordering, Service Phrases, and Invitation Language",
+  "hsk_level": "HSK 2",
+  "petrov_stage": "Make service language and invitation dialogue polite and fast.",
+  "petrov_mission": "Call the waiter, order politely, and ask for the menu or bill.",
+  "focus_targets": [
+    "Ordering toggles between 要 and 来",
+    "Drinks take 杯",
+    "Menu and bill are separate service words",
+    "Taste adjectives drive food requests"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l12-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 要, 服务员, 来, 杯.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l12-listen-2",
+      "prompt": "Listen to a line that uses Ordering toggles between 要 and 来 and Drinks take 杯 and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l12-read-1",
+      "prompt": "Match these lesson items to their meanings: 要, 服务员, 来, 杯.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l12-read-2",
+      "prompt": "Rebuild one short sentence that uses Ordering toggles between 要 and 来 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l12-speak-1",
+      "prompt": "Call the waiter, order politely, and ask for the menu or bill.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l12-speak-2",
+      "prompt": "Roleplay calling the waiter and ordering a cup of coffee with sugar.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 要, 服务员, 来, 杯, 一杯咖啡.",
+    "Which lesson-12 word means menu?",
+    "Which phrase means to drink a toast to something or someone?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 要, 服务员, 来.",
+    "Produces one correct spoken line using Ordering toggles between 要 and 来.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

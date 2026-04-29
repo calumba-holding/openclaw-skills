@@ -1,0 +1,66 @@
+{
+  "lesson_number": 1,
+  "lesson_slug": "lesson-01",
+  "title_en": "Pronouns, Greetings, and Basic Negation",
+  "hsk_level": "HSK 1 foundation",
+  "petrov_stage": "Build the first stable pronoun matrix and automate yes/no etiquette lines.",
+  "petrov_mission": "Greet someone, introduce yourself, and give one short positive or negative statement.",
+  "focus_targets": [
+    "SVO word order",
+    "No case endings on pronouns",
+    "Negation with 不",
+    "Yes/no questions with 吗"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l01-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 我, 你, 他 / 她, 我们.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l01-listen-2",
+      "prompt": "Listen to a line that uses SVO word order and No case endings on pronouns and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l01-read-1",
+      "prompt": "Match these lesson items to their meanings: 我, 你, 他 / 她, 我们.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l01-read-2",
+      "prompt": "Rebuild one short sentence that uses SVO word order with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l01-speak-1",
+      "prompt": "Greet someone, introduce yourself, and give one short positive or negative statement.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l01-speak-2",
+      "prompt": "Repeat the greeting exchange: 你好. 你好吗? 我很好.",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 我, 你, 他 / 她, 我们, 你们.",
+    "What does 你好吗？ mean?",
+    "Which particle turns a statement into a yes/no question in this lesson?"
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 我, 你, 他 / 她.",
+    "Produces one correct spoken line using SVO word order.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

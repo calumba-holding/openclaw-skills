@@ -1,0 +1,66 @@
+{
+  "lesson_number": 6,
+  "lesson_slug": "lesson-06",
+  "title_en": "Time of Day, Knowing, and Speaking Languages",
+  "hsk_level": "HSK 1 to HSK 2 bridge",
+  "petrov_stage": "Make time-of-day and knowing-language statements automatic.",
+  "petrov_mission": "Say when something happens, whether you know it, and what language you can or cannot speak.",
+  "focus_targets": [
+    "Time roots become parts of day with 上",
+    "知道 and 吗 build a practical check-in question",
+    "会说 plus a language",
+    "明白了 marks a completed change of understanding"
+  ],
+  "listening_tasks": [
+    {
+      "id": "l06-listen-1",
+      "prompt": "Listen for one of these lesson anchors and identify the intent: 当然, 早, 晚, 早上.",
+      "skill": "intent recognition",
+      "difficulty": "core"
+    },
+    {
+      "id": "l06-listen-2",
+      "prompt": "Listen to a line that uses Time roots become parts of day with 上 and 知道 and 吗 build a practical check-in question and repeat the key detail correctly.",
+      "skill": "detail extraction",
+      "difficulty": "core"
+    }
+  ],
+  "reading_tasks": [
+    {
+      "id": "l06-read-1",
+      "prompt": "Match these lesson items to their meanings: 当然, 早, 晚, 早上.",
+      "skill": "phrase matching",
+      "difficulty": "core"
+    },
+    {
+      "id": "l06-read-2",
+      "prompt": "Rebuild one short sentence that uses Time roots become parts of day with 上 with one lesson vocabulary item.",
+      "skill": "sentence reconstruction",
+      "difficulty": "bridge"
+    }
+  ],
+  "speaking_tasks": [
+    {
+      "id": "l06-speak-1",
+      "prompt": "Say when something happens, whether you know it, and what language you can or cannot speak.",
+      "skill": "guided speaking",
+      "difficulty": "core"
+    },
+    {
+      "id": "l06-speak-2",
+      "prompt": "Say in Chinese: Do you know?",
+      "skill": "pattern variation",
+      "difficulty": "bridge"
+    }
+  ],
+  "rapid_recall": [
+    "Recall and say: 当然, 早, 晚, 早上, 晚上.",
+    "What does 当然 mean?",
+    "Translate into Chinese: I do not know."
+  ],
+  "mock_pass_criteria": [
+    "Uses at least two of these lesson anchors correctly: 当然, 早, 晚.",
+    "Produces one correct spoken line using Time roots become parts of day with 上.",
+    "Answers one follow-up without dropping completely out of Chinese."
+  ]
+}

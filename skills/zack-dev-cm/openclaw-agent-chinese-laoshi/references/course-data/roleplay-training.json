@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "target": "lesson-bounded speaking automaticity",
+  "lesson_manifest": [
+    {
+      "lesson_number": 1,
+      "roleplay_training": "data/roleplays/lesson-01.json",
+      "mission": "Greet someone, introduce yourself, and give one short positive or negative statement."
+    },
+    {
+      "lesson_number": 2,
+      "roleplay_training": "data/roleplays/lesson-02.json",
+      "mission": "Ask and answer a basic identity exchange with name, city, and place."
+    },
+    {
+      "lesson_number": 3,
+      "roleplay_training": "data/roleplays/lesson-03.json",
+      "mission": "Ask what someone wants to eat or drink and answer with one clear preference."
+    },
+    {
+      "lesson_number": 4,
+      "roleplay_training": "data/roleplays/lesson-04.json",
+      "mission": "Say a date, weekday, and birthday-style calendar line without reading."
+    },
+    {
+      "lesson_number": 5,
+      "roleplay_training": "data/roleplays/lesson-05.json",
+      "mission": "Say where you want to go and combine a larger number with a place or direction line."
+    },
+    {
+      "lesson_number": 6,
+      "roleplay_training": "data/roleplays/lesson-06.json",
+      "mission": "Say when something happens, whether you know it, and what language you can or cannot speak."
+    },
+    {
+      "lesson_number": 7,
+      "roleplay_training": "data/roleplays/lesson-07.json",
+      "mission": "Ask how someone is, whether they can do something, and restate the line in another time frame."
+    },
+    {
+      "lesson_number": 8,
+      "roleplay_training": "data/roleplays/lesson-08.json",
+      "mission": "Meet someone politely, ask age or quantity questions, and answer without freezing."
+    },
+    {
+      "lesson_number": 9,
+      "roleplay_training": "data/roleplays/lesson-09.json",
+      "mission": "Use this/that with a classifier and give one short comparison."
+    },
+    {
+      "lesson_number": 10,
+      "roleplay_training": "data/roleplays/lesson-10.json",
+      "mission": "Ask for clothing or shoes by color, item type, and quantity."
+    },
+    {
+      "lesson_number": 11,
+      "roleplay_training": "data/roleplays/lesson-11.json",
+      "mission": "Order a food or drink item and state one preference between two choices."
+    },
+    {
+      "lesson_number": 12,
+      "roleplay_training": "data/roleplays/lesson-12.json",
+      "mission": "Call the waiter, order politely, and ask for the menu or bill."
+    },
+    {
+      "lesson_number": 13,
+      "roleplay_training": "data/roleplays/lesson-13.json",
+      "mission": "State a big number, a date, and one have-you-ever-done-it line."
+    },
+    {
+      "lesson_number": 14,
+      "roleplay_training": "data/roleplays/lesson-14.json",
+      "mission": "Describe the weather or temperature and ask or answer one travel-direction question."
+    },
+    {
+      "lesson_number": 15,
+      "roleplay_training": "data/roleplays/lesson-15.json",
+      "mission": "Run a polite greeting or apology exchange, then add one family or frequency sentence."
+    },
+    {
+      "lesson_number": 16,
+      "roleplay_training": "data/roleplays/lesson-16.json",
+      "mission": "Give a short biography, ask one follow-up question, and close with a social formula or toast."
+    }
+  ],
+  "tracks": [
+    "mission_rehearsal",
+    "question_ladder",
+    "repair_loop",
+    "daily_sprint"
+  ]
+}
