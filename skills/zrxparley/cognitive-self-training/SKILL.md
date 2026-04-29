@@ -1,11 +1,11 @@
 ---
 name: cognitive-self-training
-description: Daily cognitive training, dream review, and self-improvement loop for OpenClaw, Hermes, Codex, Claude Code, and other AI agents. Use when the user wants a bot to review today's learning, consolidate knowledge, run spaced repetition or active recall, connect concepts across domains, reason with tian-dao style deduction, learn from corrections/errors, update agent memory, schedule daily dream reviews, or generate a next-step improvement strategy.
+description: Daily cognitive training, dream review, dream-scene narration, and self-improvement loop for OpenClaw, Hermes, Codex, Claude Code, and other AI agents. Use when the user wants a bot to review today's learning, consolidate knowledge, run spaced repetition or active recall, connect concepts across domains, reason with tian-dao style deduction, generate a human-readable dream description of the reasoning process, configure random dream styles, learn from corrections/errors, update agent memory, schedule daily dream reviews, or generate a next-step improvement strategy.
 ---
 
 # Cognitive Self Training
 
-Use this skill to turn an agent's daily work into durable learning. The goal is not to claim a biological brain, but to approximate useful brain-like behavior through external memory, retrieval practice, error correction, concept linking, dream-like recombination, and strategic review.
+Use this skill to turn an agent's daily work into durable learning. The goal is not to claim a biological brain, but to approximate useful brain-like behavior through external memory, retrieval practice, error correction, concept linking, dream-like recombination, human-readable dream description, and strategic review.
 
 When the `tian-dao` reasoning skill is available, use it as the deduction engine for dream review: eight-dimensional deduction, probability branches, causal chains, butterfly effects, terminal states, contradiction analysis, inversion, and calibration.
 
@@ -19,8 +19,9 @@ Run the loop as:
 4. **Compare**: Identify gaps, false assumptions, missing context, and weak reasoning.
 5. **Connect**: Link today's ideas to prior ideas, adjacent domains, counterexamples, and concrete future tasks.
 6. **Dream**: Run abductive, counterfactual, and tian-dao style deduction over today's material.
-7. **Consolidate**: Update the local training store, promote stable lessons, and schedule the next review.
-8. **Strategize**: Choose the next 1-3 improvements that will most increase future performance.
+7. **Describe**: Render the reasoning process as a styled dream scene that a human can inspect.
+8. **Consolidate**: Update the local training store, promote stable lessons, and schedule the next review.
+9. **Strategize**: Choose the next 1-3 improvements that will most increase future performance.
 
 ## Pre-Install Time Handshake
 
@@ -48,7 +49,7 @@ Prefer a project-local store so learning remains scoped and inspectable:
 bash cognitive-self-training/scripts/init_cognitive_training.sh .
 ```
 
-If the skill is installed elsewhere, run the script from that installed skill path. If scripts are unavailable, create the structure in [references/storage-schema.md](references/storage-schema.md). For dream scheduling details, read [references/dream-protocol.md](references/dream-protocol.md) and [references/automation.md](references/automation.md).
+If the skill is installed elsewhere, run the script from that installed skill path. If scripts are unavailable, create the structure in [references/storage-schema.md](references/storage-schema.md). For dream scheduling details, read [references/dream-protocol.md](references/dream-protocol.md) and [references/automation.md](references/automation.md). For dream description style configuration, read [references/dream-styles.md](references/dream-styles.md).
 
 Use this root selection:
 
@@ -123,8 +124,17 @@ Use the full protocol in [references/dream-protocol.md](references/dream-protoco
    - generate falsifiable questions
    - mark confidence and missing evidence
    - propose next experiments or reading
-5. Write `dreams/YYYY-MM-DD.md`.
-6. Convert only tested or high-value results into cards, graph links, mistakes, or strategy.
+5. Select a dream description style from `.cognitive-training/dream-style-config.md`.
+6. Write a "Dream Description" scene that maps the reasoning process to visible actions, places, characters, and tensions.
+7. Write `dreams/YYYY-MM-DD.md`.
+8. Convert only tested or high-value results into cards, graph links, mistakes, or strategy.
+
+The dream description is not decorative filler. It must preserve traceability:
+
+- Every major image must correspond to an input, card, mistake, hypothesis, branch, or strategy.
+- Do not introduce unsupported facts as if they were evidence.
+- Mark dream-only metaphors as metaphors when needed.
+- Keep the rigorous deduction and hypothesis sections separate from the narrative.
 
 ## Retrieval Practice
 
@@ -227,35 +237,38 @@ When the user asks for a review or training cycle, respond with:
 
 Keep the final user-facing summary concise. Put detailed logs in `.cognitive-training/`.
 
-When the user asks for dream review, respond with:
+When the user asks for dream review, use exactly these top-level sections and do not add extra top-level sections:
 
 ```markdown
 ## Dream Review
+- Selected style:
+- Dream scene:
+- Reasoning map:
 
-### Dream Inputs
-- 
+## Dream Recurrence Statement
+- Why this dream scene recurs today:
+- What learning pattern it rehearses:
 
-### Tian-Dao Deduction
+## Tian-Dao Deduction
 - Causal chain:
 - Branches:
 - Butterfly points:
 - Terminal states:
 
-### Research Hypotheses
+## Research Hypotheses
 - Hypothesis:
 - Evidence needed:
 - Confidence:
 
-### Knowledge Expansion
-- New connection:
-- Transfer:
-- Counterexample:
-
-### Tomorrow's Practice
+## Tomorrow's Practice
 - 
 
-### Store Updates
+## Store Updates
 - 
+
+## Summary Narrative
+- Write one novel-like concluding paragraph in Chinese, no more than 300 Chinese characters.
+- Fully describe the dream details, the review experience, and how the knowledge understanding improved.
 ```
 
 ## Failure Handling

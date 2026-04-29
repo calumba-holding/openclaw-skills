@@ -24,7 +24,7 @@ Scope: thread | workspace | project
 Last configured: YYYY-MM-DD
 
 Prompt:
-Run cognitive-self-training dream review. Read today's cognitive training files, use tian-dao style deduction, write the dream review, create due recall cards, update graph links, and propose tomorrow's strategy. Do not store secrets or raw private transcripts.
+Run cognitive-self-training dream review. Read today's cognitive training files, randomly select an enabled dream style, write the result with exactly these top-level sections: Dream Review, Dream Recurrence Statement, Tian-Dao Deduction, Research Hypotheses, Tomorrow's Practice, Store Updates, Summary Narrative. Create due recall cards, update graph links, and propose tomorrow's strategy. Do not store secrets or raw private transcripts.
 ```
 
 ## Platform Mapping

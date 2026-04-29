@@ -113,3 +113,58 @@ Review log:
 ### Memory Updates
 - 
 ```
+
+## Dream Review
+
+```markdown
+## Dream Review
+
+Selected style:
+
+Dream scene:
+
+Reasoning map:
+- Scene element -> source fragment, card, mistake, hypothesis, or branch
+```
+
+## Dream Review User-Facing Output
+
+```markdown
+## Dream Review
+
+Selected style:
+
+Dream scene:
+
+Reasoning map:
+- 
+
+## Dream Recurrence Statement
+
+Tonight's dream recurs as `[style]`: ...
+
+## Tian-Dao Deduction
+
+- Causal chain:
+- Branches:
+- Butterfly points:
+- Terminal states:
+
+## Research Hypotheses
+
+- Hypothesis:
+- Evidence needed:
+- Confidence:
+
+## Tomorrow's Practice
+
+- 
+
+## Store Updates
+
+- 
+
+## Summary Narrative
+
+用不超过300个中文字符，像小说结尾一样总结梦境细节、复盘学习的知识理解、理解如何加深，以及明天应如何继续训练。
+```

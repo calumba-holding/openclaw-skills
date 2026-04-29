@@ -6,6 +6,7 @@ Use a project-local `.cognitive-training/` directory unless the user explicitly 
 .cognitive-training/
 ├── README.md
 ├── schedule.md            # HOT: dream review time and automation prompt
+├── dream-style-config.md  # HOT: style pool and random/fixed selection mode
 ├── principles.md          # HOT: compact durable rules, always checked first
 ├── strategy.md            # HOT: current deliberate-practice strategy
 ├── cards.md               # WARM: spaced-repetition cards and due dates
@@ -88,19 +89,31 @@ Last checked:
 ```markdown
 # Dream Review YYYY-MM-DD
 
-## Inputs
+## Dream Review
 
-## Replay
-
-## Compressed Fragments
+## Dream Recurrence Statement
 
 ## Tian-Dao Deduction
 
-## Academic Rigor Pass
+## Research Hypotheses
 
-## Recombination
+## Tomorrow's Practice
 
-## Hypotheses To Test
+## Store Updates
 
-## Updates Proposed
+## Summary Narrative
+```
+
+## Dream Style Config Schema
+
+```markdown
+# Dream Style Config
+
+Mode: random | fixed | weighted-random
+Fixed style:
+Enabled styles:
+- research-lab
+Weights:
+- research-lab: 1
+Safety fallback: research-lab
 ```

@@ -11,8 +11,23 @@ Load only the relevant files:
 - `.cognitive-training/cards.md` entries created or reviewed today
 - `.cognitive-training/mistakes.md` open entries
 - `.cognitive-training/graph.md` recent links
+- `.cognitive-training/dream-style-config.md`
 - `.learnings/` if present
 - `tian-dao` skill body or references if available
+
+## Style Selection
+
+Before writing the dream description, read `.cognitive-training/dream-style-config.md`. If it is missing, create it from [dream-styles.md](dream-styles.md).
+
+Selection rules:
+
+1. If `Mode: fixed`, use `Fixed style`.
+2. If `Mode: random`, randomly select one style from `Enabled styles`.
+3. If `Mode: weighted-random`, select according to the configured weights.
+4. Load the selected style's scene instruction from [dream-styles.md](dream-styles.md).
+5. If the selected style conflicts with the user's emotional safety or the seriousness of the content, choose `research-lab` instead and note the override.
+
+The style affects only the dream description. It must not alter evidence, probabilities, scores, or recommendations.
 
 ## Dream Stages
 
@@ -60,7 +75,46 @@ Then apply:
 - Inversion: imagine the lesson failed and reverse-engineer why.
 - Safety margin: preserve uncertainty and avoid over-promoting weak insights.
 
-### 4. Academic Rigor Pass
+### 4. Dream Review Scene
+
+Render the reasoning process as a scene the user can inspect. Use the selected style's scene instruction. The agent should write as if it has crossed into that dream scene to study, replay, and consolidate the day.
+
+Requirements:
+
+- 250-700 words unless the user asks for more or less.
+- Include the selected style name.
+- Begin with the crossing premise from the style's scene instruction.
+- Turn each key fragment into a visible object, actor, room, road, case file, battlefield unit, classroom exercise, lab instrument, or other style-appropriate scene element.
+- Show the reasoning movement: conflict, branch, test, uncertainty, and consolidation.
+- Add a short `Reasoning map` that links 3-7 scene elements back to source fragments.
+- Do not add new factual claims inside the scene.
+
+Use this structure:
+
+```markdown
+## Dream Review
+
+Selected style:
+
+Dream scene:
+
+Reasoning map:
+- Scene element -> source fragment or hypothesis
+```
+
+### 5. Dream Recurrence Statement
+
+Write one compact paragraph explaining why this dream scene recurs today and what learning pattern it is trying to rehearse.
+
+Use this structure:
+
+```markdown
+## Dream Recurrence Statement
+
+Tonight's dream recurs as `[style]`: ...
+```
+
+### 6. Academic Rigor Pass
 
 Write every important result as one of:
 
@@ -80,7 +134,7 @@ For each hypothesis, include:
 - Next experiment:
 ```
 
-### 5. Recombination
+### 7. Recombination
 
 For each fragment, produce:
 
@@ -89,7 +143,7 @@ For each fragment, produce:
 - counterexample: where the idea breaks
 - research question: what to study next
 
-### 6. Promotion Gate
+### 8. Promotion Gate
 
 Do not promote dream outputs directly into durable principles unless one of these is true:
 
@@ -100,6 +154,18 @@ Do not promote dream outputs directly into durable principles unless one of thes
 
 Unvalidated outputs become cards with `Source: dream` and `Stability: new`.
 
+### 9. Summary Narrative
+
+End the user-facing report and stored dream file with `Summary Narrative`.
+
+Requirements:
+
+- Write one paragraph in Chinese.
+- Limit it to 300 Chinese characters.
+- Make it read like the closing paragraph of a novel.
+- Include the dream scene's sensory detail, the reviewed knowledge, the shift in understanding, and the next learning posture.
+- Do not introduce new evidence, tasks, or claims not already represented in earlier sections.
+
 ## Output File
 
 Write to `.cognitive-training/dreams/YYYY-MM-DD.md`:
@@ -107,19 +173,17 @@ Write to `.cognitive-training/dreams/YYYY-MM-DD.md`:
 ```markdown
 # Dream Review YYYY-MM-DD
 
-## Inputs
+## Dream Review
 
-## Replay
-
-## Compressed Fragments
+## Dream Recurrence Statement
 
 ## Tian-Dao Deduction
 
-## Academic Rigor Pass
+## Research Hypotheses
 
-## Recombination
+## Tomorrow's Practice
 
-## Hypotheses To Test
+## Store Updates
 
-## Updates Proposed
+## Summary Narrative
 ```

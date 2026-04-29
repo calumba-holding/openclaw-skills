@@ -1,4 +1,4 @@
 interface:
   display_name: "Cognitive Self Training"
-  short_description: "Dream review and recall loop for agents"
-  default_prompt: "Run a daily cognitive dream review with recall drills, tian-dao deduction, research hypotheses, and tomorrow's strategy."
+  short_description: "Styled dream review and recall loop"
+  default_prompt: "Run a cognitive dream review with random scene style, Dream Recurrence Statement, tian-dao deduction, research hypotheses, tomorrow practice, store updates, and a 300-character Summary Narrative."
