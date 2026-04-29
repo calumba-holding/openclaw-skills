@@ -6,6 +6,7 @@
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from pathlib import Path
 
 
 def create_sheet_with_header(wb, sheet_name, headers, data):
@@ -266,7 +267,7 @@ def main():
             wb.move_sheet(name, offset=-wb.sheetnames.index(name) + idx)
 
     # 保存文件
-    output_path = "/Users/haodongling/.openclaw/workspace/skills/android-sharesdk-integration/assets/ShareSDK_Config_Template.xlsx"
+    output_path = Path(__file__).resolve().parent / "ShareSDK_Config_Template.xlsx"
     wb.save(output_path)
     print(f"Excel 模板已生成: {output_path}")
 

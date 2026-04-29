@@ -91,7 +91,10 @@ tags:
 
 #### 2-1 生成配置模板文件
 
-**操作**：将 `assets/ShareSDK_Config_Template.xlsx` 复制到用户项目根目录，命名为 `ShareSDK_Config.xlsx`
+**操作**：
+1. 执行 `assets/generate_excel_template.py`，生成 `assets/ShareSDK_Config_Template.xlsx`
+2. 将生成的 `assets/ShareSDK_Config_Template.xlsx` 复制到 `{path}` 下
+3. 在 `{path}` 下命名为 `ShareSDK_Config.xlsx`
 
 **告知用户**：
 ```
@@ -559,16 +562,19 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.mob.sdk'
 ```
 
+
 #### A.4 gradle.properties 配置
-
-```properties
-MobSDK.spEdition=FP
-```
-
-如需上架 Google Play,则更换为如下配置：
+**主动询问是否上架googleplay**
+如果开发者回答:是/YES 
+则配置
 
 ```properties
 MobSDK.spEdition=GPP
+```
+
+否则(否/NO): 使用如下配置
+```properties
+MobSDK.spEdition=FP
 ```
 
 ---
