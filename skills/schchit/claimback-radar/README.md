@@ -1,16 +1,26 @@
 # Claimback Radar
 
-**REQUIRED CREDENTIAL**: `OPENAI_API_KEY` environment variable.  
-**EXTERNAL DATA FLOW**: User content is sent to OpenAI API. Review OpenAI's privacy policy before use.
+**🔑 REQUIRED CREDENTIAL**: `OPENAI_API_KEY` environment variable.  
+**⚠️ EXTERNAL DATA FLOW**: User content is sent to OpenAI API. Review OpenAI's privacy policy before use.  
+**🛡️ DATA PRIVACY NOTICE**: Do not submit sensitive financial or identity data unless you explicitly accept this external data flow.
 
 ---
 
 AI-powered inbox scanner for hidden refunds, subscription traps, and savings opportunities.
 
+## Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+Required packages: `openai`, `python-dotenv`, `pydantic`.
+
 ## ⚠️ Prerequisites & Privacy
 
 - **OpenAI API Key required**: Set `OPENAI_API_KEY` environment variable.
 - **External data flow**: This skill sends your email/bill text to OpenAI API for processing. Do not use with sensitive data unless you explicitly accept OpenAI's data handling terms.
+- **.env safety**: This skill loads `.env` from the working directory if present. Ensure no unrelated secrets are stored in that file.
 
 ## What it does
 
@@ -62,6 +72,7 @@ Paste an email or bill text into the Skill invocation:
 - `main.py` explicitly loads `.env` if present and warns the user.
 - Never commit `.env` files containing real API keys to version control.
 - For production, prefer explicit `api_key` injection over implicit environment loading.
+- This skill loads `.env` from the working directory if present. Ensure no unrelated secrets are stored there.
 
 ## License
 

@@ -18,8 +18,9 @@ def main():
     env_path = Path(".env")
     if env_path.exists():
         print("⚠️  Loading .env file from current directory...")
+        print("⚠️  Ensure no unrelated secrets are stored in this .env file.")
         load_dotenv(dotenv_path=env_path, override=False)
-    
+
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         print("❌ Error: OPENAI_API_KEY not found.")

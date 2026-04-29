@@ -50,3 +50,4 @@
   "risk_flags": ["upcoming_charge", "auto_renew_on"],
   "summary": "Amazon Prime $139/year renews May 1. Review value before auto-charge. Refund possible until May 6."
 }
+```

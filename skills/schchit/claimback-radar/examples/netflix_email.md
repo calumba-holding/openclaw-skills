@@ -61,3 +61,4 @@
   "risk_flags": ["refund_window_closing", "unused_service"],
   "summary": "Netflix $15.49/month — refund window closes Apr 29, unused for 38 days. Potential savings: $15.49/month."
 }
+```
