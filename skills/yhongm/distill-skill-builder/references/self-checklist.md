@@ -289,8 +289,8 @@ sed -n '/## 输出格式规范/,/^## /p' SKILL.md | grep "❌"
 
 ### 第一次评估：发现问题
 ```bash
-cd ~/.claude/skills/<skill-name>
-python scripts/skill_evaluator_v2.py ../<skill-name>
+python ../../distill-skill-builder/scripts/skill_evaluator_v2.py \
+   <skill_dir>/<skill-name>
 ```
 
 ### 第二次修复：优先修复高分项
@@ -301,7 +301,8 @@ python scripts/skill_evaluator_v2.py ../<skill-name>
 ### 第三次验证：确认 A 级
 ```bash
 # 综合得分 90+ 即为 A 级
-python scripts/skill_evaluator_v2.py ../<skill-name> | grep "综合得分"
+python ../../distill-skill-builder/scripts/skill_evaluator_v2.py \
+   <skill_dir>/<skill-name> | grep "综合得分"
 ```
 
 ---
@@ -315,8 +316,8 @@ python scripts/skill_evaluator_v2.py ../<skill-name> | grep "综合得分"
 # batch_eval.sh
 for skill in "$@"; do
     echo "=== $skill ==="
-    cd ~/.claude/skills/$skill
-    python scripts/skill_evaluator_v2.py ../$skill 2>&1 | grep "综合得分"
+    python ../../distill-skill-builder/scripts/skill_evaluator_v2.py \
+       <skill_dir>/$skill 2>&1 | grep "综合得分"
 done
 ```
 

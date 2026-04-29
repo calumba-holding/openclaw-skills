@@ -1,12 +1,12 @@
 # Skill 评估脚本使用指南
 
 > 来源：基于 skill_evaluator_v2.py 评估器源码分析
-> URL: ~/.claude/skills/apple-design/scripts/skill_evaluator_v2.py
+> URL: ../../distill-skill-builder/scripts/skill_evaluator_v2.py
 > 整理时间：2026-04-23
 
 ## 评估器架构
 
-评估脚本位于 `~/.claude/skills/apple-design/scripts/skill_evaluator_v2.py`，包含 8 个评估函数：
+评估脚本位于 `../../distill-skill-builder/scripts/skill_evaluator_v2.py`（集中管理，不在各 skill 目录下复制），包含 8 个评估函数：
 
 | 函数 | 维度 | 满分 |
 |------|------|------|
@@ -22,8 +22,8 @@
 ## 运行方式
 
 ```bash
-cd ~/.claude/skills/<skill-name>
-python scripts/skill_evaluator_v2.py ../<skill-name>
+python ../../distill-skill-builder/scripts/skill_evaluator_v2.py \
+   <skill_dir>/<skill-name>
 ```
 
 ## 各维度详细说明
@@ -151,16 +151,58 @@ if not dates and fm.get('hermes', {}).get('last_updated'):
 
 ### 7. 参考文档覆盖 (10分)
 
-```python
-# references/ 目录
-ref_files = list(Path(ref_dir).glob('*.md'))
-avg_lines = mean([l for f in ref_files])
+**评分公式（实际测试验证）：**
+
+| 条件 | 得分 |
+|------|------|
+| 文件数 ≥6 且平均行数 ≥300 | **+10** |
+| 文件数 ≥4 或平均行数 ≥200 | +8 |
+| 其他 | 按比例计算 |
+
+公式拆解：
+- **文件数分**：每文件 0.5 分，上限 5 分。15 文件 = 7.5 → 5（上限截断）
+- **平均行数分**：avg ≥ 300 → **+3**，avg ≥ 150 → +1，否则 0
+- **来源标注分**：**+2**（bug：sourced_count 永远 < 真实值，详见下方 Bug 记录）
+
+**目标值（稳定满分）：**
+- 文件数 = 15（min 15 × 0.5 = 7.5 → 5 分）
+- 平均行数 ≥ 300
+- 所有文件有 `来源：` 或 `URL:` 标记
+
+**诊断命令：**
+```bash
+cd <skill_dir>/<skill>
+python3 -c "
+from pathlib import Path
+files = list(Path('references').glob('*.md'))
+total = sum(len(f.read_text(encoding='utf-8').split('\n')) for f in files)
+avg = total/len(files)
+print(f'Files: {len(files)}, Avg: {avg:.1f} (need >= 300)')
+"
 ```
 
-**评分：**
-- 文件数 ≥6 且平均行数 ≥300 → +10
-- 文件数 ≥4 或平均行数 ≥200 → +8
-- 其他 → 按比例计算
+**⚠️ Bug：变量遮蔽导致 sourced 检查失效**
+
+在 `_evaluate_references` 中：
+
+```python
+def _evaluate_references(skill_path):
+    ...
+    for f in ref_files:
+        ...
+        for line in lines:
+            if '来源：' in line or 'URL:' in line:
+                count = count + 1   # ← 遮蔽外层 sourced_count！
+```
+
+内层 `count` 与外层 `sourced_count` 是不同变量，内层赋值不影响外层。
+导致 `sourced >= count * 0.8` 条件永远为真（实际 sourced=1 而非真实值）。
+**此 bug 使 sourced 分 +2 恒定生效，不影响满分路径，但会掩盖来源标注不完整的问题。**
+
+**实战经验：**
+- 当 `avg < 300` 时，参考文档覆盖只能得 1 分（≈7.5/10），瓶颈在行数而非文件数
+- 扩充小文件比新增文件更高效：加 1 个 300 行文件不如把 6 个 200 行文件各扩充到 300 行
+- closures.md 是常见最短板：建议 ≥300 行并包含完整附录速查表
 
 ### 8. 输出格式规范 (5分)
 
@@ -185,6 +227,12 @@ A: `source` URL 可能在 `hermes.source` 里，需 patch 评估器或加到 bod
 ### Q: 核心内容得 14/20
 
 A: H1 数量不足 5 个。需插入顶级 H1 章节。
+
+### Q: 参考文档覆盖得 9/10
+
+A: 瓶颈在平均行数而非文件数。运行诊断命令查看当前 avg 值：
+- `avg < 300` → 只有 +1 分（公式限制），扩充最小文件（如 closures.md）到 ≥300 行
+- `avg ≥ 300` → 得 10/10，不需要增加文件数
 
 ### Q: 快速参考得 0/15
 
@@ -227,4 +275,4 @@ if not dates and fm.get('hermes', {}).get('last_updated'):
 ## 来源
 
 > skill_evaluator_v2.py 源码分析
-> ~/.claude/skills/apple-design/scripts/skill_evaluator_v2.py
+> ../../distill-skill-builder/scripts/skill_evaluator_v2.py

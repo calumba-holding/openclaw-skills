@@ -1,7 +1,8 @@
 # Skill 迭代提分实战手册
 
-> 来源：swift-language 从 52.5F 提升到 94.0 A 的完整迭代过程
-> 整理时间：2026-04-23
+> 来源：swift-language 从 52.5F 提升到 94.0 A 的完整迭代过程  
+> material-design 从 95.5 提升到 100.0 的完整过程（2026-04-24）
+> 整理时间：2026-04-24
 
 ## 迭代过程复盘
 
@@ -14,6 +15,17 @@
 | 修复来源 | 82.0 B | 添加 URL + 评估器 patch |
 | 扩展内容 | 88.5 B | 增加参考文档 |
 | H1 升级 | 94.0 A | 插入顶级 H1 章节 |
+
+### material-design 评分演进（100/100 满分案例）
+
+| 阶段 | 分数 | 主要变化 |
+|------|------|---------|
+| 初始 | 95.5 | 8 个参考文档，H2=5，核心内容 18/20 |
+| 扩充参考文档 | 96.5 | 添加 m3-migration-guide.md 等 3 个文档，参考文档覆盖 +1.5 |
+| 新增参考文档 | 97.0 | 添加 md3-api-changes.md，参考文档覆盖 9/10 |
+| **增加 H2 章节** | **100.0** | 添加 6 个 H2 分层（H2: 5→11），核心内容 20/20 |
+
+**关键发现**：H2 数量（而非 H1）是核心内容深度的瓶颈。SKILL.md 有 8 个 H1、27 个代码块、195 个表格，字符数 24KB 全部满分，唯独 H2 只有 5 个（需≥10 才满分）。在现有 H1 章节下插入 H2 分层（如 `## 色彩系统快速配置`）即可解决。
 
 ### 详细迭代步骤
 
@@ -184,7 +196,7 @@ source_section = """
 ### Patch 1：支持新文档源
 
 ```python
-# 文件：scripts/skill_evaluator_v2.py
+# 文件：skill_evaluator_v2.py
 # 位置：_evaluate_sources 函数
 
 # 原始代码
@@ -225,14 +237,8 @@ if not dates and fm.get('hermes', {}).get('last_updated'):
 ### Patch 同步
 
 ```bash
-# 修复后同步到所有 skill
-for dir in ~/.claude/skills/*/; do
-    skill=$(basename "$dir")
-    if [ -d "$dir/scripts" ]; then
-        cp ~/.claude/skills/apple-design/scripts/skill_evaluator_v2.py \
-           "$dir/scripts/skill_evaluator_v2.py"
-    fi
-done
+# 修复集中脚本即可，无需同步
+vim ../../distill-skill-builder/scripts/skill_evaluator_v2.py
 ```
 
 ---
@@ -246,8 +252,8 @@ done
 grep "trigger:" SKILL.md | head -3
 
 # 2. H1/H2 数量
-grep -c "^# " SKILL.md
-grep -c "^## " SKILL.md
+grep -c "^# " SKILL.md    # 目标: ≥5
+grep -c "^## " SKILL.md   # 目标: ≥10 ⚠️ 常被忽视！
 
 # 3. 代码块数量
 grep -c "```" SKILL.md
@@ -275,6 +281,38 @@ wc -l references/*.md
 ❓ 参考文档 10/10（6+ 文件，平均 300+ 行）
 ✅ 输出格式 5/5（回复结构 + 示例 + 禁用格式）
 ```
+
+### H2 数量：最容易被忽视的瓶颈
+
+**评估器核心内容评分逻辑**：
+```python
+# H2 数量决定标题得分
+if h1 >= 5 and h2 >= 10:
+    score += 6   # 满分
+elif h1 >= 3 and h2 >= 5:
+    score += 4   # 差 2 分
+elif h1 >= 2:
+    score += 2   # 差 4 分
+```
+
+**典型症状**：SKILL.md 有大量 H3（39 个），H1 也够（8 个），但 H2 只有 5 个。此时：
+- 字符数 8/8 ✅
+- 代码块 4/4 ✅
+- 表格 2/2 ✅
+- 标题 4/6 ❌（H2 不足）
+
+**修复方法**：在现有 H1 章节下、第一个 H3 之前插入 H2 分层：
+```python
+# 在 "### 按钮（Buttons）" 前插入 "## 按钮与交互组件"
+old = "### 按钮（Buttons）"
+new = "## 按钮与交互组件\n\n### 按钮（Buttons）"
+content = content.replace(old, new)
+```
+
+**插入位置选择**（优先这些 H1）：
+- 直接从 H1 到 H3、缺少 H2 的章节
+- H1 开头有表格/H3 密集的章节
+- 每个 H1 下至少应有 1-2 个 H2
 
 ---
 

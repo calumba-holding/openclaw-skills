@@ -4,14 +4,14 @@ Skill Quality Evaluator v2.0
 基于官方文档评估 Skill 质量
 
 评估维度：
-1. 触发词覆盖 (Trigger Coverage)
-2. 元数据完整性 (Metadata)
-3. 核心内容深度 (Core Content)
-4. 快速参考实用性 (Quick Reference)
-5. 避坑指南质量 (Pitfalls Guide)
-6. 来源标注规范性 (Source Attribution)
-7. 参考文档覆盖 (Reference Coverage)
-8. 输出格式规范 (Output Format)
+1. 触发词覆盖 (Trigger Coverage) - 15分
+2. 元数据完整性 (Metadata) - 10分
+3. 核心内容深度 (Core Content) - 20分
+4. 快速参考实用性 (Quick Reference) - 15分
+5. 避坑指南质量 (Pitfalls Guide) - 15分
+6. 来源标注规范性 (Source Attribution) - 10分
+7. 参考文档覆盖 (Reference Coverage) - 10分
+8. 输出格式规范 (Output Format) - 5分
 """
 
 import os
@@ -69,7 +69,7 @@ class SkillEvaluatorV2:
         self._evaluate_core_content(body, frontmatter)
         self._evaluate_quick_ref(body)
         self._evaluate_pitfalls(body)
-        self._evaluate_sources(body, frontmatter)
+        self._evaluate_sources(body)
         self._evaluate_references()
         self._evaluate_output_format(body)
         
@@ -103,12 +103,11 @@ class SkillEvaluatorV2:
             triggers = [t.strip() for t in trigger.split('|') if t.strip()]
             count = len(triggers)
             
-            # 评估触发词质量
             quality_bonus = 0
             has_chinese = any('\u4e00' <= c <= '\u9fff' for t in trigger for c in t)
             has_english = any(c.isalpha() for t in trigger for c in t)
             if has_chinese and has_english:
-                quality_bonus = 3  # 中英双语加分
+                quality_bonus = 3
             
             score = min(15, count * 1.5 + quality_bonus)
             self._score('触发词覆盖', score, [f'触发词数量: {count}', '中英双语' if quality_bonus else ''])
@@ -145,7 +144,6 @@ class SkillEvaluatorV2:
         score = 0
         details = []
         
-        # 字符数
         char_count = len(body)
         if char_count >= 10000:
             score += 8
@@ -157,7 +155,6 @@ class SkillEvaluatorV2:
             score += 2
         details.append(f'字符数: {char_count}')
         
-        # 标题层级
         h1 = len(re.findall(r'^# ', body, re.MULTILINE))
         h2 = len(re.findall(r'^## ', body, re.MULTILINE))
         h3 = len(re.findall(r'^### ', body, re.MULTILINE))
@@ -170,7 +167,6 @@ class SkillEvaluatorV2:
             score += 2
         details.append(f'标题: H1={h1}, H2={h2}, H3={h3}')
         
-        # 代码块
         code_blocks = len(re.findall(r'```[\s\S]*?```', body))
         if code_blocks >= 10:
             score += 4
@@ -180,7 +176,6 @@ class SkillEvaluatorV2:
             score += 1
         details.append(f'代码块: {code_blocks}')
         
-        # 表格
         tables = len(re.findall(r'\|.*\|.*\|', body))
         if tables >= 10:
             score += 2
@@ -195,7 +190,6 @@ class SkillEvaluatorV2:
         score = 0
         details = []
         
-        # 表格数量
         tables = len(re.findall(r'\|.*\|.*\|', body))
         if tables >= 5:
             score += 5
@@ -205,7 +199,6 @@ class SkillEvaluatorV2:
             score += 1
         details.append(f'表格: {tables}')
         
-        # 代码块数量
         code_blocks = len(re.findall(r'```', body))
         if code_blocks >= 10:
             score += 5
@@ -215,12 +208,10 @@ class SkillEvaluatorV2:
             score += 1
         details.append(f'代码块: {code_blocks}')
         
-        # 快速参考章节
         if re.search(r'#{1,3}\s*快速参考', body):
             score += 3
             details.append('有快速参考章节')
         
-        # 关键数值
         key_values = len(re.findall(r'\d+[ptpx%]+', body))
         if key_values >= 10:
             score += 2
@@ -235,12 +226,10 @@ class SkillEvaluatorV2:
         score = 0
         details = []
         
-        # 避坑指南章节
         if re.search(r'#{1,3}\s*[^#]*避坑', body):
             score += 8
             details.append('有避坑指南章节')
         
-        # 警告标识
         warnings = len(re.findall(r'⚠️|⚠|❌|❗', body))
         if warnings >= 5:
             score += 4
@@ -250,7 +239,6 @@ class SkillEvaluatorV2:
             score += 1
         details.append(f'警告标识: {warnings}')
         
-        # 错误/正确做法表格
         error_tables = len(re.findall(r'\|.*❌.*✅', body))
         if error_tables >= 3:
             score += 3
@@ -260,43 +248,35 @@ class SkillEvaluatorV2:
         
         self._score('避坑指南', min(15, score), details)
     
-    def _evaluate_sources(self, body: str, frontmatter: dict = None):
+    def _evaluate_sources(self, body: str):
         """评估来源标注"""
         score = 0
         details = []
         
-        # 官方文档 URL（body + frontmatter hermes.source）
-        fm = frontmatter or {}
         urls = re.findall(r'https?://\S+', body)
-        if isinstance(fm.get('hermes'), dict) and 'source' in fm['hermes']:
-            urls.append(fm['hermes']['source'])
-        if 'source' in fm:
-            urls.append(fm['source'])
-        official_urls = [u for u in urls if 'developer.apple.com' in u or 'developer.huawei.com' in u or 'swift.org' in u or 'docs.swift.org' in u]
+        official_urls = [u for u in urls if any(domain in u for domain in [
+            'developer.apple.com', 'developer.huawei.com',
+            'woshipm.com', 'zhouqicf.com', 'umlchina.com',
+            'atlassian.com', 'scrumguides.org', 'mermaid.js.org',
+            'pmi.org', 'productboard.com', 'aha.io'
+        ])]
         if len(official_urls) >= 3:
             score += 4
         elif len(official_urls) >= 1:
             score += 3
         details.append(f'官方URL: {len(official_urls)}')
         
-        # 更新日期（body + frontmatter hermes.last_updated）
         dates = re.findall(r'\d{4}[-/]\d{2}[-/]\d{2}|\d{4}年\d{1,2}月', body)
-        if not dates and fm.get('hermes', {}).get('last_updated'):
-            dates = [fm['hermes']['last_updated']]
-        elif not dates and fm.get('last_updated'):
-            dates = [fm['last_updated']]
         if dates:
             score += 3
             details.append(f'日期: {dates[0]}')
         else:
             details.append('缺少日期')
         
-        # 来源标注格式
         if re.search(r'来源：|来源:|Source:', body):
             score += 2
             details.append('有来源标注')
         
-        # 更新频率
         if '更新频率' in body or '更新周期' in body:
             score += 1
             details.append('有更新频率说明')
@@ -320,11 +300,9 @@ class SkillEvaluatorV2:
             self._score('参考文档覆盖', 0, ['references 目录为空'])
             return
         
-        # 文件数量
         score = min(5, count * 0.5)
         details.append(f'文件数: {count}')
         
-        # 文件内容深度
         total_lines = 0
         for f in files:
             lines = len(f.read_text(encoding='utf-8').split('\n'))
@@ -339,7 +317,6 @@ class SkillEvaluatorV2:
             score += 1
         details.append(f'平均行数: {avg_lines:.0f}')
         
-        # 有无来源标注
         sourced = 0
         for f in files:
             content = f.read_text(encoding='utf-8')
@@ -356,22 +333,18 @@ class SkillEvaluatorV2:
         score = 0
         details = []
         
-        # 输出格式章节
         if re.search(r'#{1,3}\s*[^#]*输出格式', body):
             score += 3
             details.append('有输出格式章节')
         
-        # 示例回复
         if '示例回复' in body or '> ' in body:
             score += 1
             details.append('有示例回复')
         
-        # 禁用格式
         if '禁用' in body or '禁止' in body:
             score += 1
             details.append('有禁用格式说明')
         
-        # 回复结构
         if re.search(r'回复结构|结构：|\d\..*回答', body):
             score += 1
             details.append('有回复结构定义')
@@ -455,7 +428,6 @@ def print_comparison(reports: list):
     print(f"  {'维度对比':^55}")
     print(f"  {'─'*55}")
     
-    # 收集所有维度
     all_dims = set()
     for r in reports:
         for name, *_ in r['results']:

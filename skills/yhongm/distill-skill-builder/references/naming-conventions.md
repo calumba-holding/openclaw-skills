@@ -258,10 +258,10 @@ tags:
 
 ```bash
 # 检查同名或相似 skill
-ls ~/.claude/skills/ | grep -i <keyword>
+ls <skill_dir>/ | grep -i <keyword>
 
 # 检查标签重叠
-grep -r "tags:" ~/.claude/skills/*/SKILL.md | grep -i <keyword>
+grep -r "tags:" <skill_dir>/*/SKILL.md | grep -i <keyword>
 ```
 
 ### 边界划分原则
@@ -391,13 +391,6 @@ description: Swift 语言权威参考...（超过 100 字）
 │   ├── topic-1.md            # 深度参考文档
 │   ├── topic-2.md
 │   └── ...
-├── raw_crawl/                  # 原始爬取内容（可选）
-│   ├── source-1.md
-│   ├── source-2.md
-│   └── crawl_list.json
-├── scripts/                    # 脚本目录（可选）
-│   ├── evaluator.py
-│   └── ...
 ├── templates/                  # 模板目录（可选）
 │   ├── template-1.md
 │   └── ...
@@ -411,8 +404,6 @@ description: Swift 语言权威参考...（超过 100 字）
 ```bash
 # ✅ 正确
 references/
-raw_crawl/
-scripts/
 templates/
 
 # ❌ 错误
@@ -430,20 +421,20 @@ Script/        # 大写
 
 ```bash
 # 1. 评估分数达到 A 级（90+）
-cd ~/.claude/skills/<skill-name>
-python scripts/skill_evaluator_v2.py ../<skill-name>
+python ../../distill-skill-builder/scripts/skill_evaluator_v2.py \
+   <skill_dir>/<skill-name>
 
 # 2. 检查触发词不与现有 skill 冲突
 grep "trigger:" SKILL.md
 
 # 3. 检查目录结构完整
-ls -la ~/.claude/skills/<skill-name>/
+ls -la <skill_dir>/<skill-name>/
 
 # 4. 检查参考文档数量和行数
 wc -l references/*.md
 
 # 5. 检查同步到 Hermes
-ls ~/.hermes/skills/<skill-name>/
+ls <hermes_dir>/<skill-name>/
 
 # 6. 测试 skill 可用性
 # 使用 skill_view 加载并测试
@@ -457,8 +448,7 @@ ls ~/.hermes/skills/<skill-name>/
 
 ### 推荐文件
 
-- [ ] scripts/skill_evaluator_v2.py
-- [ ] raw_crawl/ 目录（如有爬取内容）
+（当前推荐目录结构无推荐文件）
 
 ---
 

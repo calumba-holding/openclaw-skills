@@ -1,6 +1,6 @@
 # Skill 蒸馏完整工作流
 
-> 来源：apple-design (99.0 A)、ios-dev (96.5 A)、swift-language (94.0 A) 三个 A 级 skill 的蒸馏过程经验
+> 来源：apple-design (99.0 A)、ios-dev (96.5 A)、swift-language (94.0 A)、flutter-dev (91.0 A)、material-design (96.0 A) 五个 A 级 skill 的蒸馏过程经验
 > 整理时间：2026-04-23
 
 ## 蒸馏流程概览
@@ -17,7 +17,7 @@
 │ Phase 2: 骨架搭建                                   │
 │  - 创建目录结构                                     │
 │  - 编写 SKILL.md 框架                               │
-│  - 复制评估脚本                                     │
+│  - （评估脚本已集中管理，无需复制）                 │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
@@ -44,7 +44,6 @@
 ┌─────────────────────────────────────────────────────┐
 │ Phase 6: 同步部署                                   │
 │  - 同步到 Hermes 目录                               │
-│  - 同步评估器补丁                                   │
 │  - 验证 skill 可用                                 │
 └─────────────────────────────────────────────────────┘
 ```
@@ -57,8 +56,8 @@
 
 ```bash
 # 1. 检查是否已有相关 skill
-ls ~/.claude/skills/ | grep -i <keyword>
-ls ~/.claude/skills/ | grep -i <platform>
+ls <skill_dir>/ | grep -i <keyword>
+ls <skill_dir>/ | grep -i <platform>
 
 # 2. 确定技能边界
 #    - 避免与现有 skill 重叠
@@ -91,14 +90,8 @@ ls ~/.claude/skills/ | grep -i <platform>
 SKILL_NAME="<skill-name>"
 BASE="/mnt/c/Users/yhong/.claude/skills"
 
-mkdir -p "${BASE}/${SKILL_NAME}/raw_crawl"
 mkdir -p "${BASE}/${SKILL_NAME}/references"
-mkdir -p "${BASE}/${SKILL_NAME}/scripts"
 mkdir -p "${BASE}/${SKILL_NAME}/templates"
-
-# 复制评估脚本
-cp "${BASE}/apple-design/scripts/skill_evaluator_v2.py" \
-   "${BASE}/${SKILL_NAME}/scripts/"
 ```
 
 ### 编写 SKILL.md 框架
@@ -143,7 +136,7 @@ hermes:
 # 使用浏览器工具
 # 1. browser_navigate → URL
 # 2. browser_console → document.querySelector('article')?.innerText
-# 3. 保存到 raw_crawl/
+# 3. 保存到 references/
 ```
 
 ### 蒸馏不可爬取站点
@@ -171,8 +164,8 @@ hermes:
 ### 运行评估
 
 ```bash
-cd ~/.claude/skills/<skill-name>
-python scripts/skill_evaluator_v2.py ../<skill-name>
+python ../../distill-skill-builder/scripts/skill_evaluator_v2.py \
+   <skill_dir>/<skill-name>
 ```
 
 ### 分析评分报告
@@ -270,16 +263,9 @@ echo "✓ Synced ${SKILL_NAME} to Hermes"
 
 ### 同步评估器补丁
 
-```bash
-# 当评估器需要 patch 时
-for dir in ~/.claude/skills/*/; do
-    skill=$(basename "$dir")
-    if [ -d "$dir/scripts" ]; then
-        cp ~/.claude/skills/apple-design/scripts/skill_evaluator_v2.py \
-           "$dir/scripts/skill_evaluator_v2.py"
-    fi
-done
-```
+评估脚本集中管理在 `../../distill-skill-builder/scripts/skill_evaluator_v2.py`，无需分发。
+
+当评估器需要 patch 时，只需 patch 集中脚本即可。
 
 ---
 
@@ -315,6 +301,8 @@ done
 
 ## 来源
 
-> apple-design 蒸馏过程
-> ios-dev 蒸馏过程
-> swift-language 蒸馏过程
+> material-design-skill 蒸馏过程
+> flutter-dev-skill 蒸馏过程
+> harmonyos-dev-skill 蒸馏过程
+> ios-dev-skill 蒸馏过程
+> apple-higDesign-skill 蒸馏过程
