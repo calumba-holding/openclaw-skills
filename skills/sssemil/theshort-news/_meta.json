@@ -1,0 +1,11 @@
+{
+  "owner": "sssemil",
+  "slug": "theshort-news",
+  "displayName": "The Short News",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776679469101,
+    "commit": null
+  },
+  "history": []
+}
