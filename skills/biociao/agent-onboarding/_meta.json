@@ -1,0 +1,11 @@
+{
+  "owner": "biociao",
+  "slug": "agent-onboarding",
+  "displayName": "Agent Onboarding",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777083920399,
+    "commit": null
+  },
+  "history": []
+}
