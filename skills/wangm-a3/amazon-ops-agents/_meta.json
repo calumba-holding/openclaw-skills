@@ -1,0 +1,11 @@
+{
+  "owner": "wangm-a3",
+  "slug": "amazon-ops-agents",
+  "displayName": "Amazon Ops Agents",
+  "latest": {
+    "version": "1.0.3",
+    "publishedAt": 1777434592646,
+    "commit": null
+  },
+  "history": []
+}
