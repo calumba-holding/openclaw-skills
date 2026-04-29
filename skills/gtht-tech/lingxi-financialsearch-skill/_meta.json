@@ -1,0 +1,11 @@
+{
+  "owner": "gtht-tech",
+  "slug": "lingxi-financialsearch-skill",
+  "displayName": "国泰海通金融数据查询",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776992696921,
+    "commit": null
+  },
+  "history": []
+}
