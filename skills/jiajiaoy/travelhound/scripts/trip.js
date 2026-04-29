@@ -70,7 +70,7 @@ ${nights ? `住宿天数：${nights}晚${returnDate ? `（返程：${returnDate}
 3. web_search「${destination} 旅游安全 ${year} 最新」
    → 目前是否有安全警告或特别注意事项
 
-4. openclaw run newstoday morning-push "${destination}" --lang zh
+4. openclaw run newstoday morning "${destination}" --lang zh
    → 获取目的地相关最新新闻（政治/天气/活动）
 
 ═══ 第二步：机票比价 ═══
@@ -151,7 +151,7 @@ Budget tier: ${budgetLabelEN}
 3. web_search "${destination} travel safety advisory ${year}"
    → Active warnings or special precautions
 
-4. openclaw run newstoday morning-push "${destination}" --lang en
+4. openclaw run newstoday morning "${destination}" --lang en
    → Latest news relevant to the destination (political/weather/events)
 
 ═══ Step 2: Flight comparison ═══
