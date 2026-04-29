@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const manifest = {
   "baseUrl": "https://api.justoneapi.com",
-  "description": "Analyze Amazon Best Sellers workflows with JustOneAPI, including best Sellers.",
+  "description": "Call GET /api/amazon/get-best-sellers/v1 for Amazon Best Sellers through JustOneAPI with category.",
   "displayName": "Amazon Best Sellers",
   "openapi": "3.1.0",
   "platformKey": "amazon",
@@ -26,7 +26,7 @@ const manifest = {
         },
         {
           "defaultValue": null,
-          "description": "Best sellers category to return products for (e.g. 'software' or 'software/229535').",
+          "description": "Best sellers category to return products for (e.g. 'baby-products' or 'baby-products/166777011'). The value is derived from the URL path of the Amazon Best Sellers page, such as: https://www.amazon.com/Best-Sellers-Baby-Baby-Toddler-Feeding-Supplies/zgbs/baby-products/166777011",
           "enumValues": [],
           "location": "query",
           "name": "category",
@@ -81,8 +81,8 @@ const manifest = {
       "requestBody": null,
       "responses": [
         {
-          "description": "default response",
-          "statusCode": "default"
+          "description": "OK",
+          "statusCode": "200"
         }
       ],
       "summary": "Best Sellers",
