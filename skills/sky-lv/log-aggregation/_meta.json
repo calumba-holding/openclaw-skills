@@ -1,0 +1,11 @@
+{
+  "owner": "sky-lv",
+  "slug": "log-aggregation",
+  "displayName": "Log Aggregation",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777154456195,
+    "commit": null
+  },
+  "history": []
+}
