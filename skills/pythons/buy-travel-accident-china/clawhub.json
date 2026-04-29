@@ -13,7 +13,7 @@
   "tags": ["保险", "旅游", "旅游意外险", "API", "agent", "智能填表"],
   "tags_zh": ["保险", "旅游", "旅游意外险", "API", "agent", "智能填表"],
   "tags_en": ["insurance", "travel", "travel insurance", "API", "agent", "smart form-fill"],
-  "version": "2.0.3",
+  "version": "2.0.4",
   "license": "MIT",
   "pricing": "free"
 }

@@ -1,6 +1,6 @@
 # 旅游意外险，适合旅行社代客出单 Agent API / Travel Accident Insurance Agent API
 
-单一 Skill 入口：**仓库根目录 [`SKILL.md`](./SKILL.md)**（版本 2.0.3；ClawHub slug：`buy-travel-accident-china`，展示名：旅游意外险。）
+单一 Skill 入口：**仓库根目录 [`SKILL.md`](./SKILL.md)**（版本 2.0.4；ClawHub slug：`buy-travel-accident-china`，展示名：旅游意外险。）
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: buy-travel-accident-china
 description: 游子云旅游意外险销售平台（中国人保），适合旅行社代客出单。
-version: "2.0.3"
+version: "2.0.4"
 author: ""
 triggers:
   - 旅游意外险
@@ -61,8 +61,8 @@ triggers:
 #### 注册（新用户）
 
 1. `POST /sms/send` — Body：`event` = **`register`**，`mobile` = 手机号（大陆号码按平台要求）。
-2. 用户收到短信验证码后，`POST /register` — Body：**`mobile`**（必填）、**`code`**（必填，上一步短信验证码）、**`inviteCode`**（可选；若运营后台**强制邀请码**则必填）。**不再使用 `username` / 密码**。
-3. 注册成功后，通过下方「登录」用同一手机号收码登录以获取 **token**（或按接口返回提示操作）。具体字段校验与错误信息以 `GET /schema` 为准。
+2. 用户收到短信验证码后，`POST /register` — Body：**`mobile`**（必填）、**`code`**（必填，上一步短信验证码）、**`inviteCode`**（可选）；**`username` 可不传**，服务端默认使用 `mobile` 填充。
+3. 注册成功响应会直接返回 **`token`**、**`expires`**、**`id`**、**`username`**，可直接进入后续业务调用；具体字段校验与错误信息以 `GET /schema` 为准。
 
 #### 登录（获取 token）
 
