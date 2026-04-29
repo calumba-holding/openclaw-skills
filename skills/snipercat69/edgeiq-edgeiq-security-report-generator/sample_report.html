@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdgeIQ Labs — Security Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; background: #0f1117; color: #e0e6ed; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+  .header { background: linear-gradient(135deg, #1a1f2e 0%, #141820 100%); border: 1px solid #2a3042; border-radius: 12px; padding: 40px; margin-bottom: 32px; }
+  .brand-logo { font-size: 28px; font-weight: 700; color: #00d4ff; letter-spacing: 1px; margin-bottom: 8px; }
+  .brand-sub { font-size: 14px; color: #7a8499; text-transform: uppercase; letter-spacing: 2px; }
+  .report-title { font-size: 32px; font-weight: 700; color: #ffffff; margin: 24px 0 8px; }
+  .report-meta { font-size: 13px; color: #7a8499; margin-bottom: 24px; }
+  .score-badge { display: inline-block; padding: 12px 28px; border-radius: 8px; font-size: 18px; font-weight: 700; margin-top: 16px; }
+  .score-medium { background: #3b2e0d; color: #ffb800; border: 1px solid #ffb800; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 24px; }
+  .summary-card { background: #1a1f2e; border: 1px solid #2a3042; border-radius: 8px; padding: 20px; text-align: center; }
+  .summary-number { font-size: 36px; font-weight: 700; color: #00d4ff; }
+  .summary-label { font-size: 12px; color: #7a8499; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+  .severity-bar { display: flex; gap: 8px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
+  .sev-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .sev-critical { background: #ff2244; color: #fff; }
+  .sev-high { background: #ff4757; color: #fff; }
+  .sev-medium { background: #ffb800; color: #111; }
+  .sev-low { background: #00c97a; color: #111; }
+  .sev-info { background: #3498db; color: #fff; }
+  h2 { font-size: 20px; font-weight: 700; color: #ffffff; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #2a3042; }
+  .finding { background: #141820; border: 1px solid #2a3042; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .finding-header { padding: 16px 20px; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+  .finding-sev { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .finding-title { font-size: 15px; font-weight: 600; color: #e0e6ed; flex: 1; }
+  .finding-meta { font-size: 12px; color: #7a8499; margin-top: 2px; }
+  .finding-body { padding: 0 20px 16px 42px; font-size: 14px; color: #a0a8b8; line-height: 1.7; }
+  .code-block { background: #0a0d14; border: 1px solid #2a3042; border-radius: 6px; padding: 14px 18px; font-family: 'Courier New', monospace; font-size: 13px; color: #a8d8ff; overflow-x: auto; margin: 10px 0; }
+  .rec-card { background: #1a1f2e; border: 1px solid #2a3042; border-radius: 8px; padding: 20px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+  .rec-priority { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+  .rec-content { flex: 1; }
+  .rec-title { font-size: 15px; font-weight: 600; color: #e0e6ed; margin-bottom: 4px; }
+  .rec-detail { font-size: 13px; color: #7a8499; }
+  .section-empty { color: #4a5568; font-style: italic; padding: 16px 0; }
+  .footer { text-align: center; font-size: 11px; color: #4a5568; margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a3042; line-height: 1.8; }
+  .alert-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .alert-critical { background: #ff2244; color: #fff; }
+  .alert-high { background: #ff4757; color: #fff; }
+  .alert-medium { background: #ffb800; color: #111; }
+  .alert-low { background: #00c97a; color: #111; }
+  .alert-info { background: #3498db; color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+  th { background: #1a1f2e; color: #7a8499; text-align: left; padding: 10px 16px; border-bottom: 1px solid #2a3042; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 12px 16px; border-bottom: 1px solid #1e2533; color: #c0c8d4; }
+  tr:last-child td { border-bottom: none; }
+  .target-section { background: #141820; border: 1px solid #2a3042; border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
+  .target-header { background: #1a1f2e; padding: 16px 24px; border-bottom: 1px solid #2a3042; font-size: 18px; font-weight: 700; color: #00d4ff; }
+  .demo-badge { display: inline-block; background: #00d4ff; color: #0f1117; padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: 8px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand-logo">⬡ EdgeIQ Labs <span class="demo-badge">SAMPLE REPORT</span></div>
+    <div class="brand-sub">Security Intelligence Platform</div>
+    <div class="report-title">Monthly Security Report</div>
+    <div class="report-meta">Generated: 2026-04-23T10:00:00Z UTC &nbsp;·&nbsp; 2 target(s) scanned</div>
+    <div>
+      <span class="score-badge score-medium">Risk Score: 62/100 — HIGH</span>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-card"><div class="summary-number">11</div><div class="summary-label">Total Issues</div></div>
+      <div class="summary-card"><div class="summary-number">3</div><div class="summary-label">XSS Findings</div></div>
+      <div class="summary-card"><div class="summary-number">4</div><div class="summary-label">Open Ports</div></div>
+      <div class="summary-card"><div class="summary-number">4</div><div class="summary-label">Alerts</div></div>
+    </div>
+    <div class="severity-bar">
+      <span class="sev-pill sev-critical">CRITICAL × 3</span>
+      <span class="sev-pill sev-high">HIGH × 3</span>
+      <span class="sev-pill sev-medium">MEDIUM × 2</span>
+      <span class="sev-pill sev-info">INFO × 1</span>
+    </div>
+  </div>
+
+  <!-- EXECUTIVE SUMMARY -->
+  <h2>① Executive Summary</h2>
+  <div class="finding">
+    <div class="finding-body">
+      <p>This report covers <strong>2</strong> target(s) scanned by EdgeIQ Labs security tools.
+      A total of <strong>11</strong> issue(s) were identified with an overall risk score of
+      <strong>62/100</strong> (HIGH). Immediate action is recommended.
+      Critical vulnerabilities in XSS, exposed database ports, and an expired SSL certificate
+      require urgent remediation.</p>
+    </div>
+  </div>
+
+  <!-- XSS FINDINGS -->
+  <h2>② XSS Findings (3)</h2>
+
+  <div class="finding">
+    <div class="finding-header">
+      <div class="finding-sev" style="background:#ff2244"></div>
+      <div>
+        <div class="finding-title">Stored XSS in Comment Field</div>
+        <div class="finding-meta">example.com | https://example.com/blog/post/123</div>
+      </div>
+      <span class="alert-badge alert-critical">CRITICAL</span>
+    </div>
+    <div class="finding-body">
+      User-supplied input in the 'comment' parameter is stored and executed when other users view the page. This affects all visitors.
+      <div class="code-block">Parameter: comment</div>
+      <div class="code-block">Payload: &lt;img src=x onerror=alert(1)&gt;</div>
+      <div class="code-block">Evidence: Comment submitted containing &lt;img src=x onerror=alert(1)&gt; triggers on page load.</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-header">
+      <div class="finding-sev" style="background:#ff4757"></div>
+      <div>
+        <div class="finding-title">Reflected XSS in Search Parameter</div>
+        <div class="finding-meta">example.com | https://example.com/search?q=test</div>
+      </div>
+      <span class="alert-badge alert-high">HIGH</span>
+    </div>
+    <div class="finding-body">
+      User-supplied input in the 'q' parameter is reflected in the response without proper sanitization or encoding, allowing JavaScript execution.
+      <div class="code-block">Parameter: q</div>
+      <div class="code-block">Payload: &lt;script&gt;alert(1)&lt;/script&gt;</div>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-header">
+      <div class="finding-sev" style="background:#ffb800"></div>
+      <div>
+        <div class="finding-title">DOM-based XSS via #fragment</div>
+        <div class="finding-meta">example.com | https://example.com/dashboard#tab=profile</div>
+      </div>
+      <span class="alert-badge alert-medium">MEDIUM</span>
+    </div>
+    <div class="finding-body">
+      The client-side JavaScript reads the URL fragment and writes it to the DOM without sanitization, leading to script execution.
+      <div class="code-block">Parameter: hash_fragment</div>
+      <div class="code-block">Payload: #tab=&lt;img src=x onerror=alert(1)&gt;</div>
+      <div class="code-block">Evidence: window.location.hash is directly injected into innerHTML.</div>
+    </div>
+  </div>
+
+  <!-- NETWORK FINDINGS -->
+  <h2>③ Network Findings (2 hosts scanned)</h2>
+
+  <div class="target-section">
+    <div class="target-header">example.com (93.184.216.34)</div>
+    <table>
+      <tr><th>Port</th><th>Protocol</th><th>Service</th><th>Version</th><th>Severity</th></tr>
+      <tr><td>22</td><td>tcp</td><td>ssh</td><td>OpenSSH 8.2p1</td><td><span class='alert-badge alert-medium'>MEDIUM</span></td></tr>
+      <tr><td>80</td><td>tcp</td><td>http</td><td>nginx 1.18.0</td><td><span class='alert-badge alert-info'>INFO</span></td></tr>
+      <tr><td>443</td><td>tcp</td><td>https</td><td>nginx 1.18.0</td><td><span class='alert-badge alert-info'>INFO</span></td></tr>
+      <tr><td>3306</td><td>tcp</td><td>mysql</td><td>MySQL 8.0.29</td><td><span class='alert-badge alert-high'>HIGH</span></td></tr>
+    </table>
+    <table>
+      <tr><th>CVE ID</th><th>Description</th><th>CVSS</th><th>Severity</th></tr>
+      <tr><td><code>CVE-2021-44228</code></td><td>Log4j Remote Code Execution (Log4Shell)</td><td>10.0</td><td><span class='alert-badge alert-critical'>CRITICAL</span></td></tr>
+      <tr><td><code>CVE-2022-12345</code></td><td>OpenSSH 8.2p1 username enumeration</td><td>7.8</td><td><span class='alert-badge alert-high'>HIGH</span></td></tr>
+      <tr><td><code>CVE-2021-3450</code></td><td>MySQL privilege escalation via native plug-in</td><td>8.8</td><td><span class='alert-badge alert-high'>HIGH</span></td></tr>
+    </table>
+  </div>
+
+  <!-- SSL FINDINGS -->
+  <h2>④ SSL / Certificate Findings (1)</h2>
+
+  <div class="finding">
+    <div class="finding-header">
+      <div class="finding-sev" style="background:#ffb800"></div>
+      <div>
+        <div class="finding-title">example.com</div>
+        <div class="finding-meta">Issuer: Let's Encrypt Authority X3 | Grade: <strong>A</strong></div>
+      </div>
+      <span class="alert-badge alert-critical">Exp: -8d</span>
+    </div>
+    <div class="finding-body">
+      <p><strong>Valid:</strong> 2026-01-15T00:00:00Z → 2026-04-15T23:59:59Z</p>
+      <p><strong>Protocol:</strong> TLS 1.2</p>
+      <p><strong>Headers:</strong></p>
+      <ul>
+        <li><code>Strict-Transport-Security</code>: max-age=31536000; includeSubDomains</li>
+        <li><code>X-Content-Type-Options</code>: nosniff</li>
+        <li><code>X-Frame-Options</code>: DENY</li>
+        <li><code>X-XSS-Protection</code>: 1; mode=block</li>
+        <li><code>Content-Security-Policy</code>: default-src 'self'</li>
+      </ul>
+      <p><strong>Issues:</strong></p>
+      <ul>
+        <li>[CRITICAL] Certificate Expiring — SSL certificate expired 8 days ago. Renew immediately.</li>
+        <li>[MEDIUM] Insecure Cipher Suite — Consider enabling TLS 1.3 and disabling legacy CBC ciphers.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ALERT HISTORY -->
+  <h2>⑤ Alert History (4 events)</h2>
+  <table>
+    <tr><th>Time</th><th>Alert</th><th>Target</th><th>Severity</th></tr>
+    <tr><td>2026-04-22T14:32:00Z</td><td>Port 3306 (MySQL) Opened on example.com</td><td>example.com</td><td><span class='alert-badge alert-high'>HIGH</span></td></tr>
+    <tr><td>2026-04-20T09:10:00Z</td><td>Critical CVE-2021-44228 (Log4Shell) Detected</td><td>example.com</td><td><span class='alert-badge alert-critical'>CRITICAL</span></td></tr>
+    <tr><td>2026-04-18T16:45:00Z</td><td>XSS Payload Detected in User Input</td><td>example.com</td><td><span class='alert-badge alert-medium'>MEDIUM</span></td></tr>
+    <tr><td>2026-04-15T23:59:59Z</td><td>SSL Certificate Expired on example.com</td><td>example.com</td><td><span class='alert-badge alert-critical'>CRITICAL</span></td></tr>
+  </table>
+
+  <!-- RECOMMENDATIONS -->
+  <h2>⑥ Recommendations</h2>
+
+  <div class="rec-card">
+    <div class="rec-priority" style="background:#ff2244;color:#fff">1</div>
+    <div class="rec-content">
+      <div class="rec-title">[CRITICAL] Patch Log4Shell (CVE-2021-44228) Immediately</div>
+      <div class="rec-detail">CVSS 10.0 remote code execution vulnerability detected on example.com. Upgrade Log4j to version 2.17.0 or later. This is the highest priority fix — it allows full server compromise with no authentication.</div>
+    </div>
+  </div>
+
+  <div class="rec-card">
+    <div class="rec-priority" style="background:#ff2244;color:#fff">2</div>
+    <div class="rec-content">
+      <div class="rec-title">[CRITICAL] Fix Expired SSL Certificate on example.com</div>
+      <div class="rec-detail">The SSL certificate expired 8 days ago. All HTTPS connections will fail or show browser warnings. Renew immediately via Let's Encrypt or your certificate authority.</div>
+    </div>
+  </div>
+
+  <div class="rec-card">
+    <div class="rec-priority" style="background:#ff4757;color:#fff">3</div>
+    <div class="rec-content">
+      <div class="rec-title">[HIGH] Close Public-facing MySQL Port 3306</div>
+      <div class="rec-detail">Port 3306 (MySQL) is exposed to the internet on 93.184.216.34. Database servers must never be internet-facing. Block port 3306 in the firewall immediately, or place behind a VPN/jump host.</div>
+    </div>
+  </div>
+
+  <div class="rec-card">
+    <div class="rec-priority" style="background:#ff4757;color:#fff">4</div>
+    <div class="rec-content">
+      <div class="rec-title">[HIGH] Address Critical/High XSS Vulnerabilities</div>
+      <div class="rec-detail">3 XSS vulnerabilities found including a critical stored XSS in the comment field. Implement input sanitization and output encoding site-wide. Consider deploying a WAF as a temporary mitigation layer.</div>
+    </div>
+  </div>
+
+  <div class="rec-card">
+    <div class="rec-priority" style="background:#ffb800;color:#111">5</div>
+    <div class="rec-content">
+      <div class="rec-title">[MEDIUM] Restrict SSH Access</div>
+      <div class="rec-detail">Port 22 (SSH) is exposed to the internet. Restrict SSH access to known IP addresses via firewall rules, or require VPN for SSH access. Also upgrade OpenSSH to the latest version to patch the username enumeration vulnerability.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    EdgeIQ Labs Security Report | Generated by EdgeIQ Labs Security Report Generator v1.0.0<br>
+    For internal use only. Not for redistribution.
+  </div>
+
+</div>
+</body>
+</html>
