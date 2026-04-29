@@ -1,0 +1,11 @@
+{
+  "owner": "shivaclaw",
+  "slug": "project-trident-plugin",
+  "displayName": "Trident Plugin",
+  "latest": {
+    "version": "2.0.0",
+    "publishedAt": 1777060451579,
+    "commit": null
+  },
+  "history": []
+}
