@@ -3,9 +3,15 @@
   "slug": "dlazy-kling-image-o1",
   "displayName": "Dlazy Kling Image O1",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776759555565,
-    "commit": "https://github.com/openclaw/skills/commit/12fb5981b9ee1fbe8a645e45fb55a426428cb3b3"
+    "version": "1.0.5",
+    "publishedAt": 1777430088973,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776759555565,
+      "commit": "https://github.com/openclaw/skills/commit/12fb5981b9ee1fbe8a645e45fb55a426428cb3b3"
+    }
+  ]
 }
