@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "finrl-rl-trading",
-  "displayName": "finrl-rl-trading",
+  "displayName": "Finrl Rl Trading",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776892259623,
-    "commit": "https://github.com/openclaw/skills/commit/e71c90c72a6327da849a01613bc951cde5447532"
+    "version": "0.3.3",
+    "publishedAt": 1776954401840,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776892259623,
+      "commit": "https://github.com/openclaw/skills/commit/e71c90c72a6327da849a01613bc951cde5447532"
+    }
+  ]
 }
