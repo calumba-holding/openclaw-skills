@@ -1,0 +1,11 @@
+{
+  "owner": "hanxueyuan",
+  "slug": "cnn-news",
+  "displayName": "Cnn News",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776971228365,
+    "commit": null
+  },
+  "history": []
+}
