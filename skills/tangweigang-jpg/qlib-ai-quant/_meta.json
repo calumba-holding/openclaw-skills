@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "qlib-ai-quant",
-  "displayName": "qlib-ai-quant",
+  "displayName": "Qlib Ai Quant",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776909714225,
-    "commit": "https://github.com/openclaw/skills/commit/ede68121851b967901cf3ce7d08068d55f0b6342"
+    "version": "0.3.2",
+    "publishedAt": 1776953215436,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776909714225,
+      "commit": "https://github.com/openclaw/skills/commit/ede68121851b967901cf3ce7d08068d55f0b6342"
+    }
+  ]
 }
