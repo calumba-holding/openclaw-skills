@@ -1,0 +1,11 @@
+{
+  "owner": "ugpoor",
+  "slug": "baidu-pan-per-auth-skill",
+  "displayName": "Baidu Pan OAuth2 Auth",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776965063277,
+    "commit": null
+  },
+  "history": []
+}
