@@ -151,13 +151,27 @@ digest when you're not in this terminal:
 
 **If Telegram:** Same flow as follow-builders — guide through @BotFather,
 save token to `.env` as `TELEGRAM_BOT_TOKEN`, get chat ID via:
+
+1. Open Telegram and search for `@BotFather`
+2. Send `/newbot`
+3. Pick a bot name and a username ending in `bot`
+4. Copy the token BotFather returns
+5. Open a chat with the bot and send it any message first
+6. Save the token to `.env` as `TELEGRAM_BOT_TOKEN`
+7. Fetch the chat ID with:
+
 ```bash
 curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['result'][0]['message']['chat']['id'])" 2>/dev/null || echo "No messages found — send a message to your bot first"
 ```
 Save chat ID as `delivery.chatId`.
 
 **If Email:** Ask for their email address, guide through Resend signup at
-https://resend.com, save key to `.env` as `RESEND_API_KEY`.
+https://resend.com, then:
+
+1. Create an account
+2. Create an API key in the dashboard
+3. Save the key to `.env` as `RESEND_API_KEY`
+4. Save the destination email address as `delivery.email`
 
 **If on-demand:** Set `delivery.method` to `"stdout"`.
 

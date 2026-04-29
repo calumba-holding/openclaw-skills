@@ -1,3 +1,5 @@
+**[English](README.md)** | 中文
+
 # Follow GitHub
 
 > 你的个性化 GitHub 摘要 —— 每日或每周一份，推到你的消息通道或邮箱。
@@ -13,7 +15,31 @@
 
 灵感来自 [follow-builders](https://github.com/zarazhangrui/follow-builders)。
 
----
+## 快速开始
+
+如果你是 OpenClaw / ClawHub 用户：
+
+```bash
+openclaw skills install follow-github
+```
+
+然后开一个对话，说 `配置 follow-github` 或 `set up follow-github`。
+
+## 你会得到什么
+
+一份每日或每周的 GitHub 摘要，可按环境通过以下渠道送达：
+
+- OpenClaw 对话内直接送达
+- Telegram 机器人消息
+- Resend 邮件
+- 终端内按需获取
+
+你可以配置：
+
+- 要包含哪些内容流：Following、Trending、Hot New Projects
+- Trending / Hot 的语言过滤
+- 摘要语言：英文、中文、双语
+- 发送频率、时间、时区和投递渠道
 
 ## 输出示例
 
@@ -43,9 +69,7 @@
 
 语言、语气、章节顺序、过滤条件 —— 首次配置后全部**可通过对话调整**。
 
----
-
-## 安装方式
+## 更多安装方式
 
 根据你使用的 agent 选一种。
 
@@ -114,6 +138,43 @@ Skill 会引导你走一个 10 步的交互式配置：
 
 偏好写入 `~/.follow-github/config.json`；token 存到 `~/.follow-github/.env`
 （不会被提交，除了 GitHub API 不发往任何地方）。
+
+### 投递方式
+
+首次配置时也会一起设置投递渠道：
+
+- **OpenClaw**：走 OpenClaw 内建消息通道
+- **Telegram**：使用你自己的 bot token 和 chat ID
+- **Email**：使用你自己的 Resend API key 和邮箱地址
+- **按需获取**：不自动投递，需要时手动让 agent 生成
+
+对 Claude Code、Codex CLI 这类非持久 agent，若想定时收到摘要，推荐配置
+Telegram 或 Email。
+
+### Telegram 配置
+
+如果你选 Telegram，agent 应该这样引导用户：
+
+1. 打开 Telegram，搜索 `@BotFather`
+2. 发送 `/newbot`
+3. 设置 bot 名称和一个以 `bot` 结尾的用户名
+4. 复制 BotFather 返回的 token
+5. 先和这个 bot 聊天，随便发一条消息
+6. 把 token 存到 `~/.follow-github/.env` 的 `TELEGRAM_BOT_TOKEN`
+7. 用下面命令取 chat ID：
+
+```bash
+curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['result'][0]['message']['chat']['id'])" 2>/dev/null || echo "No messages found — send a message to your bot first"
+```
+
+### Email 配置
+
+如果你选 Email，agent 应该这样引导用户：
+
+1. 到 https://resend.com 注册一个免费账号
+2. 在 Resend 后台创建 API key
+3. 存到 `~/.follow-github/.env` 的 `RESEND_API_KEY`
+4. 在 `config.delivery.email` 写入收件邮箱
 
 ### GitHub Token 配置
 
@@ -202,12 +263,20 @@ GitHub Search API (实时)        ──┘              │
 - Node.js 18+（使用原生 `fetch`）
 - 一个 GitHub PAT（只读公开仓库权限即可）
 - 可选：`openclaw` CLI、Claude Code、或任何支持 LLM 的 CLI agent
+- 若在 OpenClaw 之外做定时投递：Telegram bot token 或 Resend API key
 
 ---
 
 ## 许可证
 
 MIT —— 见 [LICENSE](./LICENSE)。
+
+## 隐私
+
+- GitHub token 存在 `~/.follow-github/.env`，不在仓库里
+- Telegram / Resend 密钥如果使用，也只存本地 `~/.follow-github/.env`
+- 用户偏好和去重状态保存在 `~/.follow-github/`
+- 仓库只抓取公开 GitHub 数据，以及你自己的 GitHub API 请求
 
 ---
 

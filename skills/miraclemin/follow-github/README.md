@@ -1,3 +1,5 @@
+**English** | [中文](README.zh-CN.md)
+
 # Follow GitHub
 
 > Your personalized GitHub digest — delivered daily or weekly, in your inbox or chat.
@@ -14,7 +16,31 @@ server, no third-party data pipeline — just your own token hitting GitHub dire
 
 Inspired by [follow-builders](https://github.com/zarazhangrui/follow-builders).
 
----
+## Quick Start
+
+For OpenClaw / ClawHub users:
+
+```bash
+openclaw skills install follow-github
+```
+
+Then start a conversation and say `配置 follow-github` or `set up follow-github`.
+
+## What You Get
+
+A daily or weekly digest, delivered in one of these ways depending on your setup:
+
+- OpenClaw in-chat delivery
+- Telegram bot message
+- Email via Resend
+- On-demand in the terminal
+
+You can configure:
+
+- Which streams to include: Following, Trending, Hot New Projects
+- Which languages to filter for Trending / Hot
+- Digest language: English, Chinese, or bilingual
+- Delivery frequency, time, timezone, and channel
 
 ## Example Output
 
@@ -45,9 +71,7 @@ Inspired by [follow-builders](https://github.com/zarazhangrui/follow-builders).
 Language, tone, section order, and filters are all **customizable through
 conversation** after first run.
 
----
-
-## Installation
+## More Installation Options
 
 Pick the one that matches your agent.
 
@@ -120,6 +144,43 @@ The skill walks you through a 10-step interactive onboarding:
 
 Your preferences land in `~/.follow-github/config.json`; your token goes to
 `~/.follow-github/.env` (never committed, never transmitted except to GitHub).
+
+### Delivery Methods
+
+The onboarding also configures how the digest reaches you:
+
+- **OpenClaw**: delivered through OpenClaw's built-in channel system
+- **Telegram**: uses your own bot token plus chat ID
+- **Email**: uses your own Resend API key and email address
+- **On-demand**: no scheduled delivery; ask for the digest when you want it
+
+For non-persistent agents like Claude Code or Codex CLI, Telegram or email is
+the recommended way to receive scheduled digests after the terminal closes.
+
+### Telegram Setup
+
+If you choose Telegram delivery, the agent should guide you through:
+
+1. Open Telegram and search for `@BotFather`
+2. Send `/newbot`
+3. Pick a bot name and a username ending in `bot`
+4. Copy the bot token BotFather returns
+5. Open a chat with the bot and send it any message first
+6. Save the token as `TELEGRAM_BOT_TOKEN` in `~/.follow-github/.env`
+7. Fetch the chat ID with:
+
+```bash
+curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['result'][0]['message']['chat']['id'])" 2>/dev/null || echo "No messages found — send a message to your bot first"
+```
+
+### Email Setup
+
+If you choose email delivery, the agent should guide you through:
+
+1. Create a free account at https://resend.com
+2. Create an API key in the Resend dashboard
+3. Save it as `RESEND_API_KEY` in `~/.follow-github/.env`
+4. Put your destination email address into `config.delivery.email`
 
 ### GitHub Token Setup
 
@@ -211,12 +272,20 @@ this file directly.
 - Node.js 18+ (uses native `fetch`)
 - A GitHub Personal Access Token (read-only public access)
 - Optional: `openclaw` CLI, or Claude Code, or any LLM-capable CLI agent
+- Optional for scheduled delivery outside OpenClaw: a Telegram bot token or Resend API key
 
 ---
 
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
+## Privacy
+
+- Your GitHub token stays in `~/.follow-github/.env`, not in this repo
+- Telegram and Resend keys, if used, also stay in `~/.follow-github/.env`
+- Your preferences and dedup state stay in `~/.follow-github/`
+- The repo only fetches public GitHub data plus your own authenticated API requests
 
 ---
 
