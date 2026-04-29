@@ -1,8 +1,8 @@
 # ATXSwap Skill
 
-A single skill bundle for ATX trading on BSC. Works with **Claude / Cursor /
-Codex CLI** (skills.sh runtime) and **OpenClaw / ClawHub** out of the same
-directory, using a unified `SKILL.md` that declares both conventions.
+A skill bundle for the ATXSwap decentralized agent exchange protocol on BSC. A single `SKILL.md`
+works across clients represented by **Claude Code** and **OpenClaw**, so you do
+not need separate directories for different clients.
 
 [**中文文档**](./README.zh.md)
 
@@ -10,12 +10,14 @@ directory, using a unified `SKILL.md` that declares both conventions.
 - **SDK on npm**: [`atxswap-sdk`](https://www.npmjs.com/package/atxswap-sdk)
 - **SDK source / docs**: [agentswapx/atxswap-sdk](https://github.com/agentswapx/atxswap-sdk)
 
+For project background and a short [team introduction](https://docs.atxswap.com/guide/team) ([中文](https://docs.atxswap.com/zh/guide/team)), see the ATXSwap documentation site. This README describes the skill’s scope and scripts.
+
 ## What This Skill Covers
 
-- Create or import the single wallet used by the skill
+- Create the single wallet used by the skill (importing an existing private key is not supported)
 - Query ATX price, balances, LP positions, and ERC20 token info
 - Buy or sell ATX against USDT on PancakeSwap V3
-- Add liquidity, remove liquidity, collect fees, and burn empty LP NFTs
+- Preview custom-range liquidity, add liquidity, remove liquidity, collect fees, and burn empty LP NFTs
 - Transfer BNB, ATX, USDT, or arbitrary ERC20 tokens
 
 ## Directory Layout
@@ -41,25 +43,25 @@ atxswap/
 
 ## Install
 
-### OpenClaw / ClawHub (one-click)
+### OpenClaw Install
 
 ```bash
 openclaw skills install atxswap
-# or
-clawhub install atxswap
 ```
 
-### Manual / skills.sh runtime
+### Claude Code Install
 
 ```bash
 git clone https://github.com/agentswapx/skills.git
 cd skills/atxswap && npm install
 ```
 
-Optional RPC override:
+By default the skill uses a built-in fallback list of 6 BSC public RPC
+endpoints. To override, set `BSC_RPC_URL` to a single URL or to a
+comma-separated list (priority left to right):
 
 ```bash
-export BSC_RPC_URL="https://bsc-rpc.publicnode.com"
+export BSC_RPC_URL="https://my-private-rpc.example.com,https://bsc-dataseed.bnbchain.org"
 ```
 
 ## Common Commands
@@ -68,10 +70,46 @@ export BSC_RPC_URL="https://bsc-rpc.publicnode.com"
 cd skills/atxswap && node scripts/wallet.js list
 cd skills/atxswap && node scripts/query.js price
 cd skills/atxswap && node scripts/query.js quote buy 1
+cd skills/atxswap && node scripts/query.js positions <address> <tokenId>
+cd skills/atxswap && node scripts/liquidity.js quote-add usdt 0.1 --range-percent 20
 ```
 
 When invoked through a `${SKILL_DIR}`-aware runtime, `cd "${SKILL_DIR}"` is
 preferred so the skill works regardless of where the client installed it.
+
+## Liquidity Preview
+
+For custom-range liquidity, do not guess the second token amount from chat.
+Preview first, then write:
+
+```bash
+cd "${SKILL_DIR}" && node scripts/liquidity.js quote-add usdt 0.1 --range-percent 20
+cd "${SKILL_DIR}" && node scripts/liquidity.js add --base-token usdt --amount 0.1 --range-percent 20 --from <address>
+```
+
+Supported custom range modes:
+
+- `--range-percent <n>`: expands around the current ATX price, e.g. `20` means `-20% ~ +20%`
+- `--min-price <p> --max-price <p>`: explicit `USDT per 1 ATX`
+- `--tick-lower <n> --tick-upper <n>`: raw V3 ticks
+
+Recommended flow:
+
+1. Run `query.js price` or `liquidity.js quote-add`
+2. Show the returned `estimatedAmounts` to the user
+3. Wait for confirmation
+4. Execute `liquidity.js add`
+
+## Fee Harvest Preview
+
+Before collecting fees, preview the position first:
+
+```bash
+cd "${SKILL_DIR}" && node scripts/query.js positions <address> <tokenId>
+cd "${SKILL_DIR}" && node scripts/liquidity.js collect <tokenId> --from <address>
+```
+
+`query.js positions` returns **principal** notionals (**`principalAtx`**, **`principalUsdt`**, `principal0`/`principal1`) from liquidity L and spot (`getAmountsForLiquidity`); human **USDT-per-ATX** band **`priceRangeUsdtPerAtx`**, spot **`currentPriceUsdtPerAtx`**, **`currentPriceInRange`**, **`pendingFees`** `{ atx, usdt }`; plus raw `tokensOwed*` / `collectable*` for debugging. Prefer **`principal*`** when explaining tokens in-range; **`pendingFees`** / **`collectable*`** before fee harvest — do **not** surface raw tick indices to users.
 
 ## Security Rules
 
@@ -79,3 +117,18 @@ preferred so the skill works regardless of where the client installed it.
 2. Always preview price, quote, balance, or positions before write actions.
 3. Always wait for explicit user confirmation before swap, transfer, or liquidity writes.
 4. Treat all write actions as mainnet asset operations.
+5. Before deleting a wallet, require the user to export and back up the encrypted keystore first.
+6. Wallet deletion requires a second confirmation: the user must explicitly send `force delete wallet`.
+
+## Wallet Deletion
+
+Delete a wallet only after both confirmations are complete:
+
+1. The user confirms the encrypted keystore backup is done
+2. The user explicitly sends `force delete wallet`
+
+Then run:
+
+```bash
+cd "${SKILL_DIR}" && node scripts/wallet.js delete <address> --backup-confirmed yes --force-phrase "force delete wallet"
+```

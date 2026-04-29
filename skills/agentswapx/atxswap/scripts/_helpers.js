@@ -5,9 +5,19 @@ import readline from "node:readline";
 
 const DEFAULT_KEYSTORE_PATH = join(homedir(), ".config", "atxswap", "keystore");
 
+function parseRpcUrls(raw) {
+  if (!raw) return undefined;
+  const urls = raw
+    .split(",")
+    .map((url) => url.trim())
+    .filter((url) => url.length > 0);
+  return urls.length > 0 ? urls : undefined;
+}
+
 export async function createClient() {
+  const rpcUrls = parseRpcUrls(process.env.BSC_RPC_URL);
   const client = new AtxClient({
-    rpcUrl: process.env.BSC_RPC_URL,
+    ...(rpcUrls && { rpcUrls }),
     keystorePath: DEFAULT_KEYSTORE_PATH,
   });
   await client.ready();
@@ -39,8 +49,25 @@ export function fmt(wei, decimals = 18) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 6 });
 }
 
+/** V3 fee tier (`100`|`500`|`2500`|`10000`) → human-readable swap fee, e.g. `0.25%`. Matches Uniswap tier display (`fee`/10000 as a percent label). */
+export function feeTierToPercentString(fee) {
+  const n = Number(fee);
+  if (!Number.isFinite(n) || n <= 0) return "0%";
+  const pct = n / 10000;
+  const s = pct.toFixed(6).replace(/\.?0+$/, "") || "0";
+  return `${s}%`;
+}
+
+export function jsonStringify(value, space = 2) {
+  return JSON.stringify(
+    value,
+    (_, current) => (typeof current === "bigint" ? current.toString() : current),
+    space,
+  );
+}
+
 export function exitError(message, code = 1) {
-  console.error(JSON.stringify({ error: message }));
+  console.error(jsonStringify({ error: message }));
   process.exit(code);
 }
 
@@ -154,19 +181,9 @@ export async function loadWallet(client, address, args) {
   }
 }
 
-export async function exportKey(client, address, args) {
-  try {
-    return await client.wallet.exportPrivateKey(address);
-  } catch {
-    if (args.password) {
-      return await client.wallet.exportPrivateKey(address, args.password);
-    }
-
-    const ttyPassword = await promptHidden(`Password for ${address}: `);
-    if (ttyPassword) {
-      return await client.wallet.exportPrivateKey(address, ttyPassword);
-    }
-
-    exitError(`Password required for ${address}: use --password <pwd> or run in an interactive terminal`);
+export async function exportKeystore(client, address, args = {}) {
+  if (typeof client.wallet.exportMetaMaskKeystore === "function") {
+    return await client.wallet.exportMetaMaskKeystore(address, args.password);
   }
+  return client.wallet.exportKeystore(address);
 }

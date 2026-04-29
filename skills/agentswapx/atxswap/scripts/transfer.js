@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createClient, loadWallet, parseArgs, exitError, runMain } from "./_helpers.js";
+import { createClient, loadWallet, parseArgs, exitError, runMain, jsonStringify } from "./_helpers.js";
 import { parseEther } from "atxswap-sdk";
 
 await runMain(async () => {
@@ -22,7 +22,7 @@ await runMain(async () => {
       const amount = args._[2];
       if (!to || !amount) exitError("Usage: transfer.js bnb <to> <amount> [--from address]");
       const result = await client.transfer.sendBnb(wallet, to, parseEther(amount));
-      console.log(JSON.stringify({ action: "send BNB", to, amount, txHash: result.txHash }, null, 2));
+      console.log(jsonStringify({ action: "send BNB", to, amount, txHash: result.txHash }, 2));
       break;
     }
 
@@ -31,7 +31,7 @@ await runMain(async () => {
       const amount = args._[2];
       if (!to || !amount) exitError("Usage: transfer.js atx <to> <amount> [--from address]");
       const result = await client.transfer.sendAtx(wallet, to, parseEther(amount));
-      console.log(JSON.stringify({ action: "send ATX", to, amount, txHash: result.txHash }, null, 2));
+      console.log(jsonStringify({ action: "send ATX", to, amount, txHash: result.txHash }, 2));
       break;
     }
 
@@ -40,7 +40,7 @@ await runMain(async () => {
       const amount = args._[2];
       if (!to || !amount) exitError("Usage: transfer.js usdt <to> <amount> [--from address]");
       const result = await client.transfer.sendUsdt(wallet, to, parseEther(amount));
-      console.log(JSON.stringify({ action: "send USDT", to, amount, txHash: result.txHash }, null, 2));
+      console.log(jsonStringify({ action: "send USDT", to, amount, txHash: result.txHash }, 2));
       break;
     }
 
@@ -52,7 +52,7 @@ await runMain(async () => {
         exitError("Usage: transfer.js token <tokenAddress> <to> <amount> [--from address]");
       }
       const result = await client.transfer.sendToken(wallet, tokenAddr, to, parseEther(amount));
-      console.log(JSON.stringify({ action: "send token", token: tokenAddr, to, amount, txHash: result.txHash }, null, 2));
+      console.log(jsonStringify({ action: "send token", token: tokenAddr, to, amount, txHash: result.txHash }, 2));
       break;
     }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createClient, loadWallet, parseArgs, fmt, exitError, runMain } from "./_helpers.js";
+import { createClient, loadWallet, parseArgs, fmt, exitError, runMain, jsonStringify } from "./_helpers.js";
 import { parseEther } from "atxswap-sdk";
 
 await runMain(async () => {
@@ -21,19 +21,19 @@ await runMain(async () => {
 
   if (command === "buy") {
     const result = await client.swap.buy(wallet, amountWei, slippage);
-    console.log(JSON.stringify({
+    console.log(jsonStringify({
       action: "buy ATX",
       txHash: result.txHash,
       usdtSpent: fmt(result.amountIn),
       atxReceived: fmt(result.amountOut),
-    }, null, 2));
+    }, 2));
   } else {
     const result = await client.swap.sell(wallet, amountWei, slippage);
-    console.log(JSON.stringify({
+    console.log(jsonStringify({
       action: "sell ATX",
       txHash: result.txHash,
       atxSold: fmt(result.amountIn),
       usdtReceived: fmt(result.amountOut),
-    }, null, 2));
+    }, 2));
   }
 });

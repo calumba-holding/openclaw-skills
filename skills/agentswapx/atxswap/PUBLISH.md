@@ -55,8 +55,15 @@ clawhub publish ./skills/atxswap \
 
 After upload there is a brief security-scan window during which `clawhub
 inspect atxswap` returns "Skill is hidden while security scan is pending".
-Installs from `clawhub install` / `openclaw skills install` keep working
-during that window.
+
+Once the scan completes, ClawHub will flag this skill as "suspicious" because
+VirusTotal Code Insight detects crypto-key / external-API patterns — that is
+expected for any wallet SDK and not a real warning. Users must pass `--force`
+in non-interactive contexts:
+
+```bash
+clawhub install atxswap --force
+```
 
 ## Verify the published skill
 
@@ -66,8 +73,8 @@ clawhub inspect atxswap
 
 # End-user simulation in a clean directory
 TEST=$(mktemp -d)
-cd "$TEST" && clawhub install atxswap
-cd skills/atxswap && npm install   # pulls + builds atxswap-sdk (~1 min first time)
+cd "$TEST" && clawhub install atxswap --force
+cd skills/atxswap && npm install   # pulls atxswap-sdk from npm (~15s)
 node scripts/query.js              # should print usage
 ```
 

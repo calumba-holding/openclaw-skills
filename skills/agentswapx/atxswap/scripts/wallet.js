@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 import {
   createClient,
-  exportKey,
+  exportKeystore,
   getDefaultKeystorePath,
   parseArgs,
   fmt,
   exitError,
   runMain,
   resolveNewPassword,
+  jsonStringify,
 } from "./_helpers.js";
+import { writeFileSync } from "node:fs";
+import { resolve as resolvePath } from "node:path";
+
+const DELETE_FORCE_PHRASE = "force delete wallet";
 
 await runMain(async () => {
   const client = await createClient();
@@ -24,20 +29,24 @@ await runMain(async () => {
       const password = await resolveNewPassword(args);
       const name = args._[1];
       const result = await client.wallet.create(password, name);
-      console.log(JSON.stringify({
+      console.log(jsonStringify({
         action: "create",
         address: result.address,
         keystoreFile: result.keystoreFile,
         keystoreDir: getDefaultKeystorePath(),
         name: name || null,
-      }, null, 2));
+        passwordSaved: result.passwordSaved,
+        ...(result.passwordSaveError
+          ? { passwordSaveError: result.passwordSaveError }
+          : {}),
+      }, 2));
       break;
     }
 
     case "list": {
       const wallets = client.wallet.list();
       if (wallets.length === 0) {
-        console.log(JSON.stringify({ wallets: [] }, null, 2));
+        console.log(jsonStringify({ wallets: [] }, 2));
         break;
       }
       const results = [];
@@ -48,37 +57,35 @@ await runMain(async () => {
           entry.bnb = fmt(bal.bnb);
           entry.atx = fmt(bal.atx);
           entry.usdt = fmt(bal.usdt);
-        } catch {}
+        } catch (e) {
+          entry.balanceError = e?.shortMessage || e?.message?.split("\n")[0] || String(e);
+        }
         results.push(entry);
       }
-      console.log(JSON.stringify({ wallets: results }, null, 2));
-      break;
-    }
-
-    case "import": {
-      const existing = client.wallet.list();
-      if (existing.length > 0) {
-        exitError(`Wallet already exists (${existing[0].address}). Only one wallet is allowed per skill instance.`);
-      }
-      const privateKey = args._[1];
-      if (!privateKey) exitError("Usage: wallet.js import <privateKey> [name] [--password <pwd>]");
-      const password = await resolveNewPassword(args);
-      const name = args._[2];
-      const result = await client.wallet.importPrivateKey(privateKey, password, name);
-      console.log(JSON.stringify({
-        action: "import",
-        address: result.address,
-        keystoreFile: result.keystoreFile,
-        keystoreDir: getDefaultKeystorePath(),
-      }, null, 2));
+      console.log(jsonStringify({ wallets: results }, 2));
       break;
     }
 
     case "export": {
       const address = args._[1];
-      if (!address) exitError("Usage: wallet.js export <address> [--password <pwd>]");
-      const pk = await exportKey(client, address, args);
-      console.log(pk);
+      if (!address) {
+        exitError("Usage: wallet.js export <address> [--out <file>]");
+      }
+      const { keystore, keystoreFile } = await exportKeystore(client, address, args);
+      const outPath = typeof args.out === "string" ? resolvePath(args.out) : null;
+      const json = jsonStringify(keystore, 2);
+      if (outPath) {
+        writeFileSync(outPath, json);
+        console.log(jsonStringify({
+          action: "export",
+          address,
+          format: "keystore-v3",
+          source: keystoreFile,
+          output: outPath,
+        }, 2));
+      } else {
+        console.log(json);
+      }
       break;
     }
 
@@ -86,7 +93,7 @@ await runMain(async () => {
       const address = args._[1];
       if (!address) exitError("Usage: wallet.js forget-password <address>");
       await client.wallet.forgetPassword(address);
-      console.log(JSON.stringify({ action: "forget-password", address, success: true }, null, 2));
+      console.log(jsonStringify({ action: "forget-password", address, success: true }, 2));
       break;
     }
 
@@ -94,11 +101,34 @@ await runMain(async () => {
       const address = args._[1];
       if (!address) exitError("Usage: wallet.js has-password <address>");
       const saved = await client.wallet.hasSavedPassword(address);
-      console.log(JSON.stringify({ address, hasSavedPassword: saved }, null, 2));
+      console.log(jsonStringify({ address, hasSavedPassword: saved }, 2));
+      break;
+    }
+
+    case "delete": {
+      const address = args._[1];
+      if (!address) {
+        exitError("Usage: wallet.js delete <address> --backup-confirmed yes --force-phrase \"force delete wallet\"");
+      }
+      if (args["backup-confirmed"] !== "yes") {
+        exitError("Refusing to delete wallet: export and back up the keystore first, then rerun with --backup-confirmed yes");
+      }
+      if (args["force-phrase"] !== DELETE_FORCE_PHRASE) {
+        exitError("Refusing to delete wallet: rerun with --force-phrase \"force delete wallet\" after the user explicitly sends that exact phrase");
+      }
+
+      await client.wallet.delete(address);
+      console.log(jsonStringify({
+        action: "delete",
+        address,
+        deleted: true,
+        backupConfirmed: true,
+        forcePhrase: DELETE_FORCE_PHRASE,
+      }, 2));
       break;
     }
 
     default:
-      exitError("Usage: wallet.js <create|list|import|export|forget-password|has-password> [args] [--password <pwd>]");
+      exitError("Usage: wallet.js <create|list|export|forget-password|has-password|delete> [args] [--password <pwd>]");
   }
 });
