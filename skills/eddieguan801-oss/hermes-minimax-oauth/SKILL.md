@@ -1,178 +1,82 @@
----
-name: hermes-minimax-oauth
-description: Add MiniMax OAuth authentication support to Hermes Agent. Use when integrating MiniMax OAuth into Hermes, fixing MiniMax auth issues, or adding new OAuth providers to Hermes. Covers hermes-cli/auth.py and hermes-cli/auth_commands.py modifications, correct MiniMax OAuth endpoints, PKCE flow, and ProviderConfig setup.
----
+# Hermes MiniMax OAuth Skill
 
-# Hermes MiniMax OAuth Integration
+为 Hermes Agent 添加 MiniMax OAuth 登录支持。
 
-## Overview
+## 功能
 
-This skill documents how to add MiniMax OAuth support to Hermes Agent using the PKCE + user_code flow (matching OpenClaw's implementation).
+通过 `hermes auth add minimax-oauth` 命令实现 MiniMax 全球版或中国区 OAuth 登录。
 
-## Files Modified
+## 工作原理
 
-1. `hermes_cli/auth.py` - OAuth flow functions, constants, ProviderConfig
-2. `hermes_cli/auth_commands.py` - CLI command handlers
-3. `hermes_cli/models.py` - Provider catalog entries
+### OAuth 流程（user_code + PKCE）
 
-## MiniMax OAuth Configuration
-
-### Correct Endpoints (from OpenClaw reference)
+MiniMax 使用非标准的 user_code OAuth 流程，区别于常见的 device_code 流程：
 
 ```
-Base URL (Global): https://api.minimax.io
-Base URL (China):  https://api.minimaxi.com
-
-OAuth Code:  {base}/oauth/code
-OAuth Token: {base}/oauth/token
+1. POST /oauth/code          → 获取 user_code + verification_uri
+2. 用户在浏览器打开 verification_uri，输入 user_code
+3. POST /oauth/token         → 用 user_code + PKCE verifier 兑换 access_token
+4. access_token 保存到 ~/.hermes/auth.json
 ```
 
-### OAuth Parameters
+**关键差异：**
+- 端点：`/oauth/code` 和 `/oauth/token`（不是 `/v1/oauth/*`）
+- grant_type：`urn:ietf:params:oauth:grant-type:user_code`
+- 需要 PKCE（S256 code_challenge）
+- scope：`group_id profile model.completion`
 
-```
-Client ID:  78257093-7e40-4613-99e0-527b14b39113
-Scope:      group_id profile model.completion
-Grant Type: urn:ietf:params:oauth:grant-type:user_code
-```
+## 修改的文件
 
-### PKCE Requirements
+### `hermes_cli/auth.py`
 
-- Method: S256
-- Generate 32-byte random verifier, base64url encode
-- SHA256 hash of verifier = challenge
+- **新增常量**：`DEFAULT_MINIMAX_OAUTH_*`（portal URL、端点、client_id、scope）
+- **新增函数**：
+  - `_generate_pkce_pair()` — 生成 PKCE verifier/challenge
+  - `_minimax_device_code_login()` — 完整 OAuth 流程
+  - `resolve_minimax_oauth_runtime_credentials()` — 运行时凭证解析
+  - `get_minimax_oauth_auth_status()` — 登录状态查询
+  - `_refresh_minimax_access_token()` — access_token 刷新
+  - `_is_minimax_token_expiring()` — 过期检查
+- **新增 ProviderRegistry 条目**：`minimax-oauth`、`minimax-cn-oauth`
 
-## Step-by-Step Implementation
+### `hermes_cli/runtime_provider.py`
 
-### 1. Add Constants to auth.py
+- `_resolve_explicit_runtime()` 中添加 `minimax-oauth` / `minimax-cn-oauth` 处理块
 
-```python
-DEFAULT_MINIMAX_PORTAL_URL = "https://api.minimax.io"
-DEFAULT_MINIMAX_INFERENCE_URL = "https://api.minimax.io/anthropic"
-MINIMAX_OAUTH_CLIENT_ID = "78257093-7e40-4613-99e0-527b14b39113"
-MINIMAX_OAUTH_CODE_URL = "https://api.minimax.io/oauth/code"
-MINIMAX_OAUTH_TOKEN_URL = "https://api.minimax.io/oauth/token"
-MINIMAX_OAUTH_SCOPE = "group_id profile model.completion"
-MINIMAX_ACCESS_TOKEN_REFRESH_SKEW_SECONDS = 120
+### `agent/auxiliary_client.py`
 
-# China variant uses api.minimaxi.com
-```
+- OAuth provider 路由中添加 MiniMax 处理路径
 
-### 2. Add ProviderConfig Entries
+### `hermes_cli/auth_commands.py`
 
-In `auth.py`, add to `PROVIDER_REGISTRY`:
+- `auth_add_command` 支持 `hermes auth add minimax-oauth` 和 `hermes auth add minimax-cn-oauth`
 
-```python
-"minimax-oauth": ProviderConfig(
-    id="minimax-oauth",
-    name="MiniMax OAuth",
-    auth_type="oauth_device_code",
-    portal_base_url=DEFAULT_MINIMAX_PORTAL_URL,
-    inference_base_url=DEFAULT_MINIMAX_INFERENCE_URL,
-    client_id=MINIMAX_OAUTH_CLIENT_ID,
-    scope=MINIMAX_OAUTH_SCOPE,
-),
-"minimax-cn-oauth": ProviderConfig(
-    id="minimax-cn-oauth",
-    name="MiniMax OAuth (China)",
-    auth_type="oauth_device_code",
-    portal_base_url="https://api.minimaxi.com",
-    inference_base_url="https://api.minimaxi.com/anthropic",
-    client_id=MINIMAX_OAUTH_CLIENT_ID,
-    scope=MINIMAX_OAUTH_SCOPE,
-),
-```
-
-### 3. Add Alias Mappings
-
-In `_PROVIDER_ALIASES`:
-
-```python
-"minimax-global-oauth": "minimax-oauth",
-"minimax_global_oauth": "minimax-oauth",
-"minimax-china-oauth": "minimax-cn-oauth",
-"minimax_china_oauth": "minimax-cn-oauth",
-```
-
-### 4. Implement OAuth Flow Functions
-
-Key functions needed in `auth.py`:
-
-- `_generate_pkce()` - Generate verifier/challenge/state
-- `_minimax_oauth_request_code()` - POST to /oauth/code
-- `_minimax_oauth_poll_token()` - Poll /oauth/token until approved
-- `_minimax_device_code_login()` - Main login orchestrator
-- `resolve_minimax_runtime_credentials()` - Token refresh logic
-- `get_minimax_auth_status()` - Auth status check
-
-### 5. Update auth_commands.py
-
-Add to `_OAUTH_CAPABLE_PROVIDERS`:
-```python
-_OAUTH_CAPABLE_PROVIDERS = {
-    "anthropic", "nous", "openai-codex", "qwen-oauth",
-    "google-gemini-cli", "minimax-oauth", "minimax-cn-oauth"
-}
-```
-
-Add login handler:
-```python
-if provider in ("minimax-oauth", "minimax-cn-oauth"):
-    is_cn = provider == "minimax-cn-oauth"
-    portal_url = auth_mod.DEFAULT_MINIMAX_CN_PORTAL_URL if is_cn else auth_mod.DEFAULT_MINIMAX_PORTAL_URL
-    client_id = auth_mod.MINIMAX_CN_OAUTH_CLIENT_ID if is_cn else auth_mod.MINIMAX_OAUTH_CLIENT_ID
-    scope = "group_id profile model.completion"
-    creds = auth_mod._minimax_device_code_login(portal_base_url=portal_url, client_id=client_id, scope=scope)
-    # ... create PooledCredential and add to pool
-```
-
-### 6. Add to models.py
-
-In `CANONICAL_PROVIDERS`:
-```python
-ProviderEntry("minimax-oauth",  "MiniMax OAuth (Global)",   "MiniMax (global) via OAuth"),
-ProviderEntry("minimax-cn-oauth","MiniMax OAuth (China)",   "MiniMax (China) via OAuth"),
-```
-
-In model lists:
-```python
-"minimax-oauth": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2"],
-"minimax-cn-oauth": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2"],
-```
-
-### 7. Fix httpx Compatibility
-
-httpx 0.28.x uses `response.is_success` not `response.ok`:
-```python
-# Wrong
-if not response.ok:
-# Correct
-if not response.is_success:
-```
-
-## Testing
+## 使用方法
 
 ```bash
-# Restart Hermes
-pkill -f hermes_cli.main
-cd ~/.hermes/hermes-agent && nohup venv/bin/python -m hermes_cli.main gateway run &
-
-# Test OAuth flow
+# 全球版
 hermes auth add minimax-oauth
 
-# Verify syntax
-python3 -m py_compile hermes_cli/auth.py
-python3 -m py_compile hermes_cli/auth_commands.py
-python3 -m py_compile hermes_cli/models.py
+# 中国版
+hermes auth add minimax-cn-oauth
+
+# 查看状态
+hermes auth list
 ```
 
-## Common Errors
+## 端点信息
 
-| Error | Fix |
-|-------|-----|
-| `Response object has no attribute 'ok'` | Change to `response.is_success` |
-| `404` on OAuth endpoints | Use `/oauth/code` not `/api/oauth/device/code` |
-| `invalid_api_key` | Set `MINIMAX_API_KEY` in `~/.hermes/.env` |
+| 区域 | Portal Base | Code Endpoint | Token Endpoint |
+|---|---|---|---|
+| Global | `https://api.minimax.io` | `/oauth/code` | `/oauth/token` |
+| China | `https://api.minimaxi.com` | `/oauth/code` | `/oauth/token` |
 
-## Reference
+- Client ID: `78257093-7e40-4613-99e0-527b14b39113`
+- Scope: `group_id profile model.completion`
+- Inference URL: `https://api.minimax.io/v1` (global) / `https://api.minimaxi.com/v1` (CN)
 
-See `references/openclaw-oauth-implementation.md` for the complete OpenClaw reference that this was based on.
+## 注意事项
+
+- MiniMax **没有**标准的 device_code OAuth（`/v1/oauth/*` 是错的）
+- 必须使用 PKCE S256，user_code 需配合 code_verifier 使用
+- 登录后 token 通过 refresh_token 刷新，无需每次重新授权
