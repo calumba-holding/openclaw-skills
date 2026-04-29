@@ -36,6 +36,19 @@ _DESIGN_THEME_BOILERPLATE = """# Design theme
 Fill this **before** writing scene code. If the user has not specified a theme, **ask**
 for these choices explicitly.
 
+## Built-in design systems
+
+Pick one of the skill's built-in schemes (or override piecemeal):
+
+- **swiss** — Swiss International (Josef Müller-Brockmann). Inter font. Strict grid, clinical precision, black/white + restrained red.
+- **bauhaus** — Bauhaus Modern (Herbert Bayer). Space Grotesk. Primary colors, geometric, functional art.
+- **braun** — Braun Minimal (Dieter Rams). Work Sans. Warm light grays, systematic, "less but better."
+- **editorial** — Editorial Bold (Paula Scher / Pentagram). Playfair Display + Inter. Dramatic scale contrast, deep navy + warm cream.
+- **apple** — Apple Precision (Jony Ive). DM Sans. Cool neutrals, generous whitespace, sleek motion.
+- **soft** — Soft Enterprise (skill default). Roboto. Warm cream backgrounds, dot grid patterns, gas-spring easing.
+
+Fonts are downloaded on demand into `assets/fonts/` via `design_systems.font_catalog.install_fonts()`.
+
 ## Questions to ask
 
 | Topic | Prompt |
@@ -43,18 +56,62 @@ for these choices explicitly.
 | Mood | Overall feel (e.g. minimal clinical, playful, cinematic, brutalist). |
 | Light / dark | Light mode, dark mode, or high-contrast either way. |
 | Palette | Primary, accent, background hex codes (or reference brand guidelines). |
-| Typography | Title font, body font, or “system default / Manim default”. |
+| Design system | Pick one: swiss / bauhaus / braun / editorial / apple / soft (default). |
+| Typography | User may override; skill default is **Roboto** (see locked defaults below). |
 | Motion | Snappy vs floaty; calm vs energetic; any easing preferences. |
 | Brand assets | Paths under `assets/` (logo, watermark, icon set). |
 | Deliverable | Aspect ratio (16:9, 9:16), target length, platform (web, social). |
 
 ## Locked decisions
 
+- Design system:
 - Mood:
 - Palette:
 - Typography:
 - Motion:
 - Notes:
+"""
+
+# Filled after the user approves the agent's short pitch; see SKILL.md "Brief-first workflow".
+_ANIMATION_BRIEF_BOILERPLATE = """# Animation brief
+
+**Status:** DRAFT — do not write scene code until the user approves this brief (or confirms choices in chat).
+
+## One-liner (what the viewer should feel / learn)
+
+(One or two plain sentences. Avoid jargon unless the audience expects it.)
+
+## Beats (order and ~duration)
+
+| # | Beat (what appears) | ~seconds | Notes |
+|---|---------------------|----------|-------|
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+
+## Look & feel (options — user picks)
+
+**Design system (choose one):**
+
+- **A — Swiss grid** (Inter, clinical, data-forward, strict hierarchy)
+- **B — Bauhaus primary** (Space Grotesk, geometric, educational, primary colors)
+- **C — Braun minimal** (Work Sans, warm gray, product, "less but better")
+- **D — Editorial bold** (Playfair + Inter, dramatic, storytelling, magazine confidence)
+- **E — Apple precision** (DM Sans, cool, tech, sleek motion)
+- **F — Soft enterprise** (Roboto, warm cream, existing default — gas-spring easing)
+
+**Aspect / platform:** (e.g. 16:9 web, 1:1 social, 9:16 short)
+
+**Motion:** (calm / snappy / loop-heavy)
+
+## Manim-native ideas (optional — use the engine, not generic slides)
+
+Ideas to discuss: `MathTex` / `Tex`, `NumberPlane` / `NumberLine`, parametric curves, `Transform` / `ReplacementTransform`, `Indicate`, `Flash`, `ShowPassingFlash`, `LaggedStart`, updaters for continuous motion.
+
+## Approved
+
+- [ ] User approved brief and selected palette / format
+- Date / notes:
 """
 
 
@@ -69,7 +126,7 @@ class ManimProject:
         self.media_path = self.project_path / "media"
         self.config_path = self.project_path / "project.json"
         
-    def init(self) -> None:
+    def init(self, scheme: Optional[str] = None, install_fonts: bool = False) -> None:
         """Initialize project with git repository and folder structure.
 
         Creates:
@@ -78,6 +135,13 @@ class ManimProject:
         - ``exports/verification`` for frame slices + manifests used in the agent vision loop.
         - ``requirements.txt`` (canonical Manim + voiceover pins) unless already present.
         - ``DESIGN_THEME.md`` template unless already present — agents must fill with user.
+        - ``ANIMATION_BRIEF.md`` template unless already present — short pitch + options; code only after approval.
+
+        Args:
+            scheme: Optional built-in design system key (swiss, bauhaus, braun,
+                editorial, apple, soft). If provided, records it in project config.
+            install_fonts: If True and ``scheme`` is given, downloads the scheme's
+                fonts into ``assets/fonts/`` using ``design_systems.font_catalog``.
         """
         # Create directories
         self.project_path.mkdir(parents=True, exist_ok=True)
@@ -123,6 +187,18 @@ class ManimProject:
         theme_file = self.project_path / "DESIGN_THEME.md"
         if not theme_file.exists():
             theme_file.write_text(_DESIGN_THEME_BOILERPLATE, encoding="utf-8")
+
+        brief_file = self.project_path / "ANIMATION_BRIEF.md"
+        if not brief_file.exists():
+            brief_file.write_text(_ANIMATION_BRIEF_BOILERPLATE, encoding="utf-8")
+
+        # Optional: download fonts for the chosen design system
+        if scheme and install_fonts:
+            try:
+                self.install_scheme_fonts(scheme)
+            except Exception as exc:
+                print(f"⚠ Font install for '{scheme}' failed: {exc}. "
+                      "System fonts will be used as fallback.")
         
         # Initialize git repo
         if not (self.project_path / ".git").exists():
@@ -135,7 +211,8 @@ class ManimProject:
             "name": self.name,
             "created": datetime.now().isoformat(),
             "scenes": {},
-            "version": "1.0"
+            "version": "1.0",
+            "scheme": scheme,
         }
         self._save_config(config)
         
@@ -144,6 +221,34 @@ class ManimProject:
         self._git("commit", "-m", "Initial project setup", "--allow-empty")
         
         print(f"✓ Project '{self.name}' initialized at {self.project_path}")
+
+    def install_scheme_fonts(self, scheme: str) -> None:
+        """
+        Download and install fonts for a built-in design system into
+        ``assets/fonts/``.
+
+        Args:
+            scheme: One of "swiss", "bauhaus", "braun", "editorial", "apple".
+
+        Raises:
+            RuntimeError: If ``curl`` or font extraction fails.
+        """
+        import sys
+
+        # Ensure the skill's references/ folder is on sys.path so design_systems resolves
+        skill_ref = Path(__file__).resolve().parent
+        if str(skill_ref) not in sys.path:
+            sys.path.insert(0, str(skill_ref))
+
+        from design_systems.font_catalog import (  # type: ignore
+            install_fonts as _install_fonts,
+            write_attribution_file,
+        )
+
+        target = self.project_path / "assets" / "fonts"
+        installed = _install_fonts(scheme, target_dir=target)
+        write_attribution_file(scheme, target_dir=target)
+        print(f"✓ Installed {len(installed)} font files for '{scheme}' into {target}")
     
     def create_scene(self, scene_name: str, code: str, 
                      description: str = "") -> None:
@@ -222,7 +327,9 @@ class ManimProject:
         scene_class: Manim scene class name inside the file. If omitted, derived from
         scene_name (scene_1 -> Scene1). Override when your class name does not match.
 
-        output_format: ``movie`` (MP4) or ``gif`` for lightweight previews.
+        output_format: ``movie`` (MP4) or ``gif`` for lightweight previews. The value
+        ``movie`` is kept for backward compatibility; the Manim CLI is invoked with
+        ``--format mp4`` (Manim Community does not accept ``movie`` as a format flag).
 
         export_approval_copy: If True, copy the output into ``exports/approvals/`` with
         a clear filename for stakeholder sign-off (typical with ``output_format='gif'``).
@@ -237,14 +344,15 @@ class ManimProject:
         quality_flag = {"low": "-ql", "medium": "-qm", "high": "-qh"}.get(quality, "-qm")
         
         cls = scene_class or _default_scene_class_name(scene_name)
-        # Manim CLI: scene class after file path; --format gif for approval loops.
+        # Manim CLI expects mp4/gif/webm/mov, not "movie".
+        cli_format = "mp4" if output_format == "movie" else output_format
         cmd = [
             "manim",
             quality_flag,
             str(scene_file),
             cls,
             "--format",
-            output_format,
+            cli_format,
             "--disable_caching",
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.project_path)
@@ -317,7 +425,8 @@ class ManimProject:
         """Low-quality GIF in ``exports/approvals/`` for stakeholder sign-off.
 
         Does not auto-commit (keeps git history focused on approved MP4 passes).
-        After approval, render with ``output_format='movie'`` and higher quality.
+        After approval, render with ``output_format='movie'`` (MP4 via ``--format mp4``)
+        and higher quality.
         """
         return self.render(
             scene_name,

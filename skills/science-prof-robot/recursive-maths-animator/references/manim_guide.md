@@ -27,6 +27,8 @@ Manim Community (manim) is a community-maintained mathematical animation engine,
 
 **This skill uses Manim Community (`pip install manim`).**
 
+**Default typography:** use **`Roboto`** for all `Text()` (see `references/default_typography.py` and `DESIGN_THEME.md`) unless the user requests another font.
+
 ---
 
 ## Scene Code Structure
@@ -40,7 +42,7 @@ class BasicScene(Scene):
     def construct(self):
         # Create objects
         circle = Circle(radius=1.5, color=RED, fill_opacity=0.5)
-        label = Text("Circle", font_size=24)
+        label = Text("Circle", font="Roboto", font_size=24)
         label.next_to(circle, DOWN)
 
         # Animate
@@ -375,9 +377,12 @@ ffmpeg -filters 2>&1 | grep subtitles
 
 **Solution**:
 ```python
-# Option 1: Use a proxy
+# Option 1: Use a proxy — set CORP_HTTP_PROXY / CORP_HTTPS_PROXY in your environment
+# (never hardcode proxy URLs or credentials in scene code you commit).
 import os
-os.environ['HTTP_PROXY'] = 'http://proxy:port'
+for dst, src in (("HTTP_PROXY", "CORP_HTTP_PROXY"), ("HTTPS_PROXY", "CORP_HTTPS_PROXY")):
+    if os.environ.get(src):
+        os.environ[dst] = os.environ[src]
 
 # Option 2: Switch to offline TTS
 from manim_voiceover.services.pyttsx3 import Pyttsx3Service
