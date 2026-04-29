@@ -51,8 +51,10 @@ chatppt --help
 4. **用户不想配置参数**：若用户明确表示不关心参数或不想填写，全部使用默认值发起请求。
 5. **轮询展示图片**：轮询期间如果返回 `images.urls`，可直接把图片链接展示给用户。
 6. **成功即停止**：当任务状态为 `2`或`3` 后，仅返回成功结果与关键信息，不执行任何后续操作（后续接口未就绪）。
-7. **Web Search 收费确认**：`--web-search` 涉及额外收费，启用前必须先告知用户并获得明确确认；未确认则按关闭处理（传 `--web-search=true`）。
+7. **Web Search 收费确认**：`--web-search` 涉及额外收费，启用前必须先告知用户并获得明确确认；未确认则按关闭处理（传 `--web-search=false`）。
 8. **如果已经进入到了自动轮询流程中，要一直等待轮询成功或失败，不能在轮询过程中又进行生成。如果是Agent手动轮询，也需要轮询到成功或失败，不能中途停止对话等待用户继续输入。**
+9. **如果轮询接口返回了失败，不要再次生成，要询问用户是否要再次生成。**
+10. **如果用户权益用完了，提示用户去clawppt官网 <https://chat-ppt.com/openclaw> 进行充值点数。**
 
 ### 参数提取与追问规则（Agent）
 
@@ -169,29 +171,13 @@ chatppt ppt generate_banana "主题描述" [options]
 | `--custom-page-count` | int | 0 | 页数，0 = 自动 |
 
 > 约束说明：
-> - 在生成之前询问用户是否需要浏览并指定模板，需要的话调用chatppt ppt template获取--template-id参数数据。
+> - 在生成之前询问用户是否需要浏览并指定模板，需要的话调用chatppt ppt template获取--template-id参数数据，调用之后的数据，一定要将每一项的至少一张图片展示给用户挑选。
 
 #### --image-style 参数获取方式
 
 ```bash
 chatppt ppt picture_style
 ```
-
-### 绘图生成路径参数（与普通路径平级）
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `--banana-style-id` | string | 绘图风格ID |
-| `--banana-doc-type` | string | 绘图排版样式 |
-| `--banana-reference-image` | string | 参考图片 URL 或路径 |
-
-> 约束说明：
-> - 绘图生成路径参数允许全部为空。
-> - 普通路径与绘图生成路径是两条平级路线，不存在“更高级”关系。
-> - Agent 必须先确认用户走哪条路径，再组装对应参数。
-> - 生成任务默认开启轮询（`--poll=true`），接口内自动调用轮询接口持续查询直到 `SUCCESS` 或 `FAILED`。
-> - 在生成之前询问用户是否需要浏览并指定风格，需要的话调用chatppt ppt banana-template获取--banana-style-id参数数据。
-
 
 #### --template-id 参数获取方式
 获取PPT模板风格列表，支持分页查询
@@ -210,6 +196,21 @@ chatppt ppt picture_style
 ```bash
 chatppt ppt template
 ```
+
+### 绘图生成路径参数（与普通路径平级）
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `--banana-style-id` | string | 绘图风格ID |
+| `--banana-doc-type` | string | 绘图排版样式 |
+| `--banana-reference-image` | string | 参考图片 URL 或路径 |
+
+> 约束说明：
+> - 绘图生成路径参数允许全部为空。
+> - 普通路径与绘图生成路径是两条平级路线，不存在“更高级”关系。
+> - Agent 必须先确认用户走哪条路径，再组装对应参数。
+> - 生成任务默认开启轮询（`--poll=true`），接口内自动调用轮询接口持续查询直到 `SUCCESS` 或 `FAILED`。
+> - 在生成之前询问用户是否需要浏览并指定风格，需要的话调用chatppt ppt banana-template获取--banana-style-id参数数据。
 
 #### --banana-style-id 页面绘图风格参数获取方式
 
