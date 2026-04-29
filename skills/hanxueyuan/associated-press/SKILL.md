@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: associated-press
 summary: 美联社(AP)——全球最大的新闻合作社，170多年来坚持非营利的独立新闻模式。
 read_when:
