@@ -1,0 +1,11 @@
+{
+  "owner": "silverod",
+  "slug": "container-gaming",
+  "displayName": "Container Gaming — Podman, Distrobox, Flatpak, Sunshine",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776978758027,
+    "commit": null
+  },
+  "history": []
+}
