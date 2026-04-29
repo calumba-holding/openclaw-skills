@@ -1,16 +1,16 @@
 ---
 name: nexus-security-auditor
-description: "Comprehensive security audit agent. Performs OWASP Top 10 checks, dependency vulnerability scanning, authentication/authorization review, and penetration testing recommendations."
-license: proprietary
-compatibility: "Python 3.11+, NEXUS AI Corp ecosystem"
+description: Red/Blue team security audit with CVE scanning, OWASP analysis, and penetration
+  testing recommendations.
+version: '2.1.0'
 metadata:
-  department: cybersecurity
-  agents: ["cyber-red", "cyber-blue"]
-  price_per_execution: "$2.00"
-  ecosystem: "NEXUS AI Corp"
-  version: "1.0.0"
-  publishable: true
-allowed-tools: web-search web-fetch filesystem
+  openclaw:
+    emoji: 🛡️
+    homepage: https://github.com/Shuwanito/SkillsMP/tree/main/.claude/skills/nexus-security-auditor
+    os:
+    - macos
+    - linux
+    - windows
 ---
 
 # Nexus Security Auditor
