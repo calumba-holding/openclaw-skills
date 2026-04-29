@@ -1,0 +1,11 @@
+{
+  "owner": "mturac",
+  "slug": "tirosman-demo",
+  "displayName": "Tirosman Demo Skill",
+  "latest": {
+    "version": "0.2.0",
+    "publishedAt": 1777122165649,
+    "commit": null
+  },
+  "history": []
+}
