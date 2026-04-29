@@ -3,9 +3,15 @@
   "slug": "tunnel-proxy",
   "displayName": "TunnelProxy",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1776782766532,
-    "commit": "https://github.com/openclaw/skills/commit/9b3222c18d345efc6aae2ab367310a4912b418ea"
+    "version": "1.0.11",
+    "publishedAt": 1777011936569,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1776782766532,
+      "commit": "https://github.com/openclaw/skills/commit/9b3222c18d345efc6aae2ab367310a4912b418ea"
+    }
+  ]
 }

@@ -124,79 +124,10 @@ Shell: <your-frp-host>:31235
 npx clawhub@latest install tunnel-proxy
 ```
 
-4. Use in Agent code
-
-```python
-from tunnel_ops import TunnelOps
-import os
-
-# Set environment variables (recommended)
-os.environ["TUNNEL_HOST"] = "<your-tunnel-host>"
-os.environ["TUNNEL_PORT"] = "<your-pty-port>"
-os.environ["TUNNEL_HTTP_PORT"] = "<your-http-port>"
-os.environ["UPLOAD_MAGIC"] = "your-strong-random-secret"
-
-ops = TunnelOps()
-
-# Or pass parameters directly
-ops = TunnelOps(
-    host="<your-tunnel-host>",
-    pty_port=<your-pty-port>,
-    http_port=<your-http-port>
-)
-
-# Execute remote command
-output = ops.run_remote("ls -la ~/Downloads")
-
-# Pull file from local to Agent
-ops.pull_file("/Users/me/data.csv", "./local_copy.csv")
-
-# Push file from Agent to local
-ops.push_file("./result.tar.gz")
-```
-
----
-
-Typical Use Cases
-
-🐍 Case 1: Agent installs blocked Python packages
-
-```python
-ops.run_remote("pip install torch torchvision -i https://pypi.org/simple")
-```
-
-🎬 Case 2: Agent uses local ffmpeg to process videos
-
-```python
-ops.run_remote("ffmpeg -i ~/Videos/input.mp4 -vf scale=720:480 output.mp4")
-ops.pull_file("~/Videos/output.mp4", "./processed.mp4")
-```
-
-🗄️ Case 3: Agent queries internal company database
-
-```python
-result = ops.run_remote("psql -h 192.168.1.100 -U user -d db -c 'SELECT * FROM table'")
-```
-
-💾 Case 4: Agent automatically backs up your project
-
-```python
-ops.run_remote("tar -czf /tmp/backup.tar.gz ~/Projects/myapp")
-ops.pull_file("/tmp/backup.tar.gz", "./backup.tar.gz")
-```
-
-🌍 Case 5: Agent accesses blocked websites through your network
-
-```python
-content = ops.run_remote("curl -s https://arxiv.org/abs/2301.00001")
-```
-
----
-
 Technical Overview (Simplified)
 
 Component Purpose
-TunnelProxy (local) Provides HTTP file service (8080) and PTY Shell forwarding (27417)
+TunnelProxy (local) Provides HTTP file service (8080) a
 frp client (optional) Exposes local ports to public network for intranet penetration
 tunnel_ops.py (Agent) Encapsulates protocol, provides clean Python API
 

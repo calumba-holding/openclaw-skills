@@ -40,8 +40,6 @@ mix run --no-halt -e "TunnelProxy.Server.start(8080)"
 ### Agent Side
 - Python 3.8+
 - `requests`
-- `pexpect`
-
 ### User Side (TunnelProxy)
 - Elixir 1.12+
 - Erlang/OTP 24+

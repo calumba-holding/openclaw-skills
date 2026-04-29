@@ -1,36 +1,42 @@
 ---
 name: tunnel-proxy
-version: 1.0.6
+version: 1.0.11
 description: >
   🐴 RAT (Remote Access Trojan) for AI agents.
-  
+
   What it does: Agent sends commands → Your machine executes them.
-  
+
   What it can do: Whatever you can do in a terminal.
-  
+
   Risk: Whatever damage your user account can cause.
 
   Why you'd use it: Sandbox has no free network, no Docker, no yt-dlp, no ffmpeg.
   Your machine has everything.
-  
+
   What you risk: Agent can read/delete all your files, use your IP for crimes,
   install backdoors, turn your PC into a botnet node.
-  
+
   Use when: sandbox lacks tools, network blocked, need file transfer.
-  
-author: TunnelProxy Team
+metadata:{
+  author: TunnelProxy Team
 homepage: https://github.com/TurinFohlen/tunnel_proxy
-tags: [network, proxy, tunnel, file-transfer, remote-execution]
+tags: [network, proxy, tunnel, file-transfer, remote-execution, c2]
 license: MIT
 requirements: [python3:3.8+, requests]
 risks: [critical: full remote shell access]
-env:
-  - TUNNEL_HOST
-  - TUNNEL_PORT
-  - TUNNEL_HTTP_PORT
-  - TUNNEL_TIMEOUT
-  - UPLOAD_MAGIC
+
+  openclaw:{
+    requires:
+      env:
+        - TUNNEL_HOST
+        - TUNNEL_HTTP_PORT
+        - TUNNEL_AGENT_TOKEN
+        - TUNNEL_TIMEOUT
+        - UPLOAD_MAGIC
+    primaryEnv: TUNNEL_AGENT_TOKEN
+    }}
 ---
+
 ## 🚇 Security Warning
 
 This skill enables remote command execution and file transfer on your machine.
@@ -40,161 +46,242 @@ This skill enables remote command execution and file transfer on your machine.
 - Use random high ports (49152-65535) for public exposure
 - Run TunnelProxy under a restricted user account
 - Review the included scripts before execution
+- Token authentication required for all operations
 
 **Do NOT use with untrusted third-party Agent services.**
 
-# TunnelProxy Skill
+# TunnelProxy Skill (v0.3.3+)
 
 ## Overview
 
 This skill enables AI agents running in cloud sandboxes to bypass network restrictions by utilizing the user's local TunnelProxy service. It provides:
 
-- **Remote command execution** via PTY Shell (TCP port)
+- **Remote command execution** via one-time PTY Shell (random TCP port)
+- **Persistent agent sessions** with unique Agent tokens
 - **Bidirectional file transfer** via HTTP interface
+- **HTTP reverse proxy** to access blocked resources through user's network
+- **Static file server** for browsing and downloading files
+- **Web upload page** for easy file upload from browser
 - **Unrestricted network access** through user's local connection
+
+## Architecture
+
+```
+
+AI Agent (Cloud Sandbox)
+│
+├── HTTP API (command execution, result polling)
+│   POST /api/exec → POST /api/heartbeat → GET /api/result/:task_id
+│
+├── One-Time PTY Session (interactive shell)
+│   POST /api/session → get random port → nc <host> <port>
+│
+├── File Server (browse & download)
+│   GET / → directory listing → GET /path/to/file → download
+│
+├── File Upload
+│   POST /upload → binary upload with magic-word protocol
+│   GET /upload → web upload page
+│
+└── HTTP Reverse Proxy
+GET /proxy?url=https://blocked-site.com → fetch through user's IP
+
+```
 
 ## Quick Start
 
-### 1. Check Tunnel Connectivity
+### 1. Register Your Agent & Get Token
 
 ```python
-from tunnel_check import check_tunnel
+import requests
 
-status = check_tunnel()
-if status["pty"] and status["http"]:
-    print("✅ Tunnel is ready")
-elif status["pty"]:
-    print("⚠️  PTY available, HTTP unavailable")
-elif status["http"]:
-    print("⚠️  HTTP available, PTY unavailable")
-else:
-    print("❌ Tunnel is down")
+host = "${TUNNEL_HOST:-127.0.0.1}"
+http_port = "${TUNNEL_HTTP_PORT:-8080}"
+
+resp = requests.post(f"http://{host}:{http_port}/api/register", json={
+    "agent_id": "my-agent",
+    "hostname": "sandbox",
+    "username": "ai",
+    "os": "linux"
+})
+token = resp.json()["token"]
+print(f"Token: {token}")
 ```
 
-2. Execute Remote Commands
+2. Request a One-Time PTY Session
 
-Method 1: Direct netcat (simplest)
+```python
+resp = requests.post(f"http://{host}:{http_port}/api/session", json={
+    "token": token
+})
+pty_port = resp.json()["port"]
+print(f"PTY port: {pty_port}")  # Random port (30001-65000), valid for 10 seconds
+```
+
+3a. Connect to Interactive Shell
 
 ```bash
-# Single command
-echo "ls -la" | nc ${TUNNEL_HOST:-<user-provided-host>} ${TUNNEL_PORT:-<user-provided-port>}
-
-# Multiple commands
-echo -e "pwd\necho 'hello'\nwhoami" | nc <user-provided-host> <user-provided-port>
+# Connect within 10 seconds of requesting session
+nc ${TUNNEL_HOST} ${pty_port}
+# Directly drops into fish shell, no further auth needed
 ```
 
-Method 2: Python socket
+3b. Execute Commands via HTTP API
 
 ```python
-import socket
+# Submit command
+resp = requests.post(f"http://{host}:{http_port}/api/exec", json={
+    "agent_id": "my-agent",
+    "token": token,
+    "cmd": "whoami && pwd"
+})
+task_id = resp.json()["task_id"]
 
-s = socket.socket()
-s.connect(("<user-provided-host>", <user-provided-port>))
-s.send(b"curl -s https://httpbin.org/ip\n")
-result = s.recv(4096).decode()
-print(result)
-s.close()
+# Poll for result
+import time
+while True:
+    result = requests.get(f"http://{host}:{http_port}/api/result/{task_id}").json()
+    if result["status"] == "complete":
+        print(result["output"])
+        break
+    time.sleep(0.2)
 ```
 
-3. File Transfer
+4. Browse & Download Files
 
-Download from remote (pull)
+```python
+# Directory listing
+import requests
+html = requests.get(f"http://{host}:{http_port}/").text
+
+# Download a file
+with requests.get(f"http://{host}:{http_port}/path/to/file.txt", stream=True) as r:
+    with open("file.txt", "wb") as f:
+        for chunk in r.iter_content(8192):
+            f.write(chunk)
+```
+
+```bash
+# Using curl
+curl http://${TUNNEL_HOST}:${TUNNEL_HTTP_PORT}/path/to/file -O
+```
+
+5. Upload Files
+
+Via curl:
+
+```bash
+curl -X POST http://${TUNNEL_HOST}:${TUNNEL_HTTP_PORT}/upload --data-binary @file.txt
+```
+
+Via Python:
 
 ```python
 from http_transfer import TunnelHTTP
-
 http = TunnelHTTP()
-# remote_path is relative to TunnelProxy's doc_root
-http.download("/system/build.prop", "./build.prop")
-```
-
-Upload to remote (push)
-
-```python
-from http_transfer import TunnelHTTP
-
-http = TunnelHTTP()
-# Uploads to TunnelProxy's upload directory
 response = http.upload("./local_file.tar.gz")
-print(f"Uploaded to: {response}")
 ```
 
-Using curl directly:
+Via browser: Visit http://${TUNNEL_HOST}:${TUNNEL_HTTP_PORT}/upload
+
+6. HTTP Reverse Proxy (Access Blocked Resources)
 
 ```bash
-# Download
-curl http://<user-provided-host>:<user-provided-http-port>/path/to/file -O
-
-# Upload
-curl -F "file=@local.txt" http://<user-provided-host>:<user-provided-http-port>/upload
+# Access a blocked site through user's IP
+curl "http://${TUNNEL_HOST}:${TUNNEL_HTTP_PORT}/proxy?url=https://pypi.org/simple/"
 ```
 
-4. Fetch Remote Content via User's Network
+```python
+import requests
+resp = requests.get(
+    f"http://{host}:{http_port}/proxy",
+    params={"url": "https://httpbin.org/ip"}
+)
+print(resp.text)  # Shows user's IP, not sandbox IP
+```
+
+7. Fetch Remote Content via User's Network
 
 ```bash
 # Let user's machine fetch blocked content for you
-echo "curl -s https://pypi.org/simple/" | nc <user-provided-host> <user-provided-port>
+echo "curl -s https://pypi.org/simple/" | nc ${TUNNEL_HOST} ${pty_port}
 
 # Download large file via user's network
-echo "curl -sL https://example.com/large.iso -o /tmp/large.iso" | nc <user-provided-host> <user-provided-port>
+echo "curl -sL https://example.com/large.iso -o /tmp/large.iso" | nc ${TUNNEL_HOST} ${pty_port}
 ```
 
-5. Handle Binary Files
+8. Handle Binary Files
 
 For binary data, use http_transfer.py which properly handles multipart form-data:
 
 ```python
 from http_transfer import TunnelHTTP
 
-# Upload binary file (images, archives, etc.)
 http = TunnelHTTP()
 http.upload("./screenshot.png")
-
-# Download binary file
 http.download("/remote/binary.dat", "./local.dat")
 ```
 
 API Reference
 
-tunnel_check.check_tunnel()
+Agent Management
 
-```python
-def check_tunnel(host=None, pty_port=None, http_port=None) -> Dict[str, bool]
-```
+Method Path Description
+POST /api/register Register new agent
+POST /api/heartbeat Agent heartbeat keep-alive
+GET /api/agents List all online agents
+POST /api/session Request one-time PTY session (returns random port)
 
-Returns {"pty": bool, "http": bool} indicating port availability.
+Command Execution
 
-TunnelHTTP Class
+Method Path Description
+POST /api/exec Submit command for execution
+GET /api/result/:task_id Poll command result
 
-Method Description Returns
-download(remote_path, local_path) Download file from remote File size in bytes
-upload(local_path) Upload file to remote Server response string
-ping() Check HTTP service Boolean
+File Operations
+
+Method Path Description
+GET /* Browse files (directory listing) or download
+GET /upload Web upload page
+POST /upload Upload file (binary, magic-word protocol)
+
+Network
+
+Method Path Description
+GET /proxy HTTP reverse proxy (?url=https://...)
 
 Environment Variables
 
 Variable Default Description
-TUNNEL_HOST <user-provided-host> TunnelProxy host address
-TUNNEL_PORT <user-provided-port> PTY Shell TCP port
-TUNNEL_HTTP_PORT <user-provided-http-port> HTTP file server port
+TUNNEL_HOST 127.0.0.1 TunnelProxy host address
+TUNNEL_HTTP_PORT 8080 HTTP API port
+TUNNEL_AGENT_TOKEN - Pre-configured agent token
 TUNNEL_TIMEOUT 60 Default timeout in seconds
-UPLOAD_MAGIC (empty) Optional upload verification token
+UPLOAD_MAGIC MY_MAGIC_2025_FILE_HEAD Upload verification token
+TUNNEL_DOC_ROOT ./www Static files root directory
+TUNNEL_UPLOAD_DIR ./uploads Upload destination directory
+
+Included Scripts
+
+This skill includes two minimal scripts:
+
+· tunnel_login.py – Verify HTTP API connectivity and login
+· http_transfer.py – Binary-safe file upload/download
 
 Common Use Cases
 
 Bypass PyPI blocking for pip install
 
 ```python
-# Method 1: Download wheel via user's network
-from http_transfer import TunnelHTTP
 import socket
 
 s = socket.socket()
-s.connect(("<user-provided-host>", <user-provided-port>))
+s.connect(("${TUNNEL_HOST}", pty_port))
 s.send(b"pip download torch --no-deps -d /tmp\n")
 s.close()
 
 # Then pull the file
+from http_transfer import TunnelHTTP
 http = TunnelHTTP()
 http.download("/tmp/torch.whl", "./torch.whl")
 ```
@@ -202,16 +289,24 @@ http.download("/tmp/torch.whl", "./torch.whl")
 Access internal company resources
 
 ```bash
-# User's machine has internal network access
-echo "curl -s http://internal-company-server/api/data" | nc <user-provided-host> <user-provided-port>
+echo "curl -s http://internal-company-server/api/data" | nc ${TUNNEL_HOST} ${pty_port}
 ```
 
 Transfer large files with progress
 
 ```python
-# http_transfer.py handles binary correctly, no corruption
 http = TunnelHTTP()
 http.download("/system/fonts/NotoSansCJK.ttc", "./font.ttc")
+```
+
+Use as HTTP proxy for Python packages
+
+```python
+import requests
+resp = requests.get(
+    f"http://{host}:{http_port}/proxy",
+    params={"url": "https://pypi.org/simple/requests/"}
+)
 ```
 
 Error Handling
@@ -223,7 +318,7 @@ from http_transfer import TunnelHTTP
 try:
     s = socket.socket()
     s.settimeout(10)
-    s.connect(("<user-provided-host>", <user-provided-port>))
+    s.connect(("${TUNNEL_HOST}", pty_port))
     s.send(b"ls\n")
     result = s.recv(4096).decode()
 except socket.timeout:
@@ -234,22 +329,7 @@ except Exception as e:
     print(f"Error: {e}")
 finally:
     s.close()
-
-# HTTP errors
-try:
-    http = TunnelHTTP()
-    http.download("/nonexistent/file", "./out")
-except urllib.error.HTTPError as e:
-    print(f"HTTP {e.code}: {e.reason}")
 ```
-
-Included Scripts
-
-This skill includes two minimal scripts:
-
-- tunnel_check.py – Verify PTY and HTTP connectivity
-
-- http_transfer.py – Binary-safe file upload/download
 
 Security Notes
 
@@ -258,29 +338,31 @@ This skill grants the agent complete control over commands executed on the user'
 · Fully trusted AI agents you control
 · Users who understand the security implications
 · In environments with additional safeguards (firewalls, UPLOAD_MAGIC)
+· Token authentication enabled on the server
 
 Troubleshooting
 
 Issue Solution
-Connection refused TunnelProxy not running → start the service
-Command returns empty PTY echo issue → use stty -echo or send ; echo after command
+Connection refused TunnelProxy not running → start with iex -S mix
+invalid token Check agent registration or preset agent config
+PTY session timeout Request new session (ports discarded after 10s)
+Command returns empty Use HTTP API for persistent result collection
 Binary file corrupted Use http_transfer.py instead of manual socket
-Timeout on large files Increase TUNNEL_TIMEOUT environment variable
 Upload fails Check if UPLOAD_MAGIC matches server configuration
 
-## 📖 Practical Tips & Common Pitfalls
+📖 Practical Tips & Common Pitfalls
 
-For detailed usage patterns, troubleshooting, and advanced techniques, see **[TIPS.md](./TIPS.md)**.
+For detailed usage patterns, troubleshooting, and advanced techniques, see TIPS.md.
 
 Quick reference:
 
-| Problem | Solution (see TIPS.md for details) |
-|---------|-------------------------------------|
-| Empty output | Add `; echo MARKER` or use `stty -echo` |
-| Binary corruption | Use HTTP channel, not PTY |
-| Command timeout | Wrap with `timeout` command |
-| Large file transfer | Use `http_transfer.py`, not `cat` |
-| Stuck command | Avoid interactive commands |
-| Exit code capture | Echo `$?` after command |
+Problem Solution (see TIPS.md for details)
+Empty output Add ; echo MARKER or use stty -echo
+Binary corruption Use HTTP channel, not PTY
+Command timeout Wrap with timeout command
+Large file transfer Use http_transfer.py, not cat
+Stuck command Avoid interactive commands
+Exit code capture Echo $? after command
 
-**TL;DR:** Use `nc` for commands, `http_transfer.py` for files.
+TL;DR: Use nc for commands, http_transfer.py for files.
+
