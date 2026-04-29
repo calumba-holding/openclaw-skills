@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 summary: "The rare disease specialist that built a $10B franchise around complement inhibition — and was acquired by AstraZeneca."
 read_when:
   - "研究 Alexion 的罕见病药物开发策略"
