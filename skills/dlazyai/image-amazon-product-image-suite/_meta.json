@@ -3,9 +3,15 @@
   "slug": "image-amazon-product-image-suite",
   "displayName": "Image Amazon Product Image Suite",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776923054443,
-    "commit": "https://github.com/openclaw/skills/commit/97771a779e8e473863e500cccdbdf3cfb45dd082"
+    "version": "1.0.6",
+    "publishedAt": 1777430769221,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776923054443,
+      "commit": "https://github.com/openclaw/skills/commit/97771a779e8e473863e500cccdbdf3cfb45dd082"
+    }
+  ]
 }
