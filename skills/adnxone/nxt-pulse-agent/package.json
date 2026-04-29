@@ -1,7 +1,7 @@
 {
-  "name": "nxt-pulse-agent",
-  "version": "0.3.1",
-  "description": "A highly proactive agent skill (NXT) that manages user energy levels and task prioritization with ADHD micro-stepping support.",
+  "name": "NXT Pulse Agent",
+  "version": "0.5.0",
+  "description": "An adaptive proactive agent skill that manages user energy levels and task prioritization using semantic pulse checks.",
   "type": "skill",
   "author": "adnXone <https://github.com/adnxone>",
   "license": "MIT",
@@ -14,16 +14,11 @@
       "emoji": "💓",
       "tags": [
         "proactivity",
-        "adhd",
         "performance",
         "energy-management",
-        "nxt"
+        "nxt-agent"
       ],
       "language": "en"
     }
-  },
-  "main": "pulse.js",
-  "scripts": {
-    "pulse": "node pulse.js"
   }
 }

@@ -1,11 +1,17 @@
 {
   "owner": "adnxone",
   "slug": "nxt-pulse-agent",
-  "displayName": "Nxt Pulse Agent",
+  "displayName": "NXT Pulse Agent",
   "latest": {
-    "version": "0.3.1",
-    "publishedAt": 1776750468141,
-    "commit": "https://github.com/openclaw/skills/commit/16e91511770bffbd69353a2fbbdae5d91f927b0e"
+    "version": "0.5.0",
+    "publishedAt": 1777276043370,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.1",
+      "publishedAt": 1776750468141,
+      "commit": "https://github.com/openclaw/skills/commit/16e91511770bffbd69353a2fbbdae5d91f927b0e"
+    }
+  ]
 }

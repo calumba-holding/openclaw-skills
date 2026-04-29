@@ -1,40 +1,62 @@
-# 💓 NXT Pulse Agent v0.2.0
+# NXT Pulse Agent (NXT) v0.5.0
 
-> **A neuro-inclusive, energy-aware proactive partner for OpenClaw.**
+> **Proactive energy-aware task management for OpenClaw agents.**
 
-NXT Pulse Agent (formerly Proactive Pulse) is a high-performance skill designed to transform your AI assistant into a respectful, proactive partner. Built with ADHD management principles and Hermes-inspired logic, it prioritizes your mental energy over rigid schedules.
+NXT bridges the gap between reactive chat and proactive partnership. It monitors your state and energy levels to ensure the right tasks are proposed at the right time, preventing burnout and decision paralysis.
 
-[![GitHub license](https://img.shields.io/github/license/adnxone/nxt-pulse-agent)](https://github.com/adnxone/nxt-pulse-agent/blob/main/LICENSE)
-[![OpenClaw NXT](https://img.shields.io/badge/OpenClaw-NXT-blueviolet)](https://docs.openclaw.ai)
+## ✨ New in v0.5.0
+- **`/pulse` Command**: Full transparency into the agent's "mind".
+- **Manual Overrides**: Correct the agent if it misreads your vibe.
+- **Token Efficiency**: New context guardrails (`MAX_CONTEXT_CHARS`) for power users.
+- **Sensitivity Tuning**: Adjustable `PULSE_SENSITIVITY`.
 
----
+## 📦 Installation
 
-## 🌟 Key Features
-
-- **Energy-Aware Nudging**: Detects user energy (🟢/🟡/🔴) and proactively suggests moving complex tasks to your "Hyperfocus Windows."
-- **"Just 2 Minutes" Mode**: When you're in 🔴 (Low Energy), the agent proposes a single micro-step (max 2 min effort) to break executive dysfunction without triggering burnout.
-- **Critical Override**: Automatically bypasses "Snooze" modes for deadlines within a configurable threshold (default 6h).
-- **Admin Audit Trail**: Every proactive decision is logged in `memory/pulse-history.jsonl` for full transparency and review.
-- **Local State Engine**: Powered by `pulse.js` for zero-bloat, efficient context management.
-
-## 🚀 Getting Started
-
-### Installation
 ```bash
-clawhub install adnxone/nxt-pulse-agent
+clawhub install nxt-pulse-agent
 ```
 
-### Configuration
-The agent automatically uses `pulse.js` to track state. You can customize behavior in your `package.json` or environment variables:
-- `PULSE_COOLDOWN`: Default 4 hours.
-- `CRITICAL_THRESHOLD`: Default 6 hours.
+## ⚙️ Configuration
 
-## 🔍 How it Works
-The NXT Pulse Agent doesn't just wait for commands. It monitors your session logs and local calendar to act as an executive function support layer. If it sees you are tired, it protects you. If it sees a deadline, it nudges you respectfully.
+To configure NXT Pulse Agent, add a `config` object to your skill entry in `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "nxt-pulse-agent": {
+        "enabled": true,
+        "config": {
+          "PULSE_SENSITIVITY": 3,
+          "MAX_CONTEXT_CHARS": 5000,
+          "PULSE_COOLDOWN": "4h",
+          "DOWNTIME_KEYWORDS": [],
+          "CONTEXT_SOURCES": ["memory/daily-jurnal.md", "logs/activity.log"]
+        }
+      }
+    }
+  }
+}
+```
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `PULSE_SENSITIVITY` | 1-5 scale for energy state triggers (1=conservative, 5=sensitive). | `3` |
+| `MAX_CONTEXT_CHARS` | Character limit for reading external context sources per pulse. | `5000` |
+| `PULSE_COOLDOWN` | Minimum time duration between proactive nudges (e.g. 1h, 4h). | `4h` |
+| `DOWNTIME_KEYWORDS` | Optional manual triggers. Note: Semantic detection works in any language by default. | `[]` |
+| `SCOPE` | Interaction scope: `dm` or `group`. | `dm` |
+
+## 🕹 Commands
+
+- **/pulse**: Check current state.
+- **/pulse set [green/yellow/red]**: Manual override.
+- **/pulse quiet [time]**: Mute proactive nudges (e.g., `1h`).
+
+## 🛠 How it Works
+
+NXT uses **Semantic Pulse Checks**. It reads the "vibe" of recent messages. If you say "I've had a long day," the agent updates your state to `🔴 Low` and shifts from "Productivity Mode" to "Downtime Protocol."
 
 ---
-Created by [adnXone](https://github.com/adnxone) for the OpenClaw community.
-
-<p align="center">
-  <img src=".github/icon.png" alt="NXT Pulse Agent Icon" width="128">
-</p>
+Developed by **adnXone** (@adnxone). 
+[GitHub](https://github.com/adnXone/nxt-pulse-agent) | [ClawHub](https://clawhub.ai/nxt-pulse-agent)
