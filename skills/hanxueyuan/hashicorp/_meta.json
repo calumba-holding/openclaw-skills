@@ -1,0 +1,11 @@
+{
+  "owner": "hanxueyuan",
+  "slug": "hashicorp",
+  "displayName": "Hashicorp",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777111803703,
+    "commit": null
+  },
+  "history": []
+}
