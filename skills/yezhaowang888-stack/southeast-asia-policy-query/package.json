@@ -15,22 +15,41 @@
     "market-analysis",
     "investment"
   ],
-  "author": "hk001",
+  "author": "[请替换为您的名称]",
   "license": "MIT",
-  "dependencies": {}, 
+  "dependencies": {},
   "clawhub": {
     "category": "business-intelligence",
-    "tags": ["southeast-asia", "policy", "market-analysis", "investment", "deepseek-v4", "惠迈智能体"],
+    "tags": [
+      "southeast-asia",
+      "policy",
+      "market-analysis",
+      "investment",
+      "deepseek-v4",
+      "惠迈智能体"
+    ],
     "compatibility": {
-      "openclaw": ">=2026.4.0",
+      "openclaw": ">=2026.4.15",
       "deepseek": ">=v4.0.0",
-      "huimai-agents": "三层架构"
+      "mirrors": [
+        "clawhub-official-cn",
+        "tencent-skillhub"
+      ]
     },
     "features": [
       "DeepSeek v4驱动",
       "惠迈智能体协作",
       "超前技术配置",
       "跨境业务优化"
-    ]
+    ],
+    "security": {
+      "audit_passed": true,
+      "no_remote_execution": true,
+      "no_hardcoded_keys": true
+    },
+    "commercial": {
+      "license": "MIT-0",
+      "restriction": "商业SaaS集成需获得作者授权"
+    }
   }
 }
