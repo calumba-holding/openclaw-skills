@@ -1,237 +1,231 @@
 ---
 name: huo15-xiaohongshu
-displayName: 火一五小红书调研分析技能
-description: 小红书笔记抓取 + 数据分析。用浏览器 Cookie 的登录态，带强节流和风控检测，尽量不被封号。支持搜索、笔记详情、用户主页抓取；支持关键词、互动、发文时段、爆款特征等离线分析。触发词：小红书、xhs、笔记分析、小红书选题、爆款研究。
-version: 1.0.0
+displayName: 火一五小红书创作伙伴
+description: 有记忆、能学习、会教方法的小红书创作助手。两套打分叠加 — ①工程师流（标题/首段/排版/emoji/话题/合规）②Allen 流（留白/AI腔/带读者/共鸣/邀请语/范本范，含 Jarvis 陷阱 5 维），加风格档案、规则覆盖、写作教练（一次只 focus 一维的渐进式 / 全维诊断 / LLM 改写）、对话式选题、对标拆解、造词、栏目化、多读者模拟、封面 brief、草稿版本管理、今日推荐、周复盘、A/B 测试、写作训练。allen / engineer / balanced 三种预设一键切换。绝不自动化发布。触发词：小红书、xhs、写小红书、小红书文案、爆款文案、Allen 流、xiaohongshu。
+version: 3.5.1
 aliases:
-  - 火一五小红书
-  - 小红书分析
-  - 小红书抓取
+  - 火一五小红书技能
+  - 火一五小红书创作伙伴
+  - 小红书全流程
+  - 小红书助手
+  - 小红书写作
+  - 小红书文案
+  - 小红书选题
+  - 小红书发布
+  - 小红书运营
+  - 小红书复盘
+  - 小红书教练
+  - Allen 流
+  - 写小红书
   - xhs
   - xiaohongshu
 dependencies:
   python-packages:
     - requests
-    - jieba           # 可选，没有也能跑
-    - pandas          # 可选
+    - jieba       # 可选
+    - pandas      # 可选
+    - anthropic   # 可选 — LLM 增强
 ---
 
-# 火一五小红书调研分析技能 v1.0
+# 火一五小红书创作伙伴 v3.5
 
-> 给个人号 / 小团队做"选题调研、同行分析"，不是批量搬运 — 青岛火一五信息科技有限公司
+> 详细文档见 [README.md](README.md)，版本历史见 [docs/changelog.md](docs/changelog.md)。
+>
+> **v3.5 东东枪全书入库：** 《文案的基本修养》99章全本要点 + 32条金句 /
+> 新增 `data/dongdongqiang_book.md` 完整索引。
+>
+> **v3.4 文案方法论升级：** 新增 蕉下三大句式（不是…而是… / 修辞比喻 / 每一…都是…）+ 东东枪《文案的基本修养》AB点/核心体验/洞察碰撞 框架 /
+> 冬日系列5篇案例 / 贾维斯实战水位追踪（15→30分）/ 场景联想度训练提示。
+>
+> **v3.3 算法对齐：** 7 维打分（新加 CES 互动 + 标题前 13 字关键词位置）/
+> #AI生成内容 必标检查（2026/01 起强制）/ 发布节奏硬限（每天 ≤ 2 篇 / 间隔 ≥ 2h） /
+> 话题 5 槽分级（2 泛 + 2 垂 + 1 长尾）/ 3:4 HTML 封面生成（F12 截图）。
 
----
+## 能做什么
 
-## 一、核心能力
+| 阶段 | 命令 |
+|---|---|
+| **入门** | `assistant.py init --baseline ...` 建风格档案 |
+| **状态** | `assistant.py status` / `next` / `today` |
+| **调研** | `safety_check.py` → `scrape-{search,note,user}.py` → `analyze-notes.py` |
+| **选题** | `topic_ideas.py` / `brainstorm.py` / `today.py` |
+| **对标** | `reverse_engineer.py --url <爆款>`（拆出公式/骨架/Allen 6 维/why it works） |
+| **创作** | `write_post.py draft` 出骨架 → `drafts.py` 版本管理 |
+| **教练** | `coach_iterate.py` 一次 focus 一维 ｜ `coach.py` 全维 ｜ `critique.py` Allen 美学 ｜ `polish_post.py` 工程分 |
+| **改写** | `critique.py --rewrite`（需 LLM）｜ `practice.py rewrite-jarvis` 训练改写思路 |
+| **配套** | `coin_word.py` 造词 ｜ `series_design.py` 栏目化 ｜ `reader_simulate.py` 多读者 ｜ `cover_brief.py` 封面 |
+| **合规** | `compliance_check.py`（绝对化词/医美/导流/诱导互动） |
+| **发布** | `publish_helper.py`（剪贴板 + 10 项 checklist；**不自动化**） |
+| **复盘** | `track_post.py snapshot` → `weekly_review.py` |
+| **训练** | `practice.py prompt|rewrite|rewrite-jarvis` ｜ `ab_test.py` |
+| **学习** | `assistant.py learn key=value` ｜ `evolve` ｜ `preset allen|engineer|balanced` |
 
-1. **抓取**（浏览器 Cookie 登录态）
-   - 单篇笔记详情（`scrape-note.py`）
-   - 用户主页基本信息 + 最近笔记预览（`scrape-user.py`）
-   - 关键词搜索结果首页（`scrape-search.py`）
-2. **离线分析**（`analyze-notes.py`）
-   - 互动概览：均值 / 中位数 / P90 / 最高
-   - 爆款 Top 10 笔记
-   - Top 30 关键词（有 `jieba` 用 `jieba`，没有退化为按标点切）
-   - Top 30 话题标签
-   - 星期 × 小时 发布时段热力
-   - 最佳发文时段（按中位互动排序）
-   - 爆款 vs 普通的差异（标题长度、图片数、话题数、正文长度）
-3. **安全自检**（`safety_check.py`）：抓前先跑一遍，确认 Cookie、风控状态、节奏。
+## CES 算法心法（v3.3）
 
----
+```
+关注(8) > 转发(4) ≈ 评论(4) > 点赞(1) ≈ 收藏(1)
+```
 
-## 二、防封号原则（很重要，先读）
+引导 1 次"软关注" = 引导 8 次点赞。互动设计优先级：
+**软关注 → 评论邀请 → 收藏暗示 → 点赞**。
 
-> 小红书的风控比想象中严格。违反任何一条都可能导致账号被限流、封禁或要求验证。
+「想看类似的可以蹲一下」= 8 分；「你呢，留个故事给我」= 4 分；「点赞」= 1 分。
 
-1. **用自己的 Cookie**。脚本不做登录自动化 — 输密码 / 刷验证码都会立刻被识别。
-   在浏览器正常登录后，打开 DevTools → Application → Cookies → 复制整个字符串。
-2. **不共享 Cookie**。不同账号千万别混用同一台设备的 Cookie，否则会被判定为"同一人操作多号"。
-3. **节奏第一**。脚本默认每次请求随机 3~7 秒延时，单会话 30 次封顶；
-   不要把 `min_delay` 调到 0 或 1，省的那点时间还不够补一个账号。
-4. **两次会话间隔 10~30 分钟**。连续跑会触发时间维度的风控。
-5. **日请求不超过 100 次**。个人号调研 100 次足够了，如果真的超过请换时段。
-6. **不自动执行写操作**。脚本里完全没有发帖 / 点赞 / 关注 / 评论接口，也请不要自己加上。
-7. **风控即退出**。遇到 460 / 461 / 403 / "captcha" / "验证" / 重定向登录，**立即停止**，
-   到浏览器里完成一次正常浏览 + 验证操作，等至少 30 分钟再试。
-8. **不翻页批量抓**。搜索只拉第一页；用户主页也只拿默认的 preview 列表，
-   想批量看历史贴子请用浏览器手动翻（没有办法，这是风控边界）。
+新发布笔记 → **100~500 流量池** → 2 小时内 CTR ≥ 8% + 互动率 ≥ 5% → 进下一级。
 
----
+## 标题黄金法则
 
-## 三、准备工作
+**前 13 字含核心关键词**（搜索权重 40%）+ 整体 16~22 字 + 含钩子词 + emoji ≤ 2 个。
 
-### 3.1 安装依赖
+`assistant.py learn main_keyword=干皮护肤` 后，score_title 自动检查关键词位置。
+
+## 不做什么
+
+❌ 自动发布 / 多账号矩阵 / AI 生图 / 一键全文 / 达人投放分析
+
+## 防封号红线
+
+1. 用自己的 Cookie，脚本不做登录自动化
+2. 每次请求 3~7 秒延时，单会话 30 次封顶，会话间隔 10~30 分钟
+3. 460 / 461 / 403 / captcha / 重定向登录 → **立即停 30 分钟**
+4. 不翻页批量抓（搜索只取首页，主页只取 preview）
+5. 日请求 ≤ 100 次
+
+## 工作流（全部走 assistant.py）
 
 ```bash
-pip install requests
-pip install jieba pandas    # 可选，分析更准
+# 第一次
+python3 scripts/assistant.py init --persona "30+ 干皮女生" --niche "护肤" \
+    --baseline note1.md note2.json
+python3 scripts/assistant.py preset allen        # 切 Allen 美学加权
+
+# 每天写一条
+python3 scripts/assistant.py today               # 今日选题
+python3 scripts/assistant.py drafts new --topic <主题>
+python3 scripts/assistant.py write <主题>        # 起草
+python3 scripts/assistant.py coach-iterate <id>  # 一次只改一维（推荐）
+python3 scripts/assistant.py drafts diff <id>    # 对比 v_n vs v_{n-1}
+python3 scripts/assistant.py publish <id>        # 剪贴板 + checklist
+
+# 看到爆款想学
+python3 scripts/assistant.py reverse --url <URL> --add-baseline
+
+# 周末
+python3 scripts/assistant.py review              # 周/月复盘
+python3 scripts/assistant.py learn disable=emoji # 教助手新规则
+python3 scripts/assistant.py evolve              # 自动演进
 ```
 
-### 3.2 获取 Cookie（3 分钟）
+## Allen 文案心法
 
-1. 用 Chrome / Edge 打开 https://www.xiaohongshu.com ，正常登录；
-2. `F12` → Application（Chrome）→ Cookies → 选 `https://www.xiaohongshu.com`
-3. 全选复制，拼成 `name1=value1; name2=value2; ...` 的字符串（或用 Cookie 扩展一键导出）；
-4. 关键字段应包含 `web_session`、`a1`、`webId`、`xsecappid`；
-5. 导出到环境变量：
+> 1. 「好文案不是写出来的，是留出来的。」— 留白
+> 2. 「站文案里面读文案，不是站在外面分析。」— 第三课
+> 3. 「卖的是身份认同，不是商品本身。」— 第二课
+> 4. ❌ 教读者「怎么做」 vs ✅ 展示「什么样的人已经在做」 — Jarvis 陷阱核心
+> 5. 「文案不是方法，是情绪出口。」— 2026-04-27 第五课总结
+> 6. 「场景共鸣不是找冷知识，是找人人都有过的共同记忆。」— 终课批改
+> 7. 「创意文案有时不具有指向性，更多是情绪的表达。」— 2026-04-28 点评
+
+详见 `data/allen_method.md`（Allen 三课 + 五技法 + 16 案例 + 蕉下三大句式 + 东东枪基本修养 + Jarvis 陷阱 5 维差距）。
+
+## 蕉下万能句式（v3.4 新增）
+
+> 来源：Allen 2026-04-28 案例教学。蕉下（Beneunder）轻量化户外品牌，贩卖的是「能穿出门的情绪价值」。
+
+### 底层逻辑：痛点 → 场景 → 方案 → 情绪共鸣
+
+### 句式一：「不是……而是……」— 颠覆认知
+先否定旧预设，再给出品牌新定义。否定句推开旧认知，肯定句拉高产品价值。
+- 例：「不是害怕太阳，而是拥抱太阳」
+- 例：「人不是去了户外，而是回到了户外」
+
+### 句式二：修辞/比喻 — 参数变画面
+让产品功能寄生在自然意象上，不说参数只给感受。
+- 例：「风是最好的造型师」（抗风性能 → 风的造型服务）
+- 例：「像仙人掌一样，给肌肤加一层防晒层」（防晒+保湿 → 一个意象完成）
+
+### 句式三：「每一……都是……」— 功能升维
+把日常小事拉高成品牌体验。
+- 例：「每一口呼吸都是松弛的味道」
+- 例：「让每一次去户外的决定，都变得笃定」
+
+### 蕉下 vs 尽兴指南 风格对比
+
+| 维度 | 蕉下 | 人生尽兴指南 |
+|------|------|------------|
+| 角色 | 痛点爆破者 | 情绪出口提供者 |
+| 句式 | 对比/修辞/每一是 | 场景/留白/栏目化 |
+| 卖什么 | 敢晒太阳的野心 | 暂停一下活成自己的许可证 |
+| 姿态 | 「怕X，就穿蕉下」直接给方案 | 「你的尽兴式是什么模样」让读者走到答案前 |
+
+## 东东枪《文案的基本修养》参考（v3.4 新增）
+
+> 中信出版社 2019，东东枪著。99篇小文讲透广告创意与文案之道。
+
+### 核心概念速查
+
+- **广告的定义：** 创作并传播内容，改变他人的看法或感受，以促成行为改变
+- **AB点理论：** A=消费者现在看法/感受 → B=你希望他们变成的看法/感受。广告只能改变看法感受，不能直接改变行为
+- **核心体验（Key Experience）：** 品牌真正在售卖、被消费者真正买走的东西。电钻卖的不是洞，是身份感/安全感/炫耀感
+- **洞察（Insight）：** 未被发现或已被遗忘的真相。存在于认知与真相、表达与认知两个缝隙里。只能发现不能发明
+- **品牌 = 固化的偏好：** 三类结果 — 默认信赖 / 优先选择 / 相对溢价
+- **品牌传播 vs 产品传播：** 前者「为你唱首歌」，后者「给你房本车证」
+- **心象 > 形象：** 用认知状态定义目标人群，不用人口统计学
+- **Idea金字塔：** 策略Idea → 创意Idea → 执行Idea
+- **创意碰撞法：** 核心体验 × 洞察 = 创意Idea
+
+### 对小红书文案的启示
+- 每篇笔记想清楚 AB 点：读者现在怎么想 → 看完后怎么想
+- 不要卖内容本身，卖「核心体验」
+- 好的洞察 = 读者看完说「真相了」
+- 品牌号 ≠ 每篇都在卖产品，有时只需「唱首歌」让人更喜欢你
+
+## 场景联想度（v3.4 新增）
+
+> AI 写文案核心短板：场景库太窄，反复用同一批词（西瓜/蝉/冰棍/窗帘/傍晚的风）。
+
+**自检规则：** 全文中出现重复意象（如连续两篇都用「窗帘鼓成帆」）→ 提示换词。
+**缓解办法：** 每次写之前，先列出 10 个不常用的季节/场景关联词，选其中 3 个入文。
+**长期方案：** 持续喂书/案例，扩容场景库。
+
+## 风格预设
+
+| 预设 | 工程权重 | Allen 权重 | 适合 |
+|---|---|---|---|
+| `allen` | 50% | 50% | 品牌号、情感号、生活号 |
+| `engineer` | 100% | 0% | 干货号、教程、工具测评 |
+| `balanced` | 70% | 30% | 综合个人号（默认） |
 
 ```bash
-export XHS_COOKIE='web_session=...; a1=...; webId=...; xsecappid=xhs-pc-web; ...'
+python3 scripts/assistant.py preset allen
 ```
 
-### 3.3 先自检
+## 数据资产
 
-```bash
-python3 scripts/safety_check.py
+`data/` 目录包含 9 份对人和 Claude 都可读的资产：标题公式 11 种、正文骨架 7 种、
+emoji 调色板、话题标签库、社区规则、敏感词、Allen 方法论、AI 腔黑名单、节气画面库。
+
+## 个人档案位置
+
+```
+~/.xiaohongshu/
+├── posts.jsonl / snapshots.jsonl  # 起草历史 + 互动快照
+├── drafts/<id>/v01.md, v02.md, ... # 草稿版本（v3.2）
+└── profile/
+    ├── style.json / rules.json    # 风格 + 规则覆盖
+    ├── baseline/ feedback.jsonl   # 代表作 + 反馈
+    ├── iter_sessions/             # 渐进式教练历程（v3.2）
+    └── reviews/                   # 周/月复盘归档
 ```
 
-应当看到 `✓ __INITIAL_STATE__ 解析成功`；否则先别跑抓取，检查 Cookie 是否过期或被风控。
+## 触发词
+
+小红书 / xhs / xiaohongshu / 写小红书 / 小红书文案 / 爆款文案 /
+小红书选题 / 小红书发布 / 小红书复盘 / 小红书教练 / Allen 流 / 范本范
 
 ---
 
-## 四、命令行速查
-
-### 4.1 单篇笔记
-
-```bash
-python3 scripts/scrape-note.py \
-  --url "https://www.xiaohongshu.com/explore/64abc...?xsec_token=xxx" \
-  --out /tmp/note.json
-# 或
-python3 scripts/scrape-note.py --note-id 64abc... --out /tmp/note.json
-```
-
-### 4.2 用户主页
-
-```bash
-python3 scripts/scrape-user.py \
-  --url "https://www.xiaohongshu.com/user/profile/5f123..." \
-  --out /tmp/user.json
-```
-
-### 4.3 搜索关键词
-
-```bash
-python3 scripts/scrape-search.py --keyword 秋冬护肤 --out /tmp/search.json
-```
-
-### 4.4 离线分析
-
-数据集格式：JSON 数组或 JSONL，每条是 `scrape-note.py` 输出的结构。
-
-```bash
-# 合并多篇笔记为一个 JSONL
-for id in 64abc 64abd 64abe; do
-  python3 scripts/scrape-note.py --note-id $id >> notes.jsonl
-done
-
-# 分析（默认输出 Markdown 报告）
-python3 scripts/analyze-notes.py --input notes.jsonl --out report.md
-
-# 输出完整 JSON
-python3 scripts/analyze-notes.py --input notes.jsonl --format json --out report.json
-```
-
-样例数据：`examples/sample_notes.jsonl`（5 条，可直接 analyze 跑通）。
-
----
-
-## 五、Python API
-
-```python
-import sys; sys.path.insert(0, 'scripts')
-
-from xhs_client import XHSClient, load_cookie_from_env
-from xhs_parser import parse_note_page, note_to_dict
-from xhs_analyzer import load_notes, full_report, report_to_markdown
-
-# 抓
-client = XHSClient(cookie=load_cookie_from_env(), min_delay=4, max_delay=9)
-html = client.get_explore_page(note_id="64abc...", xsec_token="xxx")
-note = parse_note_page(html, note_id="64abc...")
-print(note.title, note.interactions.liked_count)
-
-# 分析
-notes = load_notes("notes.jsonl")
-report = full_report(notes)
-print(report_to_markdown(report))
-```
-
-主要接口：
-
-| 模块 | 函数 | 说明 |
-|------|------|------|
-| `xhs_client` | `XHSClient(cookie, min_delay, max_delay, max_requests_per_session)` | HTTP 层，带节流 + 风控检测 |
-| `xhs_client` | `client.get_explore_page(note_id, xsec_token)` | 拉单篇笔记 HTML |
-| `xhs_client` | `client.get_user_page(user_id)` | 拉用户主页 HTML |
-| `xhs_client` | `client.get_search_page(keyword)` | 拉搜索页 HTML |
-| `xhs_client` | `client.cool_down(minutes)` | 主动冷却（多次任务之间用） |
-| `xhs_parser` | `parse_note_page(html, note_id) -> Note` | HTML → 结构化笔记 |
-| `xhs_parser` | `parse_user_page(html) -> UserProfile` | HTML → 用户资料 |
-| `xhs_parser` | `parse_search_page(html) -> List[dict]` | HTML → 搜索结果 |
-| `xhs_analyzer` | `load_notes(path)` | 加载 JSON / JSONL |
-| `xhs_analyzer` | `full_report(notes)` | 一次性跑所有分析 |
-| `xhs_analyzer` | `report_to_markdown(report)` | 报告 → Markdown |
-| `xhs_analyzer` | `engagement_summary(notes)` | 互动摘要 |
-| `xhs_analyzer` | `top_notes(notes, n)` | Top N 爆款 |
-| `xhs_analyzer` | `keyword_frequency(notes)` | 关键词 Top 30 |
-| `xhs_analyzer` | `tag_frequency(notes)` | 话题 Top 30 |
-| `xhs_analyzer` | `posting_time_heatmap(notes)` | 周 × 小时热力 |
-| `xhs_analyzer` | `best_posting_windows(notes, n)` | 最佳发文时段 |
-| `xhs_analyzer` | `viral_pattern(notes)` | 爆款 vs 普通对比 |
-
----
-
-## 六、数据结构
-
-```python
-# xhs_parser.Note
-Note(
-    note_id, title, content, note_type,
-    images: List[str], video_url, tags: List[str], at_users: List[str],
-    author: Author(user_id, nickname, avatar, follower_count, ...),
-    interactions: Interactions(liked_count, collected_count, comment_count, shared_count),
-    ip_location, published_at, last_update_at, url, raw_time,
-)
-```
-
-导出字典（用于 JSON 存档）直接用 `note_to_dict(note)`。
-
----
-
-## 七、常见错误对照
-
-| 错误 | 含义 | 处理 |
-|------|------|------|
-| `LoginRequired: HTTP 401` | Cookie 过期 | 浏览器重新登录，重新 export |
-| `RateLimited: HTTP 460/461` | 频率风控 | **立即停止**，至少等 30 分钟 |
-| `BlockedByCaptcha: HTTP 403` / 响应出现 verify 字样 | 需要滑块 | 到浏览器过一次验证，再等 30 分钟 |
-| `NotFound: HTTP 404` | 笔记被删或 id 错 | 换一个看看 |
-| `解析失败 — 没找到 __INITIAL_STATE__` | HTML 结构变了 或 被重定向 | 加 `--save-html` 看原始页，可能要更新 parser 正则 |
-
----
-
-## 八、触发词
-
-- 小红书 / xhs / xiaohongshu / red
-- 小红书选题 / 小红书调研 / 小红书分析 / 爆款分析
-- 抓小红书笔记 / 小红书同行分析
-
----
-
-## 九、版本历史
-
-- **v1.0.0（当前）** — 首版。
-  - 抓取：单篇笔记 / 用户主页 / 关键词搜索（首页）
-  - 分析：互动摘要 / Top 榜 / 关键词 / 话题 / 时段热力 / 最佳发文 / 爆款特征
-  - 安全：`safety_check.py`、强节流、风控检测（460/461/403/captcha/redirect-to-login）
-  - 样例：`examples/sample_notes.jsonl`（5 条）
-
----
-
-**重要免责：** 本技能只为合规的、针对公开可见内容的个人调研；
-请尊重 xiaohongshu.com 的服务条款和当地法规。
-商业批量采集、内容搬运、绕过风控等行为均不在本技能支持范围内。
+**重要免责：** 仅用于合规、针对公开可见内容的个人调研与创作辅助。
+请尊重 xiaohongshu.com 的服务条款。**绝不**支持商业批量采集 / 内容搬运 / 绕过风控 / 自动化互动。
 
 **技术支持：** 青岛火一五信息科技有限公司
