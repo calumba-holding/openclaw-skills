@@ -63,3 +63,106 @@ def test_cli_export_returns_structured_diagnostics_on_integrity_failure(
     assert captured.out == ""
     assert '"kind": "export_integrity_failure"' in captured.err
     assert '"terminalReason": "integrity_failed_after_fallback"' in captured.err
+
+
+# ── Prompt file generation (Phase 1) ──────────────────────────
+
+_MINIMAL_BLUEPRINT = (
+    '{"version":"1.0","meta":{"title":"Test","industry":"common","version":"1.0"},'
+    '"library":{"capabilities":[],"actors":[],"flowSteps":[],"systems":[]},'
+    '"relations":[]}'
+)
+
+
+def test_cli_export_generates_prompt_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from business_blueprint import cli as cli_module
+
+    bp = tmp_path / "solution.blueprint.json"
+    bp.write_text(_MINIMAL_BLUEPRINT, encoding="utf-8")
+
+    monkeypatch.setattr(cli_module, "export_svg_auto", lambda *a, **k: None)
+    monkeypatch.setattr(cli_module, "export_html_viewer", lambda *a, **k: None)
+    monkeypatch.setattr(cli_module.sys, "argv", ["bb", "--export", str(bp)])
+
+    exit_code = cli_module.main()
+    assert exit_code == 0
+
+    export_dir = tmp_path / "solution.exports"
+    prompt_files = list(export_dir.glob("generation-prompt-*.md"))
+    assert len(prompt_files) == 1
+    content = prompt_files[0].read_text()
+    assert "## Provenance" in content
+    assert "## Export Configuration" in content
+
+
+def test_cli_export_drawio_generates_prompt_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from business_blueprint import cli as cli_module
+
+    bp = tmp_path / "solution.blueprint.json"
+    bp.write_text(_MINIMAL_BLUEPRINT, encoding="utf-8")
+
+    monkeypatch.setattr(cli_module, "export_drawio", lambda *a, **k: None)
+    monkeypatch.setattr(cli_module.sys, "argv", ["bb", "--export", str(bp), "--format", "drawio"])
+
+    exit_code = cli_module.main()
+    assert exit_code == 0
+
+    export_dir = tmp_path / "solution.exports"
+    prompt_files = list(export_dir.glob("generation-prompt-*.md"))
+    assert len(prompt_files) == 1
+    content = prompt_files[0].read_text()
+    assert "**Format**: drawio" in content
+
+
+def test_cli_export_auto_generates_prompt_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from business_blueprint import cli as cli_module
+
+    bp = tmp_path / "solution.blueprint.json"
+    bp.write_text(_MINIMAL_BLUEPRINT, encoding="utf-8")
+
+    monkeypatch.setattr(cli_module, "export_svg", lambda *a, **k: None)
+    monkeypatch.setattr(cli_module, "export_html_viewer", lambda *a, **k: None)
+    monkeypatch.setattr(cli_module.sys, "argv", ["bb", "--export-auto", str(bp)])
+
+    exit_code = cli_module.main()
+    assert exit_code == 0
+
+    export_dir = tmp_path / "solution.exports"
+    if not export_dir.exists():
+        # --export-auto uses stem.exports = {bp_stem}.exports
+        export_dir = tmp_path / f"{bp.stem}.exports"
+    prompt_files = list(export_dir.glob("generation-prompt-*.md"))
+    assert len(prompt_files) == 1, f"No prompt files in {export_dir}; contents: {list(export_dir.iterdir()) if export_dir.exists() else 'dir missing'}"
+    content = prompt_files[0].read_text()
+    assert "**Format**: auto-svg" in content
+
+
+def test_cli_html_generates_prompt_file(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from business_blueprint import cli as cli_module
+
+    bp = tmp_path / "solution.blueprint.json"
+    bp.write_text(_MINIMAL_BLUEPRINT, encoding="utf-8")
+    html_out = tmp_path / "output.html"
+
+    monkeypatch.setattr(cli_module, "export_html_viewer", lambda *a, **k: None)
+    monkeypatch.setattr(cli_module.sys, "argv", ["bb", "--html", str(html_out), "--from", str(bp)])
+
+    exit_code = cli_module.main()
+    assert exit_code == 0
+
+    prompt_files = list(tmp_path.glob("generation-prompt-*.md"))
+    assert len(prompt_files) == 1
+    content = prompt_files[0].read_text()
+    assert "**Format**: html" in content

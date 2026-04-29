@@ -1,11 +1,17 @@
 {
   "owner": "kaisersong",
   "slug": "kai-business-blueprint",
-  "displayName": "kai-business-blueprint",
+  "displayName": "Business Blueprint Skill",
   "latest": {
-    "version": "0.10.0",
-    "publishedAt": 1776768268378,
-    "commit": "https://github.com/openclaw/skills/commit/c419e507c122db27dbb59883cc551bf7eb4577dd"
+    "version": "0.12.0",
+    "publishedAt": 1777031859770,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.10.0",
+      "publishedAt": 1776768268378,
+      "commit": "https://github.com/openclaw/skills/commit/c419e507c122db27dbb59883cc551bf7eb4577dd"
+    }
+  ]
 }

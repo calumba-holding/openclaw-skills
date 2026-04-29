@@ -13,6 +13,7 @@ from .export_mermaid import export_mermaid
 from .export_svg import export_svg, export_svg_auto, export_product_tree_svg, export_matrix_svg, export_capability_map_svg, export_swimlane_flow_svg
 from .generate import write_plan_output
 from .model import load_json, write_json
+from .prompt_generator import generate_prompt_file
 from .projection import build_narrative_projection, default_projection_path
 from .validate import validate_blueprint
 from .viewer import write_viewer_package
@@ -102,6 +103,7 @@ def main() -> int:
         html_path = blueprint_path.parent / f"{blueprint_path.stem}.html"
         fmt = args.export_format or "svg"
         try:
+            generate_prompt_file(blueprint, export_dir, theme=args.theme, fmt=fmt)
             if fmt == "svg":
                 export_svg_auto(blueprint, export_dir / "solution.svg", theme=args.theme)
                 export_html_viewer(blueprint, html_path, theme=args.theme)
@@ -128,6 +130,7 @@ def main() -> int:
         html_path = blueprint_path.parent / f"{stem}.html"
         export_svg(blueprint, export_dir / "solution.auto.svg", theme=args.theme)
         export_html_viewer(blueprint, html_path, theme=args.theme)
+        generate_prompt_file(blueprint, export_dir, theme=args.theme, fmt="auto-svg")
         return 0
 
     if args.html:
@@ -136,6 +139,7 @@ def main() -> int:
         html_path = Path(args.html)
         html_path.parent.mkdir(parents=True, exist_ok=True)
         export_html_viewer(blueprint, html_path, theme=args.theme)
+        generate_prompt_file(blueprint, html_path.parent, theme=args.theme, fmt="html")
         return 0
 
     if args.validate:

@@ -46,9 +46,32 @@ CANVAS_X = 40
 CANVAS_PAD_TOP = 110  # room for title block
 COL_GAP = 20
 
+POSTER_LAYER_PALETTES: dict[str, list[dict[str, str]]] = {
+    "dark": [
+        {"accent": "#22D3EE", "band_fill": "#0E2A3D", "badge_fill": "#083344"},
+        {"accent": "#FBBF24", "band_fill": "#2A2010", "badge_fill": "#78350F"},
+        {"accent": "#34D399", "band_fill": "#0E2E1F", "badge_fill": "#064E3B"},
+        {"accent": "#4ADE80", "band_fill": "#0F2518", "badge_fill": "#14532D"},
+        {"accent": "#A78BFA", "band_fill": "#1E1535", "badge_fill": "#4C1D95"},
+        {"accent": "#FB7185", "band_fill": "#2A1018", "badge_fill": "#881337"},
+    ],
+    "light": [
+        {"accent": "#0F766E", "band_fill": "#F0FDFA", "badge_fill": "#CCFBF1"},
+        {"accent": "#B45309", "band_fill": "#FFFBEB", "badge_fill": "#FEF3C7"},
+        {"accent": "#047857", "band_fill": "#ECFDF5", "badge_fill": "#D1FAE5"},
+        {"accent": "#166534", "band_fill": "#F0FDF4", "badge_fill": "#DCFCE7"},
+        {"accent": "#6D28D9", "band_fill": "#F5F3FF", "badge_fill": "#E9D5FF"},
+        {"accent": "#BE123C", "band_fill": "#FFF1F2", "badge_fill": "#FFE4E6"},
+    ],
+}
+
 
 def _esc(s: str) -> str:
     return escape(str(s))
+
+
+def _poster_layer_palette(theme: str) -> list[dict[str, str]]:
+    return POSTER_LAYER_PALETTES["dark" if theme == "dark" else "light"]
 
 
 # ─── Node rendering ──────────────────────────────────────────────
@@ -193,9 +216,13 @@ def _render_arrow_labels(
     colors: dict,
     canvas_w: int,
     canvas_h: int,
+    node_rects: list[tuple[int, int, int, int]] | None = None,
 ) -> list[str]:
     rendered: list[str] = []
     occupied: list[tuple[int, int, int, int]] = []
+    # Add node rectangles to occupied so labels avoid nodes
+    if node_rects:
+        occupied.extend(node_rects)
     margin_x = 8
     min_y = 78
     max_y = max(min_y, canvas_h - 26)
@@ -771,9 +798,9 @@ def export_svg(blueprint: dict[str, Any], target: Path, theme: str = "light",
         fill_ov, stroke_ov = None, None
         if kind == "system":
             sys_data = systems_by_id.get(nid, {})
-            category = sys_data.get("category", "")
-            if category:
-                fill_ov, stroke_ov = _resolve_system_colors(category, theme)
+            # Use _categorize_system for category derivation (not just explicit field)
+            category = _categorize_system(sys_data)
+            fill_ov, stroke_ov = _resolve_system_colors(category, theme)
         parts.append(_node_svg(
             nid, n["label"], n["x"], n["y"], kind,
             colors=colors, fill_override=fill_ov, stroke_override=stroke_ov
@@ -1127,7 +1154,15 @@ def _layout_free_flow(blueprint: dict[str, Any]) -> dict[str, Any]:
 
     # ── Step 4: Define layout positions ──
     has_actors = bool(actors)
-    MAIN_COLS = [80, 310, 500, 720, 930, 1150]
+    # Dynamic column spacing based on main flow count
+    main_flow_count = len(main_flow_ordered)
+    col_offset = 1 if has_actors else 0
+    # Calculate compact column positions
+    # Actor at x=80, main flow starts at x=310, gap of 160px per column
+    COL_START = 310 if has_actors else 80
+    COL_GAP = 160  # compact gap between main flow columns
+    MAX_COLS = col_offset + main_flow_count + 4  # extra columns for supporting systems
+    MAIN_COLS = [COL_START + i * COL_GAP for i in range(MAX_COLS)]
 
     # Row Y positions — generic row semantics (not AWS-specific)
     ROW_SUPPORT = 130   # supporting systems above main (auth, security, messaging)
@@ -1160,8 +1195,12 @@ def _layout_free_flow(blueprint: dict[str, Any]) -> dict[str, Any]:
         # Auto-size width to fit label, capped to avoid overlap with next column
         label_px = sum(8 if ord(c) > 127 else 6 for c in clients_label)
         label_w = min(max(140, label_px + 24), 200)
+        # Place entry node closer to first main flow system
+        # First main flow at MAIN_COLS[col_offset], distance ~60px from its left edge
+        first_main_x = MAIN_COLS[col_offset]
+        clients_x = first_main_x - label_w - 60  # 60px gap, tighter layout
         nodes["clients"] = {
-            "x": 80, "y": MAIN_Y, "w": label_w, "h": 80,
+            "x": clients_x, "y": MAIN_Y, "w": label_w, "h": 80,
             "label": clients_label,
             "category": "external",
             "subtitles": [a.get("name", "") for a in actors[:2]],
@@ -1199,15 +1238,45 @@ def _layout_free_flow(blueprint: dict[str, Any]) -> dict[str, Any]:
     # Generic category → row mapping (no hardcoded product keywords).
     # _categorize_system() determines category from system properties.
     # Row placement: security/cloud/messaging above main, data below, infra at bottom.
+    # CRITICAL: Avoid overlap with main flow systems in the same column!
+    MIN_V_GAP = 16  # minimum vertical gap between nodes in same column
+    relations = blueprint.get("relations", [])
+
     for s in systems:
         sid = s["id"]
         if sid in nodes:
             continue
 
         cat = _categorize_system(s)
-        rel_col = _find_related_column_idx(sid, systems_by_id, steps_by_id, main_flow_ordered, main_sys_positions)
+        rel_col = _find_related_column_idx(sid, systems_by_id, steps_by_id, main_flow_ordered, main_sys_positions, col_offset)
+
+        # If fallback, use relations to find a better column
+        if rel_col == col_offset and relations:
+            for rel in relations:
+                # Check if this system depends-on or supports a main flow system
+                if rel.get("from") == sid and rel.get("type") in ("depends-on", "supports"):
+                    target_sid = rel.get("to")
+                    if target_sid in main_sys_positions:
+                        rel_col = main_sys_positions[target_sid]
+                        break
+                # Check if a main flow system depends on this system (inverse)
+                if rel.get("to") == sid and rel.get("type") in ("depends-on", "supports"):
+                    source_sid = rel.get("from")
+                    if source_sid in main_sys_positions:
+                        rel_col = main_sys_positions[source_sid]
+                        break
+
         col_x = MAIN_COLS[min(rel_col, len(MAIN_COLS) - 1)]
 
+        # Find main flow systems in this column and their Y range
+        col_main_sys = [msid for msid in main_flow_ordered if main_sys_positions.get(msid) == rel_col]
+        if col_main_sys:
+            main_y_min = min(nodes[msid]["y"] for msid in col_main_sys)
+            main_y_max = max(nodes[msid]["y"] + nodes[msid]["h"] for msid in col_main_sys)
+        else:
+            main_y_min, main_y_max = None, None
+
+        # Default row based on category
         if cat in ("security", "cloud", "message_bus"):
             row_y = ROW_SUPPORT
         elif cat in ("database",):
@@ -1217,8 +1286,22 @@ def _layout_free_flow(blueprint: dict[str, Any]) -> dict[str, Any]:
         else:
             row_y = ROW_DATA
 
+        # Adjust row_y to avoid overlap with main flow systems in same column
+        node_h_val = node_h(s)
+        if main_y_min is not None:
+            # Check if default row_y overlaps with main flow
+            node_bottom = row_y + node_h_val
+            if row_y < main_y_max and node_bottom > main_y_min:
+                # Overlap detected: place above or below main flow based on category
+                if cat in ("security", "cloud", "message_bus", "frontend"):
+                    # Above main flow
+                    row_y = main_y_min - node_h_val - MIN_V_GAP
+                else:
+                    # Below main flow
+                    row_y = main_y_max + MIN_V_GAP
+
         nodes[sid] = {
-            "x": col_x, "y": row_y, "w": node_w(s), "h": node_h(s),
+            "x": col_x, "y": row_y, "w": node_w(s), "h": node_h_val,
             "label": s["name"],
             "category": cat,
             "subtitles": _get_subtitle(s),
@@ -1227,22 +1310,41 @@ def _layout_free_flow(blueprint: dict[str, Any]) -> dict[str, Any]:
 
     # ── Step 7: Resolve overlaps — grid-based push-down ──
     # Group nodes by approximate column (x position), then ensure vertical gaps
+    # IMPORTANT: Main flow systems are protected (never pushed by overlap resolution)
     COL_BUCKET = 80  # group nodes within 80px x-range as same column
     col_buckets: dict[int, list[str]] = {}
     for sid, n in nodes.items():
         bucket = round(n["x"] / COL_BUCKET)
         col_buckets.setdefault(bucket, []).append(sid)
 
-    MIN_V_GAP = 16  # minimum vertical gap between nodes in same column
+    main_flow_sys_ids = set(main_flow_ordered)  # protect main flow systems
     for bucket, sids in col_buckets.items():
         sids.sort(key=lambda sid: nodes[sid]["y"])
+        # Pre-compute main flow Y ranges in this column for overlap checks
+        col_main_nodes = [nodes[msid] for msid in sids if msid in main_flow_sys_ids]
         for i in range(1, len(sids)):
-            prev = nodes[sids[i - 1]]
-            curr = nodes[sids[i]]
-            prev_bottom = prev["y"] + prev["h"]
-            required_y = prev_bottom + MIN_V_GAP
-            if curr["y"] < required_y:
-                curr["y"] = required_y
+            curr_sid = sids[i]
+            curr = nodes[curr_sid]
+            # Skip main flow systems — they anchor the layout
+            if curr_sid in main_flow_sys_ids:
+                continue
+            # Check overlap with ALL nodes above in sorted order
+            max_required_y = curr["y"]
+            for j in range(i):
+                other = nodes[sids[j]]
+                other_bottom = other["y"] + other["h"]
+                required_y = other_bottom + MIN_V_GAP
+                if required_y > max_required_y:
+                    max_required_y = required_y
+            # Check overlap with main flow nodes in this column
+            for main_n in col_main_nodes:
+                main_top = main_n["y"]
+                main_bottom = main_n["y"] + main_n["h"]
+                # If curr would overlap with this main flow node, push below it
+                if max_required_y < main_bottom and max_required_y + curr["h"] > main_top:
+                    max_required_y = main_bottom + MIN_V_GAP
+            if curr["y"] < max_required_y:
+                curr["y"] = max_required_y
 
     # ── Step 7b: Horizontal alignment — align nodes in same row to common center ──
     ROW_BUCKET = 40  # group nodes within 40px y-range as same row
@@ -1261,6 +1363,32 @@ def _layout_free_flow(blueprint: dict[str, Any]) -> dict[str, Any]:
         for sid in sids:
             n = nodes[sid]
             n["y"] = target_center - n["h"] // 2
+
+    # ── Step 7c: Second pass overlap resolution after horizontal alignment ──
+    # Alignment may cause new overlaps, re-run push-down for non-main-flow nodes
+    col_buckets2: dict[int, list[str]] = {}
+    for sid, n in nodes.items():
+        bucket = round(n["x"] / COL_BUCKET)
+        col_buckets2.setdefault(bucket, []).append(sid)
+
+    for bucket, sids in col_buckets2.items():
+        sids.sort(key=lambda sid: nodes[sid]["y"])
+        for i in range(1, len(sids)):
+            curr_sid = sids[i]
+            curr = nodes[curr_sid]
+            # Skip main flow systems — they anchor the layout
+            if curr_sid in main_flow_sys_ids:
+                continue
+            # Check overlap with ALL nodes above
+            max_required_y = curr["y"]
+            for j in range(i):
+                other = nodes[sids[j]]
+                other_bottom = other["y"] + other["h"]
+                required_y = other_bottom + MIN_V_GAP
+                if required_y > max_required_y:
+                    max_required_y = required_y
+            if curr["y"] < max_required_y:
+                curr["y"] = max_required_y
 
     # ── Step 8: Build arrows from flowSteps ──
     arrows: list[dict] = []
@@ -1374,6 +1502,7 @@ def _find_related_column_idx(
     steps_by_id: dict[str, dict],
     main_flow_ordered: list[str],
     main_sys_positions: dict[str, int],
+    col_offset: int = 1,
 ) -> int:
     """Find the main flow column index most related to a supporting system."""
     # Find which flow steps reference this system
@@ -1406,8 +1535,12 @@ def _find_related_column_idx(
                 for main_sid in step.get("systemIds", []):
                     if main_sid in main_sys_positions:
                         return main_sys_positions[main_sid]
-    # Default to column 2 (middle)
-    return 2
+    # Fallback: check relations (depends-on, supports) to find related main flow column
+    # Only use relations that point TO a main flow system (supporting systems serve main flow)
+    relations = steps_by_id.get("__relations__", [])  # placeholder, will pass blueprint later
+    # This will be handled in Step 6 with full blueprint access
+    # Default: use first main flow column (caller will refine with relations)
+    return col_offset if main_flow_ordered else 2
 
 
 def _check_layout_quality(layout: dict[str, Any], blueprint: dict[str, Any]) -> list[str]:
@@ -1416,6 +1549,7 @@ def _check_layout_quality(layout: dict[str, Any], blueprint: dict[str, Any]) -> 
     nodes = layout["nodes"]
     systems = blueprint.get("library", {}).get("systems", [])
     actors = blueprint.get("library", {}).get("actors", [])
+    MIN_GAP = 12  # minimum gap threshold (warning level)
 
     # 1. All systems have nodes
     sys_ids = {s["id"] for s in systems}
@@ -1436,9 +1570,9 @@ def _check_layout_quality(layout: dict[str, Any], blueprint: dict[str, Any]) -> 
             a_bottom = a["y"] + a["h"]
             b_right = b["x"] + b["w"]
             b_bottom = b["y"] + b["h"]
-            # Check if rectangles overlap or are too close (< 10px gap)
-            h_overlap = not (a_right + 10 < b["x"] or b_right + 10 < a["x"])
-            v_overlap = not (a_bottom + 10 < b["y"] or b_bottom + 10 < a["y"])
+            # Check if rectangles overlap or are too close (< MIN_GAP px)
+            h_overlap = not (a_right + MIN_GAP < b["x"] or b_right + MIN_GAP < a["x"])
+            v_overlap = not (a_bottom + MIN_GAP < b["y"] or b_bottom + MIN_GAP < a["y"])
             if h_overlap and v_overlap:
                 issues.append(f"Nodes too close: {sid_a} and {sid_b}")
 
@@ -1756,10 +1890,7 @@ def _render_free_flow_svg(
             if grid_rect_idx is not None:
                 parts[grid_rect_idx] = f'<rect width="{w}" height="{h}" fill="url(#grid)"/>'
 
-    for label_svg in _render_arrow_labels(arrow_labels, colors=colors, canvas_w=w, canvas_h=h):
-        parts.append(label_svg)
-
-    # Nodes with semantic colors
+    # Nodes with semantic colors (render BEFORE arrow_labels so labels appear on top)
     for nid, n in nodes.items():
         cat = n.get("category", "external")
         fill, stroke = _resolve_system_colors(cat, theme)
@@ -1789,6 +1920,12 @@ def _render_free_flow_svg(
                 f'text-anchor="middle" font-size="10" fill="{c}">{_esc(sub)}</text>'
             )
         parts.append('</g>')
+
+    # Arrow labels (render AFTER nodes so they appear on top)
+    # Pass node positions to avoid overlap
+    node_rects = [(n["x"], n["y"] + y_offset, n["w"], n["h"]) for n in nodes.values()]
+    for label_svg in _render_arrow_labels(arrow_labels, colors=colors, canvas_w=w, canvas_h=h, node_rects=node_rects):
+        parts.append(label_svg)
 
 
     # Legend — show categories actually used in the diagram
@@ -3046,29 +3183,26 @@ def export_layer_poster_svg(blueprint: dict[str, Any], target: Path, theme: str 
             layers[layer] = []
         layers[layer].append(system)
 
-    PAD_X = 48
-    PAD_Y = 28
-    TITLE_H = 84
-    LAYER_LABEL_W = 220
-    CARD_W = 264
-    CARD_H = 124
-    CARD_GAP = 18
-    ROW_GAP = 18
-    BAND_PAD_X = 18
-    BAND_PAD_Y = 18
-    BAND_GAP = 18
-    CONTENT_W = 1440 - PAD_X * 2 - LAYER_LABEL_W - 24
-    MAX_COLS = max(1, min(3, CONTENT_W // (CARD_W + CARD_GAP)))
-    canvas_w = 1440
+    # ── Compact layout: fits in 1280px width for PPT/report embedding ──
+    PAD_X = 32
+    PAD_Y = 20
+    TITLE_H = 56
+    LAYER_LABEL_W = 160
+    CARD_W = 180
+    CARD_H = 80
+    CARD_GAP = 12
+    ROW_GAP = 12
+    BAND_PAD_X = 12
+    BAND_PAD_Y = 12
+    BAND_GAP = 12
+    canvas_w = 1280  # Standard PPT slide width
+    CONTENT_W = canvas_w - PAD_X * 2 - LAYER_LABEL_W - 16
+    MAX_COLS = max(1, min(4, CONTENT_W // (CARD_W + CARD_GAP)))
 
-    layer_palette = [
-        ("#22D3EE", "#0E2A3D", "#083344"),
-        ("#FBBF24", "#2A2010", "#78350F"),
-        ("#34D399", "#0E2E1F", "#064E3B"),
-        ("#4ADE80", "#0F2518", "#14532D"),
-        ("#A78BFA", "#1E1535", "#4C1D95"),
-        ("#FB7185", "#2A1018", "#881337"),
-    ]
+    layer_palette = _poster_layer_palette(theme)
+    band_fill_opacity = "0.28" if theme == "dark" else "1"
+    label_fill_opacity = "0.92" if theme == "dark" else "0.98"
+    card_stroke = colors.get("layer_border", colors["border"]) if theme == "light" else None
 
     band_layouts: list[dict[str, Any]] = []
     current_y = PAD_Y + TITLE_H + 18
@@ -3095,15 +3229,17 @@ def export_layer_poster_svg(blueprint: dict[str, Any], target: Path, theme: str 
         parts.append(f'<rect width="{canvas_w}" height="{canvas_h}" fill="url(#grid)"/>')
 
     title_w = canvas_w - PAD_X * 2
+    subtitle_text = blueprint.get("meta", {}).get("subtitle", "")
+    subtitle_line = f" • {subtitle_text}" if subtitle_text else ""
     parts.append(
         f'<g class="title-block">'
-        f'<rect x="{PAD_X}" y="{PAD_Y}" width="{title_w}" height="64" rx="8" fill="{colors["canvas"]}" stroke="{colors["border"]}" stroke-width="1.2"/>'
-        f'<text x="{PAD_X + 20}" y="{PAD_Y + 28}" font-size="28" font-weight="800" fill="{colors["text_main"]}">{_esc(title)}</text>'
-        f'<text x="{PAD_X + 20}" y="{PAD_Y + 50}" font-size="12" fill="{colors["text_sub"]}" letter-spacing="0.5">产品蓝图海报 · 用户入口 → AI协同 → Harness支撑 → ERP业务 → 数据闭环</text>'
+        f'<rect x="{PAD_X}" y="{PAD_Y}" width="{title_w}" height="48" rx="6" fill="{colors["canvas"]}" stroke="{colors["border"]}" stroke-width="1"/>'
+        f'<text x="{PAD_X + 16}" y="{PAD_Y + 24}" font-size="18" font-weight="700" fill="{colors["text_main"]}">{_esc(title)}{subtitle_line}</text>'
+        f'<text x="{PAD_X + 16}" y="{PAD_Y + 40}" font-size="10" fill="{colors["text_sub"]}" letter-spacing="0.3">Layered Blueprint Poster</text>'
         f'</g>'
     )
 
-    spine_x = PAD_X + 96
+    spine_x = PAD_X + 70
     spine_top = band_layouts[0]["y"] + 10 if band_layouts else PAD_Y + TITLE_H
     spine_bottom = band_layouts[-1]["y"] + band_layouts[-1]["h"] - 10 if band_layouts else spine_top
     parts.append(
@@ -3111,32 +3247,34 @@ def export_layer_poster_svg(blueprint: dict[str, Any], target: Path, theme: str 
     )
 
     for idx, band in enumerate(band_layouts):
-        accent, card_fill, accent_dark = band["palette"]
+        accent = band["palette"]["accent"]
+        band_fill = band["palette"]["band_fill"]
+        badge_fill = band["palette"]["badge_fill"]
         band_x = PAD_X + 8
         band_y = band["y"]
         band_w = canvas_w - PAD_X * 2 - 16
         band_h = band["h"]
-        label_x = band_x + 22
-        label_y = band_y + 26
+        label_x = band_x + 14
+        label_y = band_y + 18
         content_x = band_x + LAYER_LABEL_W
         content_y = band_y + BAND_PAD_Y
-        content_w = band_w - LAYER_LABEL_W - 18
+        content_w = band_w - LAYER_LABEL_W - 16
 
         layer_match = _re.match(r'^(第[^\s]+)\s+(.*)$', band["layer"])
-        layer_prefix = layer_match.group(1) if layer_match else f'第{idx + 1}层'
+        layer_prefix = layer_match.group(1) if layer_match else f'L{idx + 1}'
         layer_title = layer_match.group(2) if layer_match else band["layer"]
         layer_summary = " / ".join(system["name"] for system in band["items"])
 
         parts.append(
-            f'<rect x="{band_x}" y="{band_y}" width="{band_w}" height="{band_h}" rx="18" fill="{card_fill}" fill-opacity="0.28" stroke="{accent}" stroke-width="1.2"/>'
+            f'<rect x="{band_x}" y="{band_y}" width="{band_w}" height="{band_h}" rx="12" fill="{band_fill}" fill-opacity="{band_fill_opacity}" stroke="{accent}" stroke-width="1"/>'
         )
         parts.append(
-            f'<rect x="{band_x + 14}" y="{band_y + 14}" width="{LAYER_LABEL_W - 28}" height="{band_h - 28}" rx="14" fill="{colors["canvas"]}" fill-opacity="0.92" stroke="{colors["border"]}" stroke-width="1"/>'
+            f'<rect x="{band_x + 8}" y="{band_y + 8}" width="{LAYER_LABEL_W - 16}" height="{band_h - 16}" rx="8" fill="{colors["canvas"]}" fill-opacity="{label_fill_opacity}" stroke="{colors["border"]}" stroke-width="0.8"/>'
         )
         parts.append(
-            f'<text x="{label_x}" y="{label_y}" font-size="12" font-weight="800" fill="{accent}" letter-spacing="0.8">{_esc(layer_prefix)}</text>'
-            f'<text x="{label_x}" y="{label_y + 28}" font-size="24" font-weight="800" fill="{colors["text_main"]}">{_esc(layer_title)}</text>'
-            f'<text x="{label_x}" y="{label_y + 54}" font-size="11" fill="{colors["text_sub"]}">{_esc(layer_summary[:56])}</text>'
+            f'<text x="{label_x}" y="{label_y}" font-size="10" font-weight="700" fill="{accent}" letter-spacing="0.5">{_esc(layer_prefix)}</text>'
+            f'<text x="{label_x}" y="{label_y + 18}" font-size="14" font-weight="700" fill="{colors["text_main"]}">{_esc(layer_title)}</text>'
+            f'<text x="{label_x}" y="{label_y + 32}" font-size="9" fill="{colors["text_sub"]}">{_esc(layer_summary[:40])}</text>'
         )
 
         for item_idx, system in enumerate(band["items"]):
@@ -3147,29 +3285,28 @@ def export_layer_poster_svg(blueprint: dict[str, Any], target: Path, theme: str 
             row_start_x = int(content_x + max(0, (content_w - row_w) / 2))
             cx = row_start_x + col * (CARD_W + CARD_GAP)
             cy = content_y + row * (CARD_H + ROW_GAP)
-            features = system.get("features", [])[:3]
             parts.append(
-                f'<rect x="{cx}" y="{cy}" width="{CARD_W}" height="{CARD_H}" rx="14" fill="{colors["canvas"]}" stroke="{accent}" stroke-width="1.8"/>'
+                f'<rect x="{cx}" y="{cy}" width="{CARD_W}" height="{CARD_H}" rx="8" fill="{colors["canvas"]}" stroke="{card_stroke or accent}" stroke-width="1"/>'
             )
             parts.append(
-                f'<rect x="{cx + 16}" y="{cy + 16}" width="68" height="18" rx="9" fill="{accent_dark}"/>'
-                f'<text x="{cx + 50}" y="{cy + 29}" text-anchor="middle" font-size="9" font-weight="700" fill="{accent}">MODULE</text>'
+                f'<text x="{cx + 8}" y="{cy + 16}" font-size="12" font-weight="600" fill="{colors["text_main"]}">{_esc(system.get("name", ""))}</text>'
             )
-            parts.append(
-                f'<text x="{cx + 16}" y="{cy + 60}" font-size="24" font-weight="800" fill="{colors["text_main"]}">{_esc(system.get("name", ""))}</text>'
-            )
-            feature_gap = 16
-            feature_start_y = min(cy + 84, cy + CARD_H - 18 - max(0, len(features) - 1) * feature_gap)
-            for line_idx, feature in enumerate(features):
-                fy = feature_start_y + line_idx * feature_gap
+            # Show category as small label
+            category = system.get("category", "")
+            if category:
                 parts.append(
-                    f'<circle cx="{cx + 20}" cy="{fy - 4}" r="3" fill="{accent}"/>'
-                    f'<text x="{cx + 32}" y="{fy}" font-size="12" fill="{accent if line_idx == len(features) - 1 else colors["text_sub"]}">{_esc(feature)}</text>'
+                    f'<text x="{cx + 8}" y="{cy + 28}" font-size="8" fill="{accent}">{_esc(category)}</text>'
+                )
+            # Show features as bullet list (compact)
+            features = system.get("properties", {}).get("features", [])[:2]
+            for fi, feat in enumerate(features):
+                parts.append(
+                    f'<text x="{cx + 8}" y="{cy + 42 + fi * 12}" font-size="9" fill="{colors["text_sub"]}">• {_esc(feat[:20])}</text>'
                 )
 
 
     parts.append(
-        f'<text x="{canvas_w / 2}" y="{canvas_h - 22}" text-anchor="middle" font-size="12" fill="{colors["text_sub"]}">云之家 V12 产品蓝图 · 海报视图</text>'
+        f'<text x="{canvas_w / 2}" y="{canvas_h - 16}" text-anchor="middle" font-size="10" fill="{colors["text_sub"]}">{_esc(title)} • Layered Poster</text>'
     )
     parts.append('</svg>')
     target.write_text("\n".join(parts), encoding="utf-8")
