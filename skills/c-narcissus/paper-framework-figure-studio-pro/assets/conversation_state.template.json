@@ -1,0 +1,141 @@
+{
+  "project": {
+    "paper_title": "",
+    "working_figure_title": "",
+    "source_type": "deep-reading-report",
+    "page_format": "A4 portrait",
+    "language": "en",
+    "preferred_upstream_artifact": "markdown_deep_reading_report",
+    "recommended_upstream_skill": "paper-deep-reading",
+    "recommended_upstream_skill_url": "https://clawhub.ai/c-narcissus/paper-deep-reading",
+    "upstream_recommendation_already_shown": false,
+    "user_ready_to_start_confirmed": false,
+    "first_post_ingest_style_board_prompted": false
+  },
+  "figure_brief": {
+    "core_claim": "",
+    "must_explain": [],
+    "must_not_include": [],
+    "audience_bias": "mixed",
+    "density": "medium"
+  },
+  "selection": {
+    "style_family": null,
+    "backup_style_family": null,
+    "structural_skeleton": null,
+    "visual_vocabulary": [],
+    "comparison_mode": null,
+    "equation_level": null,
+    "mini_result_snapshots": null
+  },
+  "round": {
+    "index": 0,
+    "name": "intake",
+    "pending_user_confirmation": true,
+    "visual_decision_required": false,
+    "awaiting_permission_to_generate": false,
+    "awaiting_image_based_choice": false
+  },
+  "history": [
+    {
+      "round": 0,
+      "action": "state_created",
+      "summary": ""
+    },
+    {
+      "round": 0,
+      "action": "first_contact_reminder_pending",
+      "summary": "Recommend paper-deep-reading markdown report if available; confirm readiness; preview first multi-style candidate board."
+    }
+  ],
+  "candidate_boards": [
+    {
+      "board_id": "",
+      "round": 0,
+      "decision_type": "",
+      "status": "planned",
+      "permission_requested": false,
+      "permission_granted": false,
+      "image_batch_generated": false,
+      "candidate_ids": [],
+      "difference_axes": [],
+      "user_choice": null,
+      "notes": ""
+    }
+  ],
+  "generation_batches": [],
+  "winning_direction": {
+    "batch_id": null,
+    "candidate_id": null,
+    "reason_selected": "",
+    "must_keep": [],
+    "must_change": []
+  },
+  "finalization": {
+    "caption_requested": false,
+    "legend_requested": false,
+    "panel_text_requested": false,
+    "status": "not-final"
+  },
+  "rendering_path": {
+    "preferred": "create_image",
+    "avoid": [
+      "svg",
+      "mermaid",
+      "tikz",
+      "graphviz"
+    ],
+    "reasoning_mode_preference": "thinking_or_extended_thinking_when_available"
+  },
+  "navigation": {
+    "must_include_next_steps_in_text_reply": true,
+    "must_include_help_shortcut_reminder": true,
+    "help_shortcut_phrase": "接下来做什么",
+    "last_announced_next_step": "",
+    "last_announced_after_images_feedback_axes": [],
+    "last_announced_then_i_will": "",
+    "last_announced_help_shortcut_reminder": "",
+    "must_include_resume_instruction": true,
+    "last_announced_resume_instruction": "",
+    "must_include_rendering_rule_reminder_every_text_reply": true,
+    "last_announced_rendering_rule_reminder": ""
+  },
+  "rendering_policy": {
+    "must_use_openai_create_image_or_chatgpt_images": true,
+    "minimum_api_family_for_ide_hosts": "ChatGPT Images 2.0",
+    "prefer_extended_thinking_in_chatgpt_web": true,
+    "do_not_ask_user_to_manually_switch_to_create_image_in_chatgpt_web": true,
+    "block_if_openai_api_key_missing_in_ide_or_api_host": true,
+    "forbidden_fallbacks": [
+      "svg",
+      "mermaid",
+      "tikz",
+      "graphviz"
+    ],
+    "must_repeat_rendering_rule_every_text_reply": true,
+    "chatgpt_web_rule_summary": "Use native image generation under the strongest available thinking-assisted path; prefer Extended Thinking when available; do not ask the user to manually switch to Create image.",
+    "ide_host_rule_summary": "Use OpenAI ChatGPT Images 2.0 or newer supported OpenAI image generation.",
+    "forbidden_summary": "Do not use SVG, mermaid, tikz, graphviz, or other vector-code fallbacks."
+  },
+  "deliverables": {
+    "text_replies_logged": [],
+    "image_batches_generated": [],
+    "caption_or_legend_outputs": []
+  },
+  "continuity": {
+    "must_remind_user_to_resume_with_skill_name": true,
+    "suggested_resume_phrase": "Please continue with paper-framework-figure-studio-pro from the current saved state.",
+    "resume_reminder_last_shown": false
+  },
+  "interaction_contract": {
+    "text_and_image_same_reply_forbidden": true,
+    "must_use_dedicated_generation_confirmation_turn": true,
+    "next_turn_mode": "text_only"
+  },
+  "generation_control": {
+    "awaiting_generation_confirmation": false,
+    "confirmed_generation_batch_id": null,
+    "next_turn_must_be_image_only": false,
+    "last_confirmation_prompt": null
+  }
+}

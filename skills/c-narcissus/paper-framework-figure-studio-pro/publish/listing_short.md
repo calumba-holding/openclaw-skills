@@ -1,0 +1,1 @@
+Turn a paper deep-reading report or method description into a publication-ready framework figure through a stateful, multi-round, human-in-the-loop studio workflow. Built for top-tier CS paper figures with separate planning and image-generation turns, visual candidate boards, and OpenAI native image rendering only.

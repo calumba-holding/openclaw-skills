@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Framework Figure Studio Pro"
+  short_description: "Design paper framework figures"
+  default_prompt: "Use $paper-framework-figure-studio-pro to read my paper method description, extract a Figure Brief, and prepare the first multi-style candidate board."
