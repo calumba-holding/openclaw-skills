@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-bilibili-get-video-detail",
+  "displayName": "Bilibili Video Details API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776960945696,
+    "commit": null
+  },
+  "history": []
+}
