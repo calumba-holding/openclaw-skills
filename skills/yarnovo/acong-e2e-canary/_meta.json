@@ -1,0 +1,11 @@
+{
+  "owner": "yarnovo",
+  "slug": "acong-e2e-canary",
+  "displayName": "Acong E2E Canary",
+  "latest": {
+    "version": "0.20260421.1737",
+    "publishedAt": 1776764277297,
+    "commit": null
+  },
+  "history": []
+}
