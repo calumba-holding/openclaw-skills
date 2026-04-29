@@ -7,8 +7,8 @@ execution:
   longRunning: true # Marks it as a long-running task to prevent interface blocking
 env:
   OPENROUTER_API_KEY:
-    description: API key for OpenRouter (only required if models in config.json use OpenRouter)
-    required: false
+    description: API key for OpenRouter. You can modify config.json to use other providers (bailian, openai_compliant) instead.
+    required: true
   DASHSCOPE_API_KEY:
     description: API key for DashScope/Bailian (only required if models in config.json use DashScope)
     required: false

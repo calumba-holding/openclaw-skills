@@ -3,9 +3,15 @@
   "slug": "wei-cross-research",
   "displayName": "Wei Cross Research",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776609743133,
-    "commit": "https://github.com/openclaw/skills/commit/d571afc2dd6d349f88aa92c5a598dfb142526614"
+    "version": "1.0.1",
+    "publishedAt": 1777437074465,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776609743133,
+      "commit": "https://github.com/openclaw/skills/commit/d571afc2dd6d349f88aa92c5a598dfb142526614"
+    }
+  ]
 }

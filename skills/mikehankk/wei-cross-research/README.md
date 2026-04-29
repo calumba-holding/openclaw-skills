@@ -1,6 +1,8 @@
 # wei-cross-research Configuration Guide
 
-[中文版本](README_cn.md)
+[![GitHub](https://img.shields.io/badge/GitHub-wei--skills-blue?logo=github)](https://github.com/MikeHanKK/wei-skills)
+
+[中文版本](README_cn.md) | [View on GitHub](https://github.com/MikeHanKK/wei-skills/tree/main/skills/wei-cross-research)
 
 This document explains how to configure `config.json` to use different model providers and deployment environments.
 
@@ -301,3 +303,11 @@ Supports any OpenAI-compatible API:
 | Requires OPENROUTER_API_KEY | ✅ | ✅ | ❌ |
 | Requires DASHSCOPE_API_KEY | Optional | Optional | ✅ |
 | China Access | May be restricted | Optimized | Good |
+
+---
+
+## Project Information
+
+- **Source Code**: [github.com/MikeHanKK/wei-skills](https://github.com/MikeHanKK/wei-skills/tree/main/skills/wei-cross-research)
+- **Issue Tracker**: [GitHub Issues](https://github.com/MikeHanKK/wei-skills/issues)
+- **Full Skills Collection**: [wei-skills repository](https://github.com/MikeHanKK/wei-skills)
