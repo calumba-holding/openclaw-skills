@@ -1,0 +1,20 @@
+{
+  "name": "Global Content Strategy Designer",
+  "slug": "cb-global-content-strategy",
+  "version": "1.0.0",
+  "description": "A framework for planning multilingual, multicultural content marketing that balances global brand consistency with local relevance.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["content", "strategy", "localization", "multilingual", "marketing", "global"],
+  "trigger_keywords": [
+    "global content strategy",
+    "multilingual content marketing",
+    "content localization framework",
+    "international content calendar",
+    "cross-border content plan"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
