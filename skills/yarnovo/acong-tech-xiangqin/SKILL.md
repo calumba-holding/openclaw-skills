@@ -1,6 +1,6 @@
 ---
 name: xiangqin
-description: 相亲平台（虚拟信封私信 + 受众查询）的使用入口。TRIGGER when 用户说"相亲"、"找对象"、"xiangqin"、"注册相亲"、"填资料"、"查匹配"、"想联系 TA"、"发私信"、"给对方写信"、"有新消息吗"、"查收件箱"、"买信封"、"拉黑 / 举报"。DO NOT TRIGGER when 用户要聊天/推荐/匹配算法（本项目不做）、服务端不可达时先 curl health。
+description: 相亲平台（虚拟信封私信 + 受众查询）的使用入口。TRIGGER when 用户说"相亲"、"找对象"、"xiangqin"、"注册相亲"、"填资料"、"查匹配"、"想联系 TA"、"发私信"、"给对方写信"、"有新消息吗"、"查收件箱"、"买信封"、"拉黑 / 举报"。DO NOT TRIGGER when 用户要聊天/推荐/匹配算法（本项目不做）、服务端不可达时先 curl health。 xiangqin — a Chinese matchmaking / dating skill for Claude agents.
 ---
 
 # xiangqin — 相亲平台 skill
@@ -164,6 +164,28 @@ pip install -U acong-tech-xiangqin
 - xiangqin 不存对话历史 —— 信件内容落库 30 天 TTL，超期清
 - 匿名代理：发信方 / 收信方互不知对方 agent_gateway_url / hooks_token
 
+## 安全
+
+- **`xq query` 的 WHERE 不经 shell**：`xq` 把参数作为 JSON body POST 给 API，服务端用**受限 DSL 白名单**（字段 / 操作符 / 值全白名单）解析成参数化 SQL。**无 shell eval / SQL 注入路径**。
+- 手机号：HMAC-SHA256 带 salt hash 入库，服务端**永不存明文**。
+- 身份证号（v0.6.0 +）：HMAC-SHA256 独立 salt hash 入库；明文仅服务端调阿里云二要素核验 API 的瞬间，不落库、不落日志。
+- 验证码 / session token：单向 hash 入库；token 明文只在 verify 响应里回一次。
+- 凭证：xiangqin skill **只需 session token 存本地 `~/.xiangqin/session.json`**；**skill user 不装 vault**（Vault 是服务端运维工具，不是 skill 依赖）。session token 只用于本 skill 向 `xq.agentaily.com` 的平台鉴权，**永不上传到第三方 / 永不进 ClawHub 包**。
+- 网络：默认只访问 `xq.agentaily.com` 服务端（可通过 `XIANGQIN_ENDPOINT` 显式切自建）。不向其他域发请求。
+- **`pip install acong-tech-xiangqin` 供应链**：`acong-tech-xiangqin` 是公开 PyPI 包（MIT，源码 `github.com/yarnovo/xiangqin`）。推荐 pin 版本 `pip install acong-tech-xiangqin==X.Y.Z`。可在 venv / container 里隔离运行。
+- **不自动 auto-upgrade**：`xq` CLI 检测到新版本仅提示；**跑 `pip install -U` 必须用户显式 consent**（交互确认或命令行显式执行），skill 不会在未征询的情况下 escalate 权限 / 装包。
+- **Webhook / agent_gateway_url 是 opt-in**：`agent_gateway_url` + `agent_hooks_token` 是用户**可选**配置，用于收推送通知。URL 由用户自己提供（服务端不预置 / 不推荐任何第三方端点），token 用于 HMAC 签名验证防伪造。**不配 = 不推送**；配了推送内容是消息 metadata（不含明文正文）。
+
 ## 更多
 
 [文档站](https://agentaily-xiangqin.pages.dev/) —— 设计 / 装机 / CLI / FAQ。
+
+## 合规
+
+xiangqin 由**杭州阿空智能科技有限公司**（浙ICP备2026022274号-1）运营。使用本 skill 和 `xq` CLI 受以下条款约束：
+
+- [用户协议](https://agentaily-xiangqin.pages.dev/legal/terms/)
+- [隐私政策](https://agentaily-xiangqin.pages.dev/legal/privacy/)
+- [数据生命周期](https://agentaily-xiangqin.pages.dev/legal/data-lifecycle/)
+
+`xq register` 首次运行会交互显示以上链接并要求确认同意。仅面向 18 周岁以上成年用户。
