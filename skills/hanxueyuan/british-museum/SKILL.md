@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: british-museum
 summary: 大英帝国的文明收藏 — 从汉斯·斯隆爵士的私人收藏到世界百科全书式博物馆
 read_when:
