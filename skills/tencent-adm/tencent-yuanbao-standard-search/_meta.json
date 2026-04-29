@@ -1,0 +1,11 @@
+{
+  "owner": "tencent-adm",
+  "slug": "tencent-yuanbao-standard-search",
+  "displayName": "元宝搜索标准版Skill",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1776998014036,
+    "commit": null
+  },
+  "history": []
+}
