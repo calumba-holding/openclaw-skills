@@ -1,11 +1,14 @@
 ---
 name: dlazy-jimeng-t2i
-version: 1.0.0
+version: 1.0.2
 description: Text-to-image generation with Jimeng, quickly converting text to high-quality images.
-metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["npm","npx"]},"install":"npm install -g @dlazy/cli@1.0.5"},"openclaw":{"systemPrompt":"When this skill is called, you can run dlazy jimeng-t2i -h to view help information."}}
+metadata: {"clawdbot":{"emoji":"🤖","requires":{"bins":["npm","npx"]},"install":"npm install -g @dlazy/cli@1.0.8","installAlternative":"npx @dlazy/cli@1.0.8","homepage":"https://github.com/dlazyai/cli","source":"https://github.com/dlazyai/cli","author":"dlazyai","license":"see-repo","npm":"https://www.npmjs.com/package/@dlazy/cli","configLocation":"~/.dlazy/config.json","apiEndpoints":["api.dlazy.com","oss.dlazy.com"]},"openclaw":{"systemPrompt":"When invoking this skill, use dlazy jimeng-t2i -h for help."}}
 ---
 
 # dlazy-jimeng-t2i
+
+[English](./SKILL.md) · [中文](./SKILL-cn.md)
+
 
 Text-to-image generation with Jimeng, quickly converting text to high-quality images.
 
@@ -14,6 +17,49 @@ Text-to-image generation with Jimeng, quickly converting text to high-quality im
 - jimeng
 - generate image, text to image
 - draw a picture
+
+## Authentication
+
+All requests require a dLazy API key, configured through the CLI:
+
+```bash
+dlazy auth set YOUR_API_KEY
+```
+
+The CLI saves the key in your user config directory (`~/.dlazy/config.json` on macOS/Linux, `%USERPROFILE%\.dlazy\config.json` on Windows), with file permissions restricted to your OS user account. You can also supply the key per-invocation via the `DLAZY_API_KEY` environment variable.
+
+### Getting Your API Key
+
+1. Sign in or create an account at [dlazy.com](https://dlazy.com)
+2. Go to [dlazy.com/dashboard/organization/api-key](https://dlazy.com/dashboard/organization/api-key)
+3. Copy the key shown in the API Key section
+
+Each key is scoped to your dLazy organization and can be **rotated or revoked at any time** from the same dashboard.
+
+## About & Provenance
+
+- **CLI source code**: [github.com/dlazyai/cli](https://github.com/dlazyai/cli)
+- **Maintainer**: dlazyai
+- **npm package**: `@dlazy/cli` (pinned to `1.0.8` in this skill's install spec)
+- **Homepage**: [dlazy.com](https://dlazy.com)
+
+You can install on demand without persisting a global binary by running:
+
+```bash
+npx @dlazy/cli@1.0.8 <command>
+```
+
+Or, if you prefer a global install, the skill's `metadata.clawdbot.install` field declares the exact pinned version (`npm install -g @dlazy/cli@1.0.8`). Review the GitHub source before installing.
+
+## How It Works
+
+This skill is a thin client over the dLazy hosted API. When you invoke it:
+
+- Prompts and parameters you provide are sent to the dLazy API endpoint (`api.dlazy.com`) for inference.
+- Any local file paths you pass to image / video / audio fields are uploaded to dLazy's media storage (`oss.dlazy.com`) so the model can read them — the same flow as any cloud-based generation API.
+- Generated output URLs returned by the API are hosted on `oss.dlazy.com`.
+
+This is the standard SaaS pattern; the skill itself does not access network or filesystem resources beyond what the dLazy CLI already handles. See [dlazy.com](https://dlazy.com) for the full service terms.
 
 ## Usage
 
@@ -27,6 +73,7 @@ Options:
   --prompt <prompt>                    Prompt
   --images <images...>                 Images [image: url or local path] (max 10)
   --size <size>                        Size [default: 1440*2560] (choices: "1024*1024", "2048*2048", "2304*1728", "2496*1664", "2560*1440", "3024*1296", "1728*2304", "1664*2496", "1440*2560", "1296*3024", "4096*4096", "4694*3520", "4992*3328", "5404*3040", "6198*2656", "3520*4694", "3328*4992", "3040*5404", "2656*6198")
+  --promptRefs <promptRefs...>         promptRefs [default: ]
   --input <spec>                       JSON payload: inline string, @file, or - (stdin)
   --dry-run                            Print payload + cost estimate without calling API
   --no-wait                            Return generateId immediately for async tasks
@@ -47,6 +94,9 @@ Options:
   }
 }
 ```
+
+
+
 
 ## Command Examples
 
@@ -71,7 +121,7 @@ dlazy jimeng-t2i --prompt 'prompt text' --image 'https://oss.dlazy.com/image.png
 
 > **AGENT CRITICAL INSTRUCTION**: 
 > 1. If the execution result returns `code: "insufficient_balance"`, you MUST explicitly inform the user that their credits are insufficient and guide them to recharge: [https://dlazy.com/dashboard/organization/settings?tab=credits](https://dlazy.com/dashboard/organization/settings?tab=credits)
-> 2. If the execution result returns `code: "unauthorized"` or indicates missing API key, you MUST inform the user to get their API key from [https://dlazy.com/dashboard/organization/api-key](https://dlazy.com/dashboard/organization/api-key) and send it to you. Once they provide it, save it using `dlazy auth set <key>` and resume the task.
+> 2. If the execution result returns `code: "unauthorized"` or indicates missing API key, you MUST inform the user to get their API key from [https://dlazy.com/dashboard/organization/api-key](https://dlazy.com/dashboard/organization/api-key) and save it using `dlazy auth set <key>` and resume the task.
 
 ## Tips
 
