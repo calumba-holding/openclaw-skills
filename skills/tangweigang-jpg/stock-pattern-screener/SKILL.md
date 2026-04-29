@@ -1,7 +1,7 @@
 ---
 name: stock-pattern-screener
 description: |-
-  使用7种技术形态检测器（杯柄、三周紧绑、高紧旗、VCP、NR7等）按确定性顺序扫描股票池，支持跨检测器评分校准与置信度聚合排序。触发场景：(1) 用户要找出现杯柄形态或VCP形态的股票；(2) 用户要对一批股票执行批量形态扫描；(3) 用户要发现突破关键形态的标的以辅助买入决策。
+  使用7种技术形态检测器（杯柄、三周紧绑、高紧旗、VCP、NR7等）按确定性顺序扫描股票池，支持跨检测器评分校准与置信度聚合排序。
 license: Proprietary. See LICENSE.txt in project root.
 compatibility: Designed for Doramagic-host ecosystem (Claude Code / openclaw / Cursor). Requires Python 3.12+ with uv package manager.
 metadata:
@@ -12,9 +12,9 @@ metadata:
   capability_activities: "finance-analytics"
   sop_version: "crystal-compilation-v6.1"
 ---
-# stock-pattern-screener
+# 股票形态筛选 (stock-pattern-screener)
 
-> I help you build quant strategies on A-share with ZVT — from data fetch to backtest, one flow. Just tell me what you want; I'll write the code, you don't have to dig docs. (Heads up: ZVT natively supports A-share, HK, and crypto. US stocks — stockus_nasdaq_AAPL — are half-baked; don't bother for serious work.)
+> 使用7种技术形态检测器（杯柄、三周紧绑、高紧旗、VCP、NR7等）按确定性顺序扫描股票池，支持跨检测器评分校准与置信度聚合排序。
 
 ## Pipeline
 
@@ -35,13 +35,6 @@ Detects chart patterns (VCP, Cup-with-Handle, NR7, etc.) using normalized scorin
 **Triggers**: setup, pattern, vcp
 
 For all **30** use cases, see [references/USE_CASES.md](references/USE_CASES.md).
-
-## Install
-
-```bash
-# One-time setup before first use
-bash scripts/install.sh
-```
 
 **Execute trigger**: `When user intent matches intent_router.uc_entries[].positive_terms AND user uses action verb (run/execute/跑/执行/backtest/fetch/collect)`
 
