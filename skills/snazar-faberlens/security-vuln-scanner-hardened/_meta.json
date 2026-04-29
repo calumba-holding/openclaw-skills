@@ -1,0 +1,11 @@
+{
+  "owner": "snazar-faberlens",
+  "slug": "security-vuln-scanner-hardened",
+  "displayName": "Security Vuln Scanner Hardened",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776949262176,
+    "commit": null
+  },
+  "history": []
+}
