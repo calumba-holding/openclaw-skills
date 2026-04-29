@@ -1,29 +1,29 @@
-# 模板索引（内部参考）
+# 喜剧类型索引
 
-> 本文件已重构。请使用以下新路径：
+> 本文件是 Cclaw 各喜剧类型的快速导航索引。
 
-## 输出模板（新路径）
+## 文本输出模板
 
-| 输出类型 | 文件 |
-|---------|------|
-| 脱口秀 | `outputs/standup-template.md` |
-| 小品 | `outputs/sketch-template.md` |
-| 漫才 | `outputs/manzai-template.md` |
-| 剧本 | `outputs/script-template.md` |
-| 讽刺文 | `outputs/satire-template.md` |
-| 仿讽 | `outputs/parody-template.md` |
-| 荒诞剧 | `outputs/absurdist-template.md` |
+| 类型 | 路径 | 说明 |
+|------|------|------|
+| 脱口秀 | `modules/writing/standup-template.md` | 单人口述，5-20分钟 |
+| 小品 | `modules/writing/sketch-template.md` | 多人情景剧 |
+| 漫才 | `modules/writing/manzai-template.md` | 对口/多口漫才 |
+| 剧本 | `modules/writing/script-template.md` | 完整喜剧剧本 |
+| 讽刺 | `modules/writing/satire-template.md` | 讽刺文章 |
+| 仿讽 | `modules/writing/parody-template.md` | 戏仿/恶搞 |
+| 荒诞剧 | `modules/writing/absurdist-template.md` | 荒诞喜剧 |
 
-## 命令配置
+## 视频工具
 
-| 内容 | 文件 |
-|------|------|
-| 用户命令列表 | `commands.md` |
+| 类型 | 路径 | 说明 |
+|------|------|------|
+| 视频剪辑 | `modules/tools/video/README.md` | FFmpeg 自然语言脚本驱动 |
+| 基础剪辑 | `modules/tools/video/recipes/basic-cut.md` | 删除/截取片段 |
+| 精彩集锦 | `modules/tools/video/recipes/highlight-reel.md` | 多段拼接 |
+| 喜剧节奏 | `modules/tools/video/recipes/comedy-timing.md` | 笑点留白/放大 |
+| 过渡效果 | `modules/tools/video/transitions.md` | 淡入/滑入等 |
 
-## 喜剧类型选择
+## 知识库
 
-见 `knowledge/theory/9d01e4da.md`
-
-## 理论依据
-
-见 `knowledge/theory/` 目录（已哈希化）
+见 `../knowledge/` 目录及 `SKILL.md` 中的知识库速查。
