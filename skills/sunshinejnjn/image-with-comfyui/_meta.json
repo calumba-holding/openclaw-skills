@@ -1,11 +1,17 @@
 {
   "owner": "sunshinejnjn",
   "slug": "image-with-comfyui",
-  "displayName": "Image With Comfyui",
+  "displayName": "Image with ComfyUI",
   "latest": {
-    "version": "1.4.7",
-    "publishedAt": 1776876652230,
-    "commit": "https://github.com/openclaw/skills/commit/4aa3fbc2477d6d6ce50a136f8b26cd61ddb9125a"
+    "version": "1.4.9",
+    "publishedAt": 1777199293753,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.4.7",
+      "publishedAt": 1776876652230,
+      "commit": "https://github.com/openclaw/skills/commit/4aa3fbc2477d6d6ce50a136f8b26cd61ddb9125a"
+    }
+  ]
 }

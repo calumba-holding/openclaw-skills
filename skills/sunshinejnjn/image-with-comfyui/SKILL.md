@@ -1,10 +1,10 @@
 ---
 name: image-with-comfyui
-description: 'Call a local ComfyUI instance for text-to-image (T2I), image-to-image/edit (I2I), and image-to-video (I2V) generation. Supports Z-Image, SD3.5 Medium, Qwen Image Edit, and Wan2.2 models with automatic prompt formatting.'
+description: 'Call a local ComfyUI instance for text-to-image (T2I), image-to-image/edit (I2I), and image-to-video (I2V) generation. Supports Z-Image, SD3.5 Medium, Qwen Image Edit, and Wan2.2 models with automatic prompt formatting and VRAM purge after run.'
 metadata:
   openclaw:
     emoji: "🎨"
-    version: "1.4.5"
+    version: "1.4.9"
     requires:
       anyBins: ["python3"]
       env:
@@ -27,23 +27,23 @@ Call a local ComfyUI server to generate or edit images and videos. Four modes:
 
 ## When to Use
 
-- User asks to generate images from text (Chinese: 绘图/生图/画图/生成图片)
-- User asks to edit an image (Chinese: 修图/改图/编辑图片/换装/换背景)
-- User asks to generate a video from an image + text (Chinese: 图生视频/动画化/生成视频)
+- User asks to generate images from text
+- User asks to edit an image
+- User asks to generate a video from an image + text
 - User provides a description and wants visual output
 
 ### Image-First Conversational Pattern (Image-First Mode)
 
 **Detection rules:**
 1. User sends **only an image** (no text, no other message in the same turn)
-2. Within **2 minutes**, the user sends a **text message** that looks like an edit or video request (Chinese keywords like: 修一下/换背景/加个特效/变成动画/把颜色改蓝的…)
+2. Within **2 minutes**, the user sends a **text message** that looks like an edit or video request (Chinese keywords like: 修一下/换背景/加个特效/变成动画/把颜色改蓝的)
 3. The text intent is **I2I** (edit the image) or **I2V** (animate the image)
 
 **Action:**
 - Route the remembered image + the new text to `image_with_comfyui.py i2i` or `wan2.2` accordingly
 - Use the latest image received as the `--image` input
 - Use the text as the `--prompt`
-- If unsure whether I2I or I2V, **default to I2I** (edit) unless the text clearly says video/animation/动
+- If unsure whether I2I or I2V, **default to I2I** (edit) unless the text clearly says video/animation
 - Do NOT ask the user for the image again — the agent already has the image from the previous turn
 
 **Context tracking:**
@@ -228,7 +228,7 @@ I2I prompts must be **concise and direct**. Keep the user's original language.
 **Rules:**
 - ✅ **Positive prompt only** — no negative prompts
 - ✅ Use user's exact words (don't translate or expand)
-- ✅ Concise (Chinese examples): "换件红色外套", "把背景换成蓝天白云", "将女孩换成男孩"
+- ✅ Concise: "换件红色外套", "把背景换成蓝天白云", "将女孩换成男孩"
 - ❌ Don't translate between languages
 - ❌ Don't over-explain or add details
 
@@ -327,23 +327,40 @@ python3 image_with_comfyui.py test
 
 **Send the media attachment directly. Be minimal.**
 
-### Rules
+### 🚨 Delivery Rules
 
-1. **Send media attachment** via `message` tool with `media` or `filePath` parameter
-2. **NO verbose messages** — don't say "✅ Image generation complete!" or similar
-3. **Don't report** model, resolution, seed, frames, or other technical details in the message
-4. **NO paths or URLs** unless user explicitly asks
-5. Only add a brief description if the task was an explicit image/video generation request (not a casual edit/query)
+**⚠️ Absolutely forbidden: Only writing text descriptions without actually sending files!**
+
+**✅ Correct approach: Send MEDIA path with the appropriate prefix for the current Channel**
+
+| Channel | Format | Example |
+|---------|--------|---------||
+| **WhatsApp** | `MEDIA:./image.jpg` | `MEDIA:./angel_video.mp4` |
+| Telegram | `MEDIA:` or `filePath:` | Varies by implementation |
+| Discord | Direct attachment | Varies by implementation |
+
+**Rules:**
+1. When sending images/videos/audio on WhatsApp, **must** add `MEDIA:` prefix + relative path
+2. Place files in `./media/outbound/` directory to ensure accessibility
+3. Don't just write text descriptions like "video attachment" — that does not equal sending a file
+4. First `cp` the file to `~/.openclaw/media/outbound/`, then send via `MEDIA:`
+5. Other Channels use their corresponding formats (see respective Channel docs)
+6. **Default to sending to the requesting session**: Generated images/videos must be sent back to the session that initiated the request, unless the user explicitly says "don't send" or "only save locally"
+7. **Pure MEDIA line for WhatsApp — no text prefix**: The `MEDIA:` line must be the **sole content of the message**, with no `[[reply_to_current]]`, text, or anything else before it. Otherwise WhatsApp splits the text and attachment into two separate messages, making it look like "sent twice". If caption text is needed, use `MEDIA:./file.ext caption=description` format.
 
 ### Example delivery
 
+**WhatsApp:**
 ```
-[📎 Image attachment]
+MEDIA:./output_image.png
 ```
 
+**Universal：**
 ```
-[📎 Video attachment]
+[📎 Image attachment via MEDIA prefix]
 ```
+
+**Never replace actual file sending with text descriptions!**
 
 ---
 
