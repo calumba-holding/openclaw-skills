@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "akshare-financial-data",
-  "displayName": "akshare-financial-data",
+  "displayName": "Akshare Financial Data",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776876841275,
-    "commit": "https://github.com/openclaw/skills/commit/a525b735c554ff041a308869888995fe4de4acea"
+    "version": "0.3.3",
+    "publishedAt": 1776954189192,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776876841275,
+      "commit": "https://github.com/openclaw/skills/commit/a525b735c554ff041a308869888995fe4de4acea"
+    }
+  ]
 }
