@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "economic-dashboard",
-  "displayName": "economic-dashboard",
+  "displayName": "Economic Dashboard",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776888379170,
-    "commit": "https://github.com/openclaw/skills/commit/083c05fd1557c13540518b242fb60d77f291c1e1"
+    "version": "0.3.3",
+    "publishedAt": 1776954334491,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776888379170,
+      "commit": "https://github.com/openclaw/skills/commit/083c05fd1557c13540518b242fb60d77f291c1e1"
+    }
+  ]
 }
