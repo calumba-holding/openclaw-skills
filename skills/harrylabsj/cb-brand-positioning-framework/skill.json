@@ -1,0 +1,20 @@
+{
+  "name": "Overseas Brand Positioning Framework",
+  "slug": "cb-brand-positioning-framework",
+  "version": "1.0.0",
+  "description": "A structured playbook for repositioning a domestic brand for foreign markets with clear value proposition, audience narrative, and competitive differentiation by region.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["brand", "positioning", "international", "strategy", "marketing"],
+  "trigger_keywords": [
+    "brand positioning overseas",
+    "rebrand for international",
+    "brand story foreign market",
+    "value proposition localization",
+    "global brand strategy"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
