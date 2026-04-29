@@ -1,16 +1,16 @@
 ---
 name: nexus-code-reviewer
-description: "Deep code review agent specialized in Python/FastAPI/React. Identifies bugs, security issues, performance bottlenecks, and architectural anti-patterns. Use when reviewing PRs, auditing codebases, or improving code quality."
-license: proprietary
-compatibility: "Python 3.11+, NEXUS AI Corp ecosystem"
+description: 'Deep code review: security, architecture, QA, performance. Python/FastAPI/React
+  specialist.'
+version: '2.1.0'
 metadata:
-  department: development
-  agents: ["cto", "backend", "qa"]
-  price_per_execution: "$0.50"
-  ecosystem: "NEXUS AI Corp"
-  version: "1.0.0"
-  publishable: true
-allowed-tools: web-search web-fetch filesystem
+  openclaw:
+    emoji: 🔍
+    homepage: https://github.com/Shuwanito/SkillsMP/tree/main/.claude/skills/nexus-code-reviewer
+    os:
+    - macos
+    - linux
+    - windows
 ---
 
 # Nexus Code Reviewer
