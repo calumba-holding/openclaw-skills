@@ -1,0 +1,4 @@
+interface:
+  display_name: "Inspiration / Case Figure Guide"
+  short_description: "Research figure design guide"
+  default_prompt: "Use $inspiration-case-figure-guide to turn my paper idea or draft into a publication-facing inspiration-source or case schematic figure plan."
