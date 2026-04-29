@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "backtrader-event-driven",
-  "displayName": "backtrader-event-driven",
+  "displayName": "Backtrader Event Driven",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776880613773,
-    "commit": "https://github.com/openclaw/skills/commit/abf54af6f32fddcd3da542eeb1615077861e8691"
+    "version": "0.3.3",
+    "publishedAt": 1776954226610,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776880613773,
+      "commit": "https://github.com/openclaw/skills/commit/abf54af6f32fddcd3da542eeb1615077861e8691"
+    }
+  ]
 }
