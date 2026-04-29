@@ -1,6 +1,6 @@
 # ControlFoley Audio Generator API Reference
 
-Base URL: `https://llmplus.ai.xiaomi.com`  
+Base URL: `https://controlfoley.ai.xiaomi.com`  
 Auth: None required
 
 **Known API quirks (from real testing):**

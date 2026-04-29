@@ -6,20 +6,18 @@ description: >
 
 ---
 
-# ControlFoley Audio Generator (CLI version)
+# ControlFoley Audio Generator
 
 A multi-functional audio generation tool powered by the ControlFoley model, integrating video sound effect (SFX) generation, video background music composition, text-to-audio and other functions to realize diversified creative audio generation. 
 
 This tool supports four modes: Video-to-Audio (V2A), Text-Controlled Video-to-Audio (TC-V2A), Audio-Controlled Video-to-Audio (AC-V2A), and Text-to-Audio (T2A).
-
-If you find this project useful, please consider giving a star ⭐️ on our [GitHub](https://github.com/xiaomi-research/controlfoley) and [ClawHub](https://clawhub.ai/yjx-research/controlfoley-audio-generator) pages ~
 
 ## Basic Info
 
 | Field | Value |
 |---|---|
 | Service Operator | Xiaomi LLM Plus Team |
-| API Endpoint | `https://llmplus.ai.xiaomi.com` |
+| API Endpoint | `https://controlfoley.ai.xiaomi.com` |
 | Open Source Repo | `https://github.com/xiaomi-research/controlfoley` |
 | Project Page | `https://yjx-research.github.io/ControlFoley_web_page/` |
 | Online Demo | `https://yjx-research.github.io/ControlFoley_web_page/#try-gen` |
@@ -45,7 +43,7 @@ ffmpeg -version     # optional, for audio format conversion
 | **T2A** | `t2a "prompt"` | Text description | .flac | Generate audio from text descriptions |
 
 
-## Usage
+## Usage (CLI version)
 
 ### 1. Text-to-Audio (T2A, default 8s)
 
@@ -93,6 +91,70 @@ python3 scripts/foley.py t2a "rain on a tin roof" --seed 42
 
 ```bash
 python3 scripts/foley.py models
+```
+
+## Usage (API version)
+
+### POST
+
+```bash
+curl -X POST "https://controlfoley.ai.xiaomi.com/api/v1/v2a/submit" -F "file=@video_path" -F "prompt=footsteps on gravel with birds chirping"
+```
+
+return 
+
+```json
+{"taskId": "xxx", "message": "Task submitted successfully"}
+```
+
+### GET 
+
+#### 1. Available Models
+
+```bash
+curl -X GET "https://controlfoley.ai.xiaomi.com/api/v1/v2a/models" 
+```
+
+return 
+
+```json
+{"models":[{"name":"ControlFoley","enabled":true}]}
+```
+
+#### 2. Status Inquiry 
+```bash
+curl -X GET "https://controlfoley.ai.xiaomi.com/api/v1/v2a/status/{taskId}" 
+```
+
+return 
+
+1. success：
+
+```json
+{"urls":["{Domain name}/ControlFoley_output/{taskId}/{filename}"],"status":"success","done":true}
+```
+
+2. processing：
+
+```json
+{"status":"processing","done":false}
+```
+
+3. pending:
+```json 
+{"status":"pending","queue_pos":1,"queue_position":1,"total_queue":2,"done":false}
+```
+
+#### 3. Result Download
+
+```bash
+curl -X GET "https://controlfoley.ai.xiaomi.com/api/v1/v2a/ControlFoley_output/{taskId}/{filename}" --output ./output.flac
+```
+
+#### 4. Status Inquiry & Result Download
+
+```bash
+curl -X GET "https://controlfoley.ai.xiaomi.com/api/v1/v2a/status_download/{taskId}" --output-dir ./output --output audio.zip
 ```
 
 ## Parameters
@@ -157,7 +219,7 @@ See ./references/api-reference.md for full endpoint documentation.
 
 ## ⚠️ Privacy & Security
 
-- **Service Operator**: Cloud processing is operated by the Xiaomi LLM Plus Team at `https://llmplus.ai.xiaomi.com`
+- **Service Operator**: Cloud processing is operated by the Xiaomi LLM Plus Team at `https://controlfoley.ai.xiaomi.com`
 - **Data Upload**: V2A/TC-V2A/AC-V2A modes upload the full video file to the remote service for processing. Do not upload videos containing sensitive personal or identifiable information
 - **Data Processing**: Uploaded videos and audio are used solely for audio generation. Results are returned via URL. Refer to the Xiaomi LLM Plus Team's terms of service for data retention and access control policies
 - **No API Key Required**: The service requires no authentication — please use it responsibly to avoid unnecessary load

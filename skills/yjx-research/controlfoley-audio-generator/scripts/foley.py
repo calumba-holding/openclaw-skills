@@ -11,7 +11,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-API_BASE = "https://llmplus.ai.xiaomi.com"
+API_BASE = "https://controlfoley.ai.xiaomi.com"
 POLL_INTERVAL = 3
 MAX_POLLS = 100  # ~5 min timeout
 
