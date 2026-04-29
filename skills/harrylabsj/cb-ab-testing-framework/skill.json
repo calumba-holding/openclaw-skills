@@ -1,0 +1,20 @@
+{
+  "name": "Overseas A/B Testing Design Framework",
+  "slug": "cb-ab-testing-framework",
+  "version": "1.0.0",
+  "description": "A framework for designing culturally aware experiments for overseas products, landing pages, messages, and funnels.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["A/B testing", "experimentation", "CRO", "international", "growth", "analytics"],
+  "trigger_keywords": [
+    "A/B testing overseas",
+    "international experiment design",
+    "localized landing page test",
+    "cross-cultural CRO",
+    "global growth experiment"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
