@@ -40,32 +40,18 @@ license: MIT
 基于 Apple Human Interface Guidelines (2026)，覆盖所有 Apple 平台的设计规范。
 
 # 设计原则
-- [design-principles.md](references/design-principles.md) — Hierarchy / Harmony / Consistency + 平台哲学
 
 # 视觉基础
-- [typography.md](references/typography.md) — San Francisco / New York / Dynamic Type / 字号层级
-- [color.md](references/color.md) — 系统色 / Dark Mode / Liquid Glass / 宽色域 P3 / 无障碍色彩
 
 # 图标与品牌
-- [sf-symbols.md](references/sf-symbols.md) — SF Symbols 6000+ 图标库 / 渲染模式 / 动画 / 自定义符号
-- [branding.md](references/branding.md) — App Icon / 品牌色 / 启动画面 / Apple 品牌规范
 
 # 组件设计规范
 
 ### 输入组件
-- [components-textfield.md](references/components-textfield.md) — TextField / SearchBar / TextEditor
-- [components-controls.md](references/components-controls.md) — Toggle / Switch / Slider / Segmented Control / DatePicker / ColorWell
 
 ### 容器组件
-- [components-buttons.md](references/components-buttons.md) — 填充按钮 / Tinted / Gray / Destructive / Borderless
-- [components-navigation.md](references/components-navigation.md) — Navigation Bar / Tab Bar / Toolbar / Sheet / Sidebar
-- [components-lists.md](references/components-lists.md) — Table / List / Collection / Swipe Actions / Drag & Drop
-- [components-containers.md](references/components-containers.md) — Alert / Action Sheet / Modal / Popover / Menu
 
 # 体验设计
-- [accessibility.md](references/accessibility.md) — VoiceOver / Dynamic Type / 对比度 / Reduce Motion / 肢体无障碍
-- [animation.md](references/animation.md) — 动画原则 / 手势驱动 / SF Symbols 动画 / 性能
-- [spatial-layout.md](references/spatial-layout.md) — visionOS 空间布局 / Liquid Glass / Billboarding / 3D 界面
 
 ---
 
@@ -575,7 +561,6 @@ extension CatalogViewController: UICollectionViewDelegateFocus {
 | ❌ 窄边框 | ✅ 安全区域各 90pt |
 
 ### watchOS
-- [watchos-hig.md](references/watchos-hig.md) — 表盘/导航/通知/Health/手势/Haptic
 
 #### 核心特征
 - 腕上设备，屏幕极小（40-45mm Series 10）

@@ -3,9 +3,15 @@
   "slug": "apple-higdesign-skill",
   "displayName": "Apple HigDesign Skill",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776938493204,
-    "commit": "https://github.com/openclaw/skills/commit/c7586eff522a4974c2a10c951f8a0e86d92f9cf0"
+    "version": "3.0.2",
+    "publishedAt": 1776959326249,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776938493204,
+      "commit": "https://github.com/openclaw/skills/commit/c7586eff522a4974c2a10c951f8a0e86d92f9cf0"
+    }
+  ]
 }
