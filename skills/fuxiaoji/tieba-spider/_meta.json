@@ -1,0 +1,11 @@
+{
+  "owner": "fuxiaoji",
+  "slug": "tieba-spider",
+  "displayName": "Tieba Spider",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777029326298,
+    "commit": null
+  },
+  "history": []
+}
