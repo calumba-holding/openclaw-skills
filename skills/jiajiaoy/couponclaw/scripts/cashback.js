@@ -22,7 +22,7 @@ if (!store) {
   console.error(lang === 'zh'
     ? '用法: node scripts/cashback.js <商家名> [--spend 金额] [--lang zh|en]'
     : 'Usage: node scripts/cashback.js <store> [--spend amount] [--lang zh|en]');
-  process.exit(1);
+  return;
 }
 
 const encoded = encodeURIComponent(store);

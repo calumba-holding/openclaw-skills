@@ -24,7 +24,7 @@ if (!query) {
   console.error(lang === 'zh'
     ? '用法: node scripts/find.js <商品或店铺> [--region cn|us|uk|au|sea|all] [--lang zh|en]'
     : 'Usage: node scripts/find.js <product or store> [--region cn|us|uk|au|sea|all] [--lang zh|en]');
-  process.exit(1);
+  return;
 }
 
 const encoded = encodeURIComponent(query);
@@ -78,9 +78,9 @@ const cashbackSources = region === 'cn' ? [
 
 // DTC 品牌检测提示
 const dtcHint = `如「${query}」是品牌官网直销（DTC）商品，额外执行：
-- web_search「${query} site:retailmenot.com OR site:slickdeals.net coupon code」获取品牌专属券码
+- 搜索 [商品名] site:retailmenot.com OR site:slickdeals.net coupon code 获取品牌专属券码
 - browser 导航品牌官网首页，检查是否有订阅弹窗优惠（通常首单 10-15% off）或顶部 banner 促销
-- web_search「${query} first order discount newsletter signup」`;
+- 搜索 [商品名] first order discount newsletter signup`;
 
 if (lang === 'zh') {
   const sourceList = activeSources.map((s, i) =>
@@ -158,9 +158,9 @@ ${cashbackList}
 ═══ Layer 3: DTC Brand Check ═══
 
 If "${query}" is a DTC brand:
-- web_search "${query} site:retailmenot.com OR site:slickdeals.net coupon code" for brand-specific codes
+- Search: [product name] site:retailmenot.com OR site:slickdeals.net coupon code
 - browser navigate to brand's official homepage, check for signup popup offer (usually 10-15% off first order) or banner promotions
-- web_search "${query} first order discount newsletter signup"
+- Search: [product name] first order discount newsletter signup
 
 Extraction rules:
 - Only record **currently valid** coupons (note expiry; mark expired ones as such — do not recommend them)
