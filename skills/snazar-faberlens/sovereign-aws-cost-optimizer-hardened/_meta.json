@@ -1,0 +1,11 @@
+{
+  "owner": "snazar-faberlens",
+  "slug": "sovereign-aws-cost-optimizer-hardened",
+  "displayName": "Sovereign Aws Cost Optimizer Hardened",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776956448003,
+    "commit": null
+  },
+  "history": []
+}
