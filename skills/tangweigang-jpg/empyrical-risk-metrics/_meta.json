@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "empyrical-risk-metrics",
-  "displayName": "empyrical-risk-metrics",
+  "displayName": "Empyrical Risk Metrics",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776888399125,
-    "commit": "https://github.com/openclaw/skills/commit/94f45790a5ff69d1e6162659862d5bcffb2c806f"
+    "version": "0.3.3",
+    "publishedAt": 1776954347722,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776888399125,
+      "commit": "https://github.com/openclaw/skills/commit/94f45790a5ff69d1e6162659862d5bcffb2c806f"
+    }
+  ]
 }
