@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: axa
 summary: 法国保险巨人 — 从诺曼底火险公司到全球最大保险集团的全球化之路
 read_when:
