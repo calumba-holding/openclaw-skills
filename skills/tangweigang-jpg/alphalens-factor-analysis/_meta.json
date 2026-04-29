@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "alphalens-factor-analysis",
-  "displayName": "alphalens-factor-analysis",
+  "displayName": "Alphalens Factor Analysis",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776876849488,
-    "commit": "https://github.com/openclaw/skills/commit/7fac1e4dfff0cacaf8c2a771dc86ec876afc656a"
+    "version": "0.3.3",
+    "publishedAt": 1776954195663,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776876849488,
+      "commit": "https://github.com/openclaw/skills/commit/7fac1e4dfff0cacaf8c2a771dc86ec876afc656a"
+    }
+  ]
 }
