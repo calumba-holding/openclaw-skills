@@ -1,0 +1,20 @@
+{
+  "name": "Overseas Social Channel Matrix",
+  "slug": "cb-social-channel-matrix",
+  "version": "1.0.0",
+  "description": "A decision framework for choosing and operating the right social media channels by region, audience, category, and growth objective.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["social media", "channel strategy", "international", "platform", "marketing"],
+  "trigger_keywords": [
+    "which social platform overseas",
+    "international social media strategy",
+    "TikTok Instagram LinkedIn overseas",
+    "social channel matrix",
+    "foreign market social channels"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
