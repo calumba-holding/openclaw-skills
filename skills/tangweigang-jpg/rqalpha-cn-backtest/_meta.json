@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "rqalpha-cn-backtest",
-  "displayName": "rqalpha-cn-backtest",
+  "displayName": "Rqalpha Cn Backtest",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776913518368,
-    "commit": "https://github.com/openclaw/skills/commit/af7f91a084ef2c23dfbea27d767bd37502f8af00"
+    "version": "0.3.3",
+    "publishedAt": 1776954592312,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776913518368,
+      "commit": "https://github.com/openclaw/skills/commit/af7f91a084ef2c23dfbea27d767bd37502f8af00"
+    }
+  ]
 }
