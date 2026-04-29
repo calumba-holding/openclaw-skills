@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "quantlib-derivatives",
-  "displayName": "quantlib-derivatives",
+  "displayName": "Quantlib Derivatives",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776909736715,
-    "commit": "https://github.com/openclaw/skills/commit/bb659fd6188d5795640949b31a295153bab0cb5a"
+    "version": "0.3.3",
+    "publishedAt": 1776954558321,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776909736715,
+      "commit": "https://github.com/openclaw/skills/commit/bb659fd6188d5795640949b31a295153bab0cb5a"
+    }
+  ]
 }
