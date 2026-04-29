@@ -3,9 +3,15 @@
   "slug": "music-studio",
   "displayName": "Music Studio",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1776879002557,
-    "commit": "https://github.com/openclaw/skills/commit/38ede8d5f993bb629d4e661e1de04d4fc7efebfb"
+    "version": "1.0.10",
+    "publishedAt": 1776999821087,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1776879002557,
+      "commit": "https://github.com/openclaw/skills/commit/38ede8d5f993bb629d4e661e1de04d4fc7efebfb"
+    }
+  ]
 }
