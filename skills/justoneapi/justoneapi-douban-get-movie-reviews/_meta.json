@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-douban-get-movie-reviews",
+  "displayName": "Douban Movie Movie Reviews API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776966700784,
+    "commit": null
+  },
+  "history": []
+}
