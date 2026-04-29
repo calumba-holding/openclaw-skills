@@ -88,6 +88,13 @@ tools: ["WebSearch", "WebFetch", "Bash", "Read", "Write"]
 - 英文来源（The Verge、TechCrunch等）**只能作为补充，不能成为主体**
 - 最终报告中，中文来源占比必须 ≥60%
 
+### 规则6: 多渠道交叉印证，禁止单一来源垄断
+
+- **单一域名链接占比不得超过50%**：如果超过50%的记录链接来自同一域名（如全部来自ithome.com），必须从其他渠道补充
+- **每条记录至少2个不同渠道验证**：对每个事件，必须从至少2个不同权威媒体搜索确认，选择最权威可信的链接作为主链接
+- **摘要应综合多渠道信息**：核心要点摘要应融合多个渠道的报道内容，而非仅依赖单一来源
+- **文档/链接选择最权威来源**：优先选择：官方来源 > 通讯社(新华社等) > 深度媒体(澎湃/财新) > 综合媒体(腾讯新闻) > 科技媒体(IT之家/36氪)
+
 ---
 
 ## 依赖检查（必须首先执行）
@@ -124,6 +131,8 @@ python3 -c "import openpyxl" 2>/dev/null || echo "MISSING: openpyxl"
 | 来源具体度 | 公司/机构名 | 公司+部门/团队 | "Google Cloud"非"Google" |
 | 不可靠来源占比 | 0% | 0% | 0%知乎/微博 |
 | 中文来源占比 | ≥60% | ≥80% | 80%中文来源 |
+| 单一域名占比 | ≤50% | ≤30% | 无单一域名超50% |
+| 交叉印证率 | ≥50%记录 | ≥80%记录 | 至少2渠道验证 |
 
 ### 每条记录质量对照
 
@@ -135,7 +144,8 @@ python3 -c "import openpyxl" 2>/dev/null || echo "MISSING: openpyxl"
 材料名称: 谷歌发布第八代TPU v8双芯：TPU 8t训练+TPU 8i推理  ← 事件+具体型号+关键差异
 发布时间: 2026-04-22                           ← 精确到日
 核心要点摘要: 谷歌在Cloud Next大会发布第八代TPU，首次拆分训练与推理专用芯片。推理成本降低40%，Meta和Anthropic已签大单。同时宣布7.5亿美元基金推动企业AI采用。  ← 从原文提取，含具体数据
-文档/链接: https://www.thepaper.cn/newsDetail_forward_33029483  ← 权威媒体原文
+文档/链接: https://www.thepaper.cn/newsDetail_forward_33029483  ← 深度媒体为主链接
+印证来源: https://www.36kr.com/p/xxx, https://www.ithome.com/0/941/418.htm  ← 不同域名佐证
 ```
 
 **不合格记录示例**（必须避免）：
@@ -149,6 +159,9 @@ python3 -c "import openpyxl" 2>/dev/null || echo "MISSING: openpyxl"
 ❌ 发布时间: 2026-04                 → 必须精确到日
 ❌ 文档/链接: https://www.zhihu.com/  → 禁止来源
 ❌ 文档/链接: https://www.theverge.com/... → 英文来源，必须有中文源交叉印证
+❌ 印证来源: https://www.ithome.com/0/941/xxx → 与主链接同域名，不算交叉印证
+❌ 印证来源: 无 → 每条记录应有≥1个不同域名的佐证
+❌ 全部15条链接都是ithome.com → 单渠道垄断，必须分散到多个媒体
 ```
 
 ### 类别最低记录数
@@ -182,6 +195,8 @@ python3 -c "import openpyxl" 2>/dev/null || echo "MISSING: openpyxl"
 12. **禁止跳过详情抓取**：每条记录必须从原文页面获取信息
 13. **禁止因中文搜索不足就放弃中文来源**：必须执行降级策略（步骤2B），不得直接回退英文媒体
 14. **禁止提示用户"技术限制"作为借口**：中文来源不足时主动用web_fetch抓取列表页，不得输出"部分中文站点无法访问"
+15. **禁止单渠道垄断**：单一域名链接占比超过50%时，必须从其他渠道补充并替换
+16. **禁止无交叉印证**：每条记录至少应有1个不同域名的佐证链接，重大事件必须有2个不同渠道
 
 ---
 
@@ -312,47 +327,77 @@ web_search({ query: "AI大模型 发布 最新 -site:zhihu.com -site:weibo.com -
 
 > ⚠️ 搜索结果中如果出现 zhihu.com / weibo.com / toutiao.com 链接，**直接丢弃**，不要点击或抓取。
 
-### 11次搜索模板
+### 搜索模板（共15次，确保多渠道覆盖）
 
-#### 搜索组A：模型厂商动态（3次）
+> ⚠️ **关键原则**：每组搜索必须分散到不同权威媒体站点，不得全部集中在 ithome.com。每次搜索应交替使用不同的 site: 组合。
+
+#### 搜索组A：模型厂商动态（4次，覆盖4组不同媒体）
 
 ```javascript
-// 国际厂商 - 限定科技媒体
+// A1：国际厂商 - IT之家+36氪
 web_search({ query: "site:ithome.com OR site:36kr.com OpenAI Anthropic Google Gemini 大模型 发布", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
 
-// 国内厂商 - 限定财经+科技媒体
-web_search({ query: "site:ithome.com OR site:nbd.com.cn OR site:new.qq.com 阿里千问 字节豆包 智谱 腾讯混元 Kimi 发布", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+// A2：国际厂商 - 腾讯新闻+澎湃（与A1不同渠道交叉）
+web_search({ query: "site:new.qq.com OR site:thepaper.cn OpenAI Anthropic Google 大模型 发布 最新", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
 
-// 开源模型 - 排除知乎
-web_search({ query: "DeepSeek Meta Llama 开源模型 发布 最新 -site:zhihu.com -site:weibo.com -site:toutiao.com", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+// A3：国内厂商 - 每经+新浪财经
+web_search({ query: "site:nbd.com.cn OR site:finance.sina.com.cn 阿里千问 字节豆包 智谱 腾讯混元 Kimi 发布", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+
+// A4：开源模型 - 机器之心+第一财经（排除知乎）
+web_search({ query: "site:jiqizhixin.com OR site:yicai.com DeepSeek Meta Llama 开源模型 发布 -site:zhihu.com -site:weibo.com -site:toutiao.com", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
 ```
 
-#### 搜索组B：AI基础设施与智能体（2次）
+#### 搜索组B：AI基础设施与智能体（3次，覆盖3组不同媒体）
 
 ```javascript
+// B1：AI算力/芯片 - IT之家+新浪财经
 web_search({ query: "site:ithome.com OR site:finance.sina.com.cn AI算力 芯片 GPU TPU 数据中心 英伟达", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
-web_search({ query: "site:36kr.com OR site:jiqizhixin.com AI Agent 智能体 MCP 框架 平台", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+
+// B2：AI算力/芯片 - 36氪+每经（与B1交叉）
+web_search({ query: "site:36kr.com OR site:nbd.com.cn AI算力 英伟达 AMD 芯片 数据中心", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+
+// B3：智能体/Agent - 机器之心+腾讯新闻
+web_search({ query: "site:jiqizhixin.com OR site:new.qq.com AI Agent 智能体 MCP 框架 平台", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
 ```
 
-#### 搜索组C：AI安全与政策（2次）
+#### 搜索组C：AI安全与政策（2次，覆盖2组不同媒体）
 
 ```javascript
+// C1：AI安全 - 新华网+澎湃
 web_search({ query: "site:xinhuanet.com OR site:thepaper.cn AI安全 合规 治理 监管 政策", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
-web_search({ query: "site:gov.cn OR site:miit.gov.cn 人工智能 政策 法规 工信部 国务院", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+
+// C2：AI政策 - 政府官方+财新
+web_search({ query: "site:gov.cn OR site:caixin.com 人工智能 政策 法规 工信部 国务院", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
 ```
 
-#### 搜索组D：汽车行业（2次）
+#### 搜索组D：汽车行业（2次，覆盖2组不同媒体）
 
 ```javascript
+// D1：汽车行业 - 新浪财经+每经
 web_search({ query: "site:finance.sina.com.cn OR site:nbd.com.cn 汽车 智驾 产销 比亚迪 吉利", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+
+// D2：智能制造 - 证券时报+腾讯新闻
 web_search({ query: "site:stcn.com OR site:new.qq.com 上汽 美的 三一 智能制造 AI", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
 ```
 
-#### 搜索组E：机器人与咨询报告（2次）
+#### 搜索组E：机器人与咨询报告（2次，覆盖2组不同媒体）
 
 ```javascript
-web_search({ query: "site:ithome.com OR site:thepaper.cn 人形机器人 量产 特斯拉 宇树 优必选", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
-web_search({ query: "site:mckinsey.com.cn OR site:36kr.com 麦肯锡 德勤 Gartner IDC 行业报告 AI", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+// E1：机器人 - 澎湃+第一财经
+web_search({ query: "site:thepaper.cn OR site:yicai.com 人形机器人 量产 特斯拉 宇树 优必选", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+
+// E2：咨询报告 - 36氪+IT之家
+web_search({ query: "site:36kr.com OR site:ithome.com 麦肯锡 德勤 Gartner IDC 行业报告 AI", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 10, country: "CN", language: "zh" })
+```
+
+#### 搜索组F：交叉印证搜索（2次，确保多渠道覆盖）
+
+```javascript
+// F1：本周重大事件 - 多站交叉（不限定site:，排除不可靠来源）
+web_search({ query: "AI 大模型 发布 芯片 最新新闻 -site:zhihu.com -site:weibo.com -site:toutiao.com", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 15, country: "CN", language: "zh" })
+
+// F2：汽车+AI交叉 - 多站交叉
+web_search({ query: "汽车 智能制造 机器人 AI 最新 -site:zhihu.com -site:weibo.com -site:toutiao.com", freshness: "week", date_after: DATE_START, date_before: DATE_END, count: 15, country: "CN", language: "zh" })
 ```
 
 ---
@@ -436,9 +481,9 @@ web_search({ query: "site:blog.google OR site:openai.com announcement", freshnes
 
 ---
 
-## 步骤4: 提取结构化信息 + 日期验证
+## 步骤4: 提取结构化信息 + 交叉印证 + 日期验证
 
-### 6个字段
+### 7个字段
 
 | 字段 | 格式要求 | 合格示例 | 不合格示例 |
 |------|----------|----------|------------|
@@ -446,8 +491,33 @@ web_search({ query: "site:blog.google OR site:openai.com announcement", freshnes
 | 来源/发布机构 | 具体到公司/部门 | Google Cloud | 知乎、行业 |
 | 材料名称 | 具体事件+关键指标 | 谷歌发布第八代TPU v8双芯：TPU 8t训练+TPU 8i推理 | AI芯片发布 |
 | 发布时间 | **必须 YYYY-MM-DD** | 2026-04-22 | 2026-04 |
-| 核心要点摘要 | 50-100字，含≥1个具体数据 | 推理成本降低40%，Meta和Anthropic已签大单 | 关键词搜索结果：... |
-| 文档/链接 | 原文URL（权威媒体） | https://www.thepaper.cn/... | https://www.zhihu.com/... |
+| 核心要点摘要 | 50-100字，含≥1个具体数据，综合多渠道 | 推理成本降低40%（36氪），Meta和Anthropic已签大单（澎湃） | 关键词搜索结果：... |
+| 文档/链接 | 最权威可信的原文URL | https://www.thepaper.cn/... | https://www.zhihu.com/... |
+| 印证来源 | ≥1个不同域名的佐证链接 | https://www.36kr.com/..., https://finance.sina.com.cn/... | 无、同域名链接 |
+
+### 交叉印证流程（每条记录必须执行）
+
+```
+1. 识别事件关键词 → 提取核心实体（如"谷歌 TPUv8"）
+2. 用关键词在至少1个不同权威媒体搜索验证
+   web_search({ query: "谷歌 TPUv8 发布 site:new.qq.com OR site:36kr.com", freshness: "week", count: 5 })
+3. 找到佐证链接 → 记录到「印证来源」字段
+4. 选择最权威的链接作为主「文档/链接」
+5. 综合多渠道信息写入摘要，重要数据标注来源
+```
+
+**链接权威性优先级**（选择主链接时参考）：
+
+```
+1. 官方来源（openai.com、blog.google）     → 最高权威
+2. 通讯社/官方媒体（xinhuanet.com）         → 官方背书
+3. 深度媒体（thepaper.cn、caixin.com）      → 深度调查
+4. 综合新闻（new.qq.com、chinanews.com）    → 广泛传播
+5. 行业媒体（36kr.com、jiqizhixin.com）     → 专业领域
+6. 科技媒体（ithome.com）                   → 快速报道
+```
+
+> ⚠️ 如果某个事件只能找到单一来源，在「印证来源」列填"单源"，摘要末尾标注 `[待核实]`。
 
 ### 日期验证（每条记录必须通过，任一不通过则丢弃）
 
@@ -466,6 +536,8 @@ web_search({ query: "site:blog.google OR site:openai.com announcement", freshnes
 □ 摘要是否从原文提取？（搜索snippet → 丢弃）
 □ 摘要是否含具体数据？（无数据 → 重写或丢弃）
 □ 英文来源是否≤40%？（超过 → 减少英文记录）
+□ 印证来源是否≥1个不同域名？（单一来源标注[待核实]）
+□ 单一域名链接是否≤50%？（超过 → 必须从其他渠道补充）
 ```
 
 ### 事实核查
@@ -493,7 +565,7 @@ wb = Workbook()
 ws = wb.active
 ws.title = "信息扫描周报"
 
-headers = ["材料类别", "来源/发布机构", "材料名称", "发布时间", "核心要点摘要", "文档/链接"]
+headers = ["材料类别", "来源/发布机构", "材料名称", "发布时间", "核心要点摘要", "文档/链接", "印证来源"]
 hfont = Font(name='Arial', bold=True, color='FFFFFF', size=11)
 hfill = PatternFill(start_color='2F5496', end_color='2F5496', fill_type='solid')
 border = Border(left=Side(style='thin'), right=Side(style='thin'),
@@ -510,10 +582,12 @@ cat_colors = {
     '财经人力': 'FFF2CC', '营销': 'EDEDED',
 }
 
+link_font = Font(name='Arial', size=10, color='0563C1', underline='single')
+
 for ri, item in enumerate(data, 2):
     for ci, val in enumerate(item, 1):
         ws.cell(row=ri, column=ci, value=val)
-    for ci in range(1, 7):
+    for ci in range(1, 8):
         cell = ws.cell(row=ri, column=ci)
         cell.border = border
         cell.font = Font(name='Arial', size=10)
@@ -523,7 +597,30 @@ for ri, item in enumerate(data, 2):
         ws.cell(row=ri, column=1).fill = PatternFill(start_color=color, end_color=color, fill_type='solid')
     ws.cell(row=ri, column=1).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.cell(row=ri, column=4).alignment = Alignment(horizontal='center', vertical='center')
-    ws.cell(row=ri, column=6).font = Font(name='Arial', size=10, color='0563C1', underline='single')
+
+    # 文档/链接列（F列）- 设置为可点击超链接
+    url_cell = ws.cell(row=ri, column=6)
+    url = str(url_cell.value or '')
+    if url.startswith('http'):
+        url_cell.hyperlink = url
+        url_cell.font = link_font
+    else:
+        url_cell.font = Font(name='Arial', size=10)
+
+    # 印证来源列（G列）- 设为可点击超链接
+    # 规则：如果有多个佐证链接，只取第一个设为hyperlink（openpyxl限制），
+    #       其余链接以纯文本显示在下方，用户可复制到浏览器打开
+    ref_cell = ws.cell(row=ri, column=7)
+    ref_val = str(ref_cell.value or '')
+    ref_urls = [u.strip() for u in ref_val.replace('，', ',').split(',') if u.strip().startswith('http')]
+    if len(ref_urls) >= 1:
+        ref_cell.hyperlink = ref_urls[0]
+        ref_cell.font = link_font
+        if len(ref_urls) > 1:
+            # 多个佐证：第一个可点击，其余附在单元格值中
+            ref_cell.value = ref_val
+    elif ref_val and ref_val != '单源':
+        ref_cell.font = Font(name='Arial', size=10)
 
 ws.column_dimensions['A'].width = 16
 ws.column_dimensions['B'].width = 22
@@ -531,8 +628,9 @@ ws.column_dimensions['C'].width = 52
 ws.column_dimensions['D'].width = 12
 ws.column_dimensions['E'].width = 65
 ws.column_dimensions['F'].width = 50
+ws.column_dimensions['G'].width = 50
 ws.freeze_panes = 'A2'
-ws.auto_filter.ref = f'A1:F{len(data)+1}'
+ws.auto_filter.ref = f'A1:G{len(data)+1}'
 
 date_str = datetime.now().strftime("%Y-%m-%d")
 filepath = f"信息扫描周报_{date_str}.xlsx"
@@ -547,7 +645,7 @@ date_str = datetime.now().strftime("%Y-%m-%d")
 filepath = f"信息扫描周报_{date_str}.csv"
 with open(filepath, 'w', newline='', encoding='utf-8-sig') as f:
     writer = csv.writer(f)
-    writer.writerow(["材料类别", "来源/发布机构", "材料名称", "发布时间", "核心要点摘要", "文档/链接"])
+    writer.writerow(["材料类别", "来源/发布机构", "材料名称", "发布时间", "核心要点摘要", "文档/链接", "印证来源"])
     for item in data:
         writer.writerow(item)
 ```
@@ -577,6 +675,9 @@ with open(filepath, 'w', newline='', encoding='utf-8-sig') as f:
 □ 是否所有搜索都是本次新执行的（非历史数据复用）？
 □ 中文来源占比是否 ≥60%？
 □ 英文来源是否 ≤40%？
+□ 单一域名链接占比是否 ≤50%？（如ithome.com不超过50%）
+□ 交叉印证率是否 ≥50%？（至少一半记录有≥2个不同渠道佐证）
+□ 所有「印证来源」是否为不同域名？（不能与「文档/链接」同域名）
 ```
 
 如果自检不通过，必须补充搜索和修正，直到达标。
@@ -683,3 +784,7 @@ npx clawhub@latest install xcrawl-scrape
 17. **摘要必须有数据**：每条摘要必须含≥1个具体数值
 18. **来源必须具体**：来源/发布机构必须具体到公司/部门名
 19. **列表页降级必执行**：中文搜索结果不足时必须抓取列表页，不能跳过
+20. **多渠道搜索**：每次搜索组必须覆盖不同媒体站点，不得全部集中在IT之家
+21. **交叉印证必执行**：每个事件至少从2个不同渠道搜索确认，综合多渠道信息写入摘要
+22. **链接权威性优先**：主链接选最权威来源（官方>通讯社>深度媒体>综合媒体>科技媒体），IT之家等科技媒体链接不应超过50%
+23. **印证来源独立域名**：印证来源必须与主链接不同域名，同域名不算交叉印证
