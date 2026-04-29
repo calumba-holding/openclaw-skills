@@ -1,0 +1,11 @@
+{
+  "owner": "whrime",
+  "slug": "gitlab-mr-reviewer",
+  "displayName": "gitlab-mr-reviewer",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1777361189508,
+    "commit": null
+  },
+  "history": []
+}
