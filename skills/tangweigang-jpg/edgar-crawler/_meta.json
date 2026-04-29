@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "edgar-crawler",
-  "displayName": "edgar-crawler",
+  "displayName": "Edgar Crawler",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776888388395,
-    "commit": "https://github.com/openclaw/skills/commit/d68675c637a8acded24ed687f90923230dd2962c"
+    "version": "0.3.3",
+    "publishedAt": 1776954340892,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776888388395,
+      "commit": "https://github.com/openclaw/skills/commit/d68675c637a8acded24ed687f90923230dd2962c"
+    }
+  ]
 }
