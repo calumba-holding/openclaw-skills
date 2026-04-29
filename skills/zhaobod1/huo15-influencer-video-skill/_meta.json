@@ -1,11 +1,17 @@
 {
   "owner": "zhaobod1",
   "slug": "huo15-influencer-video-skill",
-  "displayName": "火15 AI带货视频生成",
+  "displayName": "Huo15 Influencer Video Skill",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1776697701327,
-    "commit": "https://github.com/openclaw/skills/commit/e024bd946923cd35a666ec2436f1f06f8e2ccd5f"
+    "version": "2.0.0",
+    "publishedAt": 1777289675819,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1776697701327,
+      "commit": "https://github.com/openclaw/skills/commit/e024bd946923cd35a666ec2436f1f06f8e2ccd5f"
+    }
+  ]
 }
