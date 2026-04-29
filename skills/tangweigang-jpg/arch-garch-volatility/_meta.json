@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "arch-garch-volatility",
-  "displayName": "arch-garch-volatility",
+  "displayName": "Arch Garch Volatility",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776880592801,
-    "commit": "https://github.com/openclaw/skills/commit/f3cb5dede0659710995dcf99e5250d7ab24d6b81"
+    "version": "0.3.3",
+    "publishedAt": 1776954211682,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776880592801,
+      "commit": "https://github.com/openclaw/skills/commit/f3cb5dede0659710995dcf99e5250d7ab24d6b81"
+    }
+  ]
 }
