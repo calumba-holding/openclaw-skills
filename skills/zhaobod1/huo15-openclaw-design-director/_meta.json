@@ -3,9 +3,15 @@
   "slug": "huo15-openclaw-design-director",
   "displayName": "Huo15 Openclaw Design Director",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776919686125,
-    "commit": "https://github.com/openclaw/skills/commit/13bacc459af3c610217f82932c8cd9597bdbc05c"
+    "version": "2.0.0",
+    "publishedAt": 1777266722968,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776919686125,
+      "commit": "https://github.com/openclaw/skills/commit/13bacc459af3c610217f82932c8cd9597bdbc05c"
+    }
+  ]
 }
