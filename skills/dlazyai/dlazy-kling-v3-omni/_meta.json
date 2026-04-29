@@ -3,9 +3,15 @@
   "slug": "dlazy-kling-v3-omni",
   "displayName": "Dlazy Kling V3 Omni",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776759580665,
-    "commit": "https://github.com/openclaw/skills/commit/ca025b1d3db7f242ecc5b922a8508b68c3271a38"
+    "version": "1.0.5",
+    "publishedAt": 1777430093181,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776759580665,
+      "commit": "https://github.com/openclaw/skills/commit/ca025b1d3db7f242ecc5b922a8508b68c3271a38"
+    }
+  ]
 }
