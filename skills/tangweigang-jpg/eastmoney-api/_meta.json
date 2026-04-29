@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "eastmoney-api",
-  "displayName": "eastmoney-api",
+  "displayName": "Eastmoney Api",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776884561082,
-    "commit": "https://github.com/openclaw/skills/commit/9585aced022efc6662e4e7f7348c253de695830c"
+    "version": "0.3.3",
+    "publishedAt": 1776954319651,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776884561082,
+      "commit": "https://github.com/openclaw/skills/commit/9585aced022efc6662e4e7f7348c253de695830c"
+    }
+  ]
 }
