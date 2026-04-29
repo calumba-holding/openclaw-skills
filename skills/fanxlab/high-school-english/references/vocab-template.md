@@ -19,6 +19,8 @@
 - *英文例句1*（中文翻译）
 - *英文例句2*（中文翻译）
 
+**原词/派生词**：原词 + 音标 + 词性 + 释义
+
 ---
 
 ## 示例（ability）
@@ -37,3 +39,8 @@
 **例句**：
 - *She has the remarkable ability to remain calm under pressure.*（她有在压力下保持冷静的非凡能力。）
 - *The ability to communicate effectively is a crucial skill in the modern workplace.*（有效沟通的能力是现代职场中至关重要的技能。）
+
+**原词/派生词**：
+- **able** /ˈeɪbl/ adj. 能够...的；有能力的 → ability（词性转换）
+- **disabled** /dɪsˈeɪbld/ adj. 残疾的（反义词）
+- **disability** /ˌdɪsəˈbɪləti/ n. 残疾；缺陷

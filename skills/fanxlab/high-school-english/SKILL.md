@@ -1,6 +1,7 @@
 ---
 name: high-school-english
-description: "Target users: Chinese high school students (Grade 10-12). Goal: High School English exam preparation. Features: 1) Vocabulary learning with spaced repetition (Ebbinghaus v2.4); 2) Grammar practice (tenses, sentence structure); 3) Reading comprehension training; 4) Error tracking and review; 5) Daily study reports; 6) Achievement system. Trigger phrases: 学英语/背单词/学语法/做阅读/做完形, 复习单词/复习语法/复习错题, 英语学习/高考英语/高中英语, 讲解单词/没掌握/记住了."
+version: 1.4.0
+description: "Target users: Chinese high school students (Grade 10-12). Goal: High School English exam preparation. Features: 1) Vocabulary learning with spaced repetition (Ebbinghaus v2.4); 2) Grammar practice (tenses, sentence structure); 3) Reading comprehension training; 4) Error tracking and review; 5) Daily study reports; 6) Achievement system. Trigger phrases: 学英语/背单词/学语法/做阅读/做完形, 复习单词/复习语法/复习错题, 英语学习/高考英语/高中英语, 讲解单词/没掌握/记住了, 直接发送单个英语单词（查词/记单词）."
 ---
 
 # High School English Tutoring Skill
@@ -51,8 +52,8 @@ When this skill loads, check if `high-school-profile.md` exists in workspace mem
 
 ```
 1. Present the problem first
-2. Student attempts → wrong → then explain
-3. Reveal the pattern/rule
+2. Student attempts → judge result
+3. Branch to Scenario A/B
 4. Summarize and reinforce
 ```
 
@@ -75,6 +76,7 @@ When this skill loads, check if `high-school-profile.md` exists in workspace mem
 | "学习计划" / "每周学什么"                       | Show current weekly rhythm from profile              |
 | "讲解单词" / "单词讲解" / "讲一下单词" / "讲解一下单词"   | Explain word meaning and usage                       |
 | "xxx是什么意思"                             | Check vocab table → answer → create record if needed |
+| Send a single English word (not a sentence)  | Check vocab table → answer → create record if needed |
 | Send photo                             | OCR → determine type → save to correct table         |
 | "没掌握" / "记住了"                          | Update memory level                                  |
 
@@ -105,19 +107,26 @@ See `references/vocab-learning-flow.md`
 
 ## Question Generation Logic
 
-When generating questions:
+**根据不同场景，决定出题来源：**
 
-1. **优先查询复习队列**
-   - 查询知识点表：下次复习时间 ≤ 今天
-   - 有待复习 → 按优先级出题
-2. **无待复习题时**
-   - 从 high-school-profile 读取学生弱项
-   - 根据弱项生成针对性题目
-   - 无弱项记录 → 按当前学习日的节奏出题
-3. **数量控制**
-   - 词汇：5个一组
-   - 语法：3-5题
-   - 阅读/完形：1篇 + 3-4题
+### 复习场景
+- 查询 knowledge 表：下次复习时间 ≤ 今天
+- 有待复习 → 按优先级出题
+- 触发复习工作流
+
+### 日常练习（新题）
+1. 从 high-school-profile 读取难度参数（difficulty: easy/medium/hard）
+2. 根据难度和学生弱项生成新题
+3. 无弱项记录 → 按当前学习日的节奏出题
+4. 难度选择：
+   - easy：正确率连续 >80% 可升级
+   - medium：基准难度
+   - hard：目标75分冲刺阶段
+
+### 数量控制
+- 词汇：5个一组
+- 语法：3-5题
+- 阅读/完形：1篇 + 3-4题
 
 ## Question Design
 
@@ -171,33 +180,76 @@ Use CSV files in `workspace/high-school-data/` directory as primary storage.
 | Close-test   | CLO\_  | CLO\_001  |
 | Writing      | WRI\_  | WRI\_001  |
 
+**序号规则：** 4位数字，不足补0，按顺序递增（如 VOC_0001 → VOC_0002 → VOC_0003）
+**自动录入时：** 先查询当前最大序号，+1 得出新序号
+
 ## Workflows
 
-### Scenario A: Wrong Answer
+### 复习工作流（Review Session）
+
+**触发条件：** cron 定时提醒 / 用户说「复习错题」
+
+**来源：** knowledge 表里「下次复习时间 ≤ 今天」的记录（全是已有记录）
 
 ```
-Update knowledge table:
-- 错题标记 = 未掌握
-- 错误次数 += 1
-- 错误原因 = E01-E12 code
-- 错因分析 = detailed analysis
-- 记忆等级 = 1
-- 下次复习时间 = study time tomorrow
-
-Add review log entry
+1. 查询复习队列（下次复习时间 ≤ 今天）
+2. 出题（来自 knowledge 表的已有记录）
+3. 用户作答
+4. 判题 → 分流
+   ├─ 做错了 → 讲解析 → Scenario A（更新已有记录）→ 写复习日志 → 下一题
+   └─ 做对了 → 讲解析 → Scenario B（更新已有记录）→ 写复习日志 → 下一题
+5. 全部完成后：写复习日志（汇总本次复习结果）
 ```
 
-### Scenario B: Correct Answer
+---
+
+### 日常练习流程（New Question Practice）
+
+**触发条件：** 用户发起学习 / 周一至周五日常练习
+
+**来源：** 新题（不在 knowledge 表中）
 
 ```
-Update knowledge table:
-- 错题标记 = 已掌握
-- 错误原因/错因分析 = clear
-- 记忆等级 += 1
-- 下次复习时间 = today at study time + interval
-
-Add review log entry
+1. 出新题 → 用户作答
+2. 判题
+   ├─ 做错了 → 讲解析 → Scenario A（新建记录到 knowledge）→ 下一题
+   └─ 做对了 → 讲解析 → 给予正向反馈 → 下一题
+3. 结束后生成学习报告
 ```
+
+**两者都使用 Scenario A/B，区别在于新建还是更新已有。**
+
+---
+
+### Scenario A: 做错题
+
+讲完解析后，**立即**更新 knowledge 表：
+
+| 字段 | 值 |
+|------|-----|
+| 错题标记 | 未掌握 |
+| 错误次数 | += 1 |
+| 错误原因 | E01-E12 code |
+| 错因分析 | 详细分析 |
+| 记忆等级 | 1 |
+| 下次复习时间 | 次日学习时间 |
+
+（复习工作流中：更新已有记录；日常练习中：新建记录）
+
+---
+
+### Scenario B: 做对题（复习场景）
+
+讲完解析后，**立即**更新 knowledge 表：
+
+| 字段 | 值 |
+|------|-----|
+| 错题标记 | 已掌握 |
+| 错误原因/错因分析 | clear |
+| 记忆等级 | += 1 |
+| 下次复习时间 | 今天学习时间 + 间隔 |
+
+（仅用于复习工作流中，更新已有记录）
 
 ### Scenario C/D: Student Says "没掌握" or "记住了"
 
@@ -225,6 +277,33 @@ OCR content:
 Check vocab table:
 ├─ Already exists → answer directly
 └─ Doesn't exist → create record, then answer
+```
+
+### Proactive Word Explanation (During Lesson)
+
+When explaining vocabulary words **proactively** (not in response to student's question):
+
+```
+After giving the explanation:
+1. Check if word already exists in vocab table
+2. If NOT exists → create record immediately (同步录入)
+3. If exists → skip
+
+**ID format:** VOC_序号 (e.g. VOC_0003, VOC_0004...)
+**错题标记:** default to "未掌握"
+**序号规则:** 查询当前最大序号，+1 递增
+```
+
+### Student Sends Single Word (Looking Up)
+
+When student sends a single word (not a sentence/question):
+
+```
+1. Treat as vocabulary lookup
+2. Check vocab table:
+   ├─ Already exists → answer with record details
+   └─ Doesn't exist → create record, then answer
+3. Mark as 词汇ID: VOC_序号（查询最大序号+1）
 ```
 
 ## Daily Report

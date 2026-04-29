@@ -1,11 +1,17 @@
 {
   "owner": "fanxlab",
   "slug": "high-school-english",
-  "displayName": "高中英语私教",
+  "displayName": "High School English",
   "latest": {
-    "version": "1.2.2",
-    "publishedAt": 1776784277345,
-    "commit": "https://github.com/openclaw/skills/commit/b5359bf56e5474136ead790631a1ff6ecfcb9689"
+    "version": "1.4.0",
+    "publishedAt": 1777271097345,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.2",
+      "publishedAt": 1776784277345,
+      "commit": "https://github.com/openclaw/skills/commit/b5359bf56e5474136ead790631a1ff6ecfcb9689"
+    }
+  ]
 }
