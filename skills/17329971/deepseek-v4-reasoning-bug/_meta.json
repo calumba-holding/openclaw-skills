@@ -1,0 +1,11 @@
+{
+  "owner": "17329971",
+  "slug": "deepseek-v4-reasoning-bug",
+  "displayName": "DeepSeek V4 Reasoning Bug",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777077040841,
+    "commit": null
+  },
+  "history": []
+}
