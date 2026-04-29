@@ -1,0 +1,11 @@
+{
+  "owner": "peand-rover",
+  "slug": "tvdr-video",
+  "displayName": "Tvdr Video",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776942730461,
+    "commit": null
+  },
+  "history": []
+}
