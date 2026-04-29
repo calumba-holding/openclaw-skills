@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 summary: "The studio that defined story-driven RPGs — from Baldur's Gate to Mass Effect to Dragon Age, BioWare shaped narrative gaming."
 read_when:
   - "研究 BioWare 在叙事驱动 RPG 中的地位",
