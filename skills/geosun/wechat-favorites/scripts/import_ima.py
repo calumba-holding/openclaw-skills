@@ -14,6 +14,11 @@ IMA 知识库批量导入
 """
 import csv, json, urllib.request, time, os, sys, argparse
 
+# ===== 安全模式：完全禁用网络功能 =====
+SAFE_MODE = os.environ.get("SAFE_MODE", "").lower() in ("1", "true", "yes")
+if SAFE_MODE:
+    print("[SAFE_MODE] 网络功能已禁用，IMA 导入不可用")
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "exported_favorites")
 
@@ -115,6 +120,11 @@ def log(log_file, msg):
         f.write(line + "\n")
 
 def import_batch(kb_id, urls, client_id, api_key):
+    """批量导入 URL 到 IMA 知识库"""
+    if SAFE_MODE:
+        print("[SAFE_MODE] 网络功能已禁用")
+        return {"code": -1, "msg": "SAFE_MODE enabled"}
+    
     body = json.dumps({"knowledge_base_id": kb_id, "urls": urls}, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         "https://ima.qq.com/openapi/wiki/v1/import_urls",
