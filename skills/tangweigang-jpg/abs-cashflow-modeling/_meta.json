@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "abs-cashflow-modeling",
-  "displayName": "abs-cashflow-modeling",
+  "displayName": "Abs Cashflow Modeling",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776876819730,
-    "commit": "https://github.com/openclaw/skills/commit/bd0b27bdfa3748b8f17fbd8075332fda30a686fb"
+    "version": "0.3.3",
+    "publishedAt": 1776954171606,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776876819730,
+      "commit": "https://github.com/openclaw/skills/commit/bd0b27bdfa3748b8f17fbd8075332fda30a686fb"
+    }
+  ]
 }
