@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-bilibili-get-user-detail",
+  "displayName": "Bilibili User Profile API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776957146360,
+    "commit": null
+  },
+  "history": []
+}
