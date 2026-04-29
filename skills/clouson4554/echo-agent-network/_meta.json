@@ -1,0 +1,11 @@
+{
+  "owner": "clouson4554",
+  "slug": "echo-agent-network",
+  "displayName": "Echo Agent Network",
+  "latest": {
+    "version": "1.5.0",
+    "publishedAt": 1777036651082,
+    "commit": null
+  },
+  "history": []
+}
