@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: bafta-awards
 summary: 英国电影的最高殿堂 — BAFTA 如何在全球电影中维护英式评判标准
 read_when:
