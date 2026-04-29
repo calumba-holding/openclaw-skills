@@ -8,11 +8,14 @@
 import asyncio
 import json
 import logging
+import math
 import os
+import struct
 import sys
 import time
 import uuid
 from pathlib import Path
+from typing import Optional
 
 import websockets
 
@@ -38,6 +41,124 @@ DEFAULT_ENCODING = "mp3"
 DEFAULT_SAMPLE_RATE = 24000
 
 
+class PodcastError(Exception):
+    """播客生成错误基类"""
+    def __init__(self, message: str, error_code: Optional[str] = None, details: Optional[dict] = None):
+        super().__init__(message)
+        self.error_code = error_code
+        self.details = details or {}
+
+
+class AuthenticationError(PodcastError):
+    """认证错误"""
+    pass
+
+
+class RateLimitError(PodcastError):
+    """速率限制错误"""
+    pass
+
+
+class ContentSafetyError(PodcastError):
+    """内容安全错误"""
+    pass
+
+
+class AudioProcessor:
+    """音频后处理器"""
+
+    @staticmethod
+    def normalize_pcm(audio_bytes: bytearray, sample_rate: int = 24000, bits: int = 16) -> bytearray:
+        """PCM 音量归一化到 -1dB peak"""
+        if bits == 16:
+            fmt = "<h"
+            max_val = 32767
+        elif bits == 24:
+            # 24-bit 需要特殊处理
+            return audio_bytes
+        else:
+            return audio_bytes
+
+        samples = []
+        peak = 0
+        for i in range(0, len(audio_bytes), 2):
+            if i + 1 < len(audio_bytes):
+                val = struct.unpack(fmt, audio_bytes[i:i+2])[0]
+                samples.append(val)
+                peak = max(peak, abs(val))
+
+        if peak == 0:
+            return audio_bytes
+
+        # 归一化到 -1dB (约 0.8913)
+        target_peak = int(max_val * 0.8913)
+        gain = target_peak / peak
+
+        normalized = bytearray()
+        for val in samples:
+            new_val = int(val * gain)
+            new_val = max(-max_val, min(max_val, new_val))
+            normalized.extend(struct.pack(fmt, new_val))
+
+        return normalized
+
+    @staticmethod
+    def fade_in_out_pcm(audio_bytes: bytearray, sample_rate: int = 24000, fade_ms: int = 500, bits: int = 16) -> bytearray:
+        """添加淡入淡出效果"""
+        if bits != 16:
+            return audio_bytes
+
+        fmt = "<h"
+        samples = []
+        for i in range(0, len(audio_bytes), 2):
+            if i + 1 < len(audio_bytes):
+                samples.append(struct.unpack(fmt, audio_bytes[i:i+2])[0])
+
+        fade_samples = int(sample_rate * fade_ms / 1000)
+        total = len(samples)
+
+        # 淡入
+        for i in range(min(fade_samples, total)):
+            samples[i] = int(samples[i] * (i / fade_samples))
+
+        # 淡出
+        for i in range(max(0, total - fade_samples), total):
+            samples[i] = int(samples[i] * ((total - i) / fade_samples))
+
+        result = bytearray()
+        for val in samples:
+            result.extend(struct.pack(fmt, val))
+        return result
+
+    @staticmethod
+    def process_mp3(audio_bytes: bytearray, normalize: bool = False, fade: bool = False) -> bytearray:
+        """处理 MP3 音频（需要 pydub）"""
+        try:
+            from pydub import AudioSegment
+            audio = AudioSegment(data=bytes(audio_bytes))
+
+            if normalize:
+                # 归一化到 -1dB
+                peak = audio.max_dBFS
+                if peak < 0:
+                    audio = audio.apply_gain(-1.0 - peak)
+
+            if fade:
+                audio = audio.fade_in(500).fade_out(500)
+
+            # 导出
+            import io
+            buf = io.BytesIO()
+            audio.export(buf, format="mp3")
+            return bytearray(buf.getvalue())
+        except ImportError:
+            logger.warning("pydub 未安装，跳过 MP3 后处理。安装: pip install pydub")
+            return audio_bytes
+        except Exception as e:
+            logger.warning(f"MP3 后处理失败: {e}")
+            return audio_bytes
+
+
 class PodcastGenerator:
     """火山引擎播客语音合成客户端"""
 
@@ -55,6 +176,19 @@ class PodcastGenerator:
         self.resource_id = resource_id
         self.endpoint = endpoint
 
+    def _parse_error(self, error_msg: str) -> PodcastError:
+        """解析错误信息，返回具体错误类型"""
+        error_lower = error_msg.lower()
+
+        if any(k in error_lower for k in ["auth", "unauthorized", "token", "access"]):
+            return AuthenticationError(error_msg, "AUTH_ERROR")
+        elif any(k in error_lower for k in ["rate limit", "too many", "throttle"]):
+            return RateLimitError(error_msg, "RATE_LIMIT")
+        elif any(k in error_lower for k in ["safety", "content", "harmful", "risk"]):
+            return ContentSafetyError(error_msg, "SAFETY_ERROR")
+        else:
+            return PodcastError(error_msg, "UNKNOWN")
+
     async def generate(
         self,
         text: str,
@@ -67,6 +201,9 @@ class PodcastGenerator:
         speaker_info: dict = None,
         speech_rate: int = 0,
         skip_round_audio_save: bool = False,
+        voice_type: Optional[str] = None,
+        normalize_audio: bool = False,
+        fade_in_out: bool = False,
     ) -> dict:
         """
         生成播客音频
@@ -82,6 +219,9 @@ class PodcastGenerator:
             speaker_info: 说话人配置，如 {"random_order": false}
             speech_rate: 语速，默认 0
             skip_round_audio_save: 跳过分段保存
+            voice_type: 音色类型: zh_male / zh_female / multi / None
+            normalize_audio: 是否对音频进行音量归一化
+            fade_in_out: 是否添加淡入淡出效果
 
         Returns:
             dict: 包含 output_files, duration, texts, usage 等信息
@@ -117,6 +257,15 @@ class PodcastGenerator:
                 "speech_rate": speech_rate,
             }
         }
+
+        # 添加音色类型配置
+        if voice_type:
+            valid_types = ["zh_male", "zh_female", "multi"]
+            if voice_type not in valid_types:
+                logger.warning(f"未知音色类型 {voice_type}，有效值: {valid_types}")
+            else:
+                req_params["voice_type"] = voice_type
+                logger.info(f"使用音色类型: {voice_type}")
 
         is_podcast_round_end = True
         audio_received = False
@@ -169,7 +318,15 @@ class PodcastGenerator:
                         logger.debug(f"音频数据接收: {len(msg.payload)} 字节")
 
                     elif msg.type == MsgType.Error:
-                        raise RuntimeError(f"服务器错误: {msg.payload.decode()}")
+                        error_msg = msg.payload.decode() if msg.payload else "未知服务器错误"
+                        error_obj = self._parse_error(error_msg)
+                        if isinstance(error_obj, AuthenticationError):
+                            logger.error(f"认证失败: {error_msg}")
+                        elif isinstance(error_obj, RateLimitError):
+                            logger.error(f"速率限制: {error_msg}")
+                        elif isinstance(error_obj, ContentSafetyError):
+                            logger.error(f"内容安全拦截: {error_msg}")
+                        raise error_obj
 
                     elif msg.type == MsgType.FullServerResponse:
                         if msg.event == EventType.PodcastRoundStart:
@@ -228,6 +385,19 @@ class PodcastGenerator:
                 if is_podcast_round_end:
                     final_files = []
                     if podcast_audio and not only_nlp_text:
+                        # 音频后处理
+                        if encoding == "pcm" and (normalize_audio or fade_in_out):
+                            if normalize_audio:
+                                podcast_audio = AudioProcessor.normalize_pcm(podcast_audio)
+                                logger.info("PCM 音量归一化完成")
+                            if fade_in_out:
+                                podcast_audio = AudioProcessor.fade_in_out_pcm(podcast_audio)
+                                logger.info("PCM 淡入淡出效果已添加")
+                        elif encoding == "mp3" and (normalize_audio or fade_in_out):
+                            podcast_audio = AudioProcessor.process_mp3(
+                                podcast_audio, normalize=normalize_audio, fade=fade_in_out
+                            )
+
                         final_name = f"podcast_final_{int(time.time())}.{encoding}"
                         final_path = output_path / final_name
                         with open(final_path, "wb") as f:
@@ -274,6 +444,9 @@ async def main():
     parser.add_argument("--no-head-music", action="store_true", help="不加片头音乐")
     parser.add_argument("--tail-music", action="store_true", help="加片尾音乐")
     parser.add_argument("--only-text", action="store_true", help="只生成文本不生成音频")
+    parser.add_argument("--voice-type", choices=["zh_male", "zh_female", "multi"], help="音色类型")
+    parser.add_argument("--normalize", action="store_true", help="音量归一化")
+    parser.add_argument("--fade", action="store_true", help="淡入淡出效果")
     parser.add_argument("--appid", default=os.getenv("VOLC_APPID"), help="App ID (或环境变量 VOLC_APPID)")
     parser.add_argument("--token", default=os.getenv("VOLC_ACCESS_TOKEN"), help="Access Token (或环境变量 VOLC_ACCESS_TOKEN)")
     parser.add_argument("--app-key", default=os.getenv("VOLC_APP_KEY", "aGjiRDfUWi"), help="App Key")
@@ -301,6 +474,9 @@ async def main():
         use_head_music=not args.no_head_music,
         use_tail_music=args.tail_music,
         only_nlp_text=args.only_text,
+        voice_type=args.voice_type,
+        normalize_audio=args.normalize,
+        fade_in_out=args.fade,
     )
 
     if result["success"]:
