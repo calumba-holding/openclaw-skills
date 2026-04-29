@@ -1,0 +1,11 @@
+{
+  "owner": "sky-lv",
+  "slug": "kubernetes-automation",
+  "displayName": "Kubernetes Automation",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777068096515,
+    "commit": null
+  },
+  "history": []
+}
