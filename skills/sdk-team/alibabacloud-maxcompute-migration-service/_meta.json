@@ -1,0 +1,11 @@
+{
+  "owner": "sdk-team",
+  "slug": "alibabacloud-maxcompute-migration-service",
+  "displayName": "Alibabacloud Maxcompute Migration Service",
+  "latest": {
+    "version": "0.0.1",
+    "publishedAt": 1776685769447,
+    "commit": null
+  },
+  "history": []
+}
