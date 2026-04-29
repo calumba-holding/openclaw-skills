@@ -1,5 +1,6 @@
 import os
 import re
+import ast
 import yaml
 import collections
 
@@ -121,7 +122,7 @@ def construct(node_type: str, param: dict, x: int, y: int, count: int, id_dict: 
             if '-' in old_id:
                 old_id = old_id.strip("'").strip('"').strip("'")
             else:
-                old_id = eval(old_id)
+                old_id = ast.literal_eval(old_id)
 
             new_id = id_dict[str(old_id)].id
 
@@ -339,7 +340,7 @@ def construct_coze(node_type: str, param: dict, x: int, y: int, count: int, id_d
             if '-' in old_id:
                 old_id = old_id.strip("'").strip('"').strip("'")
             else:
-                old_id = eval(old_id) 
+                old_id = ast.literal_eval(old_id) 
 
             new_id = id_dict[str(old_id)].id
             
@@ -403,9 +404,8 @@ def construct_coze(node_type: str, param: dict, x: int, y: int, count: int, id_d
 
         url = '{{block_output_' + idd + '.' + ref_var + '}}'
 
-        github_rest_token = _load_github_rest_token()
 
-        current_node = HttpRequest_coze(url, x, y, count, github_rest_token)
+        current_node = HttpRequest_coze(url, x, y, count)
 
     elif node_type == 'if-else':
         input_list = []
