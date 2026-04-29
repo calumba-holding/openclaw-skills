@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import sys
+import time
 import urllib.parse
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -56,10 +57,10 @@ from .rendering import (
     render_final_message,
 )
 from .runtime_contract import (
+    attach_runtime_contract_artifacts,
     build_runtime_input,
     build_runtime_prompt,
     runtime_output_schema,
-    write_runtime_contract_artifacts,
 )
 from .settings import (
     SUPPORTED_MARKETPLACES,
@@ -195,6 +196,29 @@ def make_audible_fetch_result(
             "shortCircuit": True,
         },
     )
+
+
+def fetch_audible_deal_with_retry(
+    fetcher: Callable[[str], tuple[str, str]],
+    requested_url: str,
+    *,
+    retries: int,
+    backoff_seconds: float,
+    warnings: list[str],
+) -> dict[str, Any]:
+    retryable_errors = (AudibleFetchError, NoActivePromotionError)
+    for attempt in range(max(0, retries) + 1):
+        try:
+            html_text, final_url = fetcher(requested_url)
+            return parse_audible_deal(html_text, final_url, requested_url)
+        except retryable_errors as exc:
+            if attempt >= max(0, retries):
+                raise
+            warnings.append(
+                f"Retrying Audible daily promotion fetch after transient {type(exc).__name__}: {exc}"
+            )
+            if backoff_seconds > 0:
+                time.sleep(backoff_seconds * (attempt + 1))
 
 
 def build_fit_context_entries(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -516,7 +540,7 @@ def prepare_run(
     fetcher: Callable[[str], tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     ensure_python_version()
-    fetcher = fetcher or (lambda url: fetch_text_with_final_url(url))
+    fetcher = fetcher or (lambda url: fetch_text_with_final_url(url, retries=0))
     config_path = Path(options["configPath"]).resolve() if options.get("configPath") else None
     _, file_config = load_config(config_path)
     merged = {**file_config, **{key: value for key, value in options.items() if value is not None}}
@@ -577,9 +601,18 @@ def prepare_run(
     mode, ready_reason = effective_mode(csv_path, notes_text)
     requested_url = normalize_space(str(merged.get("audibleDealUrl") or spec["dealUrl"]))
     store_date = logical_store_date(spec, merged.get("today"))
+    audible_fetch_retries = int(merged.get("audibleFetchRetries") if merged.get("audibleFetchRetries") is not None else 2)
+    audible_fetch_backoff_seconds = float(
+        merged.get("audibleFetchBackoffSeconds") if merged.get("audibleFetchBackoffSeconds") is not None else 1.0
+    )
     try:
-        html_text, final_url = fetcher(requested_url)
-        candidate = parse_audible_deal(html_text, final_url, requested_url)
+        candidate = fetch_audible_deal_with_retry(
+            fetcher,
+            requested_url,
+            retries=audible_fetch_retries,
+            backoff_seconds=audible_fetch_backoff_seconds,
+            warnings=warnings,
+        )
     except NoActivePromotionError as exc:
         return make_audible_fetch_result(
             status="suppress",
@@ -860,12 +893,7 @@ def prepare_run(
         },
         "message": "Preparation complete. The skill runtime can now resolve Goodreads public score and write the final recommendation.",
     }
-    runtime_artifacts = write_runtime_contract_artifacts(artifact_dir, result)
-    result["artifacts"].update(runtime_artifacts)
-    prepare_result_path = artifact_dir / "prepare-result.json"
-    result["artifacts"]["prepareResultPath"] = str(prepare_result_path)
-    write_json_atomic(prepare_result_path, result)
-    return result
+    return attach_runtime_contract_artifacts(artifact_dir, result)
 
 
 def mark_emitted(state_file: Path, deal_key: str, *, stale_warning_date: str | None = None) -> dict[str, Any]:

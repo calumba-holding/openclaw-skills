@@ -6,7 +6,12 @@ import sys
 from pathlib import Path
 
 from . import core
+from .audible_auth import auth_file_status, finish_external_auth, start_external_auth, test_authenticated_price
+from .cli_errors import cli_error_payload
+from .diagnostics import doctor_report
 from .repo_audit import scan_repo_for_leaks
+from .shared import write_json_atomic
+from .want_to_read_scan import report_json, scan_want_to_read
 
 REQUIRED_PUBLISH_IGNORE_PATTERNS = (
     ".audible-goodreads-deal-scout/",
@@ -45,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     setup_parser.add_argument("--state-file")
     setup_parser.add_argument("--preferences-path")
     setup_parser.add_argument("--audible-marketplace")
+    setup_parser.add_argument("--audible-auth-path")
     setup_parser.add_argument("--goodreads-csv")
     setup_parser.add_argument("--notes-file")
     setup_parser.add_argument("--notes-text")
@@ -92,6 +98,72 @@ def build_parser() -> argparse.ArgumentParser:
     measure_parser.add_argument("--csv-column", action="append", default=[])
     measure_parser.add_argument("--output")
 
+    scan_parser = subparsers.add_parser(
+        "scan-want-to-read",
+        help="Scan Goodreads Want-to-Read books for visible numeric Audible US discounts.",
+    )
+    scan_parser.add_argument("--config-path")
+    scan_parser.add_argument("--limit", type=int)
+    scan_parser.add_argument("--offset", type=int, default=0)
+    scan_parser.add_argument("--scan-order", choices=("newest", "csv", "oldest", "random"), default="newest")
+    scan_parser.add_argument("--seed")
+    scan_parser.add_argument("--max-requests", type=int, default=40)
+    scan_parser.add_argument("--request-delay", type=float, default=1.0)
+    scan_parser.add_argument("--min-discount-percent", type=int, default=10)
+    scan_parser.add_argument("--output-json")
+    scan_parser.add_argument("--output-md")
+    scan_parser.add_argument("--include-non-deals", action="store_true")
+    scan_parser.add_argument("--verbose", action="store_true")
+    scan_parser.add_argument("--progress", choices=("plain", "json", "none"), default="plain")
+    scan_parser.add_argument("--progress-interval", type=float, default=5.0)
+    scan_parser.set_defaults(enrich_goodreads_ratings=None)
+    scan_parser.add_argument("--enrich-goodreads-ratings", dest="enrich_goodreads_ratings", action="store_true")
+    scan_parser.add_argument("--no-goodreads-rating-enrichment", dest="enrich_goodreads_ratings", action="store_false")
+    scan_parser.add_argument("--goodreads-rating-limit", type=int)
+    scan_parser.add_argument("--refresh-cache", action="store_true")
+    scan_parser.add_argument("--no-cache", action="store_true")
+    scan_parser.add_argument("--offline-fixtures")
+    scan_parser.add_argument("--title")
+    scan_parser.add_argument("--author")
+    scan_parser.add_argument("--audible-auth-path")
+
+    auth_start_parser = subparsers.add_parser(
+        "audible-auth-start",
+        help="Start headless external-browser Audible auth for authenticated price lookup.",
+    )
+    auth_start_parser.add_argument("--auth-path", required=True)
+    auth_start_parser.add_argument("--audible-marketplace", default="us")
+
+    auth_finish_parser = subparsers.add_parser(
+        "audible-auth-finish",
+        help="Finish headless Audible auth by pasting the final Amazon redirect URL.",
+    )
+    auth_finish_parser.add_argument("--auth-path", required=True)
+    auth_finish_parser.add_argument("--redirect-url", required=True)
+
+    auth_test_parser = subparsers.add_parser(
+        "audible-auth-test-price",
+        help="Use saved Audible auth to fetch authenticated pricing for one Audible ASIN.",
+    )
+    auth_test_parser.add_argument("--auth-path", required=True)
+    auth_test_parser.add_argument("--asin", required=True)
+
+    auth_status_parser = subparsers.add_parser(
+        "audible-auth-status",
+        help="Inspect saved Audible auth readiness, expiry, and file permissions without printing tokens.",
+    )
+    auth_status_parser.add_argument("--auth-path", required=True)
+    auth_status_parser.add_argument("--fix-permissions", action="store_true")
+
+    doctor_parser = subparsers.add_parser(
+        "doctor",
+        help="Check config, CSV, notes, auth, cache, delivery, cron, and wrapper readiness.",
+    )
+    doctor_parser.add_argument("--config-path")
+    doctor_parser.add_argument("--auth-path")
+    doctor_parser.add_argument("--openclaw-bin", default="openclaw")
+    doctor_parser.add_argument("--check-cron", action="store_true")
+
     mark_parser = subparsers.add_parser("mark-emitted", help="Record a scheduled run's emitted deal key after the skill finishes.")
     mark_parser.add_argument("--state-file", required=True)
     mark_parser.add_argument("--deal-key", required=True)
@@ -101,7 +173,7 @@ def build_parser() -> argparse.ArgumentParser:
         "publish-audit",
         help="Check that the skill bundle is shaped correctly for ClawHub publishing.",
     )
-    audit_parser.add_argument("--version", default="0.1.2")
+    audit_parser.add_argument("--version", default="0.1.6")
     audit_parser.add_argument("--tags", default="latest")
 
     finalize_parser = subparsers.add_parser(
@@ -180,6 +252,7 @@ def interactive_setup_defaults(args: argparse.Namespace) -> dict[str, object]:
     )
     return {
         "audibleMarketplace": marketplace,
+        "audibleAuthPath": args.audible_auth_path,
         "goodreadsCsvPath": csv_path or None,
         "notesText": notes_text or "",
         "notesFile": notes_file or None,
@@ -208,6 +281,7 @@ def command_setup(args: argparse.Namespace) -> int:
             "stateFile": args.state_file,
             "preferencesPath": args.preferences_path,
             "audibleMarketplace": args.audible_marketplace or "us",
+            "audibleAuthPath": args.audible_auth_path,
             "goodreadsCsvPath": args.goodreads_csv,
             "notesFile": args.notes_file,
             "notesText": args.notes_text or "",
@@ -269,6 +343,76 @@ def command_measure_context(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_scan_want_to_read(args: argparse.Namespace) -> int:
+    payload = {
+        "configPath": args.config_path,
+        "limit": args.limit,
+        "offset": args.offset,
+        "scanOrder": args.scan_order,
+        "seed": args.seed,
+        "maxRequests": args.max_requests,
+        "requestDelay": args.request_delay,
+        "minDiscountPercent": args.min_discount_percent,
+        "outputJson": args.output_json,
+        "outputMd": args.output_md,
+        "includeNonDeals": args.include_non_deals,
+        "verbose": args.verbose,
+        "progress": args.progress,
+        "progressInterval": args.progress_interval,
+        "enrichGoodreadsRatings": args.enrich_goodreads_ratings,
+        "goodreadsRatingLimit": args.goodreads_rating_limit,
+        "refreshCache": args.refresh_cache,
+        "noCache": args.no_cache,
+        "offlineFixtures": args.offline_fixtures,
+        "title": args.title,
+        "author": args.author,
+        "audibleAuthPath": args.audible_auth_path,
+    }
+    report, markdown, exit_code = scan_want_to_read(payload)
+    if report.get("status") == "error":
+        if args.output_json:
+            write_json_atomic(Path(args.output_json).expanduser(), report)
+        print(report_json(report), end="")
+        return exit_code
+    print(markdown, end="")
+    return exit_code
+
+
+def command_audible_auth_start(args: argparse.Namespace) -> int:
+    result = start_external_auth(Path(args.auth_path).expanduser(), marketplace=args.audible_marketplace)
+    print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+    return 0
+
+
+def command_audible_auth_finish(args: argparse.Namespace) -> int:
+    result = finish_external_auth(Path(args.auth_path).expanduser(), redirect_url=args.redirect_url)
+    print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+    return 0
+
+
+def command_audible_auth_test_price(args: argparse.Namespace) -> int:
+    result = test_authenticated_price(Path(args.auth_path).expanduser(), args.asin)
+    print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+    return 0
+
+
+def command_audible_auth_status(args: argparse.Namespace) -> int:
+    result = auth_file_status(Path(args.auth_path).expanduser(), fix_permissions=args.fix_permissions)
+    print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+    return 0 if result.get("ok") else 1
+
+
+def command_doctor(args: argparse.Namespace) -> int:
+    result = doctor_report(
+        config_path=Path(args.config_path).expanduser() if args.config_path else None,
+        auth_path=Path(args.auth_path).expanduser() if args.auth_path else None,
+        openclaw_bin=args.openclaw_bin,
+        check_live_cron=args.check_cron,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+    return 0 if result.get("ok") else 1
+
+
 def command_mark_emitted(args: argparse.Namespace) -> int:
     result = core.mark_emitted(
         Path(args.state_file).expanduser(),
@@ -291,6 +435,13 @@ def command_publish_audit(args: argparse.Namespace) -> int:
         "agents/openai.yaml": skill_dir / "agents" / "openai.yaml",
         "audible_goodreads_deal_scout/public_cli.py": skill_dir / "audible_goodreads_deal_scout" / "public_cli.py",
         "audible_goodreads_deal_scout/core.py": skill_dir / "audible_goodreads_deal_scout" / "core.py",
+        "audible_goodreads_deal_scout/audible_auth.py": skill_dir / "audible_goodreads_deal_scout" / "audible_auth.py",
+        "audible_goodreads_deal_scout/audible_catalog.py": skill_dir / "audible_goodreads_deal_scout" / "audible_catalog.py",
+        "audible_goodreads_deal_scout/cli_errors.py": skill_dir / "audible_goodreads_deal_scout" / "cli_errors.py",
+        "audible_goodreads_deal_scout/goodreads_rating.py": skill_dir / "audible_goodreads_deal_scout" / "goodreads_rating.py",
+        "audible_goodreads_deal_scout/want_to_read_scan.py": skill_dir / "audible_goodreads_deal_scout" / "want_to_read_scan.py",
+        "audible_goodreads_deal_scout/diagnostics.py": skill_dir / "audible_goodreads_deal_scout" / "diagnostics.py",
+        "audible_goodreads_deal_scout/runtime_contract.py": skill_dir / "audible_goodreads_deal_scout" / "runtime_contract.py",
     }
     skill_text = required_files["SKILL.md"].read_text(encoding="utf-8") if required_files["SKILL.md"].exists() else ""
     publish_ignore_entries = load_ignore_entries(publish_ignore_path)
@@ -446,31 +597,55 @@ def command_run_and_deliver(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.command == "setup":
-        return command_setup(args)
-    if args.command == "prepare":
-        return command_prepare(args)
-    if args.command == "show-csv-headers":
-        return command_show_csv_headers(args)
-    if args.command == "measure-context":
-        return command_measure_context(args)
-    if args.command == "mark-emitted":
-        return command_mark_emitted(args)
-    if args.command == "publish-audit":
-        return command_publish_audit(args)
-    if args.command == "finalize":
-        return command_finalize(args)
-    if args.command == "deliver":
-        return command_deliver(args)
-    if args.command == "run-and-deliver":
-        return command_run_and_deliver(args)
+    try:
+        if args.command == "setup":
+            return command_setup(args)
+        if args.command == "prepare":
+            return command_prepare(args)
+        if args.command == "show-csv-headers":
+            return command_show_csv_headers(args)
+        if args.command == "measure-context":
+            return command_measure_context(args)
+        if args.command == "scan-want-to-read":
+            return command_scan_want_to_read(args)
+        if args.command == "audible-auth-start":
+            return command_audible_auth_start(args)
+        if args.command == "audible-auth-finish":
+            return command_audible_auth_finish(args)
+        if args.command == "audible-auth-test-price":
+            return command_audible_auth_test_price(args)
+        if args.command == "audible-auth-status":
+            return command_audible_auth_status(args)
+        if args.command == "doctor":
+            return command_doctor(args)
+        if args.command == "mark-emitted":
+            return command_mark_emitted(args)
+        if args.command == "publish-audit":
+            return command_publish_audit(args)
+        if args.command == "finalize":
+            return command_finalize(args)
+        if args.command == "deliver":
+            return command_deliver(args)
+        if args.command == "run-and-deliver":
+            return command_run_and_deliver(args)
+    except Exception as exc:
+        print(
+            json.dumps(
+                cli_error_payload(
+                    command=str(args.command or ""),
+                    reason_code="cli_command_failed",
+                    message=str(exc),
+                    error_type=type(exc).__name__,
+                ),
+                indent=2,
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+        )
+        return 1
     parser.error(f"Unknown command: {args.command}")
     return 2
 
 
 if __name__ == "__main__":
-    try:
-        raise SystemExit(main())
-    except Exception as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))
-        raise SystemExit(1)
+    raise SystemExit(main())

@@ -1,6 +1,6 @@
 ---
 name: audible-goodreads-deal-scout
-description: Evaluate an Audible daily promotion against Goodreads public score, optional Goodreads CSV shelves, optional freeform reading notes, and optional delivery rules. Use for first-run setup, deal checks, and scheduled sends.
+description: Evaluate an Audible daily promotion against Goodreads public score, optional Goodreads CSV shelves, optional freeform reading notes, optional delivery rules, and manual Want-to-Read discount scans. Use for first-run setup, deal checks, scheduled sends, and on-demand Goodreads backlog audits.
 license: MIT
 metadata: {"openclaw":{"emoji":"🎧","skillKey":"audible-goodreads-deal-scout","homepage":"https://github.com/lenpr/audible-goodreads-deal-scout","category":"media","requires":{"anyBins":["python3","python"]}}}
 ---
@@ -10,6 +10,7 @@ metadata: {"openclaw":{"emoji":"🎧","skillKey":"audible-goodreads-deal-scout",
 Use this skill when the user wants to:
 - set up a reusable Audible deal workflow
 - check the current Audible daily promotion
+- scan Goodreads Want-to-Read books for visible Audible US discounts
 - personalize the result with a Goodreads CSV and/or freeform notes
 - finalize and optionally deliver the result into a configured channel
 
@@ -89,6 +90,76 @@ sh "{baseDir}/scripts/audible-goodreads-deal-scout.sh" setup \
 ```
 
 Use interactive `setup` only when the user explicitly wants prompt-by-prompt CLI onboarding. Otherwise prefer the non-interactive command with concrete flags.
+
+## Want-to-Read discount scan
+
+Use this only when the user asks to scan Goodreads Want-to-Read books for Audible discounts. This is a manual audit command, not a cron or delivery workflow.
+
+Requirements:
+- The configured Goodreads CSV must exist.
+- V1 supports Audible US only.
+- Do not create cron jobs or send delivery messages for this command.
+- Do not perform extra model web searches; the Python command handles Audible lookup and report generation.
+- If setup or runtime state is unclear, run `doctor` before retrying.
+
+Run:
+
+```bash
+sh "{baseDir}/scripts/audible-goodreads-deal-scout.sh" scan-want-to-read \
+  --config-path "<config-path>" \
+  [--audible-auth-path "<auth-path>"] \
+  [--limit 40] \
+  [--offset 0] \
+  [--scan-order newest] \
+  [--progress plain] \
+  [--no-goodreads-rating-enrichment] \
+  [--goodreads-rating-limit 20] \
+  [--output-json "<json-path>"] \
+  [--output-md "<markdown-path>"]
+```
+
+Default behavior:
+- Print compact Markdown to stdout.
+- Write progress to stderr by default. Use `--progress json` for machine-readable JSONL progress or `--progress none` when silence is required.
+- Show visible numeric discounts first.
+- Suppress long non-deal lists unless `--include-non-deals` is requested.
+- Suppress duplicate Audible product matches in the final report while preserving scanned-row counts.
+- Use `--offset` and `--limit` for large Goodreads backlogs.
+- For long agent-run scans, prefer `--progress json` plus `--output-json` and `--output-md` so progress logs and final reports stay separate.
+- Use `pricing.priceBasis` and `pricing.dealType` to distinguish member cash prices below list from true limited-time sale or promotion signals.
+- If CSV average ratings are missing, the command may enrich a small number of discounted rows from public Goodreads book pages by Goodreads book id. Disable with `--no-goodreads-rating-enrichment` when the user wants no Goodreads page fetches.
+
+Important caveat: Audible often hides cash prices behind credit or membership UI. Treat `price_hidden`, `price_unknown`, and `needs_review` as honest uncertainty, not as failures.
+
+Optional authenticated pricing:
+- If the user asks for headless authenticated Audible prices, use `audible-auth-start` and `audible-auth-finish`.
+- Do not ask for the user's Audible or Amazon password.
+- Store the auth file under the workspace storage directory, for example `<workspace>/.audible-goodreads-deal-scout/audible-auth.json`.
+- Treat the auth file as sensitive and never paste its token contents into chat.
+- Authenticated scans usually spend one search request plus one authenticated price request for each matched title; set `--max-requests` accordingly.
+- Treat cash pricing fields as the source of truth and do not classify Audible credit prices, including `credit_price`, as cash discounts.
+- Treat authenticated `discounted` as "member-visible cash price below list price", not proof of a limited-time sale; check `pricing.dealType`.
+- Use `audible-auth-status` to check readiness, expiry, and file permissions without exposing tokens.
+
+```bash
+sh "{baseDir}/scripts/audible-goodreads-deal-scout.sh" audible-auth-start \
+  --auth-path "<workspace>/.audible-goodreads-deal-scout/audible-auth.json" \
+  --audible-marketplace us
+
+sh "{baseDir}/scripts/audible-goodreads-deal-scout.sh" audible-auth-finish \
+  --auth-path "<workspace>/.audible-goodreads-deal-scout/audible-auth.json" \
+  --redirect-url "<final-amazon-redirect-url>"
+```
+
+Troubleshooting:
+
+```bash
+sh "{baseDir}/scripts/audible-goodreads-deal-scout.sh" doctor \
+  --config-path "<config-path>"
+
+sh "{baseDir}/scripts/audible-goodreads-deal-scout.sh" audible-auth-status \
+  --auth-path "<workspace>/.audible-goodreads-deal-scout/audible-auth.json"
+```
 
 ## Ready flow
 

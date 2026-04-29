@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.1.6
+
+- Add stderr progress reporting for long Want-to-Read scans, including JSONL mode for OpenClaw agents and log processors
+- Suppress duplicate Audible product matches in final Want-to-Read reports while preserving scanned-row counts and duplicate metadata in JSON
+- Add scan report metadata for authenticated-pricing state, cache stats, request usage, and next-batch hints
+- Add `priceBasis` and `dealType` fields so reports can distinguish member cash prices below list from limited-time sale or promotion signals
+- Enrich missing Goodreads average ratings for a capped number of discounted Want-to-Read results by Goodreads book id
+- Retry transient daily-promotion fetch failures and temporary no-active-promotion parses before suppressing or erroring
+- Clarify that authenticated `discounted` means member-visible cash price below list price, not guaranteed limited-time sale status
+- Improve release and troubleshooting docs for long scans, authenticated price lookup, and local readiness checks
+- Reduce duplicated scan-progress bookkeeping in the Want-to-Read scan implementation
+
+## 0.1.5
+
+- Add stdlib-only headless Audible external-login auth helpers for optional authenticated price lookup
+- Add authenticated Audible catalog product pricing lookup for matched Want-to-Read scan results
+- Add `--audible-auth-path` to `scan-want-to-read` and helper commands for auth start, finish, and one-ASIN price testing
+- Add `doctor` and `audible-auth-status` commands for local readiness, auth expiry, and file-permission checks
+- Add structured CLI error payloads with token redaction for command failures
+- Ignore Audible credit prices when classifying authenticated cash discounts
+- Clarify external-browser auth instructions and authenticated request budgeting
+- Move prepare-result artifact writing behind the runtime contract module boundary
+- Keep auth files out of published bundles and document that the auth file is sensitive local state
+
+## 0.1.4
+
+- Add a manual `scan-want-to-read` command for checking Goodreads `to-read` books against visible Audible US numeric discounts
+- Add conservative Audible catalog search, pricing parsing, parsed-result cache, request budgeting, and block-like circuit breaker handling for the new scan
+- Add compact Markdown and structured JSON reports for Want-to-Read discount scans
+- Add offline fixture coverage for scan selection, matching, pricing, request budget behavior, cached block failures, and compact report output
+
 ## 0.1.3
 
 - Invoke the published shell wrapper through `sh` in `SKILL.md` and README examples so official OpenClaw installs still work even when the installed script loses its executable bit

@@ -1,10 +1,10 @@
 # Audible Goodreads Deal Scout
 
-`audible-goodreads-deal-scout` is a **ClawHub / OpenClaw skill** for evaluating Audible daily promotions.
+`audible-goodreads-deal-scout` is a **ClawHub / OpenClaw skill** for evaluating Audible daily promotions and manually auditing your Goodreads Want-to-Read shelf for visible Audible discounts.
 
 If you are looking at this repository on GitHub, you are looking at the **source for a publishable ClawHub skill**, not a generic Python app or a standalone website.
 
-Its job is simple: help you decide whether an Audible daily promotion is actually worth your attention.
+Its job is simple: help you decide whether an Audible promotion is actually worth your attention.
 
 It is built for people who do **not** want raw promo noise. Instead of only showing the featured title, the skill combines:
 - the public Goodreads rating
@@ -16,6 +16,7 @@ It is built for people who do **not** want raw promo noise. Instead of only show
 
 Use this skill if you want OpenClaw to:
 - check the current Audible daily promotion
+- scan your Goodreads Want-to-Read shelf for visible Audible US discounts
 - decide whether the book clears a quality bar
 - notice if you already read it or already saved it
 - write a short fit paragraph about why it may work for you
@@ -45,8 +46,8 @@ clawhub login
 clawhub publish . \
   --slug audible-goodreads-deal-scout \
   --name "Audible Goodreads Deal Scout" \
-  --version 0.1.3 \
-  --changelog "Tighten README safety guidance and release checks" \
+  --version 0.1.6 \
+  --changelog "Improve Want-to-Read scan progress, dedupe, and docs" \
   --tags latest
 ```
 
@@ -54,6 +55,7 @@ clawhub publish . \
 
 Use this skill if you want:
 - a daily Audible promotion filter instead of a raw daily promotion feed
+- a manual Want-to-Read shelf scan for currently visible Audible US discounts
 - a way to suppress books you already read
 - a way to fast-track books you already saved on Goodreads
 - a short fit paragraph that explains why a book may work for you, and what may not
@@ -193,6 +195,146 @@ If you provide a Goodreads CSV:
 
 That `to-read` override is intentional. If you already saved the book for later, that is treated as a strong positive signal and it can override the public Goodreads threshold.
 
+## Scan your Want-to-Read shelf for Audible discounts
+
+If you configured a Goodreads CSV, you can also run a manual audit of books on your Goodreads `to-read` shelf:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh scan-want-to-read \
+  --config-path .audible-goodreads-deal-scout/config.json \
+  --limit 40 \
+  --offset 0 \
+  --progress plain
+```
+
+This is intentionally an on-demand scan, not a scheduled monitor. It helps answer: "Which books I already want to read appear to have a visible Audible discount right now?"
+
+Default behavior:
+- scans Audible US only in this first version
+- reads the current Goodreads CSV fresh each run
+- searches the first Audible result page for each selected Goodreads book
+- inspects the first three Audible result cards
+- fetches a product page only when the search card already shows plausible numeric discount evidence
+- prints compact Markdown to stdout
+- writes scan progress to stderr by default, so long runs can be monitored without corrupting Markdown/JSON output
+- keeps non-deals out of the default Markdown so the useful deals stay visible
+- suppresses duplicate Audible product matches in the final report while preserving scanned-row counts
+
+Useful batching pattern for larger shelves:
+
+```bash
+# Day 1
+sh ./scripts/audible-goodreads-deal-scout.sh scan-want-to-read \
+  --config-path .audible-goodreads-deal-scout/config.json \
+  --scan-order newest \
+  --limit 40 \
+  --offset 0
+
+# Day 2
+sh ./scripts/audible-goodreads-deal-scout.sh scan-want-to-read \
+  --config-path .audible-goodreads-deal-scout/config.json \
+  --scan-order newest \
+  --limit 40 \
+  --offset 40
+```
+
+Useful output flags:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh scan-want-to-read \
+  --config-path .audible-goodreads-deal-scout/config.json \
+  --output-json .audible-goodreads-deal-scout/reports/want-to-read.json \
+  --output-md .audible-goodreads-deal-scout/reports/want-to-read.md \
+  --include-non-deals
+```
+
+The scan is deliberately conservative. If Audible hides cash pricing behind credits, membership language, or extra buying-choice UI, the result is marked as hidden or unknown instead of guessing. If a title or author match is ambiguous, it is marked for review instead of being treated as a deal.
+
+The Markdown report shows whether authenticated pricing was enabled, live request usage, cache hits/writes, and a suggested next `--offset` command when more selected Want-to-Read books remain.
+
+Pricing fields now separate two ideas:
+- `priceBasis` says where the price came from, for example `audible_public_cash` or `audible_member_cash`.
+- `dealType` says what kind of opportunity it appears to be, for example `limited_time_sale`, `member_cash_below_list`, or `cash_price_below_list`.
+
+Goodreads ratings:
+- If your Goodreads CSV includes an average-rating column, the scan uses it for ranking.
+- If the CSV does not include that column, the scan can enrich up to 20 discounted results from public Goodreads book pages when the CSV has Goodreads book ids.
+- Use `--no-goodreads-rating-enrichment` if you want to avoid those public Goodreads rating lookups.
+- Use `--goodreads-rating-limit N` to adjust the enrichment cap.
+
+Progress output:
+- `--progress plain` writes human-readable progress lines to stderr. This is the default CLI behavior.
+- `--progress json` writes JSONL progress events to stderr for agents and log processors.
+- `--progress none` disables progress output.
+- `--progress-interval 5` controls the minimum seconds between item progress updates. Start, stop, and completion events are always emitted when progress is enabled.
+
+For long OpenClaw-agent runs, prefer `--progress json` plus `--output-json` and `--output-md`. Progress goes to stderr, while the report files stay stable and can be read after the command finishes or stops early.
+
+### Optional authenticated Audible price lookup
+
+Anonymous Audible pages often hide cash prices. If you want the Want-to-Read scan to check member-visible pricing on a headless OpenClaw machine, you can create a local Audible auth file through an external-browser flow.
+
+This does **not** put your Audible password in the skill config. The flow prints an Amazon login URL, you open it on another device, complete login there, and paste the final redirect URL back into the CLI.
+
+Start auth:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh audible-auth-start \
+  --auth-path .audible-goodreads-deal-scout/audible-auth.json \
+  --audible-marketplace us
+```
+
+Open the printed `loginUrl` in your own browser. After login, Amazon will land on an error or not-found page; copy that final address-bar URL and finish auth:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh audible-auth-finish \
+  --auth-path .audible-goodreads-deal-scout/audible-auth.json \
+  --redirect-url "<final-amazon-redirect-url>"
+```
+
+Then scan with authenticated price lookup:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh scan-want-to-read \
+  --config-path .audible-goodreads-deal-scout/config.json \
+  --audible-auth-path .audible-goodreads-deal-scout/audible-auth.json \
+  --limit 40 \
+  --max-requests 90
+```
+
+You can also save the auth path in `config.json` as `audibleAuthPath`, or set it during scripted setup with `--audible-auth-path`.
+
+Authenticated scans usually spend one search request plus one authenticated price request for each matched Audible title. Use a higher `--max-requests` value than you would for anonymous scans. The authenticated price parser treats cash prices as the source of truth and ignores Audible credit prices such as `credit_price`.
+
+Authenticated `discounted` means Audible returned a member-visible cash price below its list price for the product. It does not always prove a limited-time sale; check `dealType` in JSON if you need to distinguish `member_cash_below_list` from `limited_time_sale`.
+
+You can test one known Audible ASIN first:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh audible-auth-test-price \
+  --auth-path .audible-goodreads-deal-scout/audible-auth.json \
+  --asin B08V8B2CGV
+```
+
+The test response should include `pricingStatus`, `currentPrice`, `listPrice`, and `discountPercent` when Audible returns visible member cash pricing for that ASIN.
+
+Check auth readiness and file permissions without printing tokens:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh audible-auth-status \
+  --auth-path .audible-goodreads-deal-scout/audible-auth.json
+```
+
+If the status reports broad file permissions on a local POSIX host, tighten them with:
+
+```bash
+sh ./scripts/audible-goodreads-deal-scout.sh audible-auth-status \
+  --auth-path .audible-goodreads-deal-scout/audible-auth.json \
+  --fix-permissions
+```
+
+The auth file is sensitive. Keep it under `.audible-goodreads-deal-scout/` in your OpenClaw workspace, do not commit it, and remove it if you no longer want the skill to have authenticated Audible API access.
+
 ## Supported marketplaces
 
 Supported and fixture-tested marketplace keys:
@@ -213,6 +355,8 @@ Live marketplace behavior can still vary. A supported store may still return:
 - no active promotion
 - a blocked page
 - a page-layout drift error
+
+The Want-to-Read discount scan is currently US-only. The daily-promotion workflow remains fixture-tested for the marketplace keys listed above.
 
 If you want a non-US store, set `audibleMarketplace` to one of the keys above:
 
@@ -351,6 +495,7 @@ sh ./scripts/audible-goodreads-deal-scout.sh setup \
   --non-interactive \
   --config-path .audible-goodreads-deal-scout/config.json \
   --audible-marketplace us \
+  --audible-auth-path .audible-goodreads-deal-scout/audible-auth.json \
   --threshold 3.8 \
   --goodreads-csv "/absolute/path/to/goodreads_library_export.csv" \
   --notes-file "/absolute/path/to/preferences.md" \
@@ -418,13 +563,17 @@ Three issues cause most confusing runs:
 - Wrong notes path: if `notesFile` or `preferencesPath` points at a missing file, the prep step now returns `error_missing_notes_file` instead of silently continuing.
 - Wrong CSV header override: `--csv-column role=Header` must match the Goodreads export header exactly. If you are unsure, run `show-csv-headers` first.
 - Stale Goodreads export: if the CSV is old, the skill can still run, but read status, shelf state, and fit evidence may lag behind your actual library.
+- Transient Audible daily-deal pages: the prep step retries transient fetch failures and temporary no-active-promotion parses before returning a suppression or error.
 
 Useful checks:
 
 ```bash
+sh ./scripts/audible-goodreads-deal-scout.sh doctor --config-path .audible-goodreads-deal-scout/config.json
 sh ./scripts/audible-goodreads-deal-scout.sh show-csv-headers "/absolute/path/to/goodreads_library_export.csv"
-sh ./scripts/audible-goodreads-deal-scout.sh publish-audit --version 0.1.3 --tags latest
+sh ./scripts/audible-goodreads-deal-scout.sh publish-audit --version 0.1.6 --tags latest
 ```
+
+`doctor` checks the configured config, CSV, notes, auth file, cache directory, delivery settings, cron settings, local OpenClaw binary, and bundled shell wrapper. Add `--check-cron` when you want it to query live OpenClaw cron jobs.
 
 If your OpenClaw install strips executable bits from bundled scripts, run the wrapper through `sh` exactly as shown above and in `SKILL.md`.
 - Scheduled runs cannot stop for interactive exec approval. If your OpenClaw host keeps `exec` in `allowlist` mode, allowlist the launcher your host expects for `sh .../scripts/audible-goodreads-deal-scout.sh` before enabling daily automation, for example `/bin/sh` when that is the shell your host uses.
@@ -450,9 +599,10 @@ sh ./scripts/audible-goodreads-deal-scout.sh setup \
 Useful helper commands:
 
 ```bash
+sh ./scripts/audible-goodreads-deal-scout.sh doctor --config-path .audible-goodreads-deal-scout/config.json
 sh ./scripts/audible-goodreads-deal-scout.sh show-csv-headers "/absolute/path/to/goodreads_library_export.csv"
 sh ./scripts/audible-goodreads-deal-scout.sh measure-context --goodreads-csv "/absolute/path/to/goodreads_library_export.csv" --output /tmp/fit-context.json
-sh ./scripts/audible-goodreads-deal-scout.sh publish-audit --version 0.1.3
+sh ./scripts/audible-goodreads-deal-scout.sh publish-audit --version 0.1.6
 ```
 
 Finalize and deliver in one step:
@@ -470,6 +620,13 @@ sh ./scripts/audible-goodreads-deal-scout.sh run-and-deliver \
 - `agents/openai.yaml`: interface metadata and default prompt for OpenClaw agent surfaces
 - `scripts/audible-goodreads-deal-scout.sh`: bundled shell wrapper for local CLI and OpenClaw installs that may not preserve executable bits
 - `audible_goodreads_deal_scout/core.py`: prep/orchestration logic
+- `audible_goodreads_deal_scout/audible_auth.py`: optional headless Audible auth and API price lookup helpers
+- `audible_goodreads_deal_scout/audible_catalog.py`: Audible catalog search and conservative price parsing
+- `audible_goodreads_deal_scout/cli_errors.py`: structured CLI error payload helpers
+- `audible_goodreads_deal_scout/diagnostics.py`: local doctor/status checks
+- `audible_goodreads_deal_scout/goodreads_rating.py`: optional public Goodreads rating enrichment for Want-to-Read reports
+- `audible_goodreads_deal_scout/want_to_read_scan.py`: Goodreads Want-to-Read scan orchestration and report rendering
+- `audible_goodreads_deal_scout/runtime_contract.py`: runtime input, prompt, schema, and prepare-result artifact writing
 - `audible_goodreads_deal_scout/rendering.py`: card rendering and delivery planning
 - `audible_goodreads_deal_scout/delivery.py`: config, cron, and delivery helpers
 - `audible_goodreads_deal_scout/public_cli.py`: setup and CLI entrypoint
@@ -482,7 +639,7 @@ sh ./scripts/audible-goodreads-deal-scout.sh run-and-deliver \
 Before publishing, run:
 
 ```bash
-sh ./scripts/audible-goodreads-deal-scout.sh publish-audit --version 0.1.3 --tags latest
+sh ./scripts/audible-goodreads-deal-scout.sh publish-audit --version 0.1.6 --tags latest
 ```
 
 ## Why this is worth publishing
