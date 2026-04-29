@@ -1,6 +1,6 @@
 ---
 name: Amazon Product Top Reviews API
-description: Analyze Amazon Product Top Reviews workflows with JustOneAPI, including product Top Reviews.
+description: Call GET /api/amazon/get-product-top-reviews/v1 for Amazon Product Top Reviews through JustOneAPI with asin.
 author: JustOneAPI
 homepage: https://api.justoneapi.com
 metadata: {"openclaw":{"homepage":"https://api.justoneapi.com","primaryEnv":"JUST_ONE_API_TOKEN","requires":{"bins":["node"],"env":["JUST_ONE_API_TOKEN"]},"skillKey":"justoneapi_amazon_get_product_top_reviews"}}
@@ -8,56 +8,54 @@ metadata: {"openclaw":{"homepage":"https://api.justoneapi.com","primaryEnv":"JUS
 
 # Amazon Product Top Reviews
 
-This skill wraps 1 Amazon Product Top Reviews operations exposed by JustOneAPI. It is strongest for product Top Reviews. Expect common inputs such as `asin`, `country`.
+Use this focused JustOneAPI skill for product Top Reviews in Amazon. It targets `GET /api/amazon/get-product-top-reviews/v1`. Required non-token inputs are `asin`. OpenAPI describes it as: Get Amazon product Top Reviews data, including most helpful) public reviews, for sentiment analysis and consumer feedback tracking, product research and quality assessment, and monitoring competitor customer experience.
 
-## When To Use It
+## Endpoint Scope
 
-- The user needs product Top Reviews on Amazon Product Top Reviews.
-- The user can provide identifiers or filters such as `asin`, `country`.
-- The user wants an exact API-backed answer instead of a freeform summary.
+- Platform key: `amazon`
+- Endpoint key: `get-product-top-reviews`
+- Platform family: Amazon
+- Skill slug: `justoneapi-amazon-get-product-top-reviews`
 
-## Representative Operations
+| Operation | Version | Method | Path | OpenAPI summary |
+| --- | --- | --- | --- | --- |
+| `getProductTopReviewsV1` | `v1` | `GET` | `/api/amazon/get-product-top-reviews/v1` | Product Top Reviews |
 
-- `getProductTopReviewsV1`: Product Top Reviews — Get Amazon product Top Reviews data, including most helpful) public reviews, for sentiment analysis and consumer feedback tracking, product research and quality assessment, and monitoring competitor customer experience
+## Inputs
 
-## Available Versions
+| Parameter | In | Required by | Optional by | Type | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `asin` | `query` | all | n/a | `string` | ASIN (Amazon Standard Identification Number) |
+| `country` | `query` | n/a | all | `string` | Country code for the Amazon product. Available Values: - `US`: United States - `AU`: Australia - `BR`: Brazil - `CA`: Canada - `CN`: China - `FR`: France - `DE`: Germany - `IN`: India - `IT`: Italy - `MX`: Mexico - `NL`: Netherlands - `SG`: Singapore - `ES`: Spain - `TR`: Turkey - `AE`: United Arab Emirates - `GB`: United Kingdom - `JP`: Japan - `SA`: Saudi Arabia - `PL`: Poland - `SE`: Sweden - `BE`: Belgium - `EG`: Egypt - `ZA`: South Africa - `IE`: Ireland |
+| `country` enum | values | n/a | n/a | n/a | `AE`, `AU`, `BE`, `BR`, `CA`, `CN`, `DE`, `EG`, `ES`, `FR`, `GB`, `IE`, `IN`, `IT`, `JP`, `MX`, `NL`, `PL`, `SA`, `SE`, `SG`, `TR`, `US`, `ZA` |
 
-These endpoint versions are grouped in this interface-level skill.
+Request body: none documented; send parameters through path or query arguments.
 
-- `v1`: `getProductTopReviewsV1` - `GET /api/amazon/get-product-top-reviews/v1`
+## Version Choice
 
-## Request Pattern
+Use `getProductTopReviewsV1` for the documented `v1` endpoint. There are no alternate versions grouped in this skill.
 
-- 1 operations are available in this skill.
-- HTTP methods used here: `GET`.
-- The most common non-token parameters are `asin`, `country`.
-- All operations in this skill are parameter-driven requests; none require a request body.
-- This interface-level skill groups endpoint versions that share the same path after removing the trailing `/vN` version segment.
+## Run This Endpoint
 
-## How To Work
-
-1. Read `generated/operations.md` before choosing an endpoint.
-2. Start with one of these operations when it matches the user's request: `getProductTopReviewsV1`.
-3. Pick the smallest matching operation instead of guessing.
-4. Ask the user for any missing required parameter. Do not invent values.
-5. Call the helper with:
+Supported operation IDs in this skill: `getProductTopReviewsV1`.
 
 ```bash
-node {baseDir}/bin/run.mjs --operation "<operation-id>" --token "$JUST_ONE_API_TOKEN" --params-json '{"key":"value"}'
+node {baseDir}/bin/run.mjs --operation "getProductTopReviewsV1" --token "$JUST_ONE_API_TOKEN" --params-json '{"asin":"<asin>"}'
 ```
+
+Ask for any missing required parameter before calling the helper. Keep user-provided IDs, cursors, keywords, and filters unchanged.
 
 ## Environment
 
 - Required: `JUST_ONE_API_TOKEN`
-- This skill uses `JUST_ONE_API_TOKEN` only for authenticated Just One API requests.
-- Keep `JUST_ONE_API_TOKEN` private. Do not paste it into chat messages, screenshots, or logs.
+- Pass the token with `--token "$JUST_ONE_API_TOKEN"`; do not paste token values into chat messages, screenshots, or logs.
 - Get a token from [Just One API Dashboard](https://dashboard.justoneapi.com/en/login?utm_source=clawhub.ai&utm_medium=referral&utm_campaign=justoneapi_amazon_get_product_top_reviews&utm_content=project_link).
 - Authentication details: [Just One API Usage Guide](https://docs.justoneapi.com/en/?utm_source=clawhub.ai&utm_medium=referral&utm_campaign=justoneapi_amazon_get_product_top_reviews&utm_content=project_link).
 
-## Output Rules
+## Output Focus
 
-- Start with a plain-language answer tied to the Amazon Product Top Reviews task the user asked for.
-- Include the most decision-relevant fields from the selected endpoint before dumping raw JSON.
-- When using `getProductTopReviewsV1`, explain why the returned fields answer the user's question.
-- If the user gave filters such as `asin`, `country`, echo those back so the scope is explicit.
+- State the operation ID and endpoint path used, for example `getProductTopReviewsV1` on `/api/amazon/get-product-top-reviews/v1`.
+- Echo the required lookup scope (`asin`) before summarizing results.
+- Prioritize fields that support this endpoint purpose: Get Amazon product Top Reviews data, including most helpful) public reviews, for sentiment analysis and consumer feedback tracking, product research and quality assessment, and monitoring competitor customer experience.
+- Return raw JSON only after the short, endpoint-specific summary.
 - If the backend errors, include the backend payload and the exact operation ID.

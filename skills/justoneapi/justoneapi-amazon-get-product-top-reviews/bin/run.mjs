@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const manifest = {
   "baseUrl": "https://api.justoneapi.com",
-  "description": "Analyze Amazon Product Top Reviews workflows with JustOneAPI, including product Top Reviews.",
+  "description": "Call GET /api/amazon/get-product-top-reviews/v1 for Amazon Product Top Reviews through JustOneAPI with asin.",
   "displayName": "Amazon Product Top Reviews",
   "openapi": "3.1.0",
   "platformKey": "amazon",
@@ -72,8 +72,8 @@ const manifest = {
       "requestBody": null,
       "responses": [
         {
-          "description": "default response",
-          "statusCode": "default"
+          "description": "OK",
+          "statusCode": "200"
         }
       ],
       "summary": "Product Top Reviews",

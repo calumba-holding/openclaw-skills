@@ -53,4 +53,4 @@ No request body.
 
 ### Responses
 
-- `default`: default response
+- `200`: OK
