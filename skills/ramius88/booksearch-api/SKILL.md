@@ -1,6 +1,6 @@
 ---
 name: booksearch-api
-description: Search Amazon KDP books on the BeyondBSR public API. Use this skill whenever the user wants to discover, filter, or research self-published or traditionally published books on Amazon by BSR (Best Sellers Rank), category, keyword, royalty range, rating, reviews, publication date, binding type, or marketplace (US, UK, DE, FR, IT, ES, CA). Typical intents include KDP niche research, low-competition book discovery, sales estimation, royalty/revenue projection, competitor analysis, paperback/hardcover filtering, and bulk listing of books matching numeric/textual criteria. Do not use for single-ASIN historical price/BSR timeline lookups (not exposed by this endpoint).
+description: Search Amazon KDP books on the BeyondBSR public API and retrieve BSR (Best Sellers Rank) history for a single book. Use this skill whenever the user wants to discover, filter, or research self-published or traditionally published books on Amazon by BSR, category, keyword, royalty range, rating, reviews, publication date, binding type, or marketplace (US, UK, DE, FR, IT, ES, CA), or when the user wants the BSR timeline of a specific ASIN over the last N days. Typical intents include KDP niche research, low-competition book discovery, sales estimation, royalty/revenue projection, competitor analysis, paperback/hardcover filtering, bulk listing of books matching numeric/textual criteria, and single-ASIN BSR history charts. Do not use for price-history timelines, review/rating timelines, or account/user data — only book search and BSR history are exposed.
 metadata:
   clawdbot:
     requires:
@@ -10,7 +10,7 @@ metadata:
 
 # BookSearch API
 
-Programmatic search over the BeyondBSR book catalogue. One endpoint, JSON in / JSON out, API-key auth.
+Programmatic search over the BeyondBSR book catalogue plus BSR history retrieval for a single book. Two endpoints, JSON in / JSON out, API-key auth.
 
 ## When to use this skill
 
@@ -22,14 +22,16 @@ Use it when the user asks to:
 - Distinguish self-publishers from traditional publishers.
 - Estimate sales (daily / weekly / monthly / quarterly) and revenue per copy.
 - Compare BSR averages across multiple time windows (7d / 30d / 90d / 180d / 365d).
+- Retrieve the **BSR timeline** of a single book (by `domainId` + `asin`) over the last N days, e.g. for charting rank evolution.
 
-**Do NOT use** for: single-ASIN price-history charts, Keepa-style timeline data, account/user data, or anything not in the response schema below. Those are out of scope.
+**Do NOT use** for: price-history charts, review/rating timelines, account/user data, or anything not in the response schemas below. Those are out of scope.
 
-## Endpoint
+## Endpoints
 
 ```
 POST https://beyondbsr.com/api/v1/books/search
-Content-Type: application/json
+GET  https://beyondbsr.com/api/v1/books/{domainId}/{asin}/bsr-history?days={1..365}
+Content-Type: application/json   (search only)
 X-API-Key: $BOOKSEARCH_API_KEY
 ```
 
@@ -106,11 +108,12 @@ All fields are optional except `domainId`. Enums accept either the string name (
 
 ### Discovery
 
-| Field             | Type     | Constraint                                                  |
-|-------------------|----------|-------------------------------------------------------------|
-| `includeKeywords` | string[] | ≤ 25 items, each ≤ 100 chars, non-empty                     |
-| `excludeKeywords` | string[] | ≤ 25 items, each ≤ 100 chars, non-empty                     |
-| `categoryIds`     | long[]   | ≤ 100 items, each > 0 (Amazon BrowseNode IDs)               |
+| Field             | Type     | Default | Constraint                                                  |
+|-------------------|----------|---------|-------------------------------------------------------------|
+| `includeKeywords` | string[] | null    | ≤ 25 items, each ≤ 100 chars, non-empty                     |
+| `excludeKeywords` | string[] | null    | ≤ 25 items, each ≤ 100 chars, non-empty                     |
+| `categoryIds`     | long[]   | null    | ≤ 100 items, each > 0 (Amazon BrowseNode IDs)               |
+| `excludeFiction`  | bool?    | `true`  | When `true` (default), filters out fiction books — i.e. books whose categories all roll up to depth-2 ancestors flagged as fiction (Literature & Fiction, Romance, Mystery, Sci-Fi, Children's Books, Teen/YA, etc.) under the local Books root for the requested marketplace. A book is kept if **at least one** of its categories has a depth-2 ancestor flagged as non-fiction. Set `false` to include fiction. **Auto-disabled** when `categoryIds` is non-empty: explicit category intent overrides the fiction filter, otherwise passing a fiction category with the default would silently return zero results. Currently unsupported on Amazon.ca (`domainId=6`): with `excludeFiction=true` no books are returned for CA — pass `false` for that marketplace. |
 
 ### Pagination
 
@@ -122,7 +125,7 @@ All fields are optional except `domainId`. Enums accept either the string name (
 ## Workflow
 
 1. **Marketplace** — Identify `domainId` from intent using the marketplace table. If ambiguous (e.g. "Amazon"), ask which country.
-2. **Translate** — Map every natural-language filter to its schema field. Don't guess enum values; use the table.
+2. **Translate** — Map every natural-language filter to its schema field. Don't guess enum values; use the table. Note: by default fiction is excluded (`excludeFiction=true`). If the user asks for fiction (e.g. "romance", "mystery novels", "show me fiction too") or a mixed catalog, set `excludeFiction: false` explicitly. Most KDP/low-content niche queries are non-fiction so the default is usually correct.
 3. **Pagination** — Default to `limit: 50`. Raise to 100–300 only if the user explicitly wants many results. Start with `offset: 0`.
 4. **Send** — POST the JSON body. Inspect the status code first.
 5. **Paginate if needed** — If `returnedCount == limit`, more results likely exist. Offer to fetch the next page with `offset += limit`.
@@ -149,6 +152,7 @@ All fields are optional except `domainId`. Enums accept either the string name (
   "includeKeywords": ["journal", "notebook"],
   "excludeKeywords": ["coloring"],
   "categoryIds": [266162, 3248921],
+  "excludeFiction": false,
   "limit": 50,
   "offset": 0
 }
@@ -220,6 +224,97 @@ curl -X POST "https://beyondbsr.com/api/v1/books/search" \
 - All royalty and revenue fields are in **cents** — divide by 100 before showing currency.
 - `bsr` ≠ `bsrCurrent`. `bsr` is whatever column was chosen by `bsrType`; `bsrCurrent` is always the latest snapshot.
 - In `bsrType=Historical` mode, the `avgBsrXd` averages come from the current snapshot table while `bsr` itself is the historical month value — there is a documented temporal asymmetry inside the same response. Mention this if the user is doing a strict historical analysis.
+
+## BSR History endpoint
+
+Single-ASIN BSR timeline. Returns raw snapshots from the time-series store, ordered ascending by `recordedAt`.
+
+```
+GET https://beyondbsr.com/api/v1/books/{domainId}/{asin}/bsr-history?days={1..365}
+X-API-Key: $BOOKSEARCH_API_KEY
+Accept: application/json
+```
+
+### When to use
+
+- The user has a specific ASIN and wants its BSR over time (chart, drill-down, sanity-check the search-time `avgBsrXd` averages).
+- The user wants to verify a book's recent rank trajectory (e.g. "is it gaining or losing visibility?").
+
+If the user has filter criteria but no specific ASIN, use `POST /search` first, then call this endpoint per ASIN of interest.
+
+### Path & query parameters
+
+| Param      | In    | Type   | Required | Constraint                                                                 |
+|------------|-------|--------|----------|----------------------------------------------------------------------------|
+| `domainId` | path  | int    | yes      | One of the 7 marketplace IDs (see Marketplace domains table; validator allows 1–12). |
+| `asin`     | path  | string | yes      | Exactly 10 chars, regex `^[A-Z0-9]{10}$` (uppercase letters / digits only). |
+| `days`     | query | int?   | no       | 1–365. Default `365`. Window is `[now - days, now]` UTC.                   |
+
+### Example request
+
+```
+GET /api/v1/books/1/1635864348/bsr-history?days=90
+X-API-Key: $BOOKSEARCH_API_KEY
+Accept: application/json
+```
+
+### Example cURL
+
+```bash
+curl -X GET "https://beyondbsr.com/api/v1/books/1/1635864348/bsr-history?days=90" \
+  -H "X-API-Key: $BOOKSEARCH_API_KEY" \
+  -H "Accept: application/json"
+```
+
+### Response schema — `BookBsrHistoryApiResponse`
+
+| Field         | Type        | Notes                                                              |
+|---------------|-------------|--------------------------------------------------------------------|
+| `asin`        | string      | Echoed from request.                                               |
+| `domainId`    | int         | Echoed from request.                                               |
+| `fromUtc`     | datetime    | Window start (`now - days`), UTC.                                  |
+| `toUtc`       | datetime    | Window end (`now`), UTC.                                           |
+| `pointCount`  | int         | Number of BSR snapshots in `points`.                               |
+| `points`      | array       | `BsrPointDto[]` ordered ascending by `recordedAt`.                 |
+
+`BsrPointDto`:
+
+| Field              | Type      | Notes                                                          |
+|--------------------|-----------|----------------------------------------------------------------|
+| `recordedAt`       | datetime  | UTC timestamp of the snapshot.                                 |
+| `bestSellersRank`  | int?      | BSR at that timestamp. May be null if Keepa returned no rank.  |
+
+Example body:
+
+```json
+{
+  "asin": "1635864348",
+  "domainId": 1,
+  "fromUtc": "2026-01-27T00:00:00Z",
+  "toUtc": "2026-04-27T00:00:00Z",
+  "pointCount": 412,
+  "points": [
+    { "recordedAt": "2026-01-27T03:14:00Z", "bestSellersRank": 1234 },
+    { "recordedAt": "2026-01-27T15:02:00Z", "bestSellersRank": 1218 }
+  ]
+}
+```
+
+### Status codes (BSR history specific)
+
+| Code | Meaning                       | Notes                                                                 |
+|------|-------------------------------|-----------------------------------------------------------------------|
+| 200  | OK                            | `pointCount` may be 0 if no snapshots exist in the window.            |
+| 400  | Validation failed             | `ValidationProblemDetails`. Common causes: `days` out of range, `asin` wrong format, `domainId` out of `[1,12]`. |
+| 404  | ASIN not found for that domain| Empty body. The book is not tracked in BeyondBSR for this marketplace. Tell the user — do not retry with the same pair. |
+| 401 / 429 / 500 | See generic table below.            |
+
+### Caveats
+
+- Granularity is **raw**: Keepa snapshots arrive 1–4× per day on actively-tracked books. A 365-day window typically yields 365–1460 points. No daily aggregation is applied.
+- The endpoint returns only `(recordedAt, bestSellersRank)`. Use `POST /search` if you also need rating/review/price data.
+- ASIN is case-sensitive — must be uppercase. `1635864348` (all digits) is valid.
+- Default 365 days is the cap. Longer histories are not exposed; do not retry with `days > 365`.
 
 ## Status codes & error handling
 
