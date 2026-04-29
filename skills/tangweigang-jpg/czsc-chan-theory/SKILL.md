@@ -1,7 +1,7 @@
 ---
 name: czsc-chan-theory
 description: |-
-  CZSC 缠论技术分析工具，支持 K 线生成、笔线段识别、分型信号提取与 A 股回测可视化。触发场景：(1) 用户要分析 A 股 K 线数据；(2) 用户要计算缠中说禅的分型和买卖信号；(3) 用户要对历史行情进行回测和因子研究。
+  CZSC 缠论技术分析工具，支持 K 线生成、笔线段识别、分型信号提取与 A 股回测可视化。
 license: Proprietary. See LICENSE.txt in project root.
 compatibility: Designed for Doramagic-host ecosystem (Claude Code / openclaw / Cursor). Requires Python 3.12+ with uv package manager.
 metadata:
@@ -12,9 +12,9 @@ metadata:
   capability_activities: "backtesting, factor-research"
   sop_version: "crystal-compilation-v6.1"
 ---
-# czsc-chan-theory
+# 缠论技术分析 (czsc-chan-theory)
 
-> I help you build quant strategies on A-share with ZVT — from data fetch to backtest, one flow. Just tell me what you want; I'll write the code, you don't have to dig docs. (Heads up: ZVT natively supports A-share, HK, and crypto. US stocks — stockus_nasdaq_AAPL — are half-baked; don't bother for serious work.)
+> CZSC 缠论技术分析工具，支持 K 线生成、笔线段识别、分型信号提取与 A 股回测可视化。
 
 ## Pipeline
 
@@ -35,13 +35,6 @@ Classifying market volatility into three tiers (low/middle/high) based on recent
 **Triggers**: volatility, classification, signal
 
 For all **10** use cases, see [references/USE_CASES.md](references/USE_CASES.md).
-
-## Install
-
-```bash
-# One-time setup before first use
-bash scripts/install.sh
-```
 
 **Execute trigger**: `When user intent matches intent_router.uc_entries[].positive_terms AND user uses action verb (run/execute/跑/执行/backtest/fetch/collect)`
 
