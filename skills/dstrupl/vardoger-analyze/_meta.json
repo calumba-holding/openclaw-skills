@@ -3,9 +3,15 @@
   "slug": "vardoger-analyze",
   "displayName": "vardoger — Analyze History",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776877744712,
-    "commit": "https://github.com/openclaw/skills/commit/07c020b9983153163cc8368a2c62f590d653530e"
+    "version": "0.3.1",
+    "publishedAt": 1777057320613,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776877744712,
+      "commit": "https://github.com/openclaw/skills/commit/07c020b9983153163cc8368a2c62f590d653530e"
+    }
+  ]
 }
