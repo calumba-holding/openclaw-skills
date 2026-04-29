@@ -1,0 +1,11 @@
+{
+  "owner": "agnicpay-prog",
+  "slug": "agnic-agent-email",
+  "displayName": "Agnic Agent Email",
+  "latest": {
+    "version": "2.0.2",
+    "publishedAt": 1776954758308,
+    "commit": null
+  },
+  "history": []
+}
