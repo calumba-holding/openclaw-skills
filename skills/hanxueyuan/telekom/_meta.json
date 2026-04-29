@@ -3,9 +3,15 @@
   "slug": "telekom",
   "displayName": "Telekom",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776888271569,
-    "commit": "https://github.com/openclaw/skills/commit/49db627ebbc37c04de2b12325fbe6879b89f047a"
+    "version": "1.0.1",
+    "publishedAt": 1776936374034,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776888271569,
+      "commit": "https://github.com/openclaw/skills/commit/49db627ebbc37c04de2b12325fbe6879b89f047a"
+    }
+  ]
 }
