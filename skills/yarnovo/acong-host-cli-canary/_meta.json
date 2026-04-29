@@ -1,0 +1,11 @@
+{
+  "owner": "yarnovo",
+  "slug": "acong-host-cli-canary",
+  "displayName": "Acong host-cli Canary",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1776684575241,
+    "commit": null
+  },
+  "history": []
+}
