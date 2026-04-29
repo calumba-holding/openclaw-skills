@@ -1,0 +1,11 @@
+{
+  "owner": "zeekr0808-hue",
+  "slug": "multi-model-consensus",
+  "displayName": "Multi Model Consensus",
+  "latest": {
+    "version": "1.6.4",
+    "publishedAt": 1777465281610,
+    "commit": null
+  },
+  "history": []
+}
