@@ -1,0 +1,11 @@
+{
+  "owner": "otman-ai",
+  "slug": "metaads",
+  "displayName": "Meta Ads Api",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777042865954,
+    "commit": null
+  },
+  "history": []
+}
