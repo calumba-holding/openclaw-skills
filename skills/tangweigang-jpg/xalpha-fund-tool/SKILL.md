@@ -1,7 +1,7 @@
 ---
 name: xalpha-fund-tool
 description: |-
-  xalpha 支持多市场基金组合分析，实现 A/C 份额成本比较、可转债估值、组合业绩归因及基金相关性分析。触发场景：(1) 用户要判断买入基金选 A 份额还是 C 份额更划算；(2) 用户要分析且慢等平台上的指数投资组合历史收益和相关性；(3) 用户要查看可转债的纯债价值、期权价值和总价值。
+  xalpha 支持多市场基金组合分析，实现 A/C 份额成本比较、可转债估值、组合业绩归因及基金相关性分析。
 license: Proprietary. See LICENSE.txt in project root.
 compatibility: Designed for Doramagic-host ecosystem (Claude Code / openclaw / Cursor). Requires Python 3.12+ with uv package manager.
 metadata:
@@ -12,9 +12,9 @@ metadata:
   capability_activities: "portfolio-analytics"
   sop_version: "crystal-compilation-v6.1"
 ---
-# xalpha-fund-tool
+# xalpha 基金工具 (xalpha-fund-tool)
 
-> I help you build quant strategies on A-share with ZVT — from data fetch to backtest, one flow. Just tell me what you want; I'll write the code, you don't have to dig docs. (Heads up: ZVT natively supports A-share, HK, and crypto. US stocks — stockus_nasdaq_AAPL — are half-baked; don't bother for serious work.)
+> xalpha 支持多市场基金组合分析，实现 A/C 份额成本比较、可转债估值、组合业绩归因及基金相关性分析。
 
 ## Pipeline
 
@@ -35,13 +35,6 @@ Analyze correlation between different investment varieties in the '长赢指数�
 **Triggers**: 长赢, 相关性, 行业指数
 
 For all **16** use cases, see [references/USE_CASES.md](references/USE_CASES.md).
-
-## Install
-
-```bash
-# One-time setup before first use
-bash scripts/install.sh
-```
 
 **Execute trigger**: `When user intent matches intent_router.uc_entries[].positive_terms AND user uses action verb (run/execute/跑/执行/backtest/fetch/collect)`
 
