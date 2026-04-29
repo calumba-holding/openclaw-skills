@@ -1,0 +1,11 @@
+{
+  "owner": "mzfshark",
+  "slug": "api-integration-redhat",
+  "displayName": "API Integration for RedHat MCP",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777028914393,
+    "commit": null
+  },
+  "history": []
+}
