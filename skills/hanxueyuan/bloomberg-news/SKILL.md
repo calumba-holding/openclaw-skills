@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: bloomberg-news
 summary: Bloomberg News——全球最大的财经新闻网络，与Bloomberg Terminal深度绑定的金融信息帝国。
 read_when:
