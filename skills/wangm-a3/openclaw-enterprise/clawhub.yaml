@@ -1,0 +1,106 @@
+name: openclaw-enterprise
+version: 1.0.7
+license: MIT-0
+type: openclaw-skill
+description: "企业多Agent协作系统：1个幕僚长+20个专业Agent替代运营团队"
+emoji: "🏢"
+homepage: https://openclaw.ai
+
+# Publisher Info
+publisher:
+  name: "OpenClaw AI Team"
+  website: https://openclaw.ai
+  contact: support@openclaw.ai
+
+# Third-party Dependencies (Required for Security Audit)
+third_party:
+  - name: GitHub
+    domain: github.com
+    purpose: "开源社区协作，源码托管"
+    verify_url: https://github.com/openclaw
+
+# Required Credentials
+required_env:
+  - OPENAI_API_KEY
+  - ANTHROPIC_API_KEY
+primary_env: OPENAI_API_KEY
+
+# External APIs
+apis:
+  - name: OpenAI API
+    domain: api.openai.com
+    purpose: "LLM大语言模型调用，用于Agent推理和内容生成"
+    auth:
+      type: Bearer Token
+      env_var: OPENAI_API_KEY
+  - name: Anthropic API
+    domain: api.anthropic.com
+    purpose: "Claude大语言模型调用，用于高级推理任务"
+    auth:
+      type: Bearer Token
+      env_var: ANTHROPIC_API_KEY
+  - name: OpenClaw Enterprise API
+    domain: api.openclaw.ai
+    purpose: "企业数据源集成（可选，需企业版）"
+    auth:
+      type: API Key
+      env_var: OPENCLAW_API_KEY
+      optional: true
+      note: "企业版专属功能"
+
+# Category & Tags
+category: enterprise-ai
+tags:
+  - multi-agent
+  - enterprise
+  - collaboration
+  - workflow
+  - automation
+  - SaaS
+  - 运营自动化
+  - AI团队
+  - 幕僚长
+  - 智能运营
+
+triggers:
+  - "多Agent协作"
+  - "运营自动化"
+  - "企业AI团队"
+  - "幕僚长调度"
+  - "AI工作流"
+  - "智能运营"
+  - "团队协作"
+  - "流程自动化"
+  - "企业智能化"
+  - "数字员工"
+
+# Pricing Tiers
+pricing:
+  basic:
+    price: 999
+    currency: CNY
+    period: month
+    features:
+      - "1个幕僚长+5个专业Agent"
+      - "基础工作流"
+      - "10个并发用户"
+  professional:
+    price: 3999
+    currency: CNY
+    period: month
+    features:
+      - "1个幕僚长+20个专业Agent"
+      - "全链路覆盖"
+      - "API集成"
+      - "50个并发用户"
+      - "SLA 99.5%"
+  enterprise:
+    price: 29999
+    currency: CNY
+    period: month
+    features:
+      - "私有部署"
+      - "行业定制"
+      - "源码交付"
+      - "无限并发"
+      - "专属顾问"

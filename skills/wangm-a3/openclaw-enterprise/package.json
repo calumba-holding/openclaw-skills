@@ -1,0 +1,103 @@
+{
+  "name": "@openclaw/enterprise",
+  "version": "1.0.7",
+  "displayName": "OpenClaw Enterprise",
+  "displayNameEn": "OpenClaw Enterprise",
+  "description": "企业多Agent协作系统：1个幕僚长+20个专业Agent替代运营团队，覆盖采购/生产/销售/财务/人事/合规全链路",
+  "descriptionEn": "Enterprise Multi-Agent Collaboration System — 1 ChiefOfStaff + 20 specialized agents covering procurement, production, sales, finance, HR and compliance workflows.",
+  "emoji": "🏢",
+  "category": "enterprise-ai",
+  "tags": [
+    "multi-agent",
+    "enterprise",
+    "collaboration",
+    "workflow",
+    "automation",
+    "SaaS",
+    "运营自动化",
+    "AI团队",
+    "幕僚长",
+    "智能运营"
+  ],
+  "author": {
+    "name": "OpenClaw AI Team",
+    "email": "support@openclaw.ai",
+    "website": "https://openclaw.ai",
+    "github": "https://github.com/openclaw"
+  },
+  "license": "MIT-0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WangM-A3/openclaw-enterprise-skill"
+  },
+  "keywords": [
+    "enterprise",
+    "multi-agent",
+    "AI",
+    "workflow-automation",
+    "SaaS",
+    "运营自动化"
+  ],
+  "pricing": {
+    "basic": {
+      "price": 999,
+      "currency": "CNY",
+      "period": "month",
+      "features": [
+        "1个幕僚长+5个专业Agent",
+        "基础工作流",
+        "10个并发用户"
+      ]
+    },
+    "professional": {
+      "price": 3999,
+      "currency": "CNY",
+      "period": "month",
+      "features": [
+        "1个幕僚长+20个专业Agent",
+        "全链路覆盖",
+        "API集成",
+        "50个并发用户",
+        "SLA 99.5%"
+      ]
+    },
+    "enterprise": {
+      "price": 29999,
+      "currency": "CNY",
+      "period": "month",
+      "features": [
+        "私有部署",
+        "行业定制",
+        "源码交付",
+        "无限并发",
+        "专属顾问"
+      ]
+    }
+  },
+  "agents": {
+    "total": 21,
+    "chiefOfStaff": 1,
+    "executors": 20
+  },
+  "requirements": {
+    "python": ">=3.10",
+    "pip": [
+      "httpx>=0.25.0",
+      "fastapi>=0.104.0",
+      "uvicorn>=0.24.0",
+      "langgraph>=0.0.20",
+      "pydantic>=2.0.0"
+    ]
+  },
+  "languages": ["zh-CN", "en-US"],
+  "publishConfig": {
+    "registry": "https://clawhub.ai",
+    "access": "public"
+  },
+  "clawhub": {
+    "agentCount": 21,
+    "version": "1.0.7",
+    "firstPublished": "2026-04-23",
+    "marketplaces": ["clawhub"]
+  }
+}
