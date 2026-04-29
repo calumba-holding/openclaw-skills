@@ -1,8 +1,16 @@
 # Team Sessions
 
-**OpenClaw 多 Agent 团队沟通标准工作流。**
+主控发号施令、成员各司其职的团队沟通流程规范。
 
 用 `sessions_spawn` 与团队成员（子代理）高效沟通，零横向沟通，主控统一调度。
+
+---
+
+## ⚠️ 权限说明
+
+本 skill 需要在 `openclaw.json` 中配置 subagent 权限，并重启 Gateway 使配置生效。
+
+**关于 `allowAgents: ["*"]`**：这是 OpenClaw 标准配置，允许主控 spawn 子代理。`["*"]` 表示允许所有 agentId，不等于"所有 agent 都有权限"——子代理权限仍由主控控制。如果有特殊需求，可改为只列出需要的 agentId（如 `["analyst","writer"]`）。
 
 ---
 
@@ -18,7 +26,7 @@
 ### 1. 安装
 
 ```bash
-clawhub install team-communication
+clawhub install team-sessions
 ```
 
 ### 2. 配置成员
@@ -74,14 +82,6 @@ sessions_spawn({
 
 ---
 
-## 文档
-
-| 文件 | 说明 |
-|------|------|
-| [SKILL.md](./SKILL.md) | 完整规范与最佳实践 |
-| [examples/](./examples/) | 使用场景示例 |
-| [templates/](./templates/) | 成员配置模板 |
-
 ## 适用场景
 
 - 内容创作团队（策划→写手→审核）
@@ -93,4 +93,4 @@ sessions_spawn({
 
 ## 版本
 
-- v1.0.0 — 首发
+- v1.0.1（2026-04-24）— 补充权限说明，澄清 allowAgents 的实际影响

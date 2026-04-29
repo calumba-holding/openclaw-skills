@@ -1,33 +1,25 @@
 ---
 name: team-sessions
-description: 用 sessions_spawn 与团队成员沟通的标准工作流。支持任意数量子代理的团队管理。
+description: 主控发号施令、成员各司其职的团队沟通流程规范。零横向沟通，workspace 隔离，sessions_spawn 标准流程。
 metadata:
   openclaw:
     requires:
       bins: []
     install: []
+    permissions:
+      - 修改 ~/.qclaw/openclaw.json（允许 spawn subagent，这是 OpenClaw 标准配置，不是危险操作）
+      - 执行 openclaw gateway restart
 ---
 
 # Team Sessions
 
-> 用 `sessions_spawn` 与团队成员（子代理）沟通的标准工作流。
-
-**触发：** 派任务给团队成员、协调子代理、管理多会话通信。
-
----
-
-## 一、核心理念
-
-**一个主控，多成员，零横向沟通。**
-
-- 主代理（你）是唯一的调度中心
-- 成员只与主代理通信，不互相@、不互相回复
-- 所有任务通过 `sessions_spawn` 派发
-- 所有结果回报到主代理
+> **触发：** 派任务给团队成员、协调子代理、管理多会话通信。
+>
+> **核心理念：** 一个主控，多成员，零横向沟通。
 
 ---
 
-## 二、Sessions Spawn 三要素
+## 一、Sessions Spawn 三要素
 
 ```javascript
 sessions_spawn({
@@ -64,7 +56,7 @@ sessions_spawn({
 
 ---
 
-## 三、配置步骤
+## 二、配置步骤
 
 ### Step 1：创建成员 workspace
 
@@ -110,7 +102,7 @@ echo "你是成员B，负责..." > ~/.qclaw/workspace-main/member-b/SOUL.md
 }
 ```
 
-**关键：** `allowAgents: ["*"]` 必须设置，否则 `sessions_spawn` 报 forbidden。
+> ⚠️ **关于 `allowAgents: ["*"]`**：这是 OpenClaw 的标准配置，允许主控 spawn 子代理。`["*"]` 表示允许所有 agentId，不等于"所有 agent 都有权限"——子代理的权限仍由主控控制。如果你的部署已有其他 agent，可以只列出需要的 agentId（如 `["member-a","member-b"]`）。
 
 ### Step 4：重启 Gateway
 
@@ -120,7 +112,7 @@ openclaw gateway restart
 
 ---
 
-## 四、标准派任务流程
+## 三、标准派任务流程
 
 ### 判断任务类型
 
@@ -186,7 +178,7 @@ sessions_yield()
 
 ---
 
-## 五、沟通铁律
+## 四、沟通铁律
 
 ### 1. 零横向沟通
 
@@ -218,7 +210,7 @@ sessions_yield()
 
 ---
 
-## 六、常见错误
+## 五、常见错误
 
 ### Forbidden Error
 
@@ -249,7 +241,7 @@ Error: sessions_spawn forbidden
 
 ---
 
-## 七、最佳实践
+## 六、最佳实践
 
 1. **预写脚本**：复杂任务先写 Python 脚本，让子代理只执行 `python3 xxx.py`
 2. **任务编号**：每个任务带编号，方便追踪

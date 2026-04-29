@@ -3,9 +3,15 @@
   "slug": "team-sessions",
   "displayName": "Team Sessions",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776868267319,
-    "commit": "https://github.com/openclaw/skills/commit/3598c138341ca70f83f3251150e2e8db19571e5e"
+    "version": "1.0.2",
+    "publishedAt": 1777031041599,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776868267319,
+      "commit": "https://github.com/openclaw/skills/commit/3598c138341ca70f83f3251150e2e8db19571e5e"
+    }
+  ]
 }
