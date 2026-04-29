@@ -1,0 +1,11 @@
+{
+  "owner": "powerloom-bot",
+  "slug": "powerloom-bds-univ3",
+  "displayName": "🦄 Powerloom Uniswap V3 timeseries data",
+  "latest": {
+    "version": "0.0.8",
+    "publishedAt": 1777211483444,
+    "commit": null
+  },
+  "history": []
+}
