@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "p2p-lending-data",
-  "displayName": "p2p-lending-data",
+  "displayName": "P2p Lending Data",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776905922791,
-    "commit": "https://github.com/openclaw/skills/commit/cdf32054a4160c81739ec0a06323e177eb3946b8"
+    "version": "0.3.3",
+    "publishedAt": 1776954521750,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776905922791,
+      "commit": "https://github.com/openclaw/skills/commit/cdf32054a4160c81739ec0a06323e177eb3946b8"
+    }
+  ]
 }
