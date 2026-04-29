@@ -1,0 +1,11 @@
+{
+  "owner": "jdl-external-skills",
+  "slug": "iplat-test-skill",
+  "displayName": "国际平台组测试合集",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777019892134,
+    "commit": null
+  },
+  "history": []
+}
