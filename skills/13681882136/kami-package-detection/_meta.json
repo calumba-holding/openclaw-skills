@@ -3,11 +3,16 @@
   "slug": "kami-package-detection",
   "displayName": "Kami Package Detection",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1776910346988,
-    "commit": "https://github.com/openclaw/skills/commit/5495804f919287a2bca3869ddbccb237444c5643"
+    "version": "1.0.5",
+    "publishedAt": 1776923383804,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1776910346988,
+      "commit": "https://github.com/openclaw/skills/commit/5495804f919287a2bca3869ddbccb237444c5643"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1776838420162,

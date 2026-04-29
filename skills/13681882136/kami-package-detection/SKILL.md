@@ -1,10 +1,14 @@
 ---
 name: kami-package-detection
 description: A free skill by Kami SmartHome. Get notified the moment a package arrives at your door. Detects packages, parcels, and bags from RTSP camera streams using AI vision.
-version: 1.0.2
+version: 1.0.4
 author: kami-smarthome
 tags:
   - smart-home
+  - kami
+  - home-assistant
+  - smarthome
+  - detect
   - object-detection
   - yolo
   - package-detection
@@ -18,14 +22,25 @@ tags:
   - monitoring
   - notification
 triggers:
+  - smart home
+  - kami
+  - home assistant
+  - detect
   - detect packages
   - detect parcels
+  - kami package
+  - kami smart home
+  - home assistant package
+  - smart home delivery
+  - check doorstep
+  - delivery notification
   - check for deliveries
   - package detection
   - is there a package
   - monitor packages
   - check camera for packages
   - any deliveries at the door
+  - parcel alert
 metadata:
   openclaw:
     requires:
@@ -75,6 +90,14 @@ The `yolov8s-worldv2.onnx` model file is included in the skill package. If missi
 
 ```bash
 clawhub install kami-package-detection
+```
+
+Alternatively, download the YOLOv8s-World v2 `.pt` model from [Ultralytics YOLO-World](https://docs.ultralytics.com/models/yolo-world/) and export it to ONNX yourself. Make sure the class names used during export match the `--class_names` parameter:
+
+```bash
+pip install ultralytics
+yolo export model=yolov8s-worldv2.pt format=onnx imgsz=320
+cp yolov8s-worldv2.onnx /path/to/kami-package-detection/
 ```
 
 ## Parameter Confirmation
