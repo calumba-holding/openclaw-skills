@@ -1,11 +1,17 @@
 {
   "owner": "vassiliylakhonin",
   "slug": "central-asia-caspian-hybrid-intelligence-v3-1",
-  "displayName": "central_asia_caspian_hybrid_intelligence_v3_1",
+  "displayName": "Central Asia Caspian Hybrid Intelligence V3 1",
   "latest": {
-    "version": "3.1.0",
-    "publishedAt": 1776929388304,
-    "commit": "https://github.com/openclaw/skills/commit/705eaa9c480468d3a04519bdbb97948fdc60ac8b"
+    "version": "3.1.1",
+    "publishedAt": 1777257015955,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "3.1.0",
+      "publishedAt": 1776929388304,
+      "commit": "https://github.com/openclaw/skills/commit/705eaa9c480468d3a04519bdbb97948fdc60ac8b"
+    }
+  ]
 }
