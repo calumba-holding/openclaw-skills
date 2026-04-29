@@ -1,7 +1,7 @@
 """
 沟通三部曲 - 执行入口
 思考 → 执行 → 复盘
-TTL 验证逻辑（14天免费 → API 7天校验）
+TTL 验证逻辑（7天免费 → API 校验）
 """
 
 import os, json, time, sys
@@ -12,10 +12,10 @@ from typing import Dict, Any, Optional
 # TTL 配置区（用户付费后填入 API_KEY）
 # ============================================================
 API_KEY = ""  # 付费后获得，填入这里
-API_URL = "https://flights-hobbies-supports-difficulty.trycloudflare.com/verify"
+API_URL = "https://www.kaiwu8.com/verify"
 SKILL_ID = "three-steps-comm"
 LOCAL_TTL_FILE = os.path.join(os.path.dirname(__file__), ".ttl")
-FREE_TTL_DAYS = 14  # 免费体验天数
+FREE_TTL_DAYS = 7  # 免费体验天数
 RENEWAL_INTERVAL = 7 * 86400  # 付费后每7天校验一次
 
 
@@ -38,7 +38,7 @@ def _save_local_ttl(expires_at: int) -> None:
 
 
 def _init_ttl() -> int:
-    """首次使用初始化 14 天 TTL"""
+    """首次使用初始化 7 天 TTL"""
     expires_at = int(time.time()) + FREE_TTL_DAYS * 86400
     _save_local_ttl(expires_at)
     return expires_at
@@ -86,7 +86,7 @@ def _verify_ttl() -> bool:
 def _check_and_renew_ttl() -> None:
     """每次调用检查 TTL"""
     if not _verify_ttl():
-        print("[TTL] 免费体验已到期，请前往 https://example.com 续费获取 API_KEY")
+        print("[TTL] 免费体验已到期，请前往 https://www.kaiwu8.com 续费获取 API_KEY")
         raise PermissionError("Skill 授权已过期，请续费后填入 API_KEY 继续使用")
 
 
