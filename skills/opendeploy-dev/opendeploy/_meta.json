@@ -1,0 +1,11 @@
+{
+  "owner": "opendeploy-dev",
+  "slug": "opendeploy",
+  "displayName": "opendeploy",
+  "latest": {
+    "version": "1.0.7",
+    "publishedAt": 1777307319007,
+    "commit": null
+  },
+  "history": []
+}

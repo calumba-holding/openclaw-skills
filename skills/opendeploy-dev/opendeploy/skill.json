@@ -1,0 +1,166 @@
+{
+  "name": "opendeploy",
+  "version": "1.0.7",
+  "description": "Deploy any project to opendeploy from a coding agent. The skill reads local env files as deployment configuration and submits the resulting key/value pairs to the opendeploy API, while excluding env and credential files from uploaded source archives. On first use, after explicit approval, it writes ~/.opendeploy/auth.json (0600) by calling POST /v1/client-guests/register, then runs the deploy pipeline as Bearer od_*. On success it prints either an account-binding URL or the project's dashboard URL.",
+  "homepage": "https://opendeploy.dev",
+  "api_base": "https://dashboard.dev.opendeploy.dev/api",
+
+  "requires": {
+    "binaries": {
+      "required": ["curl", "jq", "zip"],
+      "conditional": [
+        { "name": "git", "when": "deploying from GIT_URL" },
+        { "name": "unzip", "when": "deploying from or inspecting an existing ZIP" }
+      ]
+    },
+    "env_vars": {
+      "required": [],
+      "optional": [
+        "GIT_URL",
+        "GIT_BRANCH",
+        "GIT_TOKEN",
+        "OD_GATEWAY",
+        "OD_REGION_ID",
+        "OD_ENVIRONMENT",
+        "SUBDOMAIN",
+        "OPDEPLOY_AUTH_FILE",
+        "OPDEPLOY_ALLOW_CREDENTIAL_INIT"
+      ]
+    },
+    "network": {
+      "destinations": ["https://dashboard.dev.opendeploy.dev/api"]
+    },
+    "persistent_files": [
+      "~/.opendeploy/auth.json",
+      "~/.opendeploy/lib/log.sh",
+      "~/.opendeploy/logs/<UTC-date>.log"
+    ],
+    "sensitive_inputs": [
+      "real .env values are submitted to the platform API as service env configuration, never uploaded as source files",
+      "GIT_TOKEN is sent only to the opendeploy gateway for private repository access"
+    ]
+  },
+
+  "files": [
+    { "name": "SKILL.md",                        "url": "https://opendeploy.dev/skills/SKILL.md" },
+    { "name": "skill.json",                      "url": "https://opendeploy.dev/skills/skill.json" },
+    { "name": "references/api-schemas.md",       "url": "https://opendeploy.dev/skills/references/api-schemas.md" },
+    { "name": "references/analyze-local.md",     "url": "https://opendeploy.dev/skills/references/analyze-local.md" },
+    { "name": "references/failure-playbook.md",  "url": "https://opendeploy.dev/skills/references/failure-playbook.md" },
+    { "name": "references/auth.md",              "url": "https://opendeploy.dev/skills/references/auth.md" },
+    { "name": "references/setup.md",             "url": "https://opendeploy.dev/skills/references/setup.md" },
+    { "name": "references/deploy.md",            "url": "https://opendeploy.dev/skills/references/deploy.md" },
+    { "name": "references/domain.md",            "url": "https://opendeploy.dev/skills/references/domain.md" },
+    { "name": "references/operate.md",           "url": "https://opendeploy.dev/skills/references/operate.md" },
+    { "name": "scripts/log.sh",                  "url": "https://opendeploy.dev/skills/scripts/log.sh" }
+  ],
+
+  "auth": {
+    "scheme":      "Bearer",
+    "header":      "Authorization: Bearer <plaintext_token>",
+    "token_kinds": [
+      { "prefix": "od_k", "kind": "dashboard_token", "table": "user_api_keys", "authority": "full user (one active per user)" },
+      { "prefix": "od_a", "kind": "local_deploy_credential", "table": "client_agents", "authority": "guest tenant when state=pending; account-level deploy authority when state=bound" }
+    ],
+    "auth_file": {
+      "path":        "~/.opendeploy/auth.json",
+      "permissions": "0600",
+      "schema": {
+        "version":   "int (currently 1)",
+        "api_key":   "string (required) — od_* plaintext token",
+        "gateway":   "string (optional) — overrides default api_base; the dashboard binding/project host is gateway minus '/api'",
+        "guest_id":  "string (optional) — present only for local deploy credentials; used to construct the account-binding URL at use-time",
+        "bind_sig":  "string (optional) — HMAC seal verified by dashboard on bind"
+      },
+      "binding_url_persistence": "Not stored. Always derived at use-time as `${gateway%/api}/guest/<guest_id>?h=<bind_sig>`. Older auth.json files that include a server URL key are tolerated but the value is ignored on read."
+    }
+  },
+
+  "logging": {
+    "log_dir":       "~/.opendeploy/logs/",
+    "log_file":      "~/.opendeploy/logs/<UTC-date>.log",
+    "lib_path":      "~/.opendeploy/lib/log.sh",
+    "format":        "JSONL — one JSON object per line, each `{ts, level, step, ...context}`",
+    "rotation":      "daily by UTC date; append-only; never auto-pruned by the skill",
+    "permissions":   { "dir": "0700", "file": "0600" },
+    "logger":        "Function `od_log <level> <step> [key value]...` defined in lib/log.sh. Sourced by every reference at the top of its first bash block (`. \"$HOME/.opendeploy/lib/log.sh\"`).",
+    "secret_guard":  "Logger silently drops keys named api_key, bind_sig, password, token, *secret*, *Authorization* before serialisation. Even if a step accidentally passes one, it never reaches disk.",
+    "steps":         [
+      "skill.start",  "auth.resolve",  "auth.register",
+      "setup.project_create", "setup.dependency_create", "setup.service_create",
+      "deploy.upload_only", "deploy.update_source", "deploy.env_replace",
+      "deploy.create", "deploy.terminal",
+      "domain.rename", "operate.<verb>", "report"
+    ],
+    "skill_must":    "Emit one od_log line per major operation completion. Levels: info on success, warn on recoverable anomaly, error on terminal failure. Include deployment_id / project_id / service_id whenever known so a later `jq -c --arg d <id> 'select(.deployment_id==$d)'` reconstructs the full timeline.",
+    "retention":     "User responsibility. Suggest `find ~/.opendeploy/logs -mtime +30 -delete` if asked, but the skill itself never deletes log files."
+  },
+
+  "endpoints": {
+    "anonymous": [
+      {
+        "method": "POST",
+        "path":   "/v1/client-guests/register",
+        "auth":   "none",
+        "rate_limit": "5/hour/source-ip + 24h idempotent replay by (source_ip, user_agent)",
+        "body":   "{\"source_hint\": \"claude-code/Darwin\"}",
+        "returns": "{ guest_id, api_key, gateway, bind_sig, bind_url, expires_in_seconds } — note: bind_url is IGNORED by the skill (always derived locally from gateway+guest_id+bind_sig).",
+        "notes":  "On idempotent replay api_key is omitted (the plaintext is never re-shown). The skill MUST persist the first successful response or the user is locked out. Skill stores api_key, gateway, guest_id, bind_sig only; the server URL is not persisted because the host must always be derived from gateway."
+      }
+    ],
+    "oidc": [
+      { "method": "POST",   "path": "/v1/client-guests/{guest_id}/bind",   "notes": "Dashboard-only. Skill never calls this." },
+      { "method": "GET",    "path": "/v1/client-guests",                   "notes": "Dashboard-only." },
+      { "method": "DELETE", "path": "/v1/client-guests/{guest_id}",        "notes": "Dashboard-only." }
+    ],
+    "bearer_pipeline": [
+      "GET    /v1/regions/",
+      "POST   /v1/projects/",
+      "POST   /v1/projects/{id}/services/",
+      "POST   /v1/dependencies/create",
+      "POST   /v1/upload/upload-only",
+      "POST   /v1/upload/update-source",
+      "POST   /v1/deployments/",
+      "GET    /v1/deployments/{id}",
+      "GET    /v1/deployments/{id}/logs",
+      "GET    /v1/deployments/{id}/build-logs/stream",
+      "PUT    /v1/projects/{id}/services/{sid}/env",
+      "PUT    /v1/services/{id}",
+      "GET    /v1/service-domains",
+      "GET    /v1/service-domains/check-subdomain/{prefix}",
+      "PUT    /v1/service-domains/{id}/subdomain"
+    ]
+  },
+
+  "guest_tier": {
+    "applies_when":      "token kind=local_deploy_credential AND state=pending (not yet linked to an account)",
+    "cpu_limit":         "1",
+    "memory_limit":      "1Gi",
+    "services_per_project": 1,
+    "managed_database":  true,
+    "subdomain_rename":  true,
+    "custom_domain":     false,
+    "billing_routes":    false,
+    "idle_gc_hours":     6,
+    "gc_behavior":       "Project (services, deployments, dependencies, domains) is soft-deleted 6h after last deploy activity. The local credential row is kept unless last_deployed_at is NULL (token never used → row dropped to release prefix)."
+  },
+
+  "account_binding_url": {
+    "format":        "{gateway_host_without_api}/guest/{guest_id}?h={bind_sig}&url={app_url}",
+    "format_note":   "ALWAYS derive the host from OD_GATEWAY with the trailing /api stripped — never trust a server-returned URL. The credential row only exists in this gateway's DB, so the dashboard binding page lives on the same host as the gateway, full stop.",
+    "purpose":       "User-facing handoff. User clicks -> dashboard SSO -> POST /v1/client-guests/{guest_id}/bind. Bind verifies the bind_sig HMAC, transitions the credential to state=bound (bound_user_id populated), and atomically updates projects.created_by + tenant_id + state for every internal project row matching that credential.",
+    "skill_must":    "Print the URL when IS_BOUND==0 (local deploy credential not yet linked to an account) after APP_URL is known. Include url=APP_URL in the handoff URL. Never call bind itself. Never print bind_sig standalone. Never use a server-supplied URL verbatim."
+  },
+
+  "guest_credential_states": [
+    { "state": "pending",  "terminal": false, "description": "registered, not yet linked to an account; can deploy under guest-tenant resource caps" },
+    { "state": "bound",    "terminal": false, "description": "linked to a user; same token now authenticates with account-level deploy authority" },
+    { "state": "revoked",  "terminal": true,  "description": "user revoked from dashboard; subsequent requests 401" }
+  ],
+
+  "metadata": {
+    "emoji":    "",
+    "category": "deploy",
+    "tagline":  "Deploy first, sign up after."
+  }
+}
