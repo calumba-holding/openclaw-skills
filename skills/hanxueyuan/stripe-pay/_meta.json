@@ -1,0 +1,11 @@
+{
+  "owner": "hanxueyuan",
+  "slug": "stripe-pay",
+  "displayName": "Stripe Pay",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777158221728,
+    "commit": null
+  },
+  "history": []
+}
