@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: abc-news
 summary: ABC News——迪士尼帝国的电视新闻部门，以《早安美国》和《晚间世界新闻》定义美国电视新闻。
 read_when:
