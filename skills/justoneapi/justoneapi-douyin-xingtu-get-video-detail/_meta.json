@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-douyin-xingtu-get-video-detail",
+  "displayName": "Douyin Creator Marketplace (Xingtu) Video Details API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777147120866,
+    "commit": null
+  },
+  "history": []
+}
