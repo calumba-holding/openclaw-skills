@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "ledger-plaintext-accounting",
-  "displayName": "ledger-plaintext-accounting",
+  "displayName": "Ledger Plaintext Accounting",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776899966426,
-    "commit": "https://github.com/openclaw/skills/commit/98fe57fe274eeec2217d1ca068d99fac9a27a245"
+    "version": "0.3.3",
+    "publishedAt": 1776954473283,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776899966426,
+      "commit": "https://github.com/openclaw/skills/commit/98fe57fe274eeec2217d1ca068d99fac9a27a245"
+    }
+  ]
 }
