@@ -1,0 +1,11 @@
+{
+  "owner": "virtualsms-io",
+  "slug": "virtualsms-sms-verification",
+  "displayName": "VirtualSMS — Real SIM SMS Verification",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777129825255,
+    "commit": null
+  },
+  "history": []
+}
