@@ -1,0 +1,11 @@
+{
+  "owner": "hgta",
+  "slug": "image-2",
+  "displayName": "Image-2 Skill",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777174852615,
+    "commit": null
+  },
+  "history": []
+}
