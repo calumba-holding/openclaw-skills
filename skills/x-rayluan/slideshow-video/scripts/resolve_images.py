@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
-import hashlib
 import json
+import os
 import random
 import re
 import urllib.parse
@@ -14,6 +14,11 @@ LOREM_PICSUM = "https://picsum.photos/1200/1800"
 PINTEREST_SEARCH = "https://www.pinterest.com/search/pins/?q={query}"
 PINTEREST_RESOURCE = "https://www.pinterest.com/resource/BaseSearchResource/get/"
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
+
+GPT_IMAGE_MODELS = {
+    "openai": "openai/gpt-image-2",
+    "kie": "kie/gpt-image-2-text-to-image",
+}
 
 
 class PinterestClient:
@@ -117,7 +122,6 @@ class PinterestClient:
 
         random.seed(seed or query)
         random.shuffle(urls)
-        # de-dup while preserving random order
         uniq = []
         seen = set()
         for u in urls:
@@ -141,36 +145,97 @@ def build_image_url(query: str, seed: str | None = None) -> str:
     return UNSPLASH_RANDOM.format(query=q)
 
 
-def build_resolved_url(slide: dict, default_query: Optional[str], pinterest_client: PinterestClient) -> Optional[str]:
-    # Prefer explicit imagePath/imageUrl set by caller.
-    image_query = slide.get("imageQuery")
-    if slide.get("imagePath"):
-        return slide["imagePath"]
-
-    if image_query:
-        return resolve_query_image(image_query, pinterest_client)
-
-    if default_query:
-        return resolve_query_image(default_query, pinterest_client)
-
-    raise ValueError("Slide is missing imagePath, imageUrl, and imageQuery")
+def get_openclaw_api_base() -> str:
+    return os.environ.get("OPENCLAW_BASE_URL", "http://127.0.0.1:3333").rstrip("/")
 
 
-def resolve_query_image(query: str, pinterest_client: PinterestClient) -> str:
-    # Default: pull candidate images from Pinterest.
+def get_openclaw_session_key() -> Optional[str]:
+    return os.environ.get("OPENCLAW_SESSION_KEY") or os.environ.get("OPENCLAW_SESSION")
+
+
+def call_openclaw_image_generate(prompt: str, model: str, size: Optional[str] = None, filename: Optional[str] = None) -> Optional[str]:
+    session_key = get_openclaw_session_key()
+    if not session_key:
+        return None
+
+    payload = {
+        "tool": "image_generate",
+        "arguments": {
+            "action": "generate",
+            "model": model,
+            "prompt": prompt,
+        },
+    }
+    if size:
+        payload["arguments"]["size"] = size
+    if filename:
+        payload["arguments"]["filename"] = filename
+
+    req = urllib.request.Request(
+        f"{get_openclaw_api_base()}/api/sessions/{urllib.parse.quote(session_key)}/tool-call",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req, timeout=180) as response:
+        body = json.loads(response.read().decode("utf-8", errors="ignore"))
+
+    candidates = []
+    if isinstance(body, dict):
+        for key in ("media", "MEDIA", "path", "output", "result"):
+            value = body.get(key)
+            if isinstance(value, str):
+                candidates.append(value)
+        tool_result = body.get("toolResult") or body.get("result")
+        if isinstance(tool_result, dict):
+            for key in ("media", "MEDIA", "path"):
+                value = tool_result.get(key)
+                if isinstance(value, str):
+                    candidates.append(value)
+            if isinstance(tool_result.get("media"), list):
+                candidates.extend([item for item in tool_result["media"] if isinstance(item, str)])
+
+    for candidate in candidates:
+        if candidate.startswith("MEDIA:"):
+            return candidate[len("MEDIA:"):]
+        if candidate:
+            return candidate
+    return None
+
+
+def resolve_query_image_gpt(query: str, model_key: str, size: Optional[str] = None) -> Optional[str]:
+    model = GPT_IMAGE_MODELS.get(model_key)
+    if not model:
+        raise ValueError(f"Unsupported GPT image provider: {model_key}")
+    filename = f"resolved-{model_key}-gpt-image-2.png"
+    return call_openclaw_image_generate(query, model=model, size=size or "1024x1536", filename=filename)
+
+
+def resolve_query_image(query: str, pinterest_client: PinterestClient, source_mode: str = "pinterest") -> str:
+    if source_mode in GPT_IMAGE_MODELS:
+        generated = resolve_query_image_gpt(query, source_mode)
+        if generated:
+            return generated
+        raise RuntimeError(f"GPT image generation failed for provider: {source_mode}")
+
+    if source_mode == "unsplash":
+        return build_image_url(query)
+
     urls = pinterest_client.fetch_query_images(query, limit=6, seed=query)
     if urls:
         return urls[0]
-    # Fallback if Pinterest returns no images
     return build_image_url(query)
 
 
-def resolve_project(project: dict) -> dict:
+def resolve_project(project: dict, source_mode: str = "pinterest", image_size: Optional[str] = None) -> dict:
     slides = project.get('slides', [])
     if not isinstance(slides, list):
         raise ValueError("project.slides must be a list")
 
-    slug = project.get('slug', 'post')
     default_query = project.get('defaultImageQuery')
     pinterest_client = PinterestClient()
 
@@ -182,9 +247,18 @@ def resolve_project(project: dict) -> dict:
         if not query:
             raise ValueError(f"Slide {idx} is missing imagePath, imageUrl, and imageQuery")
 
-        resolved_url = resolve_query_image(query, pinterest_client)
-        slide['imageUrl'] = resolved_url
-        slide['resolvedFromQuery'] = query
+        if source_mode in GPT_IMAGE_MODELS:
+            resolved_path = resolve_query_image_gpt(query, source_mode, size=image_size)
+            if not resolved_path:
+                raise RuntimeError(f"Slide {idx} GPT image generation failed")
+            slide['imagePath'] = resolved_path
+            slide['resolvedFromQuery'] = query
+            slide['resolvedBy'] = GPT_IMAGE_MODELS[source_mode]
+        else:
+            resolved_url = resolve_query_image(query, pinterest_client, source_mode=source_mode)
+            slide['imageUrl'] = resolved_url
+            slide['resolvedFromQuery'] = query
+            slide['resolvedBy'] = source_mode
 
     return project
 
@@ -195,13 +269,15 @@ def parse_local_file(path: str) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Resolve imageQuery fields into imageUrl values.')
+    parser = argparse.ArgumentParser(description='Resolve imageQuery fields into imageUrl or imagePath values.')
     parser.add_argument('project', help='Project JSON file')
     parser.add_argument('--output', help='Write resolved project JSON to this path')
+    parser.add_argument('--source', default='pinterest', choices=['pinterest', 'unsplash', 'openai', 'kie'], help='How to resolve imageQuery values')
+    parser.add_argument('--image-size', default=None, help='Image size hint for GPT image generation, for example 1024x1536 or 1536x1024')
     args = parser.parse_args()
 
     project = parse_local_file(args.project)
-    resolved = resolve_project(project)
+    resolved = resolve_project(project, source_mode=args.source, image_size=args.image_size)
     rendered = json.dumps(resolved, ensure_ascii=False, indent=2)
 
     if args.output:

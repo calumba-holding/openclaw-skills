@@ -1,11 +1,25 @@
 ---
-name: slideshow-video
-description: Generate TikTok-style slideshow assets and MP4 exports from local images, remote image URLs, or lightweight image queries plus structured copy. Use when creating 9:16 slideshow posts, turning hooks plus image sources into PNG slides, exporting those slides into a short vertical video, or building a low-cost short-form content pipeline with reusable JSON configs. Also use when producing shorts with sentence-level voice sync, tighter TikTok-style captions, or per-line audio aligned to specific slides.
+name: OpenClaw SlideShow Video
+description: |
+  Generate SEO/GEO-friendly TikTok-style slideshow videos with AI-powered visuals.
+  Combines GPT Image 2 for stunning image generation, automated caption creation,
+  and multi-language narration. Transform any content into engaging short-form
+  videos optimized for discoverability by AI search engines (ChatGPT, Perplexity,
+  Google AI Overviews). Use when creating 9:16 slideshow posts, turning hooks
+  plus image sources into PNG slides, exporting those slides into a short vertical
+  video, or building a low-cost short-form content pipeline with reusable JSON
+  configs. Also use when producing shorts with sentence-level voice sync, tighter
+  TikTok-style captions, or per-line audio aligned to specific slides.
 ---
 
 # Slideshow Video
 
 Generate a repeatable short-form slideshow pipeline from local images, remote image URLs, or lightweight image queries and a JSON project file. This skill covers query resolution, PNG slide generation, MP4 export, optional background music, remote image caching, sentence-level sync exports, and a simple project wrapper that saves output metadata for downstream scheduling.
+
+Image queries can resolve in three ways:
+- stock-image lookup via Pinterest or Unsplash
+- native GPT image generation via `openai/gpt-image-2`
+- Kie-hosted GPT image generation via `kie/gpt-image-2-text-to-image`
 
 ## Quick start
 
@@ -28,7 +42,7 @@ python3 ~/.openclaw/skills/slideshow-video/scripts/batch_pipeline.py /path/to/pr
 
 ## Core resources
 
-- `scripts/resolve_images.py`: resolve `imageQuery` values into usable remote image URLs
+- `scripts/resolve_images.py`: resolve `imageQuery` values into usable remote image URLs or generated local image files
 - `scripts/generate_slides.py`: generate 1080x1920 PNG slides from local images, remote image URLs, and text blocks
 - `scripts/export_mp4.py`: convert ordered slide PNGs into an H.264 vertical MP4, with optional background music
 - `scripts/export_sync_mp4.py`: export a voice-synced MP4 from slide PNGs plus per-line audio files, holding each slide for that line's measured duration
@@ -105,7 +119,25 @@ Install ffmpeg for MP4 export if it is not already present.
 
 Remote images are downloaded and cached automatically when you use `imageUrl` or when `imagePath` is itself an `http/https` URL.
 
-When a slide only has `imageQuery`, the pipeline resolves it into a remote image URL first, writes `resolved-project.json`, then continues normally. Review resolved images before posting because query-based sourcing is convenience-first, not quality-safe.
+When a slide only has `imageQuery`, the pipeline can resolve it into either a remote image URL or a generated local image file first, writes `resolved-project.json`, then continues normally. Review resolved images before posting because query-based sourcing is convenience-first, not quality-safe, and model-generated imagery should also be checked for brand fit.
+
+## GPT Image 2 support
+
+Use `imageQuery` with either `--image-source openai` or `--image-source kie` when you want the slideshow pipeline to generate slide art instead of searching the web.
+
+Examples:
+
+```bash
+python3 ~/.openclaw/skills/slideshow-video/scripts/resolve_images.py project.json --source openai --image-size 1024x1536 --output build/resolved-project.json
+python3 ~/.openclaw/skills/slideshow-video/scripts/resolve_images.py project.json --source kie --image-size 1024x1536 --output build/resolved-project.json
+python3 ~/.openclaw/skills/slideshow-video/scripts/run_pipeline.py project.json --image-source kie --image-size 1024x1536 --output-root build --overwrite
+```
+
+Notes:
+- `openai` maps to `openai/gpt-image-2`
+- `kie` maps to `kie/gpt-image-2-text-to-image`
+- GPT image resolution requires an active OpenClaw session runtime so `resolve_images.py` can call the `image_generate` tool through the local session API
+- generated slide assets are written into the resolved project as `imagePath` values
 
 ## Good defaults
 

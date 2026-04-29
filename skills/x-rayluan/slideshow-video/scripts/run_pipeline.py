@@ -20,6 +20,8 @@ def main():
     parser.add_argument('project', help='Pipeline JSON file')
     parser.add_argument('--output-root', default='build', help='Root output directory')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite MP4 output if it exists')
+    parser.add_argument('--image-source', default='pinterest', choices=['pinterest', 'unsplash', 'openai', 'kie'], help='How to resolve imageQuery values')
+    parser.add_argument('--image-size', default=None, help='Image size hint for GPT image generation, for example 1024x1536 or 1536x1024')
     args = parser.parse_args()
 
     project_path = Path(args.project).expanduser().resolve()
@@ -34,13 +36,18 @@ def main():
     resolved_project_path = output_root / 'resolved-project.json'
     video_path = output_root / f'{slug}.mp4'
 
-    run([
+    resolve_cmd = [
         'python3',
         str(RESOLVE),
         str(project_path),
         '--output',
         str(resolved_project_path),
-    ])
+        '--source',
+        str(args.image_source),
+    ]
+    if args.image_size:
+        resolve_cmd.extend(['--image-size', str(args.image_size)])
+    run(resolve_cmd)
 
     with open(resolved_project_path, 'r', encoding='utf-8') as f:
         project = json.load(f)
@@ -88,6 +95,8 @@ def main():
         'audio': project.get('audio'),
         'caption': project.get('caption'),
         'hashtags': project.get('hashtags', []),
+        'imageSource': args.image_source,
+        'imageSize': args.image_size,
     }
     with open(output_root / 'summary.json', 'w', encoding='utf-8') as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)

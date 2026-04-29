@@ -85,6 +85,13 @@ Resolve image queries first:
 python3 ~/.openclaw/skills/slideshow-video/scripts/resolve_images.py project.json --output build/resolved-project.json
 ```
 
+Resolve image queries with GPT Image 2 instead of stock-image search:
+
+```bash
+python3 ~/.openclaw/skills/slideshow-video/scripts/resolve_images.py project.json --source openai --image-size 1024x1536 --output build/resolved-project.json
+python3 ~/.openclaw/skills/slideshow-video/scripts/resolve_images.py project.json --source kie --image-size 1024x1536 --output build/resolved-project.json
+```
+
 Generate slides only:
 
 ```bash
@@ -107,6 +114,13 @@ Run the full pipeline for one project:
 
 ```bash
 python3 ~/.openclaw/skills/slideshow-video/scripts/run_pipeline.py project.json --output-root build --overwrite
+```
+
+Run the full pipeline while generating slide art with GPT Image 2:
+
+```bash
+python3 ~/.openclaw/skills/slideshow-video/scripts/run_pipeline.py project.json --image-source openai --image-size 1024x1536 --output-root build --overwrite
+python3 ~/.openclaw/skills/slideshow-video/scripts/run_pipeline.py project.json --image-source kie --image-size 1024x1536 --output-root build --overwrite
 ```
 
 Run a directory in batch:
@@ -135,6 +149,7 @@ Batch mode prints a JSON report with per-project status (`ok`/`failed`).
 ## Practical caveats
 
 - Query-based image sourcing is convenience-first, not brand-safe by default. Review image choices before posting.
+- GPT-generated images are better for style control, but still review text rendering, logos, and brand consistency before publishing.
 - Treat Pinterest, TikTok, and third-party hosted images as potential copyright risk. Validate licensing before commercial scale use.
 - Do not rely on automation myths for account safety. Draft-based posting may reduce operational risk, but it is not a guarantee.
 - Measure hooks and layouts with actual retention data. The production pipeline is only half the game.
