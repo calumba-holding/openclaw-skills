@@ -3,9 +3,15 @@
   "slug": "dlazy-video-scenes",
   "displayName": "Dlazy Video Scenes",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776847267790,
-    "commit": "https://github.com/openclaw/skills/commit/2102ce1b19fcfb7cad8e5628f94f8f68dd310a8d"
+    "version": "1.0.5",
+    "publishedAt": 1777430133268,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776847267790,
+      "commit": "https://github.com/openclaw/skills/commit/2102ce1b19fcfb7cad8e5628f94f8f68dd310a8d"
+    }
+  ]
 }
