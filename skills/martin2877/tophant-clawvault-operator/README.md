@@ -1,6 +1,6 @@
 # ClawVault Operator Skill
 
-Day-to-day operations skill for ClawVault — start/stop services, manage configuration, apply vault presets, scan text/files, and schedule local filesystem security scans directly from OpenClaw agents.
+Day-to-day operations skill for ClawVault — start/stop services, manage configuration, apply vault presets, and scan text/files directly from OpenClaw agents.
 
 **Complements** [`tophant-clawvault-installer`](https://clawhub.ai/Martin2877/tophant-clawvault-installer) (install/health/test/uninstall) with the full operational surface of ClawVault.
 
@@ -22,10 +22,10 @@ This creates the `~/.clawvault-env/` venv that the operator skill depends on.
 **From ClawHub (recommended):**
 
 ```bash
-openclaw skills install tophant-clawvault-operator
+openclaw skills install tophant-clawvault-operator --version=0.2.5 --force
 
 # Or via clawhub CLI
-clawhub install tophant-clawvault-operator
+clawhub install tophant-clawvault-operator --version 0.2.5
 ```
 
 **ClawHub:** https://clawhub.ai/Martin2877/tophant-clawvault-operator
@@ -65,12 +65,10 @@ openclaw restart
 |---|---|
 | **Service lifecycle** | `start`, `stop`, `status` |
 | **Threat scanning** | `scan`, `scan-file` |
-| **Configuration** | `config-show`, `config-get`, `config-set`, `config-append`, `config-remove` |
-| **Vault presets** | `vault-list`, `vault-show`, `vault-apply`, `vault-create`, `vault-update`, `vault-delete`, `vault-active` |
-| **Local filesystem scans** | `local-scan`, `scan-schedule-add`, `scan-schedule-list`, `scan-schedule-remove`, `scan-history` |
-| **Per-agent config** | `agent-list`, `agent-set`, `agent-remove` |
+| **Configuration** | `config-show`, `config-get`, `config-set` |
+| **Vault presets** | `vault-list`, `vault-show`, `vault-apply` |
 
-25 commands total. See [SKILL.md](./SKILL.md) for complete reference with examples.
+11 commands total. See [SKILL.md](./SKILL.md) for complete reference with examples.
 
 ## Vault Presets
 
@@ -88,7 +86,7 @@ Each preset bundles detection toggles + guard mode + file-monitor patterns + enf
 
 ## Hot-patching
 
-`config-set`, `config-append`, `config-remove`, and `vault-apply` detect a running dashboard and hot-patch the live configuration via the REST API — no restart required. When the dashboard is not running, they fall back to editing `~/.ClawVault/config.yaml` directly.
+`config-set` and `vault-apply` detect a running dashboard and hot-patch the live configuration via the REST API — no restart required. When the dashboard is not running, they fall back to editing `~/.ClawVault/config.yaml` directly.
 
 ## Requirements
 
