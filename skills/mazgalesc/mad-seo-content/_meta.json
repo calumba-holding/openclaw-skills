@@ -1,11 +1,17 @@
 {
   "owner": "mazgalesc",
   "slug": "mad-seo-content",
-  "displayName": "MAD SEO CONTENT 1.0",
+  "displayName": "M.A.D. SEO CONTENT",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1776940203937,
-    "commit": "https://github.com/openclaw/skills/commit/ef7503492ba0668ed86726b9dd382ac65f0db691"
+    "version": "1.2.1",
+    "publishedAt": 1777245728500,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1776940203937,
+      "commit": "https://github.com/openclaw/skills/commit/ef7503492ba0668ed86726b9dd382ac65f0db691"
+    }
+  ]
 }

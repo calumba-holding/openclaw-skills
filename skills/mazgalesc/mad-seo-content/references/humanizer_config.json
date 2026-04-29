@@ -3,7 +3,7 @@
   "detection_patterns": [
     "repetitive_sentence_structure",
     "rule_of_three_lists",
-    "lack_of_burstiness",
+    "repetitive_cadence",
     "robotic_transitions",
     "sycophantic_intros",
     "significance_inflation",

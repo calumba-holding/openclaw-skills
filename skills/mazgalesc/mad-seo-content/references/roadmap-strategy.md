@@ -1,6 +1,6 @@
 # Mad SEO: 12-Month Strategic Roadmap Logic
 
-This reference governs the autonomous generation of long-term SEO growth plans. It uses a phased approach to build authority and displace competitors.
+This reference governs the autonomous generation of long-term SEO growth plans. It uses a phased approach to build authority and displace competitors, integrated with WordPress category taxonomies.
 
 ## 1. The Priority Formula
 Strategic prioritization is based on the following formula:
@@ -15,31 +15,31 @@ Strategic prioritization is based on the following formula:
 ### Phase 1: Foundations (Months 1-3)
 **Objective**: Establish a footprint and secure early traffic.
 - **Focus**: Long-tail keywords, Low competition (Difficulty < 30).
-- **Tasks**:
-    - 4x Informational blog posts/month.
-    - Optimization of 2 core service/product pages.
-    - Local NAP Consistency audit (if applicable).
-    - Basic internal linking setup.
+- **Strategy**: 
+    - Focus on **TOFU (Awareness)** content.
+    - Map to general WordPress categories (e.g., "Guides", "News").
+    - Establish Topical Authority by covering basic concepts.
 
 ### Phase 2: Authority Building (Months 4-6)
 **Objective**: Command topical authority in core clusters.
 - **Focus**: Mid-difficulty keywords (Difficulty 30-60).
-- **Tasks**:
-    - 4x Cluster blog posts/month linking to Pillars.
-    - 1x "Skyscraper" Pillar content (2500+ words) per month.
-    - Technical health monitoring (Core Web Vitals).
-    - Advanced Schema implementation.
+- **Strategy**:
+    - Shift towards **MOFU (Consideration)** content.
+    - Map to technical/specific WordPress categories (e.g., "SEO", "Plugins").
+    - Create "Skyscraper" Pillar content (2500+ words) to anchor clusters.
 
 ### Phase 3: Competitive Acquisition (Months 7-12)
 **Objective**: Displace market leaders for high-volume terms.
 - **Focus**: High difficulty keywords (Difficulty 60+).
-- **Tasks**:
-    - Targeted "Thin Spot" takeover articles based on competitor gaps.
-    - Strategic external authority building (Guest posts/PR).
-    - Content Refresh cycles for Phase 1 content.
+- **Strategy**:
+    - Increase **BOFU (Decision)** content ratio.
+    - Map to conversion categories (e.g., "Case Studies", "Tools").
+    - Targeted "Thin Spot" takeover articles based on competitor gaps found via WordPress content audits.
 
-## 3. Intent Mapping
-- **Informational**: "How to...", "What is...", "Tips for..."
-- **Commercial**: "Best [service]", "[Service] price", "Hire [service]"
-- **Transactional**: "Buy [product]", "Sign up for [service]"
-- **Local**: "[Service] in [Location]", "[Service] near me"
+## 3. Publication Frequency
+The roadmap does not assume a fixed number of posts. It adapts to the user's configured **`publication_days`**:
+- **1 Day/Week**: ~52 posts/year.
+- **3 Days/Week**: ~156 posts/year.
+- **5 Days/Week**: ~260 posts/year.
+
+The 50/30/20 Funnel Rule remains the guiding principle for distribution regardless of frequency.

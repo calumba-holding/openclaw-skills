@@ -1,23 +1,23 @@
 {
-  "name": "MAD SEO CONTENT 1.0",
-  "version": "1.0.2",
-  "description": "The ultimate autonomous SEO/GEO engine for OpenClaw. Features the Lean 11-Tool architecture, unified analytics, and native Human-GEO burstiness injection.",
+  "name": "M.A.D. SEO CONTENT",
+  "version": "1.2.1",
+  "description": "The M.A.D. (Multimodal Attribution & Discovery) engine for autonomous SEO. Features editorial variety optimization, unified analytics, and site-wide entity mapping.",
   "author": "Mad Labs",
   "entry": "index.js",
   "permissions": [
     {
       "type": "fs.write",
-      "path": "/root/.openclaw/shared/",
-      "reason": "Required for persistent PROJECT_STRATEGY.json, entity maps, SQLite calendar, and cross-agent audit logs on the VPS."
+      "path": "/root/.openclaw/shared/mad_seo/",
+      "reason": "Restricted path for project strategy and SQLite calendar to minimize exposure to other skills."
     },
     {
       "type": "fs.read",
-      "path": "/root/.openclaw/shared/",
-      "reason": "Required to read the existing strategy and entity context before generating new content."
+      "path": "/root/.openclaw/shared/mad_seo/",
+      "reason": "Restricted path to read project context and authorized entity maps."
     }
   ],
   "triggers": [
-    "Onboard me to Mad SEO",
+    "Onboard me to M.A.D. SEO CONTENT",
     "Omnichannel research for [Topic]",
     "Plan my strategy",
     "Draft an article",
@@ -27,7 +27,8 @@
     "Inject internal links",
     "Repurpose content",
     "Analyze share of voice",
-    "Run analytics suite"
+    "Run analytics suite",
+    "Create a WordPress draft"
   ],
   "dependencies": {
     "skills": [

@@ -14,16 +14,23 @@ exports.tools = {
   async onboard() {
     return {
       success: true,
-      instructions: `Run the MAD SEO CONTENT 1.0 ONBOARDING Workflow:
-      1. **Introduction**: Introduce yourself as the Lean 11-Tool Omnichannel SEO Director.
-      2. **Dependency Check**: Inform the user you are verifying 'scrapling-official', 'api-gateway', and 'agent-browser'.
-      3. **Data Collection (Crucial)**: Ask the user to provide the following 4 pieces of information to set up the workspace:
-         - **Target Market & Language** (e.g., Italy/Italian)
-         - **Brand Name & Core Service** (e.g., 'Mad Labs, Web Design')
-         - **Google Search Console & GA4 Property URLs** (Required for the Analytics Suite)
-         - **Sitemap XML URL** (Required for Entity Mapping)
-      4. **State Initialization**: Tell the user that once they provide this info, you will save it to '/shared/PROJECT_STRATEGY.json' and initialize the '/shared/mad_seo.db' SQLite calendar.
-      5. **First Action**: Ask them to provide the data to begin!`,
+      instructions: `Run the MAD SEO CONTENT 1.2.0 ONBOARDING Workflow:
+      1. **Introduction**: Introduce yourself as the Omnichannel SEO Director (Universal WP Edition).
+      2. **Dependency Check**: Verify 'scrapling-official', 'api-gateway', and 'agent-browser'.
+      3. **Data Collection**: Ask the user for the following configuration:
+         - **Target Language** (e.g., "it" for Italian, "en" for English).
+         - **Brand Name & Core Service**.
+         - **Output Format**: "html" (preferred for WP) or "markdown".
+         - **WordPress Config**: URL, User, and Application Password.
+         - **SEO Plugin**: "rank_math", "yoast", or "none".
+           *IMPORTANT*: If using Rank Math, inform the user they MUST install 'Rank Math API Manager' from GitHub: https://github.com/Devora-AS/rank-math-api-manager
+         - **WP Categories**: A mapping of IDs to names (e.g., {5: "Guide", 10: "SEO"}).
+         - **Publication Days**: e.g., ["mon", "wed", "sat"].
+      4. **State Initialization**: Save to './shared/mad_seo/PROJECT_STRATEGY.json' and init the SQLite DB.
+      5. **Security & Trust Model**: 
+         - Explicitly inform the user that WordPress credentials will be stored in a sub-folder of the shared workspace.
+         - **Transparency**: Disclose that 'api-gateway' handles GSC/GA4, while 'agent-browser' and 'scrapling' perform outbound network requests to public SEO/Social endpoints. No telemetry or secondary storage is used.
+         - **Recommendation**: Advise the user to only run this skill alongside trusted, verified dependencies.`,
     };
   },
 
@@ -33,11 +40,11 @@ exports.tools = {
   async research_strategy({ topic }) {
     return {
       success: true,
-      instructions: `Conduct a Content 1.0 Omnichannel strategic analysis for "${topic}".
-      1. **SERP Intelligence**: Identify Skyscraper 3.0 content gaps in the Top 10.
-      2. **Social Discovery**: Use 'scrapling' to analyze Reddit/Discourse for real-world pain points and unique terminology.
-      3. **Entity Grounding**: Define the Knowledge Graph Category and Primary Entity relationship.
-      4. **Social Proof Injection**: Suggest 3-5 community-sourced "Experience Markers" for HCU compliance.`,
+      instructions: `Conduct an Omnichannel strategic analysis for "${topic}".
+      1. **Internal Context**: Query existing posts from WordPress (or the local ENTITY_MAP.json) to see what has already been covered on this topic.
+      2. **Language Focus**: Use the configured 'language' parameter.
+      3. **SERP Intelligence**: Identify Skyscraper 3.0 content gaps in the Top 10.
+      4. **Social Discovery**: Use 'scrapling' to analyze platforms for real-world pain points.`,
       reference: refs.engine_strategy,
       local_benchmarks: refs.local_compliance
     };
@@ -49,11 +56,12 @@ exports.tools = {
   async plan_strategy({ niche, location }) {
     return {
       success: true,
-      instructions: `Execute the Strategy Planning Protocol for [${niche}] in [${location}]:
-      1. **Predictive Roadmap**: Generate a high-level 12-month strategy identifying "Quick Win" clusters. Save to '/root/.openclaw/shared/PROJECT_STRATEGY.json'.
-      2. **Topic Generation**: Extract 12 specific titles for the first 4-week rollout based on the roadmap.
-      3. **Funnel Alignment**: Classify each title into TOFU (Awareness), MOFU (Consideration), or BOFU (Decision).
-      4. **Stateful Tracking**: Connect to SQLite DB at '/root/.openclaw/shared/mad_seo.db' and INSERT these 12 titles into the 'content_calendar' table.`,
+      instructions: `Execute the Full-Year Strategy Planning Protocol for [${niche}] in [${location}]:
+      1. **Inventory Audit**: Fetch existing post titles/slugs from WordPress to prevent duplicates.
+      2. **12-Month Calendar**: Generate a complete editorial calendar for the next 52 weeks (respecting 'publication_days').
+      3. **Strategic Variety**: Ensure a balanced mix of TOFU/MOFU/BOFU, mapping each stage to the user's specific WordPress Categories (e.g., TOFU -> "Guide").
+      4. **WP Category Mapping**: Assign every single planned post to the correct 'wp_category_id' based on the stage mapping.
+      5. **SQL Batch Insert**: Insert all ~150+ planned titles and dates into the SQLite 'content_calendar' table.`,
       roadmap_logic: refs.roadmap_strategy,
       funnel_strategy: refs.funnel_strategy,
       db_schema: refs.db_schema
@@ -68,10 +76,11 @@ exports.tools = {
     return {
       success: true,
       instructions: `Draft, Humanize, and Title the article for "${topic}" targeting "${target_keyword}".
-      1. **Writing**: Draft a 1,500-3,000 word pillar post. Include a "Suggested Visual Evidence" table at the end.
-      2. **Humanization Pass**: Natively apply the Human-GEO Framework (referenced in '${configPath}'). Strip all 'Tier 1' AI-giveaway terms and force sentence burstiness (<10 and >20 words).
-      3. **Headlines**: Generate 3 high-CTR, human-sounding headline options at the top of the file using 'refs.title_formulas'.
-      4. **Output**: Write the final, humanized draft to '/shared/content/[topic].md'.`,
+      1. **Output Format**: Generate content in the configured 'output_format' (HTML or Markdown). If HTML, use semantic tags (h2, p, figure, etc.).
+      2. **Language**: Use the configured 'language' for all text generation.
+      3. **Writing**: Draft a 1,500-3,000 word pillar post.
+      4. **Humanization Pass**: Natively apply the Human-GEO Framework (referenced in '${configPath}').
+      5. **Output**: Write the final draft to './shared/mad_seo/content/[topic].[ext]'.`,
       quality_standards: refs.writer_quality,
       structure_templates: refs.structure_templates,
       title_library: refs.title_formulas,
@@ -101,8 +110,8 @@ exports.tools = {
     return {
       success: true,
       instructions: `Analyze ${content_path} and generate a Content 1.0 GEO-Optimized "${type}" Schema.
-      1. Use 'schema_architect' to ensure proper "Relationship Anchoring".
-      2. Inject Knowledge Graph IDs (Wikidata) where applicable.`,
+      1. **SEO Plugin Integration**: If a plugin (Rank Math/Yoast) is configured, prepare the API payload for the respective meta update endpoint instead of just JSON-LD.
+      2. **Entity Grounding**: Inject Knowledge Graph IDs (Wikidata) where applicable.`,
       schema_logic: refs.schema_architect
     };
   },
@@ -114,9 +123,9 @@ exports.tools = {
     return {
       success: true,
       instructions: `Run a Content 1.0 GLOBAL SITE INTELLIGENCE AUDIT for: ${sitemap_url}.
-      1. **Global Entity Map**: Build '/root/.openclaw/shared/ENTITY_MAP.json' containing all site entities and their relationships.
-      2. **Performance Overlay**: Attach GSC performance metrics to each entity node.
-      3. **Master Prescription**: Write individualized optimization reports to '/root/.openclaw/shared/audits/'.`,
+      1. **Global Entity Map**: Build the entity map file containing all site entities and their relationships.
+      2. **GSC Correlation**: Correlate sitemap URLs with GSC performance metrics.
+      3. **Master Prescription**: Write individualized optimization reports to the 'audits' folder in the './shared/mad_seo/' directory.`,
       audit_standards: refs.writer_quality
     };
   },
@@ -124,13 +133,16 @@ exports.tools = {
   /**
    * Automatically finds older, high-authority posts and injects contextual links to a newly published post.
    */
-  async inject_internal_links({ new_post_path, new_post_topic }) {
+  async inject_internal_links({ new_post_path, new_post_topic, dry_run = false }) {
     return {
       success: true,
       instructions: `Run the Content 1.0 Internal Link Injection sequence for "${new_post_topic}":
-      1. **Query Entity Map**: Use '/shared/ENTITY_MAP.json' to find 3 semantically related, existing high-authority posts.
-      2. **Contextual Injection**: Open the Markdown files of those 3 older posts.
-      3. **Insertion**: Naturally weave a new sentence into each older post that links to ${new_post_path}.`
+      1. **Analysis**: Use './shared/mad_seo/ENTITY_MAP.json' to find 3 semantically related, existing high-authority posts.
+      2. **Drafting**: Prepare the new contextual sentences for each post.
+      3. **Review**: Present the proposed changes (Diff) to the user.
+      4. **Safety Verification**: 
+         - If 'dry_run' is true, ONLY output the proposed changes. Do not edit files.
+         - If 'dry_run' is false, you MUST wait for explicit user confirmation of the diff before writing to the markdown files.`
     };
   },
 
@@ -144,7 +156,7 @@ exports.tools = {
       1. **Twitter/X**: Extract 3 core insights to create an engaging Thread.
       2. **LinkedIn**: Rewrite the introduction into a high-authority narrative post.
       3. **Newsletter**: Draft a 150-word teaser linking to the main article.
-      4. Save outputs to '/shared/distribution/' and update the SQLite 'content_calendar' status to 'Repurposed'.`,
+      4. Save outputs to './shared/mad_seo/distribution/' and update the SQLite 'content_calendar' status to 'Repurposed'.`,
       funnel_strategy: refs.funnel_strategy
     };
   },
@@ -174,6 +186,27 @@ exports.tools = {
       2. **If 'decay'**: Identify URLs where traffic dropped >20% YoY. Mark them in the SQLite 'content_calendar' for a 'Refresh'.
       3. **If 'cannibalization'**: Check if multiple URLs receive impressions for "${target_keyword}". Suggest 301 redirects or canonical tags for the loser.`
     };
+  },
+  /**
+   * Creates a WordPress draft via REST API, uploads media, and sets SEO meta.
+   */
+  async create_wp_draft({ title, content_file, category_id, featured_image_path }) {
+    return {
+      success: true,
+      instructions: `Execute the WordPress Publishing Protocol for "${title}":
+      1. **Media Upload**: Upload the image from '${featured_image_path}' to the WP Media Library and capture the 'attachment_id'.
+      2. **Post Creation**: Create a new 'draft' post with the HTML content from '${content_file}', assigned to category ID ${category_id}.
+      3. **SEO Meta Update**: 
+         - If **Rank Math**: Send meta update to '/wp-json/rank-math-api/v1/update-meta'.
+         - If **Yoast**: Update meta fields via the standard REST API post update.
+      4. **Verification**: Confirm the post ID and provide the preview URL.`,
+      wp_auth_logic: "Basic Auth (User + Application Password)",
+      rest_endpoints: {
+        posts: "/wp-json/wp/v2/posts",
+        media: "/wp-json/wp/v2/media",
+        rank_math: "/wp-json/rank-math-api/v1/update-meta"
+      }
+    };
   }
 };
 
@@ -185,7 +218,8 @@ exports.draft_article.args = { topic: 'string', target_keyword: 'string' };
 exports.audit_eeat.args = { file_path: 'string', author_bio: 'string?' };
 exports.generate_schema.args = { content_path: 'string', type: 'string' };
 exports.site_wide_intelligence.args = { sitemap_url: 'string', gsc_property: 'string' };
-exports.inject_internal_links.args = { new_post_path: 'string', new_post_topic: 'string' };
+exports.inject_internal_links.args = { new_post_path: 'string', new_post_topic: 'string', dry_run: 'boolean?' };
 exports.repurpose_content.args = { file_path: 'string' };
 exports.analyze_share_of_voice.args = { domain: 'string', topics: 'string[]' };
 exports.analytics_suite.args = { audit_type: 'string', site_url: 'string', target_keyword: 'string?' };
+exports.create_wp_draft.args = { title: 'string', content_file: 'string', category_id: 'number', featured_image_path: 'string' };
