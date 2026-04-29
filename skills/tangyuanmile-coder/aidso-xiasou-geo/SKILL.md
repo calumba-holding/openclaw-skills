@@ -90,7 +90,8 @@ AIDSO GEO 能力依赖用户已绑定的 API key。
 
 | 方法 | 路径 | 说明 | 详细文档 |
 |------|------|------|----------|
-| GET | `/openapi/skills/band_report/md?brandName={brandName` | GEO诊断 | [references/diagnosis.md](references/diagnosis.md) |
+| POST | `/openapi/skills/get_questions` | GEO诊断 | [references/diagnosis.md](references/diagnosis.md) |
+| POST | `/openapi/skills/band_report/md/v2` | GEO诊断 | [references/diagnosis.md](references/diagnosis.md) |
 
 ### 品牌知识库
 
