@@ -3,9 +3,15 @@
   "slug": "logo-branding-system",
   "displayName": "Logo Branding System",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776931316340,
-    "commit": "https://github.com/openclaw/skills/commit/ad4e51d10f6c2442a79fca68397e5dd2959c340d"
+    "version": "1.0.5",
+    "publishedAt": 1777430160050,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776931316340,
+      "commit": "https://github.com/openclaw/skills/commit/ad4e51d10f6c2442a79fca68397e5dd2959c340d"
+    }
+  ]
 }
