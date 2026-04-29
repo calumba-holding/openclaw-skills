@@ -1,0 +1,11 @@
+{
+  "owner": "poteshniy",
+  "slug": "agenttrust-scanner",
+  "displayName": "AgentTrust — Security Scanner for AI Skills",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777116509641,
+    "commit": null
+  },
+  "history": []
+}
