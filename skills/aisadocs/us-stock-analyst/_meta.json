@@ -3,9 +3,15 @@
   "slug": "us-stock-analyst",
   "displayName": "Us Stock Analyst",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776877851522,
-    "commit": "https://github.com/openclaw/skills/commit/22069215ce25c257a4d5967ccd735a899e261221"
+    "version": "1.0.1",
+    "publishedAt": 1777407149015,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776877851522,
+      "commit": "https://github.com/openclaw/skills/commit/22069215ce25c257a4d5967ccd735a899e261221"
+    }
+  ]
 }
