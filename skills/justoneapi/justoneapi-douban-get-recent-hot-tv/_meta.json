@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-douban-get-recent-hot-tv",
+  "displayName": "Douban Movie Recent Hot Tv API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777011768588,
+    "commit": null
+  },
+  "history": []
+}
