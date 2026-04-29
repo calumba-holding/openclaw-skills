@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-bilibili-get-video-danmu",
+  "displayName": "Bilibili Video Danmaku API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776960937479,
+    "commit": null
+  },
+  "history": []
+}
