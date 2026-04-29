@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "finrl-meta-envs",
-  "displayName": "finrl-meta-envs",
+  "displayName": "Finrl Meta Envs",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776892248506,
-    "commit": "https://github.com/openclaw/skills/commit/87dd0a0eab53e7895034a9f40e77681a3de1c62f"
+    "version": "0.3.3",
+    "publishedAt": 1776954393171,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776892248506,
+      "commit": "https://github.com/openclaw/skills/commit/87dd0a0eab53e7895034a9f40e77681a3de1c62f"
+    }
+  ]
 }
