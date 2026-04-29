@@ -1,0 +1,20 @@
+{
+  "name": "Cross-border Customer Journey Mapper",
+  "slug": "cb-customer-journey-mapper",
+  "version": "1.0.0",
+  "description": "A structured method for mapping awareness-to-retention journeys for overseas customers, including cultural trust barriers and local channel touchpoints.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["customer journey", "funnel", "mapping", "international", "CX", "marketing"],
+  "trigger_keywords": [
+    "overseas customer journey",
+    "international funnel map",
+    "cross-border buyer journey",
+    "foreign market trust barriers",
+    "global customer experience"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
