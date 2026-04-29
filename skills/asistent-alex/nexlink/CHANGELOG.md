@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-04-28
+
+### Added
+
+- **Exchange contacts module** — full CRUD + search via EWS
+  - `nexlink contacts list|get|create|update|delete|search`
+  - Server-side search with Q() filter (display_name, given_name, surname, company_name, email)
+  - Safe delete via `move_to_trash()`
+- **Nextcloud contacts module** — CardDAV contacts with auto-discovered principal
+  - `nexlink contacts addressbooks|list|get|create|update|delete|search --source nextcloud`
+  - vCard ↔ dict conversion
+  - Automatic DAV principal discovery (handles GUID-based principals)
+  - Cached principal resolution (avoids PROPFIND per call)
+- **Integration tests** — 11 Exchange live + 12 Nextcloud live tests
+
+### Fixed
+
+- **`_get_contacts_folder`** was returning `account.contacts.root` (MailFolder) instead of `account.contacts`
+- **`ContactPhoneNumbers` removed in exchangelib 5.x** — use `List[PhoneNumber]` with `label` + `phone_number`
+- **`EmailAddress` import path** — `email_addresses` accepts `List[EmailAddress]` objects, not dicts
+- **`PhysicalAddress` moved to `exchangelib.indexed_properties`** — import from `exchangelib.properties` raised `ImportError`
+- **Nextcloud DAV principal mismatch** — `_dav_base_path()` used login username but Nextcloud may use a GUID; now auto-discovers via PROPFIND
+
+## [0.11.0] - 2026-04-25
+
+### Added
+
+- **OWNER_EMAIL config variable** — optional env var for notification recipient
+  - Priority chain: `--to` flag > `OWNER_EMAIL` > `account.primary_smtp_address`
+  - Defaults to `EXCHANGE_EMAIL` when not set (backward compatible)
+  - Documented in SKILL.md env vars list
+- **Integration tests for OWNER_EMAIL fallback** — 3 new tests in `TestOwnerEmailFallback`
+  - `test_reminder_uses_owner_email` — verifies OWNER_EMAIL is used as recipient
+  - `test_reminder_falls_back_to_account_email` — verifies fallback to Exchange account
+  - `test_reminder_explicit_to_overrides_owner_email` — verifies `--to` flag priority
+- **Integration tests for Exchange sync operations** — 15 new tests covering sync, error handling, and reminder flows
+
+### Changed
+
+- `cmd_reminders` now resolves recipient via `get_connection_config()` instead of `account.primary_smtp_address` directly
+
 ## [0.9.0] - 2026-04-22
 
 ### Changed

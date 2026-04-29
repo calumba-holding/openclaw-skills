@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NexLink Exchange Module - Main entry point.
+NextLink Exchange Module - Main entry point.
 """
 
 import sys

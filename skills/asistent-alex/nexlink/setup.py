@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NexLink - Exchange and Nextcloud assistant for Romanian SMEs.
+NextLink - Exchange and Nextcloud assistant for Romanian SMEs.
 """
 
 from setuptools import setup, find_packages
@@ -9,14 +9,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="nexlink",
-    version="0.10.4",
+    name="nextlink",
+    version="0.13.0",
     author="OpenClaw Community",
     author_email="community@openclaw.ai",
     description="Exchange and Nextcloud assistant for Romanian SMEs",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/asistent-alex/openclaw-nexlink",
+    url="https://github.com/asistent-alex/openclaw-nextlink",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -40,6 +40,6 @@ setup(
         ],
     },
     scripts=[
-        "scripts/nexlink.py",
+        "scripts/nextlink.py",
     ],
 )

@@ -1,5 +1,5 @@
 """
-Logging system for NexLink skill.
+Logging system for NextLink skill.
 Provides configurable logging with file rotation and multiple levels.
 """
 
@@ -74,7 +74,7 @@ class ColoredFormatter(logging.Formatter):
 
 class Logger:
     """
-    Configurable logger for NexLink skill.
+    Configurable logger for NextLink skill.
 
     Environment variables:
     - IMM_LOG_LEVEL: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
