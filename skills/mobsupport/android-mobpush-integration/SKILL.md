@@ -94,7 +94,10 @@ tags:
 
 #### 2-1 生成配置模板文件
 
-**操作**：将 `assets/MobPush_Config_Template.xlsx` 复制到用户项目根目录，命名为 `MobPush_Config.xlsx`
+**操作**：
+1. 执行 `assets/generate_excel_template.py`，生成 `assets/MobPush_Config_Template.xlsx`
+2. 将生成的 `assets/MobPush_Config_Template.xlsx` 复制到 `{path}` 下
+3. 在 `{path}` 下命名为 `MobPush_Config.xlsx`
 
 **告知用户**：
 ```
@@ -468,6 +471,7 @@ mobPushReceiver	MobPushReceiver	注册推送监听
 ```java
 /**
  * import com.mob.pushsdk.MobPushReceiver;
+ * import com.mob.pushsdk.PushReceiver;
  */
 public static void addPushReceiver(MobPushReceiver mobPushReceiver)
 PushReceiver mobPushReceiver = new PushReceiver() {
@@ -793,16 +797,29 @@ FCM {
 
 ### C. 推送消息接收处理
 
-创建自定义 Receiver implements `MobPushReceiver`：
+创建自定义 Receiver implements `PushReceiver`：
 
 ```java
-import com.mob.pushsdk.MobPushReceiver;
 import com.mob.pushsdk.MobPushCustomMessage;
 import com.mob.pushsdk.MobPushNotifyMessage;
 import com.mob.pushsdk.PushReceiver;
 
-public class MyPushReceiver implements MobPushReceiver {
+public class MyPushReceiver implements PushReceiver {
     
+     @Override
+    public void onCommandReceive(int type, Map<String, Object> map) {
+        //接收MobPush内部消息
+        //type   内部消息的类型
+        //map    内部消息的数组
+        map.get(PushReceiver.KEY_CHANNEL);//channel
+        if (type == 1 || type == 2) {
+            //Mob或者厂商 Token改变
+            map.get(PushReceiver.KEY_TOKEN);//token
+        } else if (type == 3) {
+            //三方sdk初始化失败
+            map.get(PushReceiver.KEY_MESSAGE);//失败原因
+        }
+    }
 
     @Override
     public void onCustomMessageReceive(Context context, MobPushCustomMessage message) {

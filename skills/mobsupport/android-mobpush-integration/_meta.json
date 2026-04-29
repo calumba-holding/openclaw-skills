@@ -3,9 +3,15 @@
   "slug": "android-mobpush-integration",
   "displayName": "Android Mobpush Integration",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776940231170,
-    "commit": "https://github.com/openclaw/skills/commit/e56edf3d21af4b885ce70a538659c2a8c686ddb8"
+    "version": "2.0.0",
+    "publishedAt": 1777433188229,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776940231170,
+      "commit": "https://github.com/openclaw/skills/commit/e56edf3d21af4b885ce70a538659c2a8c686ddb8"
+    }
+  ]
 }
