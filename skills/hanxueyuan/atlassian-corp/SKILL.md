@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: atlassian-corp
 summary: 从悉尼车库到 SaaS 巨人 — Atlassian 如何用零销售团队策略征服开发者市场
 read_when:
