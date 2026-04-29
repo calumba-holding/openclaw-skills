@@ -3,11 +3,16 @@
   "slug": "aws-wechat-article-topics",
   "displayName": "公众号选题 & 爆款标题（AI）",
   "latest": {
-    "version": "1.0.22",
-    "publishedAt": 1776900227243,
-    "commit": "https://github.com/openclaw/skills/commit/68295fd7892f29ad1d68976fc48d3879db4669d8"
+    "version": "1.0.23",
+    "publishedAt": 1777035835083,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.22",
+      "publishedAt": 1776900227243,
+      "commit": "https://github.com/openclaw/skills/commit/68295fd7892f29ad1d68976fc48d3879db4669d8"
+    },
     {
       "version": "1.0.20",
       "publishedAt": 1776897317569,
