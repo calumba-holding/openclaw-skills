@@ -1,36 +1,66 @@
 ---
 name: cms-tbs-scene-create
-description: 提供【TBS场景创建】全流程执行能力。用户一旦表达“创建TBS场景/建训练场景/把业务背景转成可创建场景/确认后创建场景”等执行意图，必须进入本 Skill 的结构化解析与脚本调用流程；仅当用户明确是纯咨询时，才允许先文字说明并二次确认是否执行。本 Skill 通过依赖 `cms-auth-skills` 获取 `access-token` 后，才允许进入真实创建链路。
+description: 提供【TBS 训战场景创建】全流程执行能力。用户一旦表达“创建场景/生成对练场景/医药代表训练/销售训练/校验场景/确认落库”等执行意图，必须进入本 Skill 的分阶段脚本调用流程；仅当用户明确是纯咨询时，才允许先文字说明并二次确认是否执行。本 Skill 依赖 `cms-auth-skills` 获取 `access-token` 后才允许真实落库。
 skillcode: cms-tbs-scene-create
 github: https://github.com/xgjk/xg-skills/tree/main/cms-tbs-scene-create
 dependencies:
   - cms-auth-skills
 # bump 时须同步修改同目录下 version.json 的 version 字段
-version: 0.5.5
+version: 0.6.33
 tools_provided:
-  - name: tbs_client
+  - name: tbs-client
     category: exec
     risk_level: medium
     permission: write
-    description: TBS Admin API 共享客户端，封装请求、主数据精确匹配与创建逻辑
+    description: TBS Admin API 共享客户端，封装请求、主数据匹配与创建
+    status: active
+  - name: tbs-scene-session-init
+    category: exec
+    risk_level: low
+    permission: write
+    description: 初始化会话状态目录
+    status: active
+  - name: tbs-scene-payload-write
+    category: exec
+    risk_level: low
+    permission: write
+    description: 安全写入 latest-payload.json，避免手写 JSON 出错
+    status: active
+  - name: tbs-scene-preflight
+    category: exec
+    risk_level: low
+    permission: read
+    description: 只读检查会话状态，决定下一步
     status: active
   - name: tbs-scene-parse
     category: exec
     risk_level: low
     permission: read
-    description: 解析用户输入为场景草稿，并输出待确认字段与缺失字段
+    description: 解析用户输入、合并草稿、推进阶段
     status: active
   - name: tbs-scene-validate
     category: exec
     risk_level: low
     permission: read
-    description: 校验场景草稿是否达到可确认创建条件
+    description: 校验场景草稿；FULL 用于最终确认，TBV 用于标题/背景补丁
     status: active
-  - name: tbs-scene-create
+  - name: tbs-scene-knowledge-check
     category: exec
     risk_level: medium
     permission: write
-    description: 在用户明确确认后解析主数据并调用 createScene 创建场景
+    description: 查询/复用/创建产品知识，并写回 knowledgeReady
+    status: active
+  - name: tbs-scene-create-from-session
+    category: exec
+    risk_level: medium
+    permission: write
+    description: 从会话目录组装 create payload 并调用创建脚本
+    status: active
+  - name: tbs-scene-finalize-from-session
+    category: exec
+    risk_level: medium
+    permission: write
+    description: 用户最终确认后的总落库入口
     status: active
 ---
 
@@ -38,115 +68,95 @@ tools_provided:
 
 ## 核心定位
 
-本 Skill 只做一件事：根据用户执行意图，读取对应 `references/*.md` 与 `prompts/*.json`，再执行 `scripts/*.py`。  
-参数、边界、分支逻辑都以 `references` 为准，`SKILL.md` 只负责入口和流程约束。
+本 Skill 只做一件事：根据用户创建 TBS 训战场景的意图，读取对应 `references/*.md`，再执行 `scripts/*.py`。  
+参数、边界、分支逻辑以 `references` 为准；`SKILL.md` 只保留入口级规则。
 
-## 强制前置（保持不变）
+## 强制前置
 
-调用任何真实创建脚本前，必须先通过依赖 Skill `cms-auth-skills` 获取有效 `access-token`。  
-未鉴权时，不允许执行 `tbs-scene-create.py` 及其真实创建链路。
-本 Skill 发起的所有 TBS Admin API 请求均基于该 `access-token` 鉴权。
+真实落库前必须通过 `cms-auth-skills` 获取有效 `access-token`，并以 `--access-token` 注入最终落库入口。  
+未鉴权时，可以 parse / validate / preflight，但不得调用真实 CMS/TBS 写接口。
 
-`access-token` 的获取与传递方式必须为：由上游 `cms-auth-skills` 注入/传递到本 Skill 执行命令中（`--access-token`）。
+## 标准执行流程
 
-## 标准执行流程（必须遵循）
+1. 识别用户是“执行创建”还是“纯咨询”。
+2. 任何用户可见回复前，必须先读 `references/output-templates.md` 与 `references/review-checklist.md`，并按当前时点套用模板；模板是强制输出契约，不是参考文案。
+3. 若用户首次只表达“创建场景/我要创建一个场景”，且未提供可解析基础信息：不得调用脚本，直接使用 `output-templates.md` 模板 0「标准版」原结构输出。
+4. 若首轮输入为完整长文本并命中模板 0 的“长文本例外”：创建或复用 `sessionDir`，再进入 parse。
+5. 每次执行脚本前，先读对应 `references/*.md`。
+6. 用 `tbs-scene-payload-write.py` 写 payload；禁止手写/拼字符串 JSON。
+7. 用 `tbs-scene-parse.py` 推进阶段；不要靠猜测判断阶段。
+8. 当 parse 返回 `READY_FOR_SCENE_GENERATION` / `scenarioGenerated=false`：作为内部事务连续完成“场景内容生成 → 写回 draft → 再 parse → FULL validate”，除耗时提示外不得向用户播报内部状态。
+9. 需要探路时先跑只读 `tbs-scene-preflight.py`，不要反复 parse/validate。
+10. 模板 3 最终确认前执行 `tbs-scene-validate.py --scope full`。
+11. 用户明确回复“确认”后，只调用 `tbs-scene-finalize-from-session.py`。
 
-1. 识别用户是“执行动作”还是“纯咨询”。
-2. 若是纯咨询：先提供说明性答复，并明确询问是否进入创建执行；在用户未明确要求执行前，不进入脚本调用链路。
-3. 若是执行动作：先定位目标脚本。
-4. 先读取 `references/auth.md`，确保 `access-token` 与 `--base-url` 环境一致（未读不得进入真实创建链路）。
-5. 再读取该脚本对应的 `references/*.md`（及本阶段要求的 `prompts/*.json`），未读不得执行。
-6. 按文档组装参数并执行 `python3 scripts/<name>.py`。
-7. 如一轮调用多个脚本，每个脚本的 reference 都要先读再执行。
+## 会话文件
 
-## 内部编排判定与门禁（仅使用现有字段）
+同一场景全程复用同一个目录：
 
-本 Skill 的内部编排只使用当前已存在字段，不新增协议字段：
+```text
+workspace/.cms-log/state/cms-tbs-scene-create/{sessionId}/
+├── latest-payload.json
+├── latest-parse-result.json
+├── latest-draft.json
+├── latest-validate-result.json
+├── latest-knowledge-check-result.json
+└── latest-create-result.json
+```
 
-- 通用判定：`success`、`error`
-- parse 判定：`stage`、`missingFields`、`userOutputTemplate.clarifyQuestions`
-- validate 门禁：`validationReport.passed`、`validationReport.blockingIssues`、`validationReport.warningIssues`
-- create 门禁：`userConfirmation`、`validationReport.passed`、`sceneId`、`resolvedIds`、`personaIds`、`knowledgeIds`
-- 草稿复用：`draftPath`
-
-串联规则（parse -> validate -> create）：
-
-1. `success=true` 仅表示脚本调用成功返回，不等于可直接进入下一脚本。
-2. `tbs-scene-parse.py`：根据 `stage` 判断当前在“继续补充/继续确认/可进入场景内容生成/可进入校验”哪个阶段。
-3. `tbs-scene-validate.py`：仅当 `validationReport.passed=true` 时，才允许进入最终确认与创建准备。
-4. `tbs-scene-create.py`：仅当 `userConfirmation=确认` 且 `validationReport.passed=true` 时允许真实创建。
-5. 任一脚本返回 `success=false`，均视为当前链路中断，先处理 `error` 后再决定是否重试或回退。
-
-## 用户可见回复约束（必须遵循）
-
-1. 命中执行意图（如“创建TBS场景/建训练场景”）后，首条用户可见回复必须直接进入“阶段 1：基础信息确认”，优先使用 `references/tbs-scene-parse.md` 固定模板开场。
-2. 禁止对用户播报内部动作或思考过程，包括但不限于：
-   - “你要创建TBS场景，这是执行意图，我进入结构化流程”
-   - “先读取关键参考文档，理清流程再动手”
-   - “我先读 references / prompts 再执行脚本”
-3. 读取 `references/*.md`、`prompts/*.json`、执行脚本等动作属于内部编排，只能在系统内部完成，不应作为用户可见话术。
-4. 面向用户只输出业务导向内容：确认清单、待补充问题、下一步用户操作（如“请补充/请确认”）。
-5. 禁止向用户展示任何中间结构化结果（如基础信息骨架 JSON、payload JSON、脚本原始 stdout/stderr JSON），包括代码块、折叠块或“JSON x lines”形式。
-6. 用户可见输出前，必须执行内部信息拦截：命中 `runtime context`、`subagent`、`session_key`、`session_id`、`internal` 或字段级技术报错时，必须改写为业务话术后再输出。
-7. 校验失败时，统一使用业务话术模板，不直接回显技术字段或 issue code（例如：“内容结构需微调，我已自动修正并重新校验。”）。
-8. 收口优先：当 `validationReport.passed=true` 且用户未提出新的修改请求时，仅提供“确认创建 / 取消”两种选择，不再主动扩展采集。
+`latest-draft.json` 是唯一草稿真源。不要直接覆盖它，只能通过脚本写回。`tbs-scene-session-init.py` 默认会复用 120 秒内尚未写入业务文件的空 session（仅 `SESSION.txt`），用于抵抗审批/重试导致的多空目录；确需新会话时传 `--force-new`。
 
 ## 常用命令与必读文档
 
-建议先读：`references/README.md`（总索引与推荐阅读顺序）。
-
 | 脚本 | 必读 reference | 用途 |
-|------|----------------|------|
-| `tbs-scene-parse.py` | `references/tbs-scene-parse.md` | 分阶段确认与门禁编排 |
-| `tbs-scene-validate.py` | `references/tbs-scene-validate.md` | 创建前程序校验 |
-| `tbs-scene-create.py` | `references/tbs-scene-create.md` | 用户确认后真实创建 |
+|---|---|---|
+| `tbs-scene-session-init.py` | `references/tbs-scene-parse.md` | 初始化 session |
+| `tbs-scene-payload-write.py` | `references/common-params.md` | 安全写 payload |
+| `tbs-scene-preflight.py` | `references/tbs-scene-preflight.md` | 只读判断下一步 |
+| `tbs-scene-parse.py` | `references/tbs-scene-parse.md` | 解析/合并/推进 |
+| `tbs-scene-knowledge-check.py` | `references/tbs-scene-parse.md` | 产品知识查重/创建 |
+| `tbs-scene-validate.py` | `references/tbs-scene-validate.md` | FULL/TBV 校验 |
+| `tbs-scene-finalize-from-session.py` | `references/tbs-scene-create.md` | 用户确认后的总落库入口 |
 
-补充：
-- 自然语言骨架提取：`references/base-info-parse.md` + `prompts/base-info-parse.model.schema.json`
-- 场景正文生成：`references/scenario-json-parse.md` + `prompts/scenario-json-parse.model.schema.json`
-- 复杂编排示例：`references/agent-patterns.md`
+补充：用户可见话术看 `references/output-templates.md`；场景正文生成看 `references/scenario-json-parse.md`；输出自检看 `references/review-checklist.md`；鉴权看 `references/auth.md`。
 
-## 测试示例（推荐）
+## Gate-5
 
-### 示例 1：先做基础信息分阶段解析
-
-```bash
-# 第一步：先读 references/base-info-parse.md
-# 第二步：按 prompts/base-info-parse.model.schema.json 提取骨架并写入 payload.json
-# 第三步：执行 parse，判断当前阶段
-python3 scripts/tbs-scene-parse.py --params-file payload.json
-```
-
-### 示例 2：生成后先校验，再发起最终确认
+用户最终确认后，OpenClaw/Agent 只调用：
 
 ```bash
-# 第一步：先读 references/tbs-scene-validate.md
-python3 scripts/tbs-scene-validate.py --params-file draft.json
+python3 scripts/tbs-scene-finalize-from-session.py \
+  --session-dir "<sessionDir>" \
+  --user-confirmation 确认 \
+  --access-token "<access-token>"
 ```
 
-### 示例 3：用户确认创建后真实落库
+不要直接调用 `tbs-scene-create.py`。该脚本只允许被 session/finalize wrapper 内部调用。
 
-```bash
-# 第一步：先读 references/tbs-scene-create.md
-python3 scripts/tbs-scene-create.py \
-  --params-file draft.json \
-  --access-token "<ACCESS_TOKEN>"
-```
+## 路径选择
 
-## 反向示例（不要这样做）
+- **路径 A**：Gate-2 先完成 `knowledge-check`，之后生成场景、FULL validate、最终确认、finalize。
+- **路径 B**：设置 `meta.deferKnowledgeCmsCheckUntilPreCreate=true`，把 CMS 知识查重/创建推迟到用户最终确认后，由 `finalize` 自动执行。
 
-- 未获取 `access-token` 就直接执行 `scripts/tbs-scene-create.py`。
-- 没读对应 `references/*.md` 就起调脚本。
-- 未经过 `tbs-scene-validate.py` 就直接进入创建。
-- 用户还没明确回复“确认创建”，就直接调用 `/scene/createScene`。
-- 主数据精确匹配到多条时，擅自猜测业务领域、科室或品种。
-- 用户明确“产品知识暂无 / 不提供资料”后，仍重复追问证据状态或强推知识主题。
-- 基础信息确认阶段私自扩展结构化字段（如“关键决策者/利好背景/场景氛围”）并向用户展示，导致确认清单超出脚本门禁字段。
-- 产品知识与资料确认阶段把问题拆成多轮反复追问（应优先引导用户一次性回复：主题 + 证据状态 + 证据来源）。
+路径 B 写入 `knowledgeIds` 后会再跑一次 FULL validate；这是必要校验，不属于重复探路。
+
+## 反向示例
+
+- 未读 reference 就执行脚本。
+- 用户可见回复自由发挥，未套用 `output-templates.md` 对应模板。
+- 首轮“我要创建场景”时自行改写模板 0，或用自创的“完整描述/引导回答”结构替代模板 0。
+- 直接手写 JSON 覆盖 `latest-draft.json`。
+- 每轮用户消息都跑 `parse + validate`。
+- 向用户展示 `scenarioGenerated=false`、`READY_FOR_SCENE_GENERATION`、`draft`、`parse`、`validate` 等内部状态。
+- 在场景内容生成事务中间停下向用户解释内部判断，而不是连续执行到模板 3 或业务化失败提示。
+- 用户未确认就进入 Gate-5。
+- Agent 直接调用 `tbs-scene-create.py`。
+- 凭 `scene.knowledgeIds` 非空就认为知识已就绪；必须看 `meta.knowledgeReady=true`。
+- 在 knowledge-check 与第二次 FULL validate 之间再跑 parse。
 
 ## 错误处理与通用参数
 
-通用错误格式、`--params-file` 用法、输入文件规则请查看 `references/common-params.md`。
+通用错误格式、`--params-file`、JSON 安全写入与展示声明规则见 `references/common-params.md`。
 
 ---
 
@@ -156,26 +166,24 @@ python3 scripts/tbs-scene-create.py \
 cms-tbs-scene-create/
 ├── SKILL.md
 ├── version.json
-├── prompts/
-│   ├── base-info-parse.model.schema.json
-│   ├── scenario-json-parse.model.schema.json
-│   └── scene.schema.json
 ├── scripts/
-│   ├── README.md
-│   ├── tbs_client.py
-│   ├── tbs_md_sanitize.py
+│   ├── tbs-client.py
+│   ├── tbs-scene-session-init.py
+│   ├── tbs-scene-payload-write.py
+│   ├── tbs-scene-preflight.py
 │   ├── tbs-scene-parse.py
+│   ├── tbs-scene-knowledge-check.py
 │   ├── tbs-scene-validate.py
-│   └── tbs-scene-create.py
+│   ├── tbs-scene-create-from-session.py
+│   └── tbs-scene-finalize-from-session.py
 └── references/
-    ├── README.md
     ├── auth.md
-    ├── base-info-parse.md
+    ├── common-params.md
     ├── tbs-scene-parse.md
+    ├── tbs-scene-preflight.md
     ├── tbs-scene-validate.md
     ├── tbs-scene-create.md
     ├── scenario-json-parse.md
-    ├── common-params.md
-    ├── agent-patterns.md
-    └── maintenance.md
+    ├── output-templates.md
+    └── review-checklist.md
 ```

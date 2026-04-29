@@ -3,9 +3,15 @@
   "slug": "cms-tbs-scene-create",
   "displayName": "cms-tbs-scene-create",
   "latest": {
-    "version": "0.5.5",
-    "publishedAt": 1776858727609,
-    "commit": "https://github.com/openclaw/skills/commit/5017e36e0c969bffead92adca3af37a89f7d79d8"
+    "version": "0.6.33",
+    "publishedAt": 1777434246284,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.5.5",
+      "publishedAt": 1776858727609,
+      "commit": "https://github.com/openclaw/skills/commit/5017e36e0c969bffead92adca3af37a89f7d79d8"
+    }
+  ]
 }

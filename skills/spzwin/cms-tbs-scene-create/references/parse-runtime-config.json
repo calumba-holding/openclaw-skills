@@ -1,0 +1,155 @@
+{
+  "fieldLabels": {
+    "title": "场景标题",
+    "businessDomainName": "业务领域",
+    "departmentName": "科室",
+    "drugName": "产品名称",
+    "location": "地点",
+    "doctorConcerns": "医生顾虑",
+    "repGoal": "代表目标",
+    "sceneBackground": "场景背景",
+    "productKnowledgeNeeds": "产品知识主题",
+    "knowledge": "产品知识正文（可选）",
+    "doctorOnlyContext": "对练对象侧上下文",
+    "coachOnlyContext": "教练侧上下文",
+    "actorProfile": "对练对象角色",
+    "generationNotes": "待确认说明"
+  },
+  "defaults": {
+    "notProvidedEvidenceSource": "用户确认暂无书面证据资料",
+    "declinedProductKnowledgeTopic": "用户确认暂不补充产品知识主题",
+    "partialEvidenceSource": "用户已确认场景所需产品知识主题，书面证据待补充",
+    "readyEvidenceSource": "用户已提供可用证据资料"
+  },
+  "declineRegexPatterns": [
+    "产品知识暂无",
+    "没有产品知识|无需产品知识|不提供产品知识",
+    "不要产品知识",
+    "不提供.*(产品知识|知识主题)",
+    "不提供.*(资料|证据).*(产品|书面)",
+    "暂不补充.*(知识|资料)"
+  ],
+  "blockedPhrases": [
+    "确认",
+    "是",
+    "不是",
+    "对",
+    "不对",
+    "好的",
+    "ok",
+    "yes",
+    "no",
+    "暂无",
+    "没有",
+    "不清楚"
+  ],
+  "bestPracticeKeywords": [
+    "话术",
+    "最佳实践",
+    "沟通技巧",
+    "应对",
+    "怎么说",
+    "开场",
+    "异议处理"
+  ],
+  "deriveLimits": {
+    "minTopicLength": 2,
+    "maxTopicLength": 30,
+    "maxTopicCount": 6
+  },
+  "alignmentLimits": {
+    "minBackgroundLength": 40,
+    "minPieceLength": 3,
+    "missingPiecePreviewLength": 24,
+    "maxMissingPieces": 5
+  },
+  "inferReplyLimits": {
+    "maxCandidateLength": 40
+  },
+  "statusText": {
+    "toFill": "待补充",
+    "toConfirm": "请确认",
+    "needSupplement": "需要补充",
+    "noSupplementNeeded": "无需补充",
+    "ready": "已具备",
+    "pendingStart": "待开始",
+    "pendingConfirm": "待确认"
+  },
+  "alignmentText": {
+    "noBackground": "场景背景尚未生成，暂不做对齐评估。",
+    "backgroundTooShort": "场景背景偏短，不建议跳过场景正文生成。",
+    "missingCoreInputs": "缺少医生顾虑与代表目标，无法做对齐判断。",
+    "missingRepGoalLabel": "代表目标",
+    "coreNotCoveredPrefix": "场景背景未完全覆盖以下要点：",
+    "coveredOk": "场景背景已覆盖医生顾虑与代表目标要点，可建议跳过场景正文再生成。"
+  },
+  "changeSummaryText": {
+    "updatedFields": "本轮字段更新：{labels}。",
+    "canSkipS3": "编排提示：可跳过 scenario-json-parse 再生成，但仍须走 TBV 与 PRE。",
+    "shouldRunS3": "编排提示：建议执行 scenario-json-parse 完整生成或补全后再校验。"
+  },
+  "pendingNotesText": {
+    "baseInfoStage": "当前先确认业务领域、科室、产品、地点、医生顾虑、代表目标；标题、场景背景和上下文稍后统一生成。",
+    "knowledgeStageBaseAck": "基础信息已由用户确认，系统已根据当前场景给出产品知识主题建议；如无调整，请回复“确认”，也可删除、改名或新增主题。产品知识正文可稍后补充。",
+    "knowledgeStageBaseUnack": "基础信息字段已识别，但仍需用户核对是否准确；核对无误后请由 Agent 在下一轮解析请求中携带 baseInfoAcknowledged=true，再进入场景内容生成。",
+    "knowledgeStageOptionalKnowledge": "产品知识正文补充是可选的：可以只确认知识主题关键词，也可以额外补充知识正文/资料来源供创建前解析。",
+    "readyForGeneration": "基础信息与产品知识/资料已具备；此时应在内部执行场景内容生成，再进入校验。",
+    "autoDerivedNeeds": "已按产品知识主题生成规范建议主题，需用户确认后再进入场景内容生成。",
+    "bestPracticeAdopted": "已采纳你补充的代表话术/最佳实践内容，将归入教练侧上下文（coachOnlyContext）的“## 最佳实践”小节。"
+  },
+  "baseQuestionMap": {
+    "businessDomainName": "这是哪个业务领域？请从临床推广、院外零售、学术合作、通用能力中选择一个。",
+    "departmentName": "这次主要对应哪个科室？",
+    "drugName": "这次对应的具体产品或品种是什么？",
+    "location": "这个场景发生在什么地点？",
+    "doctorConcerns": "医生对产品、证据、安全性、费用、可及性或推广方式的具体顾虑/异议是什么？",
+    "repGoal": "代表本次沟通最想达成的目标是什么？"
+  },
+  "knowledgeQuestionText": {
+    "backgroundHintAck": "已确认的业务背景",
+    "backgroundHintUnack": "当前识别出的业务背景（请同时核对上方基础信息是否准确）",
+    "confirmNeeds": "请核对上方“产品知识主题”：如无调整，请回复“确认”；也可以删除、改名或新增主题。正文可稍后补充。",
+    "confirmBaseFirst": "请先明确确认上方基础信息是否全部准确；确认后由 Agent 在下一轮 tbs-scene-parse 请求中设置 baseInfoAcknowledged=true。"
+  },
+  "contentQuestionText": {
+    "echoUpdated": "本轮用户已更新：{labels}。请先向用户回显更新后的确认清单并请其确认。",
+    "genTitleBackground": "请在内部生成场景标题与场景背景。",
+    "genActorProfile": "请在内部补齐对练对象角色画像（至少包含 name）；不向用户单独展示该字段确认项。",
+    "genContexts": "请在内部生成对练对象侧上下文与教练侧上下文，用户无需逐段确认正文。"
+  },
+  "nextActionText": {
+    "baseInfo": "请先补充并确认基础信息；确认后再分析产品知识需求与资料情况。",
+    "knowledgeBaseFirst": "请先引导用户核对基础信息是否准确；用户明确确认后，在下一轮解析请求 JSON 顶层设置 baseInfoAcknowledged=true，再继续确认产品知识/资料并进入内部生成。",
+    "knowledge": "请展示基础信息 6 项和系统建议的产品知识主题；如无调整请用户回复“确认”，也允许删除、改名或新增。产品知识正文补充可选。",
+    "readyForGenerationWithEcho": "请先向用户回显更新后的确认清单（重点：{labels}），确认无误后再内部生成场景内容；生成完成后重新运行本脚本并进入场景校验。",
+    "readyForGeneration": "请在内部执行场景内容生成；生成完成后重新运行本脚本，再进入场景校验。",
+    "readyForValidateWithEcho": "用户本轮已更新（{labels}），请先回显最新确认清单并确认无误，再执行场景校验。",
+    "default": "请确认上述关键信息；如无误，可以继续执行场景校验。"
+  },
+  "systemActionHintText": {
+    "baseInfo": "先与用户确认基础信息；此阶段不要提前执行 scenario-json-parse 全量生成。",
+    "knowledgeBaseFirst": "先引导用户核对基础信息；未携带 baseInfoAcknowledged=true 前，不要进入 scenario-json-parse 全量生成。",
+    "knowledge": "按 references/product-knowledge-topic-generate.md 基于已确认基础信息生成产品知识主题，并给用户轻确认；未收到主题确认前，不要进入场景内容生成。",
+    "readyForGenerationWithEcho": "检测到用户本轮更新字段（{labels}）；先向用户回显更新后的确认清单，再内部读取 references/scenario-json-parse.md + references/*.json 生成内容。",
+    "readyForGeneration": "现在再内部读取 references/scenario-json-parse.md + references/*.json，生成 title、sceneBackground、actorProfile、doctorOnlyContext、coachOnlyContext。",
+    "readyForValidateWithEcho": "检测到用户本轮更新字段（{labels}）；先回显更新后的确认清单，再执行 tbs-scene-validate.py。",
+    "default": "执行 tbs-scene-validate.py，确认是否达到最终创建前门禁。"
+  },
+  "stageLabelText": {
+    "BASE_INFO_CONFIRM": "先确认基础信息",
+    "KNOWLEDGE_CONFIRM": "再确认产品知识与资料",
+    "READY_FOR_SCENE_GENERATION": "已可内部生成场景内容",
+    "READY_FOR_VALIDATE": "已可执行场景校验"
+  },
+  "phaseTitleText": {
+    "BASE_INFO_CONFIRM": "基础信息确认",
+    "KNOWLEDGE_CONFIRM": "产品知识与资料确认",
+    "READY_FOR_SCENE_GENERATION": "场景内容生成"
+  },
+  "errorText": {
+    "missingInput": "缺少 userText 或结构化 scene",
+    "patchLockedHint": "在基础信息已确认后不可再补丁修改基础字段；进入场景内容生成或校验阶段后，仅允许补丁更新场景标题与场景背景（含 background 同义键）。",
+    "patchLockedPastKnowledgeSuffix": " 已进入场景内容生成或校验阶段：`parsedFields` / `userUpdates` / `userConfirmedFields` / `userProvidedFields` 仅允许 `title`、`sceneBackground`、`background`。被拒字段请改写到请求 JSON 顶层的 `scene` 对象中（与已有草稿合并）后再调用本脚本，勿再通过上述补丁键覆盖。",
+    "patchLockedBaseAckSuffix": " 被拒字段属于已确认基础六字段：请先在未声明 `baseInfoAcknowledged` 的轮次纠正，或由用户明确同意回退后再改；勿再通过补丁键覆盖已锁定基础项。"
+  }
+}
