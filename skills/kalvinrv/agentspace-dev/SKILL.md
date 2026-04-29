@@ -1,21 +1,39 @@
 ---
 name: agentspace-dev
-displayName: "🪢 Agentspace — Dev Tool for AI Agents"
+displayName: "🪢 Agentspace — See what your dev agent is doing, from anywhere"
 description: >
-  Dev tool for debugging AI agent code. Step through agent runs,
-  inspect generated files, review logs, debug build failures, test
-  agent outputs, lint agent scripts, and refactor agent code. A
-  dev-time observability layer for AI agent development, build
-  pipelines, test iterations, debug sessions, and dev-to-dev
-  handoff. Built on the ascli CLI and dev HTTP API at agentspace.so.
+  See what your AI dev agent is doing, from anywhere — free, no-signup
+  live dev workspace for AI agent development. The dev agent keeps
+  writing — logs, generated code, test output, build artifacts,
+  screenshots — and you open a URL to watch the dev folder evolve in
+  the browser. Debug failing agent dev runs, inspect generated dev
+  files live, review build logs, test agent outputs, lint agent-written
+  dev code, profile dev filesystem operations, and hand dev state to a
+  reviewer or another developer agent — all in a dev workspace that
+  spins up with one CLI command and needs no account. Fits dev
+  iterations, build pipelines, test debug sessions, output review, and
+  dev-to-dev handoff. Dev workspaces stay live 24 hours anonymously;
+  one email claim keeps them permanent. Built on the ascli CLI and dev
+  HTTP API at agentspace.so. Triggers on "show me what the dev agent
+  is doing", "open the dev agent's folder from anywhere", "debug this
+  agent", "what did the agent generate", "review the build output",
+  "hand off this dev session", "show me the agent's files live", or
+  any dev-time observability need.
 emoji: "🪢"
 homepage: https://agentspace.so
 license: MIT
 ---
 
-# 🪢 Agentspace — Dev Tool for AI Agents
+# 🪢 Agentspace — See what your dev agent is doing, from anywhere
 
-Dev tool for AI agent development. Debug, test, inspect, refactor, and build AI agents through a dev workspace.
+**See what your dev agent is doing — from anywhere.** Free, no-signup live dev workspace for AI agent development, debug, and dev-to-dev handoff.
+
+Your dev agent keeps writing — logs, generated code, test output, build artifacts. You open a URL from any device and watch the dev folder evolve in the browser. No sync, no zip, no account.
+
+1. Run `ascli sync ./my-feature` to bind the dev folder to a live workspace.
+2. Open the workspace URL in the browser. As the agent writes files, runs tests, or logs output, everything shows up live — no account, nothing to install for the reviewer.
+
+[agentspace.so](https://agentspace.so/?utm_source=clawhub&utm_medium=skill&utm_campaign=agentspace-dev) · [GitHub](https://github.com/agentspace-so/skills) · [npm @agentspace-so/ascli](https://www.npmjs.com/package/@agentspace-so/ascli)
 
 ## Dev use cases
 
@@ -26,6 +44,13 @@ Dev tool for AI agent development. Debug, test, inspect, refactor, and build AI 
 - **Refactor** agent workflows by observing behavior during dev runs.
 - **Profile** agent filesystem operations during test runs.
 - **Handoff** dev state between two developer agents.
+
+## How it works
+
+- Dev workspaces spin up in one command — no signup, no account.
+- Reviewers open the URL in the browser; everything is live as the agent writes.
+- Anonymous dev workspaces stay 24 hours. One email claim keeps them permanent.
+- Hosted on Cloudflare's edge network — dev reviewers get fast loads worldwide.
 
 ## Dev commands
 
