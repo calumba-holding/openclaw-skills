@@ -3,9 +3,15 @@
   "slug": "gateway-restart-profiler",
   "displayName": "Gateway Restart Profiler",
   "latest": {
-    "version": "0.1.1",
-    "publishedAt": 1776648953625,
-    "commit": "https://github.com/openclaw/skills/commit/ac0649e85f03452c0d012c82b3f55e79a8bb6829"
+    "version": "0.1.2",
+    "publishedAt": 1776935383931,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.1.1",
+      "publishedAt": 1776648953625,
+      "commit": "https://github.com/openclaw/skills/commit/ac0649e85f03452c0d012c82b3f55e79a8bb6829"
+    }
+  ]
 }
