@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "quantaxis-data-platform",
-  "displayName": "quantaxis-data-platform",
+  "displayName": "Quantaxis Data Platform",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776909726613,
-    "commit": "https://github.com/openclaw/skills/commit/6269a072d4d1f7baf73bae55d18f29d76f835861"
+    "version": "0.3.3",
+    "publishedAt": 1776954551795,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776909726613,
+      "commit": "https://github.com/openclaw/skills/commit/6269a072d4d1f7baf73bae55d18f29d76f835861"
+    }
+  ]
 }
