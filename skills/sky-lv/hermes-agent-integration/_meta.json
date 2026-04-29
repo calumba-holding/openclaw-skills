@@ -1,0 +1,11 @@
+{
+  "owner": "sky-lv",
+  "slug": "hermes-agent-integration",
+  "displayName": "Hermes Agent Integration",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777068076328,
+    "commit": null
+  },
+  "history": []
+}
