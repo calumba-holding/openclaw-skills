@@ -17,7 +17,7 @@ Unlike OpenRouter, which optimizes for cost, Sage Router optimizes for **getting
 
 - **Intent-based routing**: Code tasks go to coding models, creative tasks to creative models, reasoning tasks to reasoning models
 - **Automatic fallback**: If one provider fails or hits rate limits, it seamlessly tries the next
-- **Dynamic discovery**: New models from Ollama, Anthropic, OpenAI, Google, and OpenClaw are auto-detected — no config updates needed
+- **Dynamic discovery**: New models from Ollama, Anthropic, OpenAI, Google, NVIDIA Cloud, and OpenClaw are auto-detected — no config updates needed
 - **Zero API lock-in**: Use any subscription you already have (Ollama, Claude, OpenAI, Gemini, GitHub Copilot)
 - **Debuggable routing**: Surface the selected provider/model in headers, `/health`, or optional debug output
 
@@ -159,6 +159,26 @@ Models are auto-discovered via `/api/tags`.
 
 Models are auto-discovered via `/v1/models`.
 
+
+### Darkbloom
+
+Darkbloom is OpenAI-compatible at `https://api.darkbloom.dev`. If `DARKBLOOM_API_KEY` is present in `~/.openclaw/.env` or the skill-local `.env`, Sage Router loads it automatically through the bundled `darkbloom` provider profile.
+
+```json
+{
+  "providers": {
+    "darkbloom": {
+      "baseUrl": "https://api.darkbloom.dev",
+      "apiKey": "${DARKBLOOM_API_KEY}",
+      "models": "auto-discover",
+      "api": "openai-completions"
+    }
+  }
+}
+```
+
+Models are auto-discovered via `/v1/models`. Chat requests route through `/v1/chat/completions`.
+
 ### Google Gemini
 
 ```json
@@ -224,6 +244,29 @@ Sage Router can route through a local Grok SSO proxy instead of burning xAI API 
 
 See `provider-profiles.json` for the `grok-sso` template and `GROK_SSO.md` for setup.
 
+### NVIDIA Cloud
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "nvidia": {
+        "enabled": true,
+        "config": {
+          "autoDiscovery": {
+            "enabled": true,
+            "base_url": "integrate.api.nvidia.com/v1",
+            "api_key": "$NVIDIA_API_KEY"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Models are auto-discovered from NVIDIA Cloud when `NVIDIA_API_KEY` is present.
+
 ### OpenClaw Gateway
 
 ```json
@@ -243,6 +286,36 @@ Models are auto-discovered via the gateway's `/v1/models` endpoint.
 
 ---
 
+## Docker / Production deployment
+
+The Docker image bundles Sage Router plus Dario for Anthropic-compatible Claude requests. Dario credentials are read from `~/.dario`, mounted into the container at `/root/.dario`.
+
+```bash
+# Router only, with Dario available for Anthropic-compatible requests
+docker compose up -d --build
+
+# Router + llama.cpp GPU classifier sidecar
+SAGE_ROUTER_INTENT_CLASSIFIER_ENABLED=1 \
+SAGE_ROUTER_MODELS_DIR=/path/to/gguf-models \
+docker compose --profile classifier up -d --build
+```
+
+Key production flags:
+
+```bash
+SAGE_ROUTER_OPENROUTER_FREE_ONLY=1
+SAGE_ROUTER_DARIO_AUTOSTART=1
+SAGE_ROUTER_INTENT_CLASSIFIER_ENABLED=1
+SAGE_ROUTER_INTENT_CLASSIFIER_PROVIDER=llamacpp
+SAGE_ROUTER_INTENT_CLASSIFIER_BASE_URL=http://llamacpp-classifier:8080
+SAGE_ROUTER_INTENT_CLASSIFIER_MODEL=classifier
+SAGE_ROUTER_INTENT_CLASSIFIER_MODEL_PATH=/models/qwen2.5-0.5b-instruct-q4_K_M.gguf
+SAGE_ROUTER_INTENT_CLASSIFIER_N_GPU_LAYERS=999
+```
+
+The classifier backend speaks OpenAI-compatible llama.cpp server API (`/v1/chat/completions`), so it can be run as a sidecar, on Cyber GPU, or replaced by any compatible local inference server.
+
+
 ## Provider Feature Matrix
 
 | Provider | Dynamic Discovery | Force Model | Passthrough | Auth Method |
@@ -252,6 +325,7 @@ Models are auto-discovered via the gateway's `/v1/models` endpoint.
 | **Anthropic** | ✅ Via Dario | ✅ | ✅ | API key |
 | **OpenAI** | ✅ `/v1/models` | ✅ | ✅ | API key |
 | **GitHub Copilot** | ✅ `/v1/models` | ✅ | ✅ | Token |
+| **NVIDIA Cloud** | ✅ auto-discovery | ✅ | ✅ | API key |
 | **OpenClaw Gateway** | ✅ `/v1/models` | ✅ | ✅ | Gateway token |
 | **xAI/Grok (API)** | ✅ `/v1/models` | ✅ | ✅ | API key |
 | **xAI/Grok (SSO)** | ❌ SSO proxy | ❌ | ❌ | Cookie/SSO |
@@ -380,6 +454,7 @@ That means stream-shaped responses work for client compatibility, but they may s
 ANTHROPIC_API_KEY=sk-...
 OPENAI_API_KEY=sk-...
 GEMINI_API_KEY=AIza...
+NVIDIA_API_KEY=nvapi-...
 OLLAMA_HOST=http://localhost:11434
 
 # Router behavior
@@ -434,6 +509,7 @@ LOG_LEVEL=DEBUG python3 router.py
 - [ ] Usage analytics dashboard
 - [ ] Distributed deployment mode
 - [ ] CDN-hosted option (high-availability)
+- [ ] **Grok SSO Browser Extension** — Chrome extension to proxy SuperGrok web access via local OpenAI-compatible endpoint (blocked by anti-bot; needs extension architecture)
 
 ---
 

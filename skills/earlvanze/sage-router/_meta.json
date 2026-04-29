@@ -3,9 +3,15 @@
   "slug": "sage-router",
   "displayName": "Sage Router",
   "latest": {
-    "version": "3.24.1",
-    "publishedAt": 1776871485906,
-    "commit": "https://github.com/openclaw/skills/commit/3b889ea9cb97bd5e8c2707e45177006cd687eabe"
+    "version": "3.26.16",
+    "publishedAt": 1777341122390,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "3.24.1",
+      "publishedAt": 1776871485906,
+      "commit": "https://github.com/openclaw/skills/commit/3b889ea9cb97bd5e8c2707e45177006cd687eabe"
+    }
+  ]
 }
