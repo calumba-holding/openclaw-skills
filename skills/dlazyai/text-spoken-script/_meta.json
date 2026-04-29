@@ -3,9 +3,15 @@
   "slug": "text-spoken-script",
   "displayName": "Text Spoken Script",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776931343015,
-    "commit": "https://github.com/openclaw/skills/commit/10fdcfe59675e682cda314b4b6f3ef29d8342653"
+    "version": "1.0.5",
+    "publishedAt": 1777430164077,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776931343015,
+      "commit": "https://github.com/openclaw/skills/commit/10fdcfe59675e682cda314b4b6f3ef29d8342653"
+    }
+  ]
 }
