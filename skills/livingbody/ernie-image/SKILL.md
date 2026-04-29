@@ -1,11 +1,24 @@
 ---
 name: ERNIE-Image
-description: Generate/edit images with ERNIE-Image(Gemini 3 Pro Image). Use for image create/modify requests incl. edits. Supports text-to-image + image-to-image; 1K/2K/4K; use --input-image.
+description: Generate images with ERNIE-Image. Use for image create requests incl. edits. Supports text-to-image ; - 1024x1024/1376x768/1264x848/ 1200x896/896x1200/848x1264/768x1376; use --input-image.
 ---
 
 # ERNIE-ImageImage Generation & Editing
 
 Generate new images or edit existing ones using Baidu's ERNIE-Image API.
+
+## Prerequisites
+
+- Clawdbot installed and configured
+
+- Need Install python openai sdk: pip instsall openai
+
+## API Key
+
+The script checks for API key in this order:
+-  1.API key from https://aistudio.baidu.com/account/accessToken
+- 2.`ERNIE-Image_API_KEY` environment variable
+- 3.`--api-key` argument (use if user provided key in chat)
 
 ## Usage
 
@@ -16,23 +29,7 @@ Run the script using absolute path (do NOT cd to skill directory first):
 python ~/.codex/skills/ERNIE-Image/scripts/generate_image.py --prompt "your image description" --filename "output-name.png" [--resolution 1024*1024|1366*768] [--api-key KEY]
 ```
 
-**Edit existing image:**
-```bash
-python ~/.codex/skills/ERNIE-Image/scripts/generate_image.py --prompt "editing instructions" --filename "output-name.png" --input-image "path/to/input.png" [--resolution 1024*1024|1366*768] [--api-key KEY]
-```
-
 **Important:** Always run from the user's current working directory so images are saved where the user is working, not in the skill directory.
-
-## Default Workflow (draft → iterate → final)
-
-Goal: fast iteration without burning time on 4K until the prompt is correct.
-
-- Draft (1K): quick feedback loop
-  - `python  ~/.codex/skills/ERNIE-Image/scripts/generate_image.py --prompt "<draft prompt>" --filename "yyyy-mm-dd-hh-mm-ss-draft.png" --resolution 1024*1024`
-- Iterate: adjust prompt in small diffs; keep filename new per run
-  - If editing: keep the same `--input-image` for every iteration until you’re happy.
-- Final (4K): only when prompt is locked
-  - `python ~/.codex/skills/ERNIE-Image/scripts/generate_image.py --prompt "<final prompt>" --filename "yyyy-mm-dd-hh-mm-ss-final.png" --resolution 1366*768`
 
 ## Resolution Options
 
@@ -50,11 +47,7 @@ Map user requests to API parameters:
 - No mention of resolution → `1024x1024`
 - "low resolution", 1024x1024
 
-## API Key
 
-The script checks for API key in this order:
-1. `--api-key` argument (use if user provided key in chat)
-2. `ERNIE-Image_API_KEY` environment variable
 
 If neither is available, the script exits with an error message.
 
@@ -66,7 +59,6 @@ If neither is available, the script exits with an error message.
   
 - Common failures:
   - `Error: No API key provided.` → set `ERNIE-Image_API_KEY` or pass `--api-key`
-  - `Error loading input image:` → wrong path / unreadable file; verify `--input-image` points to a real image
   - “quota/permission/403” style API errors → wrong key, no access, or quota exceeded; try a different key/account
 
 ## Filename Generation
@@ -116,3 +108,8 @@ Use templates when the user is vague or when edits must be precise.
 python ~/.codex/skills/ERNIE-Image/scripts/generate_image.py --prompt "A serene Japanese garden with cherry blossoms" --filename "2025-11-23-14-23-05-japanese-garden.png" --resolution 1024*1024
 ```
 
+#  References
+- [https://aistudio.baidu.com/blog/detail/794723628346373](https://aistudio.baidu.com/blog/detail/794723628346373)
+- [https://aistudio.baidu.com/ernieimage](https://aistudio.baidu.com/ernieimage)
+- [https://aistudio.baidu.com/modelsdetail/46030/intro](https://aistudio.baidu.com/modelsdetail/46030/intro)
+- 

@@ -9,7 +9,7 @@
 Generate images using Baidu's ERNIE-Image API.
 
 Usage:
-    uv run generate_image.py --prompt "your image description" --filename "output.png" [--resolution 1K|2K|4K] [--api-key KEY]
+    python generate_image.py --prompt "your image description" --filename "output.png" [--resolution 1024x1024] [--api-key KEY]
 """
 import argparse
 import os
@@ -22,7 +22,12 @@ def get_api_key(provided_key: str | None) -> str | None:
     """Get API key from argument first, then environment."""
     if provided_key:
         return provided_key
-    return os.environ.get("ERNIE-Image_API_KEY")
+    # Try multiple env var names for compatibility
+    for key in ["ERNIE-Image_API_KEY", "ERNIE_Image_API_KEY", "BAIDU_API_KEY"]:
+        value = os.environ.get(key)
+        if value:
+            return value
+    return None
 
 
 def main():
