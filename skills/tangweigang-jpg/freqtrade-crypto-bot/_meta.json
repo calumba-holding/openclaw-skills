@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "freqtrade-crypto-bot",
-  "displayName": "freqtrade-crypto-bot",
+  "displayName": "Freqtrade Crypto Bot",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776896083642,
-    "commit": "https://github.com/openclaw/skills/commit/4345e6f42e0d9aa9cafcd1015fdbb6be7423a83d"
+    "version": "0.3.3",
+    "publishedAt": 1776954425136,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776896083642,
+      "commit": "https://github.com/openclaw/skills/commit/4345e6f42e0d9aa9cafcd1015fdbb6be7423a83d"
+    }
+  ]
 }
