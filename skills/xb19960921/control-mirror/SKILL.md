@@ -1,239 +1,406 @@
 ---
 name: control-mirror
-description: Audits agent and system architecture through a control theory lens for stability, feedback, noise, delay, oscillation, error control, adaptive behavior, and architectural evolution.
+description: Audits software, agent, workflow, platform, and socio-technical system architectures through engineering cybernetics: stability, feedback loops, noise, delay, error control, damping, observability, adaptation, and safe evolution. Use for architecture review, system stability diagnosis, multi-agent/AgentOS review, workflow governance, control-loop design, feedback failure analysis, and self-adaptive system improvement.
 ---
 
 # Control Mirror
 
-将钱学森《工程控制论》的核心理念变成一个专门审查系统架构的技能。
+Control Mirror turns the core ideas of Qian Xuesen's **Engineering Cybernetics** into a practical architecture review skill.
 
-这个 skill 不是普通的“架构 review”。它有三个角色：
+It is not a generic architecture review checklist. It treats a system as a **controlled dynamic system** and asks one brutal question:
 
-- **镜子**：照出系统里已经存在但平时不容易承认的问题
-- **尺子**：衡量系统当前到底强在哪、弱在哪
-- **指南针**：给出下一阶段最值得推进的进化方向
+> Is this system becoming more controllable, stable, observable, and adaptive — or merely more complicated?
 
-核心目标不是追求“更复杂”，而是推动系统变得更像**真正的自适应控制系统**。
+Use it as three tools at once:
 
----
-
-## 何时使用
-
-在这些场景触发：
-
-- 用户想审查自己的 Agent / 多Agent / 工作流系统
-- 用户想判断当前架构为什么会发散、振荡、污染、失稳
-- 用户想检查记忆系统、路由系统、反馈系统、工具系统是否真的合理
-- 用户想知道系统的优点到底是不是“真优点”，还是暂时没暴露问题
-- 用户想得到架构演进方向，而不是泛泛建议
-- 用户明确提到：控制论、工程控制论、反馈、稳定性、自适应、噪声、误差控制、时滞、振荡、自稳系统
+- **Mirror**: reveal hidden instability, noise, delay, positive feedback, and uncontrolled loops.
+- **Ruler**: measure whether the architecture has real controllability, not just many modules.
+- **Compass**: identify the next highest-leverage evolution step toward a self-stabilizing system.
 
 ---
 
-## 审查核心心法
+## When to Use
 
-不要把系统当成功能集合，要把它当成**控制系统**来审。
+Use this skill when the user wants to review, diagnose, or evolve any system architecture, especially:
 
-总是优先看这些问题：
+- software platforms, agent systems, workflow engines, automation systems, data pipelines, product operating systems
+- multi-agent systems, AgentOS, LLM tool-use systems, memory systems, routing layers, evaluation pipelines
+- systems that repeatedly fail, oscillate, drift, over-consume resources, or require constant human supervision
+- architectures with unclear feedback loops, weak observability, noisy memory/context, delayed correction, or unsafe automation
+- reviews involving: control theory, feedback, stability, damping, adaptation, error correction, delay, noise, self-stabilization, cybernetics
 
-1. 这个系统稳不稳
-2. 这个系统有没有反馈闭环
-3. 这个系统会不会因为时滞和噪声失真
-4. 这个系统有没有误差控制机制
-5. 这个系统有没有进入局部振荡的风险
-6. 这个系统能不能在环境变化下自己收敛，而不是一直靠人盯着
-
-不要先问它“功能多不多”，先问它“可控不可控”。
+Do **not** use this as a generic “is the code clean?” review. Use it when the key question is **system behavior over time**.
 
 ---
 
-## 审查流程
+## Core Lens
 
-### Phase 1：建立控制系统视角
+Do not start by asking “how many features does the system have?”
 
-先把用户系统映射成控制论结构：
+Start with:
 
-- 用户目标 → 参考输入
-- Agent / 调度器 / 工作流 → 控制器
-- 工具调用 / 环境 /真实任务对象 → 被控对象
-- 校验 / review / memory / retry → 反馈链路
-- 上下文污染 / 误召回 / 无关信息 → 噪声
-- 工具调用慢 / 状态同步慢 / 异步协作慢 → 时滞
-- Token / 成本 / 资源上限 → 约束条件
+1. What is the reference input / target state?
+2. What acts as the controller?
+3. What is the controlled object / environment?
+4. What sensors observe the system state?
+5. What feedback changes future behavior?
+6. Where are delay, noise, saturation, and error accumulation introduced?
+7. What prevents unstable positive feedback?
+8. Can the system converge after disturbance?
 
-如果做不到这个映射，说明审查还停留在表面。
-
-### Phase 2：用“镜子”找问题
-
-重点检查这些失稳模式：
-
-#### 1. 开环幻觉
-症状：
-- 只会执行，不会纠偏
-- 输出后没有校验链路
-- 错了只能靠人发现
-
-结论：系统仍然是开环系统。
-
-#### 2. 振荡问题
-症状：
-- 反复确认同一件事
-- 重复搜索 / 重复写回 / 重复调用工具
-- 答案越来越长但推进越来越少
-
-结论：系统进入局部振荡。
-
-#### 3. 时滞问题
-症状：
-- 异步流程反馈太慢
-- 多Agent协作互相等待
-- 上下文状态更新滞后
-
-结论：系统被时滞拉坏了控制精度。
-
-#### 4. 噪声污染
-症状：
-- 无关上下文进入高频决策
-- 错误召回被重复放大
-- 历史背景挤占当前信号
-
-结论：系统过滤层太弱。
-
-#### 5. 误差失控
-症状：
-- 小错误连续累积
-- 没有写回前判断
-- 没有回退机制
-- 错误会级联放大
-
-结论：系统缺误差控制。
-
-#### 6. 假自适应
-症状：
-- 看起来很灵活，但所有调整都靠人工
-- 没有自动阻尼、自动降级、自动收敛
-
-结论：系统只是复杂，不是真自适应。
-
-### Phase 3：用“尺子”量优点
-
-不要只抓错，也要辨认系统真正有价值的地方。
-
-优点不是“模块多”，而是这些：
-
-- 是否有真实反馈闭环
-- 是否有稳定性优先意识
-- 是否有噪声过滤机制
-- 是否有误差补偿机制
-- 是否有写回前稳定判断
-- 是否有振荡检测
-- 是否能在长期运行中减少人盯盘
-
-如果一个优点不能提高系统可控性，就别轻易把它算成架构优势。
-
-### Phase 4：用“指南针”给演进方向
-
-不要给用户十几条散建议。只给最值的方向。
-
-演进建议按优先级分三档：
-
-#### P0：先防失控
-适用：系统已经有明显振荡、污染、回路失稳
-
-优先建议：
-- 加反馈闭环
-- 加写回前稳定性判断
-- 加重复回路检测
-- 加上下文过滤层
-- 加错误回滚机制
-
-#### P1：再提自稳
-适用：系统能跑，但长期运行不稳
-
-优先建议：
-- 加自适应阻尼
-- 加运行时降级策略
-- 加动态上下文裁剪
-- 加噪声字段黑名单
-- 加高权重字段优先注入
-
-#### P2：最后做自适应演进
-适用：系统基础稳定，准备进一步产品化
-
-优先建议：
-- 加环境感知参数
-- 加运行状态监控
-- 加动态策略切换
-- 加稳定域检测
-- 加演化后的自动复盘沉淀
+If you cannot map these, the review is still too superficial.
 
 ---
 
-## 输出结构
+## Engineering Cybernetics Mapping
 
-输出时固定按这四段：
+Map the user's architecture into this structure:
 
-### 一、控制系统映射
-一句话说清这个系统在控制论里是什么结构。
-
-### 二、架构问题（镜子）
-只列最关键的 3-5 个，不堆清单。
-每个问题都要说：
-- 这是什么问题
-- 为什么这是控制问题
-- 如果不改会怎样
-
-### 三、架构优点（尺子）
-只写真正提高系统可控性的优点。
-不要把“功能多”误写成优点。
-
-### 四、进化方向（指南针）
-给出：
-- 当前最值得改的 1-3 件事
-- 为什么优先改这个
-- 改完系统会更像哪一种自适应控制系统
+| Cybernetics concept | Architecture equivalent |
+|---|---|
+| Reference input | User goal, SLA, product target, policy, task objective |
+| Controller | Scheduler, orchestrator, agent, workflow engine, governance layer |
+| Controlled object | Codebase, service, team process, model provider, external environment |
+| Actuator | Tool calls, deployments, writes, API calls, workflow transitions |
+| Sensor | Tests, logs, metrics, review, cost reports, human feedback, evals |
+| Feedback | Signals that change later routing, budget, memory, workflow, or policy |
+| Noise | Irrelevant context, stale memory, bad retrieval, flaky logs, misleading metrics |
+| Delay | Async queues, slow tools, stale state sync, delayed human review |
+| Error | Difference between target and actual state |
+| Damping | Rate limits, compression, budget caps, confirmations, backoff, gates |
+| Saturation | Token limits, API limits, budget limits, human attention limits |
+| Stability boundary | Conditions where automation must pause, degrade, or ask for confirmation |
 
 ---
 
-## 关键判断标准
+## Review Workflow
 
-把所有结论都往这句上收：
+### Phase 1: Define the Control Loop
 
-**这个系统是不是正在变得更像真正的自适应控制系统？**
+Produce a concise control-loop map:
 
-判断时看：
+```text
+Target → Controller → Actuator → Controlled object → Sensor → Feedback → Controller
+```
 
-- 会不会自己纠偏
-- 会不会自己降噪
-- 会不会自己收敛
-- 会不会自己识别振荡
-- 会不会在环境变化下调整策略
+Then identify:
 
-如果都还做不到，就别急着夸它“高级”。
+- feedback frequency
+- feedback quality
+- delay points
+- noise sources
+- constraints / saturation points
+- human checkpoints
+
+### Phase 2: Detect Instability Patterns
+
+Look for the highest-risk 3-5 patterns only. Do not dump a huge checklist.
+
+#### 1. Open-loop execution
+
+Symptoms:
+- system executes but does not verify
+- failures do not change future strategy
+- humans discover errors only after damage
+
+Control diagnosis: the system lacks effective feedback.
+
+#### 2. Positive feedback amplification
+
+Symptoms:
+- bad memory causes worse retrieval, which writes more bad memory
+- failing retries increase cost and context noise
+- low-quality outputs feed later decisions without validation
+
+Control diagnosis: error is amplified instead of damped.
+
+#### 3. Oscillation
+
+Symptoms:
+- repeated searching, repeated rewriting, repeated re-planning
+- agents hand tasks back and forth
+- workflow loops without new evidence
+
+Control diagnosis: feedback exists, but damping and convergence criteria are weak.
+
+#### 4. Delay-induced correction failure
+
+Symptoms:
+- async feedback arrives after the system has already moved on
+- state is stale when decisions are made
+- human approval comes too late to prevent error propagation
+
+Control diagnosis: the feedback loop has harmful latency.
+
+#### 5. Noise pollution
+
+Symptoms:
+- irrelevant context dominates current task signal
+- stale memory is treated as truth
+- logs are too verbose to reveal failure causes
+
+Control diagnosis: the sensor layer lacks filtering.
+
+#### 6. Error accumulation
+
+Symptoms:
+- small deviations silently compound
+- no checkpoint validates intermediate state
+- rollback is missing or expensive
+
+Control diagnosis: there is no bounded-error mechanism.
+
+#### 7. Fake adaptation
+
+Symptoms:
+- system looks flexible, but every adjustment is manual
+- policies do not update from observed outcomes
+- “AI decides” but cannot explain or revise its decision rule
+
+Control diagnosis: adaptation is not closed-loop.
+
+#### 8. Saturation blindness
+
+Symptoms:
+- token/cost/API/human attention limits are treated as infinite
+- system fails only after hitting hard limits
+- no graceful degradation exists
+
+Control diagnosis: constraints are not part of the controller.
+
+### Phase 3: Measure Real Strengths
+
+Only count an architectural strength if it improves controllability.
+
+Good strengths include:
+
+- feedback that actually changes future behavior
+- tests/reviews that gate irreversible actions
+- cost/token/resource constraints that affect routing
+- memory that is filtered, layered, and reversible
+- observability that exposes why decisions were made
+- fallback and degradation paths
+- explicit pause/confirm conditions for high-risk actions
+
+Do not praise “many modules”, “many agents”, or “complex workflows” unless they improve stability.
+
+### Phase 4: Score Control Maturity
+
+Use this 0-5 scale:
+
+| Level | Name | Meaning |
+|---:|---|---|
+| 0 | Open loop | Executes without reliable feedback |
+| 1 | Human-corrected loop | Humans catch and correct most errors |
+| 2 | Verified loop | Tests/reviews/metrics gate some actions |
+| 3 | Damped closed loop | Budgets, gates, retries, and fallbacks reduce instability |
+| 4 | Adaptive closed loop | Historical outcomes tune future routing/policy/budget |
+| 5 | Self-evolving controlled system | The system improves its own procedures while preventing drift and pollution |
+
+Give a level with one sentence of evidence.
+
+### Phase 5: Recommend Evolution
+
+Prioritize only 1-3 actions.
+
+Use this priority logic:
+
+- **P0: Prevent loss of control** — add gates, rollback, confirmation, error bounds, loop detection.
+- **P1: Improve self-stabilization** — add damping, filtering, degradation, better observability.
+- **P2: Improve adaptation** — use historical outcomes to tune policies, promote SOPs, evolve workflows.
 
 ---
 
-## 对 OpenClaw / Agent 系统特别要审的点
+## Control Scorecard
 
-当审查对象是 OpenClaw、多Agent、claude-mem、工作流系统时，额外重点检查：
+When the user wants a rigorous review, include this table:
 
-- Skill 是真优先调用，还是口头优先
-- 记忆层是提效，还是污染源
-- 多Agent 是真协作，还是互相放大噪声
-- 路由层是稳态调度，还是关键词拍脑袋
-- 长期运行是否存在“越跑越散”的趋势
-- 写回机制是否把临时噪声误写进长期层
+| Dimension | Score / 5 | What to check |
+|---|---:|---|
+| Feedback completeness |  | Does output affect future decisions? |
+| Stability / convergence |  | Does the system stop oscillating and converge? |
+| Noise filtering |  | Are irrelevant/stale signals filtered before decisions? |
+| Delay handling |  | Are stale/late signals detected and handled? |
+| Error control |  | Are small errors bounded before they cascade? |
+| Damping / resource control |  | Are cost/token/API/human limits part of control? |
+| Observability |  | Can humans see why decisions were made? |
+| Adaptation |  | Do historical outcomes tune future behavior? |
+| Safety boundary |  | Does automation pause on irreversible/high-risk actions? |
+
+Then summarize:
+
+```text
+Control maturity level: L0-L5
+Strongest control loop: ...
+Weakest control loop: ...
+Highest-risk instability: ...
+Next P0 action: ...
+```
 
 ---
 
-## 边界
+## Output Format
 
-不要把这个 skill 变成纯理论报告。
+Use this default structure:
 
-必须做到：
-- 结论能落地
-- 指出的问题能被验证
-- 给出的演进方向能排序
-- 输出围绕“可控性”而不是炫概念
+### 1. Control-system mapping
 
-如果只是讲控制论概念，没有落到系统结构和演进动作，算失败。
+One concise paragraph or diagram mapping the system into controller / controlled object / feedback / noise / delay / constraints.
+
+### 2. Architecture problems — Mirror
+
+List the most important 3-5 problems.
+
+For each:
+
+- **Problem**: what is unstable or uncontrolled
+- **Control diagnosis**: why this is a feedback/noise/delay/error issue
+- **Consequence**: what happens if it remains unfixed
+
+### 3. Architecture strengths — Ruler
+
+Only list strengths that improve controllability, stability, observability, or adaptation.
+
+### 4. Evolution direction — Compass
+
+Give 1-3 prioritized actions:
+
+- priority
+- action
+- why it comes first
+- how to verify it worked
+
+### 5. Control scorecard
+
+Include when the review is non-trivial or when the user asks for scoring.
+
+---
+
+## Domain-Specific Review Prompts
+
+### Software platform / microservices
+
+Check:
+
+- service health signals → routing / scaling / rollback
+- alert delay and alert fatigue
+- retry storms and cascading failures
+- circuit breakers and backpressure
+- deployment rollback and blast-radius control
+
+### Data pipeline / analytics system
+
+Check:
+
+- data quality sensors
+- late-arriving data handling
+- schema drift detection
+- bad data quarantine
+- downstream contamination recovery
+
+### Workflow / operations system
+
+Check:
+
+- whether each step has a gate
+- whether failed steps loop back to the right point
+- whether work-in-progress creates hidden queues
+- whether handoffs introduce delay or noise
+- whether “done” has measurable criteria
+
+### Agent / LLM system
+
+Check:
+
+- tool calls are verified, not assumed
+- memory is layered and filtered
+- retrieval errors do not poison future context
+- model routing considers complexity, cost, latency, health, and outcome history
+- long outputs are compressed before entering context
+- high-risk writes/actions require confirmation
+
+### Organization / socio-technical system
+
+Check:
+
+- decision feedback is timely enough to matter
+- local team incentives do not amplify global instability
+- metrics do not become noisy proxies
+- governance prevents irreversible mistakes without freezing execution
+
+---
+
+## AgentOS / Multi-Agent Extension
+
+Use this section only when reviewing AgentOS, multi-agent platforms, OpenClaw-like systems, LLM orchestration, or autonomous workflow engines.
+
+### AgentOS control-loop map
+
+```text
+User goal / task queue
+  → execution kernel / orchestrator
+  → complexity scoring + routing policy
+  → model / agent / tool execution
+  → tests / review / cost / logs / user feedback
+  → memory / metrics / SOP candidates
+  → next routing, workflow, budget, or policy decision
+```
+
+### AgentOS-specific questions
+
+- Is there a single default execution entrypoint, or can components bypass the control loop?
+- Does model routing use complexity, budget, health, latency, historical success/failure, and user preference?
+- Are high-token outputs such as test logs, build logs, git diffs, search/list/tree outputs compressed and measured?
+- Do workflow templates have gates and failure loops, or are they only diagrams?
+- Does memory separate runtime observations, task summaries, failure cases, SOP candidates, and long-term wiki notes?
+- Do failures and costs tune future behavior, or are they only recorded?
+- Are irreversible writes, public actions, deletions, deployments, and over-budget actions bounded by confirmation?
+
+### AgentOS scorecard add-on
+
+| Dimension | Score / 5 | Deduct when... |
+|---|---:|---|
+| Default entrypoint unity |  | APIs/tools bypass the kernel/orchestrator |
+| Model routing adaptiveness |  | routing is keyword-only or ignores history/cost/health |
+| Token damping |  | noisy outputs enter context uncompressed |
+| Workflow gate strength |  | steps can advance without required evidence |
+| Memory pollution resistance |  | temporary noise is written into long-term memory |
+| Feedback-to-policy loop |  | failures/costs are logged but do not affect future decisions |
+| Explainability |  | decisions lack request id, factors, or human-readable reason |
+| Safety boundary |  | high-risk automation has no pause/confirm path |
+
+Common AgentOS instability patterns:
+
+- **Kernel bypass**: multiple execution paths ignore the main controller.
+- **Feedback as logs only**: sensors exist, but do not affect control.
+- **Memory writeback overheating**: every observation becomes long-term truth.
+- **Formal workflow gates**: steps exist, but missing evidence does not block progress.
+- **Unobservable damping**: compression/budgeting exists, but savings and loss are not measurable.
+
+---
+
+## Anti-Patterns
+
+Avoid these mistakes:
+
+- Turning the review into a theoretical control theory lecture.
+- Praising complexity as sophistication.
+- Listing every possible issue instead of the few that most affect control.
+- Suggesting adaptation before the system has basic stability.
+- Ignoring human attention and budget as hard constraints.
+- Treating logs as feedback when they do not change future decisions.
+- Treating memory as knowledge without filtering, promotion, or rollback.
+
+---
+
+## Quality Bar
+
+A good Control Mirror review must be:
+
+- **Mapped**: clear controller / object / sensor / feedback structure.
+- **Diagnostic**: names the control failure, not just the symptom.
+- **Prioritized**: gives P0/P1/P2, not a flat wishlist.
+- **Verifiable**: each recommendation has a way to check completion.
+- **Grounded**: tied to the actual architecture, code, workflow, or process.
+
+If the output does not help the user make the system more controllable, stable, observable, or adaptive, it failed.
