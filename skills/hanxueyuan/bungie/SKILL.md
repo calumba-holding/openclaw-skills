@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 summary: "From Halo to Destiny to Marathon — Bungie's creative journey through the evolution of first-person gaming."
 read_when:
   - "研究 Bungie 如何定义主机 FPS 品类",
