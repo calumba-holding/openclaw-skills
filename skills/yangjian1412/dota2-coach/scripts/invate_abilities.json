@@ -1,0 +1,362 @@
+{
+  "bane": {
+    "bane_ichor_of_nyctasha": "妮塔莎脓血"
+  },
+  "bloodseeker": {
+    "bloodseeker_sanguivore": "食血动物"
+  },
+  "crystal_maiden": {
+    "crystal_maiden_glacial_guard": "冰川护体"
+  },
+  "drow_ranger": {
+    "drow_ranger_trueshot": "精准光环"
+  },
+  "mirana": {
+    "mirana_celestial_quiver": "天界箭袋"
+  },
+  "nevermore": {
+    "nevermore_necromastery": "支配死灵"
+  },
+  "morphling": {
+    "morphling_ebb_and_flow": "潮涨潮落"
+  },
+  "phantom_lancer": {
+    "phantom_lancer_illusory_armaments": "灵幻兵械"
+  },
+  "pudge": {
+    "pudge_innate_graft_flesh": "腐肉堆积"
+  },
+  "sand_king": {
+    "sandking_caustic_finale": "腐尸毒"
+  },
+  "sven": {
+    "sven_wrath_of_god": "神之愤怒"
+  },
+  "tiny": {
+    "tiny_insurmountable": "不可逾越"
+  },
+  "windrunner": {
+    "windrunner_tailwind": "一路顺风"
+  },
+  "zuus": {
+    "zuus_static_field": "静电场"
+  },
+  "kunkka": {
+    "kunkka_admirals_rum": "统帅朗姆酒"
+  },
+  "lich": {
+    "lich_death_charge": "献身"
+  },
+  "shadow_shaman": {
+    "shadow_shaman_fowl_play": "禽戏"
+  },
+  "tidehunter": {
+    "tidehunter_leviathans_catch": "利维坦的渔获"
+  },
+  "riki": {
+    "riki_innate_backstab": "背刺"
+  },
+  "necrolyte": {
+    "necrolyte_sadist": "施虐之心"
+  },
+  "beastmaster": {
+    "beastmaster_inner_beast": "野性之心"
+  },
+  "venomancer": {
+    "venomancer_poison_sting": "毒刺"
+  },
+  "death_prophet": {
+    "death_prophet_witchcraft": "巫术精研"
+  },
+  "phantom_assassin": {
+    "phantom_assassin_blur": "魅影无形"
+  },
+  "luna": {
+    "luna_lunar_blessing": "月之祝福"
+  },
+  "dazzle": {
+    "dazzle_innate_weave": "编织"
+  },
+  "furion": {
+    "furion_spirit_of_the_forest": "丛林之魂"
+  },
+  "life_stealer": {
+    "life_stealer_ghoul_frenzy": "尸鬼狂怒"
+  },
+  "omniknight": {
+    "omniknight_degen_aura": "退化光环"
+  },
+  "night_stalker": {
+    "night_stalker_hunter_in_the_night": "暗夜猎影"
+  },
+  "broodmother": {
+    "broodmother_spiders_milk": "蜘蛛奶"
+  },
+  "chen": {
+    "chen_zealot": "狂热者"
+  },
+  "spectre": {
+    "spectre_desolate": "荒芜"
+  },
+  "doom_bringer": {
+    "doom_bringer_lvl_pain": "等级？痛苦"
+  },
+  "ancient_apparition": {
+    "ancient_apparition_bone_chill": "刺骨严寒"
+  },
+  "spirit_breaker": {
+    "spirit_breaker_bull_rush": "神行太保"
+  },
+  "gyrocopter": {
+    "gyrocopter_afterburner": "加力燃烧器"
+  },
+  "alchemist": {
+    "alchemist_goblins_greed": "贪魔的贪婪"
+  },
+  "invoker": {
+    "invoker_invoke": "元素祈唤"
+  },
+  "obsidian_destroyer": {
+    "obsidian_destroyer_equilibrium": "精华变迁"
+  },
+  "brewmaster": {
+    "brewmaster_liquid_courage": "壮胆酒"
+  },
+  "shadow_demon": {
+    "shadow_demon_menace": "威胁"
+  },
+  "lone_druid": {
+    "lone_druid_spirit_bear": "熊灵伙伴"
+  },
+  "treant": {
+    "treant_natures_guise": "自然蔽护"
+  },
+  "ogre_magi": {
+    "ogre_magi_dumb_luck": "傻福"
+  },
+  "undying": {
+    "undying_ceaseless_dirge": "挽歌犹唱"
+  },
+  "rubick": {
+    "rubick_curiosity": "奇心"
+  },
+  "disruptor": {
+    "disruptor_electromagnetic_repulsion": "电磁排斥"
+  },
+  "nyx_assassin": {
+    "nyx_assassin_neuro_sting": "法力燃烧"
+  },
+  "wisp": {
+    "wisp_equilibrium": "衡势"
+  },
+  "visage": {
+    "visage_silent_as_the_grave": "静如古墓"
+  },
+  "slark": {
+    "slark_essence_shift": "能量转移"
+  },
+  "medusa": {
+    "medusa_mana_shield": "魔法盾"
+  },
+  "troll_warlord": {
+    "troll_warlord_switch_stance": "战斗姿态"
+  },
+  "magnataur": {
+    "magnataur_solid_core": "坚固核心"
+  },
+  "tusk": {
+    "tusk_bitter_chill": "严寒"
+  },
+  "skywrath_mage": {
+    "skywrath_mage_shield_of_the_scion": "天裔之盾"
+  },
+  "abaddon": {
+    "abaddon_withering_mist": "凋零迷雾"
+  },
+  "legion_commander": {
+    "legion_commander_outfight_them": "迎难而战！"
+  },
+  "earth_spirit": {
+    "earth_spirit_stone_caller": "残岩"
+  },
+  "phoenix": {
+    "phoenix_dying_light": "消逝之光"
+  },
+  "techies": {
+    "techies_mutually_assured_destruction": "同归于尽"
+  },
+  "winter_wyvern": {
+    "winter_wyvern_eldwurms_edda": "古龙诗集"
+  },
+  "arc_warden": {
+    "arc_warden_runic_infusion": "神符灌注"
+  },
+  "monkey_king": {
+    "monkey_king_mischief": "七十二变"
+  },
+  "pangolier": {
+    "pangolier_fortune_favors_the_bold": "天佑勇者"
+  },
+  "grimstroke": {
+    "grimstroke_ink_trail": "墨痕"
+  },
+  "hoodwink": {
+    "hoodwink_forager": ""
+  },
+  "marci": {
+    "marci_special_delivery": "特快专递"
+  },
+  "muerta": {
+    "muerta_supernatural": "超自然"
+  },
+  "ringmaster": {
+    "ringmaster_dark_carnival_souvenirs": "暗黑狂欢主持"
+  },
+  "kez": {
+    "kez_switch_weapons": "流派变换"
+  },
+  "slardar": {
+    "slardar_seaborn_sentinel": "汪洋前哨"
+  },
+  "viper": {
+    "viper_predator": "掠食"
+  },
+  "skeleton_king": {
+    "skeleton_king_vampiric_aura": "吸血灵魂"
+  },
+  "tinker": {
+    "tinker_eureka": "尤里卡！"
+  },
+  "witch_doctor": {
+    "witch_doctor_gris_gris": "驱邪护符"
+  },
+  "sniper": {
+    "sniper_keen_scope": "基恩瞄准镜"
+  },
+  "warlock": {
+    "warlock_eldritch_summoning": "邪术召唤"
+  },
+  "antimage": {
+    "antimage_persectur": "绝人之路"
+  },
+  "axe": {
+    "axe_one_man_army": "一人之军"
+  },
+  "earthshaker": {
+    "earthshaker_enchant_totem": "强化图腾"
+  },
+  "juggernaut": {
+    "juggernaut_bladeform": "剑心犹在"
+  },
+  "lina": {
+    "lina_slow_burn": "慢热"
+  },
+  "puck": {
+    "puck_puckish": "顽皮克敌"
+  },
+  "razor": {
+    "razor_unstable_current": "不稳定电流"
+  },
+  "storm_spirit": {
+    "storm_spirit_galvanized": "通电"
+  },
+  "bounty_hunter": {
+    "bounty_hunter_big_game_hunter": "赏金猎人"
+  },
+  "enchantress": {
+    "enchantress_rabblerouser": "煽动野怪"
+  },
+  "lycan": {
+    "lycan_apex_predator": "顶级掠食者"
+  },
+  "bristleback": {
+    "bristleback_prickly": "尖刺在背"
+  },
+  "centaur": {
+    "centaur_horsepower": "开足马力"
+  },
+  "enigma": {
+    "enigma_event_horizon": "事件视界"
+  },
+  "vengefulspirit": {
+    "vengefulspirit_retribution": "恶有恶报"
+  },
+  "weaver": {
+    "weaver_threads_of_fate": "命运之线"
+  },
+  "lion": {
+    "lion_to_hell_and_back": "下地狱再上来"
+  },
+  "abyssal_underlord": {
+    "abyssal_underlord_raid_boss": "侵略大军"
+  },
+  "batrider": {
+    "batrider_smoldering_resin": "闷烧树脂"
+  },
+  "chaos_knight": {
+    "chaos_knight_fundamental_forging": "基本法则锻造"
+  },
+  "clinkz": {
+    "clinkz_infernal_shred": "地狱之裂"
+  },
+  "dark_seer": {
+    "dark_seer_aggrandize": "才思敏捷"
+  },
+  "dark_willow": {
+    "dark_willow_pixie_dust": "仙灵粉尘"
+  },
+  "dawnbreaker": {
+    "dawnbreaker_break_of_dawn": "辰星破晓"
+  },
+  "dragon_knight": {
+    "dragon_knight_dragon_blood": "龙族血统"
+  },
+  "elder_titan": {
+    "elder_titan_momentum": "动量"
+  },
+  "ember_spirit": {
+    "ember_spirit_immolation": "献祭心"
+  },
+  "faceless_void": {
+    "faceless_void_distortion_field": "扭曲力场"
+  },
+  "huskar": {
+    "huskar_blood_magic": "血魔法"
+  },
+  "jakiro": {
+    "jakiro_double_trouble": "天生一对"
+  },
+  "keeper_of_the_light": {
+    "keeper_of_the_light_bright_speed": "光明速度"
+  },
+  "largo": {
+    "largo_encore": "安可"
+  },
+  "leshrac": {
+    "leshrac_defilement": "大肆污染"
+  },
+  "mars": {
+    "mars_dauntless": "无畏"
+  },
+  "meepo": {
+    "meepo_geomancy": "地卜术"
+  },
+  "naga_siren": {
+    "naga_siren_eelskin": "鳗鱼皮"
+  },
+  "oracle": {
+    "oracle_prognosticate": "预言"
+  },
+  "primal_beast": {
+    "primal_beast_colossal": "庞"
+  },
+  "pugna": {
+    "pugna_oblivion_savant": "湮灭专家"
+  },
+  "queenofpain": {
+    "queenofpain_succubus": "魅魔"
+  },
+  "rattletrap": {
+    "rattletrap_armor_power": "装甲力量"
+  }
+}

@@ -1,0 +1,7965 @@
+[
+  {
+    "hero_key": "abaddon",
+    "abilities": [
+      {
+        "key": "abaddon_death_coil",
+        "name": "迷雾缠绕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "abaddon_aphotic_shield",
+        "name": "无光之盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "abaddon_frostmourne",
+        "name": "魔霭诅咒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "abaddon_withering_mist",
+        "name": "凋零迷雾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "abaddon_borrowed_time",
+        "name": "回光返照",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "abyssal_underlord",
+    "abilities": [
+      {
+        "key": "abyssal_underlord_firestorm",
+        "name": "火焰风暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "abyssal_underlord_pit_of_malice",
+        "name": "怨念深渊",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "abyssal_underlord_atrophy_aura",
+        "name": "衰退光环",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "abyssal_underlord_raid_boss",
+        "name": "侵略大军",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "abyssal_underlord_dark_portal",
+        "name": "恶魔之扉",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "alchemist",
+    "abilities": [
+      {
+        "key": "alchemist_acid_spray",
+        "name": "酸性喷雾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "alchemist_unstable_concoction",
+        "name": "不稳定化合物",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "alchemist_corrosive_weaponry",
+        "name": "腐蚀兵械",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "alchemist_berserk_potion",
+        "name": "狂暴药剂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "alchemist_goblins_greed",
+        "name": "贪魔的贪婪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "alchemist_chemical_rage",
+        "name": "化学狂暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "alchemist_unstable_concoction_throw",
+        "name": "投掷不稳定化合物",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "ancient_apparition",
+    "abilities": [
+      {
+        "key": "ancient_apparition_cold_feet",
+        "name": "寒霜之足",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ancient_apparition_ice_vortex",
+        "name": "冰霜漩涡",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ancient_apparition_chilling_touch",
+        "name": "极寒之触",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ancient_apparition_bone_chill",
+        "name": "刺骨严寒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "ancient_apparition_ice_blast",
+        "name": "冰晶爆轰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ancient_apparition_ice_blast_release",
+        "name": "释放",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "antimage",
+    "abilities": [
+      {
+        "key": "antimage_mana_break",
+        "name": "法力损毁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "antimage_blink",
+        "name": "闪烁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "antimage_counterspell",
+        "name": "法术反制",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "antimage_persectur",
+        "name": "绝人之路",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "antimage_mana_void",
+        "name": "法力虚空",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "arc_warden",
+    "abilities": [
+      {
+        "key": "arc_warden_flux",
+        "name": "乱流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "arc_warden_magnetic_field",
+        "name": "磁场",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "arc_warden_spark_wraith",
+        "name": "闪光幽魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "arc_warden_runic_infusion",
+        "name": "神符灌注",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "arc_warden_tempest_double",
+        "name": "风暴双雄",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "axe",
+    "abilities": [
+      {
+        "key": "axe_berserkers_call",
+        "name": "狂战士之吼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "axe_battle_hunger",
+        "name": "战斗饥渴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "axe_counter_helix",
+        "name": "反击螺旋",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "axe_culling_blade",
+        "name": "淘汰之刃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "axe_one_man_army",
+        "name": "一人之军",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "bane",
+    "abilities": [
+      {
+        "key": "bane_enfeeble",
+        "name": "虚弱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bane_brain_sap",
+        "name": "蚀脑",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bane_nightmare",
+        "name": "噩梦",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bane_fiends_grip",
+        "name": "魔爪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bane_nightmare_end",
+        "name": "噩梦终止",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bane_ichor_of_nyctasha",
+        "name": "妮塔莎脓血",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "batrider",
+    "abilities": [
+      {
+        "key": "batrider_sticky_napalm",
+        "name": "粘性燃油",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "batrider_flamebreak",
+        "name": "烈焰破击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "batrider_firefly",
+        "name": "火焰飞行",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "batrider_sticky_napalm_application_damage",
+        "name": "施加时伤害：",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "batrider_smoldering_resin",
+        "name": "闷烧树脂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "batrider_flaming_lasso",
+        "name": "燃烧枷锁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "beastmaster",
+    "abilities": [
+      {
+        "key": "beastmaster_wild_axes",
+        "name": "野性之斧",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "beastmaster_summon_razorback",
+        "name": "召唤刀背兽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "beastmaster_summon_raptor",
+        "name": "召唤猛禽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "beastmaster_inner_beast",
+        "name": "野性之心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "beastmaster_drums_of_slom",
+        "name": "斯洛姆战鼓",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "beastmaster_primal_roar",
+        "name": "原始咆哮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "bloodseeker",
+    "abilities": [
+      {
+        "key": "bloodseeker_bloodrage",
+        "name": "血怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bloodseeker_blood_bath",
+        "name": "血祭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bloodseeker_thirst",
+        "name": "焦渴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bloodseeker_sanguivore",
+        "name": "食血动物",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "bloodseeker_rupture",
+        "name": "割裂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "bounty_hunter",
+    "abilities": [
+      {
+        "key": "bounty_hunter_shuriken_toss",
+        "name": "投掷飞镖",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bounty_hunter_jinada",
+        "name": "忍术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bounty_hunter_wind_walk",
+        "name": "暗影步",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bounty_hunter_wind_walk_ally",
+        "name": "暗影情谊",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "bounty_hunter_big_game_hunter",
+        "name": "职业猎人",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "bounty_hunter_track",
+        "name": "追踪术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "brewmaster",
+    "abilities": [
+      {
+        "key": "brewmaster_thunder_clap",
+        "name": "雷霆一击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "brewmaster_cinder_brew",
+        "name": "余烬佳酿",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "brewmaster_drunken_brawler",
+        "name": "醉拳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "brewmaster_liquid_courage",
+        "name": "壮胆酒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "brewmaster_primal_split",
+        "name": "元素分离",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "bristleback",
+    "abilities": [
+      {
+        "key": "bristleback_viscous_nasal_goo",
+        "name": "粘稠鼻液",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bristleback_quill_spray",
+        "name": "刺针扫射",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bristleback_bristleback",
+        "name": "钢毛后背",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bristleback_hairball",
+        "name": "毛团",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "bristleback_warpath",
+        "name": "战意",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "bristleback_prickly",
+        "name": "尖刺在背",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "broodmother",
+    "abilities": [
+      {
+        "key": "broodmother_insatiable_hunger",
+        "name": "极度饥渴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "broodmother_spin_web",
+        "name": "织网",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "broodmother_incapacitating_bite",
+        "name": "麻痹之咬",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "broodmother_sticky_snare",
+        "name": "蛛纱陷阱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "broodmother_spiders_milk",
+        "name": "蜘蛛奶",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "broodmother_spawn_spiderlings",
+        "name": "孵化蜘蛛",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "centaur",
+    "abilities": [
+      {
+        "key": "centaur_hoof_stomp",
+        "name": "马蹄践踏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "centaur_double_edge",
+        "name": "双刃剑",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "centaur_return",
+        "name": "反伤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "centaur_work_horse",
+        "name": "马到成功",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "centaur_mount",
+        "name": "便车",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "centaur_stampede",
+        "name": "奔袭冲撞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "centaur_horsepower",
+        "name": "开足马力",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "chaos_knight",
+    "abilities": [
+      {
+        "key": "chaos_knight_chaos_bolt",
+        "name": "混乱之箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "chaos_knight_reality_rift",
+        "name": "实相裂隙",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "chaos_knight_chaos_strike",
+        "name": "混沌一击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "chaos_knight_fundamental_forging",
+        "name": "基本法则锻造",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "chaos_knight_phantasm",
+        "name": "混沌之军",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "chen",
+    "abilities": [
+      {
+        "key": "chen_penitence",
+        "name": "赎罪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "chen_holy_persuasion",
+        "name": "神圣劝化",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "chen_divine_favor",
+        "name": "神力恩泽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "chen_zealot",
+        "name": "狂热者",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "chen_hand_of_god",
+        "name": "上帝之手",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "clinkz",
+    "abilities": [
+      {
+        "key": "clinkz_strafe",
+        "name": "扫射",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "clinkz_searing_arrows",
+        "name": "灼热之箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "clinkz_death_pact",
+        "name": "死亡契约",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "clinkz_burning_barrage",
+        "name": "炽烈火雨",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "clinkz_burning_army",
+        "name": "烈焰之军",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "clinkz_wind_walk",
+        "name": "骨隐步",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "clinkz_infernal_shred",
+        "name": "地狱之裂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "crystal_maiden",
+    "abilities": [
+      {
+        "key": "crystal_maiden_crystal_nova",
+        "name": "冰霜新星",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "crystal_maiden_frostbite",
+        "name": "冰封禁制",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "crystal_maiden_brilliance_aura",
+        "name": "奥术光环",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "crystal_maiden_crystal_clone",
+        "name": "冰晶克隆",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "crystal_maiden_glacial_guard",
+        "name": "冰川护体",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "crystal_maiden_freezing_field",
+        "name": "极寒领域",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "crystal_maiden_freezing_field_stop",
+        "name": "停止极寒领域",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "dark_seer",
+    "abilities": [
+      {
+        "key": "dark_seer_vacuum",
+        "name": "真空",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_seer_ion_shell",
+        "name": "离子外壳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_seer_surge",
+        "name": "奔腾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_seer_normal_punch",
+        "name": "普通一拳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_seer_aggrandize",
+        "name": "才思敏捷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "dark_seer_wall_of_replica",
+        "name": "复制之墙",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "dark_willow",
+    "abilities": [
+      {
+        "key": "dark_willow_bramble_maze",
+        "name": "荆棘迷宫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_willow_shadow_realm",
+        "name": "暗影之境",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_willow_cursed_crown",
+        "name": "诅咒王冠",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_willow_bedlam",
+        "name": "作祟",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dark_willow_pixie_dust",
+        "name": "仙灵粉尘",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "dark_willow_terrorize",
+        "name": "恐吓",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "dawnbreaker",
+    "abilities": [
+      {
+        "key": "dawnbreaker_fire_wreath",
+        "name": "星破天惊",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dawnbreaker_celestial_hammer",
+        "name": "上界重锤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dawnbreaker_luminosity",
+        "name": "熠熠生辉",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dawnbreaker_converge",
+        "name": "会合",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dawnbreaker_break_of_dawn",
+        "name": "辰星破晓",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "dawnbreaker_solar_guardian",
+        "name": "天光现世",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dawnbreaker_land",
+        "name": "dawnbreaker_land",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "dazzle",
+    "abilities": [
+      {
+        "key": "dazzle_poison_touch",
+        "name": "剧毒之触",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dazzle_shallow_grave",
+        "name": "薄葬",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dazzle_shadow_wave",
+        "name": "暗影波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dazzle_innate_weave",
+        "name": "编织",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "dazzle_nothl_projection",
+        "name": "虚无投影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dazzle_nothl_projection_end",
+        "name": "结束投影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "death_prophet",
+    "abilities": [
+      {
+        "key": "death_prophet_carrion_swarm",
+        "name": "地穴虫群",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "death_prophet_silence",
+        "name": "沉默魔法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "death_prophet_spirit_siphon",
+        "name": "吸魂巫术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "death_prophet_witchcraft",
+        "name": "巫术精研",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "death_prophet_exorcism",
+        "name": "驱使恶灵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "disruptor",
+    "abilities": [
+      {
+        "key": "disruptor_thunder_strike",
+        "name": "风雷之击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "disruptor_glimpse",
+        "name": "恶念瞥视",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "disruptor_kinetic_field",
+        "name": "动能力场",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "disruptor_kinetic_fence",
+        "name": "动能栅栏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "disruptor_electromagnetic_repulsion",
+        "name": "电磁排斥",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "disruptor_static_storm",
+        "name": "静态风暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "doom_bringer",
+    "abilities": [
+      {
+        "key": "doom_bringer_devour",
+        "name": "吞噬",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "doom_bringer_scorched_earth",
+        "name": "焦土",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "doom_bringer_infernal_blade",
+        "name": "阎刃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "doom_bringer_doom",
+        "name": "末日",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "doom_bringer_lvl_pain",
+        "name": "等级？痛苦",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "dragon_knight",
+    "abilities": [
+      {
+        "key": "dragon_knight_breathe_fire",
+        "name": "火焰气息",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dragon_knight_dragon_tail",
+        "name": "神龙摆尾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dragon_knight_wyrms_wrath",
+        "name": "飞龙之怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "dragon_knight_fireball",
+        "name": "龙炎火球",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "dragon_knight_dragon_blood",
+        "name": "龙族血统",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "dragon_knight_elder_dragon_form",
+        "name": "古龙形态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "drow_ranger",
+    "abilities": [
+      {
+        "key": "drow_ranger_frost_arrows",
+        "name": "霜冻之箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "drow_ranger_wave_of_silence",
+        "name": "狂风",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "drow_ranger_multishot",
+        "name": "数箭齐发",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "drow_ranger_glacier",
+        "name": "冰川",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "drow_ranger_trueshot",
+        "name": "精准光环",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "drow_ranger_marksmanship",
+        "name": "射手天赋",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "earth_spirit",
+    "abilities": [
+      {
+        "key": "earth_spirit_boulder_smash",
+        "name": "巨石冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "earth_spirit_rolling_boulder",
+        "name": "巨石翻滚",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "earth_spirit_geomagnetic_grip",
+        "name": "地磁之握",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "earth_spirit_stone_caller",
+        "name": "残岩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "earth_spirit_petrify",
+        "name": "残岩魔咒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "earth_spirit_magnetize",
+        "name": "磁化",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "earthshaker",
+    "abilities": [
+      {
+        "key": "earthshaker_fissure",
+        "name": "沟壑",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "earthshaker_enchant_totem",
+        "name": "强化图腾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "earthshaker_aftershock",
+        "name": "余震",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "earthshaker_echo_slam",
+        "name": "回音击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "earthshaker_slugger",
+        "name": "强击图腾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "elder_titan",
+    "abilities": [
+      {
+        "key": "elder_titan_echo_stomp",
+        "name": "回音重踏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "elder_titan_ancestral_spirit",
+        "name": "灵体游魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "elder_titan_natural_order",
+        "name": "自然秩序",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "elder_titan_move_spirit",
+        "name": "移动灵体游魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "elder_titan_momentum",
+        "name": "动量",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "elder_titan_earth_splitter",
+        "name": "裂地沟壑",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "elder_titan_return_spirit",
+        "name": "灵体游魂回归",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "ember_spirit",
+    "abilities": [
+      {
+        "key": "ember_spirit_searing_chains",
+        "name": "炎阳索",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ember_spirit_sleight_of_fist",
+        "name": "无影拳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ember_spirit_flame_guard",
+        "name": "烈火罩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ember_spirit_activate_fire_remnant",
+        "name": "激活残焰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ember_spirit_immolation",
+        "name": "献祭心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "ember_spirit_fire_remnant",
+        "name": "残焰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "enchantress",
+    "abilities": [
+      {
+        "key": "enchantress_impetus",
+        "name": "推进",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enchantress_enchant",
+        "name": "魅惑",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enchantress_natures_attendants",
+        "name": "自然之助",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enchantress_bunny_hop",
+        "name": "跃动",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "enchantress_little_friends",
+        "name": "密友",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "enchantress_untouchable",
+        "name": "不可侵犯",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enchantress_rabblerouser",
+        "name": "煽动野怪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "enigma",
+    "abilities": [
+      {
+        "key": "enigma_malefice",
+        "name": "憎恶",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enigma_demonic_conversion",
+        "name": "恶魔召唤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enigma_midnight_pulse",
+        "name": "午夜凋零",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "enigma_event_horizon",
+        "name": "事件视界",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "enigma_black_hole",
+        "name": "黑洞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "faceless_void",
+    "abilities": [
+      {
+        "key": "faceless_void_time_walk",
+        "name": "时间漫游",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "faceless_void_time_dilation",
+        "name": "时间膨胀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "faceless_void_time_lock",
+        "name": "时间锁定",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "faceless_void_time_walk_reverse",
+        "name": "反时间漫游",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "faceless_void_distortion_field",
+        "name": "扭曲力场",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "faceless_void_chronosphere",
+        "name": "时间结界",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "furion",
+    "abilities": [
+      {
+        "key": "furion_sprout",
+        "name": "发芽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "furion_teleportation",
+        "name": "传送",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "furion_force_of_nature",
+        "name": "自然的呼唤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "furion_curse_of_the_forest",
+        "name": "青森诅咒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "furion_spirit_of_the_forest",
+        "name": "丛林之魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "furion_wrath_of_nature",
+        "name": "自然之怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "grimstroke",
+    "abilities": [
+      {
+        "key": "grimstroke_dark_artistry",
+        "name": "绝笔",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "grimstroke_ink_creature",
+        "name": "戾影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "grimstroke_spirit_walk",
+        "name": "墨涌",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "grimstroke_dark_portrait",
+        "name": "暗绘",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "grimstroke_soul_chain",
+        "name": "缚魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "grimstroke_ink_trail",
+        "name": "墨痕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "gyrocopter",
+    "abilities": [
+      {
+        "key": "gyrocopter_rocket_barrage",
+        "name": "火箭弹幕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "gyrocopter_homing_missile",
+        "name": "追踪导弹",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "gyrocopter_flak_cannon",
+        "name": "高射火炮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "gyrocopter_afterburner",
+        "name": "加力燃烧器",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "gyrocopter_side_gunner_spawn_ability",
+        "name": "侧翼机枪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "gyrocopter_call_down",
+        "name": "召唤飞弹",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "hoodwink",
+    "abilities": [
+      {
+        "key": "hoodwink_acorn_shot",
+        "name": "爆栗出击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_bushwhack",
+        "name": "野地奇袭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_scurry",
+        "name": "密林奔走",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_decoy",
+        "name": "诱敌奇术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_hunters_boomerang",
+        "name": "猎手旋镖",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "hoodwink_sharpshooter",
+        "name": "一箭穿心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_sharpshooter_release",
+        "name": "中止一箭穿心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_mistwoods_wayfarer",
+        "name": "林渊旅人",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "hoodwink_forager",
+        "name": "林渊旅人",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "huskar",
+    "abilities": [
+      {
+        "key": "huskar_inner_fire",
+        "name": "心炎",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "huskar_burning_spear",
+        "name": "沸血之矛",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "huskar_berserkers_blood",
+        "name": "狂战士之血",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "huskar_blood_magic",
+        "name": "血魔法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "huskar_life_break",
+        "name": "牺牲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "invoker",
+    "abilities": [
+      {
+        "key": "invoker_quas",
+        "name": "冰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_wex",
+        "name": "雷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_exort",
+        "name": "火",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_invoke",
+        "name": "元素祈唤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "invoker_cold_snap",
+        "name": "急速冷却",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_ghost_walk",
+        "name": "幽灵漫步",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_tornado",
+        "name": "强袭飓风",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_emp",
+        "name": "电磁脉冲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_alacrity",
+        "name": "灵动迅捷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_chaos_meteor",
+        "name": "混沌陨石",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_sun_strike",
+        "name": "阳炎冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_forge_spirit",
+        "name": "熔炉精灵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_ice_wall",
+        "name": "寒冰之墙",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "invoker_deafening_blast",
+        "name": "超震声波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "jakiro",
+    "abilities": [
+      {
+        "key": "jakiro_dual_breath",
+        "name": "冰火交加",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "jakiro_ice_path",
+        "name": "冰封路径",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "jakiro_liquid_fire",
+        "name": "液态火",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "jakiro_liquid_ice",
+        "name": "液态冰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "jakiro_double_trouble",
+        "name": "天生一对",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "jakiro_macropyre",
+        "name": "烈焰焚身",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "juggernaut",
+    "abilities": [
+      {
+        "key": "juggernaut_blade_fury",
+        "name": "剑刃风暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "juggernaut_healing_ward",
+        "name": "治疗守卫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "juggernaut_blade_dance",
+        "name": "剑舞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "juggernaut_swift_slash",
+        "name": "迅风斩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "juggernaut_bladeform",
+        "name": "剑心犹在",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "juggernaut_omni_slash",
+        "name": "无敌斩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "keeper_of_the_light",
+    "abilities": [
+      {
+        "key": "keeper_of_the_light_illuminate",
+        "name": "冲击波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_blinding_light",
+        "name": "致盲之光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_chakra_magic",
+        "name": "查克拉魔法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_radiant_bind",
+        "name": "炎阳之缚",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_will_o_wisp",
+        "name": "灵光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_spirit_form",
+        "name": "灵魂形态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_illuminate_end",
+        "name": "释放冲击波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "keeper_of_the_light_bright_speed",
+        "name": "光明速度",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "kez",
+    "abilities": [
+      {
+        "key": "kez_echo_slash",
+        "name": "回音重斩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_grappling_claw",
+        "name": "制敌爪钩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_kazurai_katana",
+        "name": "影武长刀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_switch_weapons",
+        "name": "流派变换",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "kez_raptor_dance",
+        "name": "猛禽之舞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_falcon_rush",
+        "name": "天隼冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_talon_toss",
+        "name": "利爪飞掷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_shodo_sai",
+        "name": "翔影之钗",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_ravens_veil",
+        "name": "渡鸦之纱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kez_shodo_sai_parry_cancel",
+        "name": "取消",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "kunkka",
+    "abilities": [
+      {
+        "key": "kunkka_torrent",
+        "name": "洪流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kunkka_tidebringer",
+        "name": "潮汐使者",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kunkka_x_marks_the_spot",
+        "name": "X标记",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kunkka_admirals_rum",
+        "name": "统帅朗姆酒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "kunkka_tidal_wave",
+        "name": "潮汐波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "kunkka_ghostship",
+        "name": "幽灵船",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "kunkka_return",
+        "name": "送回",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "largo",
+    "abilities": [
+      {
+        "key": "largo_catchy_lick",
+        "name": "动人之舐",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "largo_frogstomp",
+        "name": "蛙力千钧",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "largo_croak_of_genius",
+        "name": "灵呱一闪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "largo_encore",
+        "name": "安可",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "largo_amphibian_rhapsody",
+        "name": "两栖狂想曲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "largo_song_fight_song",
+        "name": "巨腹闪电战",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "largo_song_double_time",
+        "name": "疾步生风",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "largo_song_good_vibrations",
+        "name": "大屿灵药",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "legion_commander",
+    "abilities": [
+      {
+        "key": "legion_commander_overwhelming_odds",
+        "name": "压倒性优势",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "legion_commander_press_the_attack",
+        "name": "强攻",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "legion_commander_moment_of_courage",
+        "name": "勇气之霎",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "legion_commander_outfight_them",
+        "name": "迎难而战！",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "legion_commander_duel",
+        "name": "决斗",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "leshrac",
+    "abilities": [
+      {
+        "key": "leshrac_split_earth",
+        "name": "撕裂大地",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "leshrac_diabolic_edict",
+        "name": "恶魔敕令",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "leshrac_lightning_storm",
+        "name": "闪电风暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "leshrac_greater_lightning_storm",
+        "name": "虚无主义",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "leshrac_defilement",
+        "name": "大肆污染",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "leshrac_pulse_nova",
+        "name": "脉冲新星",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "lich",
+    "abilities": [
+      {
+        "key": "lich_frost_nova",
+        "name": "寒霜爆发",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lich_frost_shield",
+        "name": "冰霜魔盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lich_sinister_gaze",
+        "name": "阴邪凝视",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lich_ice_spire",
+        "name": "寒冰尖柱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "lich_death_charge",
+        "name": "献身",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "lich_chain_frost",
+        "name": "连环霜冻",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "life_stealer",
+    "abilities": [
+      {
+        "key": "life_stealer_rage",
+        "name": "狂暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "life_stealer_open_wounds",
+        "name": "撕裂伤口",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "life_stealer_feast",
+        "name": "盛宴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "life_stealer_ghoul_frenzy",
+        "name": "尸鬼狂怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "life_stealer_infest",
+        "name": "感染",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "life_stealer_consume",
+        "name": "吞灭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "lina",
+    "abilities": [
+      {
+        "key": "lina_dragon_slave",
+        "name": "龙破斩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lina_light_strike_array",
+        "name": "光击阵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lina_fiery_soul",
+        "name": "炽魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lina_flame_cloak",
+        "name": "腾焰斗篷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "lina_slow_burn",
+        "name": "慢热",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "lina_laguna_blade",
+        "name": "神灭斩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "lion",
+    "abilities": [
+      {
+        "key": "lion_impale",
+        "name": "裂地尖刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lion_voodoo",
+        "name": "妖术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lion_mana_drain",
+        "name": "法力吸取",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lion_to_hell_and_back",
+        "name": "下地狱再上来",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "lion_finger_of_death",
+        "name": "死亡之指",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "lone_druid",
+    "abilities": [
+      {
+        "key": "lone_druid_entangle",
+        "name": "缠绕之根",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lone_druid_spirit_link",
+        "name": "灵魂链接",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lone_druid_savage_roar",
+        "name": "野蛮咆哮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lone_druid_spirit_bear",
+        "name": "熊灵伙伴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "lone_druid_true_form",
+        "name": "真熊形态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "luna",
+    "abilities": [
+      {
+        "key": "luna_lucent_beam",
+        "name": "月光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "luna_lunar_orbit",
+        "name": "环月",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "luna_moon_glaive",
+        "name": "月刃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "luna_lunar_blessing",
+        "name": "月之祝福",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "luna_eclipse",
+        "name": "月蚀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "lycan",
+    "abilities": [
+      {
+        "key": "lycan_summon_wolves",
+        "name": "召狼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lycan_howl",
+        "name": "嗥叫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lycan_feral_impulse",
+        "name": "野性驱使",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "lycan_wolf_bite",
+        "name": "饿狼撕咬",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "lycan_apex_predator",
+        "name": "顶级掠食者",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "lycan_shapeshift",
+        "name": "变身",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "magnataur",
+    "abilities": [
+      {
+        "key": "magnataur_shockwave",
+        "name": "震荡波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "magnataur_empower",
+        "name": "授予力量",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "magnataur_skewer",
+        "name": "巨角冲撞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "magnataur_horn_toss",
+        "name": "长角抛物",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "magnataur_solid_core",
+        "name": "坚固核心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "magnataur_reverse_polarity",
+        "name": "两极反转",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "marci",
+    "abilities": [
+      {
+        "key": "marci_grapple",
+        "name": "过肩摔",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "marci_companion_run",
+        "name": "回身踢",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "marci_bodyguard",
+        "name": "护卫术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "marci_special_delivery",
+        "name": "特快专递",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "marci_unleash",
+        "name": "怒拳破",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "mars",
+    "abilities": [
+      {
+        "key": "mars_spear",
+        "name": "战神迅矛",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "mars_gods_rebuke",
+        "name": "神之谴戒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "mars_bulwark",
+        "name": "护身甲盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "mars_dauntless",
+        "name": "无畏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "mars_arena_of_blood",
+        "name": "热血竞技场",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "medusa",
+    "abilities": [
+      {
+        "key": "medusa_split_shot",
+        "name": "分裂箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "medusa_mystic_snake",
+        "name": "秘术异蛇",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "medusa_gorgon_grasp",
+        "name": "罗网箭阵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "medusa_cold_blooded",
+        "name": "冷血动物",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "medusa_mana_shield",
+        "name": "魔法盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "medusa_stone_gaze",
+        "name": "石化凝视",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "meepo",
+    "abilities": [
+      {
+        "key": "meepo_earthbind",
+        "name": "地之束缚",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "meepo_poof",
+        "name": "忽悠",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "meepo_ransack",
+        "name": "洗劫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "meepo_petrify",
+        "name": "掘地",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "meepo_megameepo",
+        "name": "超大米波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "meepo_divided_we_stand",
+        "name": "分则能成",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "meepo_geomancy",
+        "name": "地卜术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "meepo_megameepo_fling",
+        "name": "超大米波摔扔",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "mirana",
+    "abilities": [
+      {
+        "key": "mirana_starfall",
+        "name": "群星风暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "mirana_arrow",
+        "name": "月神之箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "mirana_leap",
+        "name": "跳跃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "mirana_celestial_quiver",
+        "name": "天界箭袋",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "mirana_invis",
+        "name": "月之暗面",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "monkey_king",
+    "abilities": [
+      {
+        "key": "monkey_king_boundless_strike",
+        "name": "棒击大地",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_tree_dance",
+        "name": "丛林之舞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_primal_spring",
+        "name": "乾坤之跃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_jingu_mastery",
+        "name": "如意棒法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_mischief",
+        "name": "七十二变",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "monkey_king_wukongs_command",
+        "name": "猴子猴孙",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_primal_spring_early",
+        "name": "马上跃出",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_untransform",
+        "name": "变回原状",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "monkey_king_transfiguration",
+        "name": "出神入化",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "morphling",
+    "abilities": [
+      {
+        "key": "morphling_waveform",
+        "name": "波浪形态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "morphling_adaptive_strike_agi",
+        "name": "变体打击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "morphling_ebb_and_flow",
+        "name": "潮涨潮落",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "morphling_morph_agi",
+        "name": "属性变换（敏捷获取）",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "morphling_morph_str",
+        "name": "属性变换（力量获取）",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "morphling_replicate",
+        "name": "变形",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "morphling_morph_replicate",
+        "name": "替换复制体",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "muerta",
+    "abilities": [
+      {
+        "key": "muerta_dead_shot",
+        "name": "弹无虚发",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "muerta_the_calling",
+        "name": "唤魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "muerta_gunslinger",
+        "name": "神枪在手",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "muerta_spectral_slug",
+        "name": "幽魂子弹",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "muerta_pierce_the_veil",
+        "name": "越界",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "muerta_supernatural",
+        "name": "超自然",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "naga_siren",
+    "abilities": [
+      {
+        "key": "naga_siren_mirror_image",
+        "name": "镜像",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "naga_siren_ensnare",
+        "name": "诱捕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "naga_siren_rip_tide",
+        "name": "激流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "naga_siren_reel_in",
+        "name": "捕捞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "naga_siren_eelskin",
+        "name": "鳗鱼皮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "naga_siren_song_of_the_siren",
+        "name": "海妖之歌",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "naga_siren_song_of_the_siren_cancel",
+        "name": "终止海妖之歌",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "necrolyte",
+    "abilities": [
+      {
+        "key": "necrolyte_death_pulse",
+        "name": "死亡脉冲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "necrolyte_ghost_shroud",
+        "name": "幽魂护罩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "necrolyte_heartstopper_aura",
+        "name": "竭心光环",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "necrolyte_death_seeker",
+        "name": "死亡搜寻",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "necrolyte_sadist",
+        "name": "施虐之心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "necrolyte_reapers_scythe",
+        "name": "死神镰刀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "nevermore",
+    "abilities": [
+      {
+        "key": "nevermore_shadowraze1",
+        "name": "毁灭阴影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nevermore_shadowraze2",
+        "name": "毁灭阴影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nevermore_shadowraze3",
+        "name": "毁灭阴影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nevermore_frenzy",
+        "name": "灵魂盛宴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nevermore_dark_lord",
+        "name": "魔王降临",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nevermore_requiem",
+        "name": "魂之挽歌",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nevermore_necromastery",
+        "name": "支配死灵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "night_stalker",
+    "abilities": [
+      {
+        "key": "night_stalker_void",
+        "name": "虚空",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "night_stalker_crippling_fear",
+        "name": "伤残恐惧",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "night_stalker_midnight_feast",
+        "name": "午夜盛宴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "night_stalker_hunter_in_the_night",
+        "name": "暗夜猎影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "night_stalker_darkness",
+        "name": "黑暗飞升",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "nyx_assassin",
+    "abilities": [
+      {
+        "key": "nyx_assassin_impale",
+        "name": "穿刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nyx_assassin_jolt",
+        "name": "神智爆裂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nyx_assassin_spiked_carapace",
+        "name": "尖刺外壳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nyx_assassin_burrow",
+        "name": "钻地",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "nyx_assassin_neuro_sting",
+        "name": "法力燃烧",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "nyx_assassin_vendetta",
+        "name": "复仇",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "nyx_assassin_unburrow",
+        "name": "现身",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "obsidian_destroyer",
+    "abilities": [
+      {
+        "key": "obsidian_destroyer_arcane_orb",
+        "name": "奥术天球",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "obsidian_destroyer_astral_imprisonment",
+        "name": "星体禁锢",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "obsidian_destroyer_objurgation",
+        "name": "责难",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "obsidian_destroyer_equilibrium",
+        "name": "精华变迁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "obsidian_destroyer_sanity_eclipse",
+        "name": "神智之蚀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "ogre_magi",
+    "abilities": [
+      {
+        "key": "ogre_magi_fireblast",
+        "name": "火焰爆轰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ogre_magi_ignite",
+        "name": "引燃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ogre_magi_bloodlust",
+        "name": "嗜血术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ogre_magi_unrefined_fireblast",
+        "name": "未精通的火焰爆轰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "ogre_magi_smash",
+        "name": "烈火护盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "ogre_magi_dumb_luck",
+        "name": "傻福",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "ogre_magi_multicast",
+        "name": "多重施法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "omniknight",
+    "abilities": [
+      {
+        "key": "omniknight_purification",
+        "name": "洗礼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "omniknight_martyr",
+        "name": "驱逐",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "omniknight_hammer_of_purity",
+        "name": "纯洁之锤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "omniknight_degen_aura",
+        "name": "退化光环",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "omniknight_guardian_angel",
+        "name": "守护天使",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "oracle",
+    "abilities": [
+      {
+        "key": "oracle_fortunes_end",
+        "name": "气运之末",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "oracle_fates_edict",
+        "name": "命运敕令",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "oracle_purifying_flames",
+        "name": "涤罪之焰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "oracle_rain_of_destiny",
+        "name": "天命之雨",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "oracle_diviners_deck",
+        "name": "占卜师牌组",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "oracle_false_promise",
+        "name": "虚妄之诺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "oracle_prognosticate",
+        "name": "预言",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "pangolier",
+    "abilities": [
+      {
+        "key": "pangolier_swashbuckle",
+        "name": "虚张声势",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pangolier_shield_crash",
+        "name": "甲盾冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pangolier_lucky_shot",
+        "name": "幸运一击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pangolier_rollup",
+        "name": "卷土重来",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "pangolier_gyroshell",
+        "name": "地雷滚滚",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pangolier_gyroshell_stop",
+        "name": "停止滚动",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pangolier_rollup_stop",
+        "name": "中止卷土重来",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pangolier_fortune_favors_the_bold",
+        "name": "天佑勇者",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "phantom_assassin",
+    "abilities": [
+      {
+        "key": "phantom_assassin_stifling_dagger",
+        "name": "窒碍短匕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_assassin_phantom_strike",
+        "name": "幻影突袭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_assassin_blur",
+        "name": "魅影无形",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "phantom_assassin_fan_of_knives",
+        "name": "刀阵旋风",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_assassin_immaterial",
+        "name": "飘忽不定",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_assassin_coup_de_grace",
+        "name": "恩赐解脱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "phantom_lancer",
+    "abilities": [
+      {
+        "key": "phantom_lancer_spirit_lance",
+        "name": "灵魂之矛",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_lancer_doppelwalk",
+        "name": "神行百变",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_lancer_phantom_edge",
+        "name": "幻影冲锋",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phantom_lancer_illusory_armaments",
+        "name": "灵幻兵械",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "phantom_lancer_juxtapose",
+        "name": "并列",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "phoenix",
+    "abilities": [
+      {
+        "key": "phoenix_icarus_dive",
+        "name": "凤凰冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_fire_spirits",
+        "name": "烈火精灵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_sun_ray",
+        "name": "烈日炙烤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_sun_ray_toggle_move",
+        "name": "切换移动状态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_dying_light",
+        "name": "消逝之光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "phoenix_supernova",
+        "name": "超新星",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_launch_fire_spirit",
+        "name": "发动烈火精灵",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_icarus_dive_stop",
+        "name": "终止凤凰冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "phoenix_sun_ray_stop",
+        "name": "终止烈日炙烤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "primal_beast",
+    "abilities": [
+      {
+        "key": "primal_beast_onslaught",
+        "name": "突",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "primal_beast_trample",
+        "name": "踏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "primal_beast_uproar",
+        "name": "咤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "primal_beast_rock_throw",
+        "name": "砸",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "primal_beast_onslaught_release",
+        "name": "正在突进",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "primal_beast_pulverize",
+        "name": "捶",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "primal_beast_colossal",
+        "name": "庞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "puck",
+    "abilities": [
+      {
+        "key": "puck_illusory_orb",
+        "name": "幻象法球",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "puck_waning_rift",
+        "name": "新月之痕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "puck_phase_shift",
+        "name": "相位转移",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "puck_ethereal_jaunt",
+        "name": "灵动之翼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "puck_puckish",
+        "name": "顽皮克敌",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "puck_dream_coil",
+        "name": "梦境缠绕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "pudge",
+    "abilities": [
+      {
+        "key": "pudge_meat_hook",
+        "name": "肉钩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pudge_rot",
+        "name": "腐烂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pudge_flesh_heap",
+        "name": "肉盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pudge_innate_graft_flesh",
+        "name": "腐肉堆积",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "pudge_dismember",
+        "name": "肢解",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "pugna",
+    "abilities": [
+      {
+        "key": "pugna_nether_blast",
+        "name": "幽冥爆轰",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pugna_decrepify",
+        "name": "衰老",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pugna_nether_ward",
+        "name": "幽冥守卫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "pugna_oblivion_savant",
+        "name": "湮灭专家",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "pugna_life_drain",
+        "name": "生命汲取",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "queenofpain",
+    "abilities": [
+      {
+        "key": "queenofpain_shadow_strike",
+        "name": "暗影突袭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "queenofpain_blink",
+        "name": "闪烁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "queenofpain_scream_of_pain",
+        "name": "痛苦尖叫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "queenofpain_succubus",
+        "name": "魅魔",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "queenofpain_sonic_wave",
+        "name": "超声冲击波",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "rattletrap",
+    "abilities": [
+      {
+        "key": "rattletrap_battery_assault",
+        "name": "弹幕冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rattletrap_power_cogs",
+        "name": "能量齿轮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rattletrap_rocket_flare",
+        "name": "照明火箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rattletrap_overclocking",
+        "name": "超速运转",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "rattletrap_jetpack",
+        "name": "喷气背包",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "rattletrap_hookshot",
+        "name": "发射钩爪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rattletrap_armor_power",
+        "name": "装甲力量",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "rattletrap_jetpack_toggle",
+        "name": "喷气背包开关",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "razor",
+    "abilities": [
+      {
+        "key": "razor_plasma_field",
+        "name": "等离子场",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "razor_static_link",
+        "name": "静电连接",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "razor_storm_surge",
+        "name": "风暴涌动",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "razor_unstable_current",
+        "name": "不稳定电流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "razor_eye_of_the_storm",
+        "name": "风暴之眼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "riki",
+    "abilities": [
+      {
+        "key": "riki_smoke_screen",
+        "name": "烟幕",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "riki_blink_strike",
+        "name": "闪烁突袭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "riki_tricks_of_the_trade",
+        "name": "绝杀秘技",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "riki_innate_backstab",
+        "name": "背刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "riki_backstab",
+        "name": "刀光谍影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "ringmaster",
+    "abilities": [
+      {
+        "key": "ringmaster_tame_the_beasts",
+        "name": "驯兽术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ringmaster_the_box",
+        "name": "逃生技",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ringmaster_impalement",
+        "name": "尖刀戏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ringmaster_spotlight",
+        "name": "聚光灯",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "ringmaster_wheel",
+        "name": "奇观轮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ringmaster_tame_the_beasts_crack",
+        "name": "鞭打",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ringmaster_dark_carnival_souvenirs",
+        "name": "暗黑狂欢主持",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "rubick",
+    "abilities": [
+      {
+        "key": "rubick_telekinesis",
+        "name": "隔空取物",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_fade_bolt",
+        "name": "弱化能流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_arcane_supremacy",
+        "name": "奥术至尊",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_spell_steal",
+        "name": "技能窃取",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_telekinesis_land",
+        "name": "隔空取物着陆",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_hidden1",
+        "name": "rubick_hidden1",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_hidden2",
+        "name": "rubick_hidden2",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "rubick_curiosity",
+        "name": "奇心",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "rubick_telekinesis_land_self",
+        "name": "隔空取物着陆",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "sand_king",
+    "abilities": [
+      {
+        "key": "sandking_burrowstrike",
+        "name": "掘地穿刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sandking_sand_storm",
+        "name": "沙尘暴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sandking_scorpion_strike",
+        "name": "尾刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sandking_caustic_finale",
+        "name": "腐尸毒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "sandking_epicenter",
+        "name": "地震",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "shadow_demon",
+    "abilities": [
+      {
+        "key": "shadow_demon_disruption",
+        "name": "崩裂禁锢",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_demon_disseminate",
+        "name": "散播",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_demon_shadow_poison",
+        "name": "暗影剧毒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_demon_shadow_poison_release",
+        "name": "释放暗影毒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_demon_demonic_cleanse",
+        "name": "邪恶净愈",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "shadow_demon_demonic_purge",
+        "name": "邪恶净化",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_demon_menace",
+        "name": "威胁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "shadow_shaman",
+    "abilities": [
+      {
+        "key": "shadow_shaman_ether_shock",
+        "name": "苍穹震击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_shaman_voodoo",
+        "name": "妖术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_shaman_shackles",
+        "name": "枷锁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shadow_shaman_fowl_play",
+        "name": "禽戏",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "shadow_shaman_urnaconda",
+        "name": "巨蟒之瓮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "shadow_shaman_mass_serpent_ward",
+        "name": "群蛇守卫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "shredder",
+    "abilities": [
+      {
+        "key": "shredder_whirling_death",
+        "name": "死亡旋风",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shredder_timber_chain",
+        "name": "伐木锯链",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shredder_reactive_armor",
+        "name": "活性护甲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shredder_flamethrower",
+        "name": "喷火装置",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "shredder_chakram",
+        "name": "锯齿飞轮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shredder_return_chakram",
+        "name": "收回锯齿飞轮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "shredder_exposure_therapy",
+        "name": "暴露疗法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "silencer",
+    "abilities": [
+      {
+        "key": "silencer_curse_of_the_silent",
+        "name": "奥术诅咒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "silencer_glaives_of_wisdom",
+        "name": "智慧之刃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "silencer_last_word",
+        "name": "遗言",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "silencer_brain_drain",
+        "name": "默默受苦",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "silencer_global_silence",
+        "name": "全领域静默",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "silencer_oppressive_silence",
+        "name": "默默受苦",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "skeleton_king",
+    "abilities": [
+      {
+        "key": "skeleton_king_hellfire_blast",
+        "name": "冥火爆击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skeleton_king_bone_guard",
+        "name": "白骨护卫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skeleton_king_mortal_strike",
+        "name": "本命一击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skeleton_king_vampiric_spirit",
+        "name": "吸血灵魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skeleton_king_reincarnation",
+        "name": "绝冥再生",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skeleton_king_vampiric_aura",
+        "name": "吸血灵魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "skywrath_mage",
+    "abilities": [
+      {
+        "key": "skywrath_mage_arcane_bolt",
+        "name": "奥法鹰隼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skywrath_mage_concussive_shot",
+        "name": "震荡光弹",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skywrath_mage_ancient_seal",
+        "name": "上古封印",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "skywrath_mage_shield_of_the_scion",
+        "name": "天裔之盾",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "skywrath_mage_mystic_flare",
+        "name": "神秘之耀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "slardar",
+    "abilities": [
+      {
+        "key": "slardar_sprint",
+        "name": "守卫冲刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "slardar_slithereen_crush",
+        "name": "鱼人碎击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "slardar_bash",
+        "name": "深海重击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "slardar_seaborn_sentinel",
+        "name": "汪洋前哨",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "slardar_amplify_damage",
+        "name": "侵蚀雾霭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "slark",
+    "abilities": [
+      {
+        "key": "slark_dark_pact",
+        "name": "黑暗契约",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "slark_pounce",
+        "name": "突袭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "slark_saltwater_shiv",
+        "name": "海浪短刀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "slark_depth_shroud",
+        "name": "深海护罩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "slark_essence_shift",
+        "name": "能量转移",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "slark_shadow_dance",
+        "name": "暗影之舞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "snapfire",
+    "abilities": [
+      {
+        "key": "snapfire_scatterblast",
+        "name": "电光石火",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "snapfire_firesnap_cookie",
+        "name": "龙炎饼干",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "snapfire_lil_shredder",
+        "name": "霹雳铁手",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "snapfire_gobble_up",
+        "name": "血盆大口",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "snapfire_spit_creep",
+        "name": "喷吐",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "snapfire_mortimer_kisses",
+        "name": "蜥蜴绝吻",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "snapfire_boomstick",
+        "name": "猎枪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "sniper",
+    "abilities": [
+      {
+        "key": "sniper_shrapnel",
+        "name": "榴霰弹",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sniper_headshot",
+        "name": "爆头",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sniper_take_aim",
+        "name": "瞄准",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sniper_concussive_grenade",
+        "name": "震荡手雷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "sniper_keen_scope",
+        "name": "基恩瞄准镜",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "sniper_assassinate",
+        "name": "暗杀",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "spectre",
+    "abilities": [
+      {
+        "key": "spectre_spectral_dagger",
+        "name": "幽鬼之刃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spectre_shadow_step",
+        "name": "如影随形",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spectre_dispersion",
+        "name": "折射",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spectre_reality",
+        "name": "空降",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spectre_desolate",
+        "name": "荒芜",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "spectre_haunt",
+        "name": "鬼影重重",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "spirit_breaker",
+    "abilities": [
+      {
+        "key": "spirit_breaker_charge_of_darkness",
+        "name": "暗影冲刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spirit_breaker_bulldoze",
+        "name": "威吓",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spirit_breaker_greater_bash",
+        "name": "巨力重击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "spirit_breaker_planar_pocket",
+        "name": "位面空洞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "spirit_breaker_bull_rush",
+        "name": "神行太保",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "spirit_breaker_nether_strike",
+        "name": "幽冥一击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "storm_spirit",
+    "abilities": [
+      {
+        "key": "storm_spirit_static_remnant",
+        "name": "残影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "storm_spirit_electric_vortex",
+        "name": "电子涡流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "storm_spirit_overload",
+        "name": "超负荷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "storm_spirit_ball_lightning",
+        "name": "球状闪电",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "storm_spirit_galvanized",
+        "name": "通电",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "sven",
+    "abilities": [
+      {
+        "key": "sven_storm_bolt",
+        "name": "风暴之拳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sven_great_cleave",
+        "name": "巨力挥舞",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sven_warcry",
+        "name": "战吼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sven_gods_strength",
+        "name": "神之力量",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "sven_wrath_of_god",
+        "name": "神之愤怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "techies",
+    "abilities": [
+      {
+        "key": "techies_sticky_bomb",
+        "name": "粘性炸弹",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "techies_reactive_tazer",
+        "name": "活性电击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "techies_suicide",
+        "name": "爆破起飞！",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "techies_mutually_assured_destruction",
+        "name": "同归于尽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "techies_minefield_sign",
+        "name": "雷区标识",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "techies_land_mines",
+        "name": "感应地雷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "techies_reactive_tazer_stop",
+        "name": "引爆电击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "techies_focused_detonate",
+        "name": "引爆同归于尽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "templar_assassin",
+    "abilities": [
+      {
+        "key": "templar_assassin_refraction",
+        "name": "折光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "templar_assassin_meld",
+        "name": "隐匿",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "templar_assassin_psi_blades",
+        "name": "灵能之刃",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "templar_assassin_trap",
+        "name": "触发陷阱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "templar_assassin_trap_teleport",
+        "name": "灵能投射",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "templar_assassin_psionic_trap",
+        "name": "灵能陷阱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "templar_assassin_inner_peace",
+        "name": "心怀安宁",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "terrorblade",
+    "abilities": [
+      {
+        "key": "terrorblade_reflection",
+        "name": "倒影",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "terrorblade_conjure_image",
+        "name": "惑幻",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "terrorblade_metamorphosis",
+        "name": "魔化",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "terrorblade_demon_zeal",
+        "name": "狂魔",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "terrorblade_terror_wave",
+        "name": "怵潮",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "terrorblade_sunder",
+        "name": "魂断",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "terrorblade_dark_unity",
+        "name": "暗黑团结",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "tidehunter",
+    "abilities": [
+      {
+        "key": "tidehunter_gush",
+        "name": "巨浪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tidehunter_kraken_shell",
+        "name": "海妖外壳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tidehunter_anchor_smash",
+        "name": "锚击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tidehunter_dead_in_the_water",
+        "name": "重如铁锚",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "tidehunter_ravage",
+        "name": "毁灭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tidehunter_krill_eater",
+        "name": "tidehunter_krill_eater",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tidehunter_leviathans_catch",
+        "name": "利维坦的渔获",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "tinker",
+    "abilities": [
+      {
+        "key": "tinker_laser",
+        "name": "激光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tinker_march_of_the_machines",
+        "name": "机械行军",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tinker_deploy_turrets",
+        "name": "部署炮塔",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tinker_warp_grenade",
+        "name": "折跃耀光",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "tinker_keen_teleport",
+        "name": "基恩载具",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tinker_rearm",
+        "name": "再装填",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tinker_eureka",
+        "name": "尤里卡！",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "tiny",
+    "abilities": [
+      {
+        "key": "tiny_avalanche",
+        "name": "山崩",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tiny_toss",
+        "name": "投掷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tiny_tree_grab",
+        "name": "抓树",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tiny_tree_channel",
+        "name": "树木连掷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "tiny_insurmountable",
+        "name": "不可逾越",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "tiny_grow",
+        "name": "长大",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tiny_toss_tree",
+        "name": "扔树",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "treant",
+    "abilities": [
+      {
+        "key": "treant_natures_grasp",
+        "name": "自然卷握",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "treant_leech_seed",
+        "name": "寄生种子",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "treant_living_armor",
+        "name": "活体护甲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "treant_eyes_in_the_forest",
+        "name": "丛林之眼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "treant_natures_guise",
+        "name": "自然蔽护",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "treant_overgrowth",
+        "name": "疯狂生长",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "troll_warlord",
+    "abilities": [
+      {
+        "key": "troll_warlord_switch_stance",
+        "name": "战斗姿态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "troll_warlord_whirling_axes_ranged",
+        "name": "旋风飞斧（远程）",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "troll_warlord_whirling_axes_melee",
+        "name": "旋风飞斧（近战）",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "troll_warlord_fervor",
+        "name": "热血战魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "troll_warlord_berserkers_rage",
+        "name": "狂战士之怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "troll_warlord_battle_trance",
+        "name": "战斗专注",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "tusk",
+    "abilities": [
+      {
+        "key": "tusk_ice_shards",
+        "name": "寒冰碎片",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tusk_snowball",
+        "name": "雪球",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tusk_tag_team",
+        "name": "摔角行家",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tusk_drinking_buddies",
+        "name": "酒友",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "tusk_walrus_kick",
+        "name": "海象飞踢",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "tusk_walrus_punch",
+        "name": "海象神拳！",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tusk_launch_snowball",
+        "name": "雪球滚滚",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "tusk_bitter_chill",
+        "name": "严寒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "undying",
+    "abilities": [
+      {
+        "key": "undying_decay",
+        "name": "腐朽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "undying_soul_rip",
+        "name": "噬魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "undying_tombstone",
+        "name": "墓碑",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "undying_ceaseless_dirge",
+        "name": "挽歌犹唱",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "undying_flesh_golem",
+        "name": "血肉傀儡",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "ursa",
+    "abilities": [
+      {
+        "key": "ursa_earthshock",
+        "name": "震撼大地",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ursa_overpower",
+        "name": "超强力量",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ursa_fury_swipes",
+        "name": "怒意狂击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "ursa_maul",
+        "name": "暴烈之爪",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "ursa_enrage",
+        "name": "激怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "vengefulspirit",
+    "abilities": [
+      {
+        "key": "vengefulspirit_magic_missile",
+        "name": "魔法箭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "vengefulspirit_wave_of_terror",
+        "name": "恐怖波动",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "vengefulspirit_command_aura",
+        "name": "复仇光环",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "vengefulspirit_retribution",
+        "name": "恶有恶报",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "vengefulspirit_nether_swap",
+        "name": "移形换位",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "venomancer",
+    "abilities": [
+      {
+        "key": "venomancer_venomous_gale",
+        "name": "瘴气",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "venomancer_snakebite",
+        "name": "毒蛇撕咬",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "venomancer_plague_ward",
+        "name": "瘟疫守卫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "venomancer_poison_sting",
+        "name": "毒刺",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "venomancer_noxious_plague",
+        "name": "恶性瘟疫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "viper",
+    "abilities": [
+      {
+        "key": "viper_poison_attack",
+        "name": "毒性攻击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "viper_nethertoxin",
+        "name": "幽冥剧毒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "viper_corrosive_skin",
+        "name": "腐蚀皮肤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "viper_nose_dive",
+        "name": "极恶俯冲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "viper_predator",
+        "name": "掠食",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "viper_viper_strike",
+        "name": "蝮蛇突袭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "visage",
+    "abilities": [
+      {
+        "key": "visage_grave_chill",
+        "name": "黄泉颤抖",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "visage_soul_assumption",
+        "name": "灵魂超度",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "visage_gravekeepers_cloak",
+        "name": "陵卫斗篷",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "visage_stone_form_self_cast",
+        "name": "石像形态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "visage_silent_as_the_grave",
+        "name": "静如古墓",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "visage_summon_familiars",
+        "name": "召唤佣兽",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "visage_summon_familiars_stone_form",
+        "name": "石像形态",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "void_spirit",
+    "abilities": [
+      {
+        "key": "void_spirit_aether_remnant",
+        "name": "残阴",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "void_spirit_dissimilate",
+        "name": "异化",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "void_spirit_resonant_pulse",
+        "name": "共鸣脉冲",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "void_spirit_intrinsic_edge",
+        "name": "内在优势",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "void_spirit_astral_step",
+        "name": "太虚之径",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "warlock",
+    "abilities": [
+      {
+        "key": "warlock_fatal_bonds",
+        "name": "致命连接",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "warlock_shadow_word",
+        "name": "暗言术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "warlock_upheaval",
+        "name": "剧变",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "warlock_eldritch_summoning",
+        "name": "邪术召唤",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "warlock_rain_of_chaos",
+        "name": "混乱之祭",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "weaver",
+    "abilities": [
+      {
+        "key": "weaver_the_swarm",
+        "name": "虫群",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "weaver_shukuchi",
+        "name": "缩地",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "weaver_geminate_attack",
+        "name": "连击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "weaver_time_lapse",
+        "name": "时光倒流",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "weaver_threads_of_fate",
+        "name": "命运之线",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "windrunner",
+    "abilities": [
+      {
+        "key": "windrunner_shackleshot",
+        "name": "束缚击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "windrunner_powershot",
+        "name": "强力击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "windrunner_windrun",
+        "name": "风行",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "windrunner_gale_force",
+        "name": "狂风之力",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "windrunner_focusfire_cancel",
+        "name": "集中火力取消",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "windrunner_focusfire",
+        "name": "集中火力",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "windrunner_tailwind",
+        "name": "一路顺风",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "winter_wyvern",
+    "abilities": [
+      {
+        "key": "winter_wyvern_arctic_burn",
+        "name": "严寒烧灼",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "winter_wyvern_splinter_blast",
+        "name": "碎裂冲击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "winter_wyvern_cold_embrace",
+        "name": "极寒之拥",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "winter_wyvern_eldwurms_edda",
+        "name": "古龙诗集",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "winter_wyvern_winters_curse",
+        "name": "寒冬诅咒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "wisp",
+    "abilities": [
+      {
+        "key": "wisp_tether",
+        "name": "羁绊",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_spirits",
+        "name": "幽魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_overcharge",
+        "name": "过载",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_spirits_in",
+        "name": "拉近幽魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_spirits_out",
+        "name": "拉远幽魂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_relocate",
+        "name": "降临",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_tether_break",
+        "name": "断开连接",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "wisp_equilibrium",
+        "name": "衡势",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "witch_doctor",
+    "abilities": [
+      {
+        "key": "witch_doctor_paralyzing_cask",
+        "name": "麻痹药剂",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "witch_doctor_voodoo_restoration",
+        "name": "巫毒疗法",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "witch_doctor_maledict",
+        "name": "巫蛊咒术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "witch_doctor_voodoo_switcheroo",
+        "name": "巫毒变身术",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "witch_doctor_gris_gris",
+        "name": "驱邪护符",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      },
+      {
+        "key": "witch_doctor_death_ward",
+        "name": "死亡守卫",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      }
+    ],
+    "talents": []
+  },
+  {
+    "hero_key": "zuus",
+    "abilities": [
+      {
+        "key": "zuus_arc_lightning",
+        "name": "弧形闪电",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "zuus_lightning_bolt",
+        "name": "雷击",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "zuus_heavenly_jump",
+        "name": "神圣一跳",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "zuus_cloud",
+        "name": "雷云",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": true,
+        "shard_grants": false
+      },
+      {
+        "key": "zuus_lightning_hands",
+        "name": "霹雳之手",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": true
+      },
+      {
+        "key": "zuus_thundergods_wrath",
+        "name": "雷神之怒",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false
+      },
+      {
+        "key": "zuus_static_field",
+        "name": "静电场",
+        "mc": null,
+        "cd": null,
+        "behavior": "",
+        "scepter_grants": false,
+        "shard_grants": false,
+        "is_innate": true
+      }
+    ],
+    "talents": []
+  }
+]
