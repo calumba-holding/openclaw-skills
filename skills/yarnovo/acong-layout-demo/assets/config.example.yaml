@@ -1,0 +1,14 @@
+# assets/config.example.yaml — example config file shape for this skill
+# Copy to config.yaml and fill in your values.
+
+project:
+  name: my-project
+  language: en
+
+limits:
+  max_tokens: 4096
+  timeout_seconds: 30
+
+features:
+  cache: true
+  telemetry: false
