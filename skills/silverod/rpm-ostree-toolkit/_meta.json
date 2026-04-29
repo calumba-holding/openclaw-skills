@@ -1,0 +1,11 @@
+{
+  "owner": "silverod",
+  "slug": "rpm-ostree-toolkit",
+  "displayName": "rpm-ostree Toolkit — Fedora Atomic / Bazzite Manager",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776978737335,
+    "commit": null
+  },
+  "history": []
+}
