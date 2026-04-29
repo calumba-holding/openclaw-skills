@@ -1,0 +1,11 @@
+{
+  "owner": "linux2010",
+  "slug": "opentask-client",
+  "displayName": "Opentask Skill",
+  "latest": {
+    "version": "1.4.0",
+    "publishedAt": 1777041742811,
+    "commit": null
+  },
+  "history": []
+}
