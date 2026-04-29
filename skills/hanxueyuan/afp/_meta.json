@@ -3,9 +3,15 @@
   "slug": "afp",
   "displayName": "Afp",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776931433181,
-    "commit": "https://github.com/openclaw/skills/commit/e7a5cdbab9633ec8299f6928e5736db1df801c15"
+    "version": "1.0.1",
+    "publishedAt": 1776963858076,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776931433181,
+      "commit": "https://github.com/openclaw/skills/commit/e7a5cdbab9633ec8299f6928e5736db1df801c15"
+    }
+  ]
 }

@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: afp
 summary: 法新社(AFP)——全球三大通讯社之一，从法国革命时期的新闻信到覆盖200+国家的国际新闻网络。
 read_when:
