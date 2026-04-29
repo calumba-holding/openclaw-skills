@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-douban-get-movie-comments",
+  "displayName": "Douban Movie Comments API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776966684089,
+    "commit": null
+  },
+  "history": []
+}
