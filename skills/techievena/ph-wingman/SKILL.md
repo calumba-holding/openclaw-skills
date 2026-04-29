@@ -1,100 +1,66 @@
 ---
-name: "ph wingman"
+name: "producthunt-wingman"
 slug: "ph-wingman"
-version: "1.1.0"
-description: "AI-native ProductHunt outreach agent — automates community discovery, enrichment, and LinkedIn engagement."
+version: "1.6.1"
+description: "Premium PH outreach agent — automates community discovery, enrichment, and LinkedIn engagement locally."
 tags: ["producthunt", "outreach", "linkedin", "marketing", "automation"]
 author: "techievena"
 homepage: "https://producthunt.eonik.ai"
+requirements:
+  binaries:
+    - python3
+    - curl
 metadata:
   openclaw:
     requires:
       env:
-        - CRUSTDATA_API_KEY
         - OPENAI_API_KEY
-        - LINKEDIN_EMAIL
-        - LINKEDIN_PASSWORD
-    primaryEnv: CRUSTDATA_API_KEY
+        - LAUNCH_DATE
+        - PH_LAUNCH_URL
+      optionalEnv:
+        - ANTHROPIC_API_KEY
+        - GOOGLE_API_KEY
+    primaryEnv: OPENAI_API_KEY
 ---
 
-# ProductHunt Launch Outreach Agent
+# ProductHunt Wingman: Local-First Outreach
 
-Automated end-to-end community building for ProductHunt launches. Finds your tribe via **Crustdata**, enriches their profiles with deep professional metadata, and manages the entire LinkedIn connection/DM lifecycle using a persistent **browser-use** agent.
+Premium ProductHunt outreach agent. This skill operates by managing a local background server that orchestrates community discovery, profile enrichment, and LinkedIn engagement.
 
-Powered by the **Crustdata Discovery Engine** and aligned with the "Intelligence OS" outreach philosophy.
+### 🛡️ Security & Privacy Audit
+> [!IMPORTANT]
+> This skill executes code located in the `server/` directory of the installed package.
+> Before your first run, please review the local files (`server/main.py`, `server/linkedin_agent.py`) to verify network calls and data handling. 
+> The agent uses your **local browser session** for LinkedIn; it never asks for or stores your password.
 
-## Agent Instructions
+### 📦 Prerequisites
+- **Python 3.9+** and **Chrome/Chromium** installed.
+- **Environment Variables**:
+  - `OPENAI_API_KEY`: Required for message personalization.
+  - `LAUNCH_DATE`: Your ProductHunt launch date (`YYYY-MM-DD`).
+  - `PH_LAUNCH_URL`: Your product's PH launch URL.
 
-When a user triggers this skill, you MUST follow these steps exactly:
+### 🛠️ Runtime Instructions
+1. **Local Server Check**:
+   - The agent first checks if the Mission Control dashboard is reachable at `http://localhost:3847`.
+   - If not, it enters the `server/` directory, ensures the virtual environment is ready (`./setup.sh`), and starts the service (`python3 main.py`).
+2. **Dashboard Management**:
+   - Once the server is live, the agent can trigger pipelines, check status, or pause/resume outreach by making local API calls to the dashboard.
+3. **LinkedIn Authentication**:
+   - On the first run, a local browser window will open. **You must manually log in to LinkedIn** in this window. The session is saved locally in `server/.browser_profile/`.
 
-1.  **Check Bootstrap:** Check if the wingman server is running:
-    ```bash
-    curl -sf http://localhost:3847/api/stats > /dev/null 2>&1 && echo "RUNNING" || echo "NOT_RUNNING"
-    ```
-2.  **Self-Install (if needed):** If `NOT_RUNNING`, check if the repo exists in `$HOME/.ph-wingman`. If not, clone it, run the `./setup.sh` script, and start the server using `nohup`.
-3.  **Execute Action:** Once running, dispatch the user's request to the local API:
-    - For "start": POST to `/api/scheduler/start`
-    - For "scrape": POST to `/api/scrape/ph-streaks` then run `/api/enrich/run`
-    - For "status": GET `/api/stats` and format a premium summary.
-4.  **Display Results:** Read the API response and provide a concise, formatted summary. Highlight key metrics: Prospects found, connections sent today, and days remaining until launch.
+### 🗣️ Voice/Chat Commands
+- *"Start my PH outreach"* → Triggers the 5-phase discovery and enrichment pipeline.
+- *"Enrich new prospects"* → Systematically visits profiles to extract rich "Genome" data.
+- *"Check my launch status"* → Returns a high-density summary of the outreach funnel.
+- *"Pause wingman"* → Pauses the background scheduler.
 
-## Triggers
+### 📅 Automatic Triggers
+- **Daily Discovery**: Runs at 9 AM local time via cron.
+- **Outreach Loop**: Enforces connection budgets to protect your account.
 
-Use this skill when a user asks to:
-- "Start my PH outreach"
-- "Set up wingman"
-- "Scrape ProductHunt streaks"
-- "How many connections did wingman send today?"
-- "Check my launch outreach status"
-- "Pause wingman"
-
-## 🚀 Unlock Full Launch Power
-This skill is powered by the [PH Wingman Dashboard](http://localhost:3847). While the agent handles the loop autonomously, the dashboard unlocks:
-- **Prospect Genome:** Deep dive into Crustdata enrichment results (skills, recent posts).
-- **Custom Message Preview:** Edit and review every AI-generated outreach message.
-- **Schedule Timeline:** See exactly when each connection request is planned.
-- **Group Scraper:** Join relevant LinkedIn groups and scrape their entire member list.
-
-## Quick Start
-
-### 1. Installation
-The skill handles this automatically, but you can also run it manually:
-```bash
-git clone https://github.com/techievena/producthunt-wingman.git ~/.ph-wingman
-cd ~/.ph-wingman/server && ./setup.sh
-```
-
-### 2. Configure
-Ensure your `.env` contains:
-- `CRUSTDATA_API_KEY` (Get from app.crustdata.com)
-- `OPENAI_API_KEY` (For personalization)
-- `LINKEDIN_EMAIL` / `LINKEDIN_PASSWORD` (For auto-login)
-
-## Actions & Automation
-
-| Goal | Command |
-|---|---|
-| **Initialize Outreach** | `POST /api/scheduler/start` |
-| **Discover PH Tribe** | `POST /api/scrape/ph-streaks?max_users=100` |
-| **Run Intelligence Engine** | `POST /api/enrich/run` |
-| **Allocate Connection Windows** | `POST /api/schedule/allocate` |
-
-## Data & Security Commitment
-
-This skill is designed to prioritize account safety and data privacy:
-
-1.  **Local-First Architecture**: Your LinkedIn session and credentials stay on your local machine in the `.browser_profile` directory. Nothing is sent to external servers except the necessary API calls to Crustdata and OpenAI.
-2.  **Anti-Bot Protection**: We use **browser-use** with persistent sessions and randomized delays to mimic human behavior, keeping your LinkedIn account safe from automation detection.
-3.  **Credit Budgeting**: The system includes a strict 5,000-credit guardrail to ensure you never exceed your Crustdata plan during high-volume discovery.
-
-## Continuous Automated Outreach
-
-The core objective of this skill is to completely automate your pre-launch community growth. OpenClaw’s built-in cron scheduler can keep the wingman active:
-
-**Schedule Daily Activity Sync (Every morning at 9 AM):**
-```bash
-# Set up daily scanning and outreach sync
-openclaw cron add --name "daily-ph-sync" --cron "0 9 * * *" --message "check wingman status" --session isolated
-```
-
-*OpenClaw will verify the agent is running every morning and report the previous day's connection success rate directly to your active channel.*
+### 🚀 Dashboard Features
+Accessible locally at `http://localhost:3847`:
+- **Prospect Genome:** Deep dive into each member's profile data.
+- **Message Editor:** Review and manually edit AI-generated outreach DMs.
+- **Outreach Kanban:** Real-time visibility into the campaign funnel.

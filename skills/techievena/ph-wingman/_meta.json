@@ -1,11 +1,17 @@
 {
   "owner": "techievena",
   "slug": "ph-wingman",
-  "displayName": "ph wingman",
+  "displayName": "producthunt-wingman",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1776593800126,
-    "commit": "https://github.com/openclaw/skills/commit/0292046d49e94903f3457ab899192bc273f61c9f"
+    "version": "1.6.1",
+    "publishedAt": 1776920220103,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1776593800126,
+      "commit": "https://github.com/openclaw/skills/commit/0292046d49e94903f3457ab899192bc273f61c9f"
+    }
+  ]
 }

@@ -1,7 +1,8 @@
 {
-  "name": "ph-wingman",
-  "version": "1.1.0",
-  "description": "AI-native ProductHunt outreach agent — automates community discovery, enrichment, and LinkedIn engagement.",
+  "name": "producthunt-wingman",
+  "slug": "ph-wingman",
+  "version": "1.6.1",
+  "description": "Premium PH outreach agent. Executes locally to automate community discovery, deep enrichment, and LinkedIn engagement with full privacy control.",
   "author": "techievena",
   "license": "MIT",
   "source": "https://github.com/techievena/producthunt-wingman",
@@ -11,8 +12,7 @@
     "outreach",
     "linkedin",
     "marketing",
-    "automation",
-    "crustdata"
+    "automation"
   ],
   "triggers": [
     "Start my PH outreach",
@@ -20,6 +20,7 @@
     "Scrape ProductHunt streaks",
     "How many connections did wingman send today?",
     "Check my launch outreach status",
+    "Enrich new prospects",
     "Pause wingman",
     "cron"
   ],
@@ -28,10 +29,9 @@
     "python": ">=3.9"
   },
   "requiredEnv": [
-    "CRUSTDATA_API_KEY",
     "OPENAI_API_KEY",
-    "LINKEDIN_EMAIL",
-    "LINKEDIN_PASSWORD"
+    "LAUNCH_DATE",
+    "PH_LAUNCH_URL"
   ],
   "requirements": {
     "bins": [
