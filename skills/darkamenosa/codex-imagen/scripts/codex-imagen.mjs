@@ -10,10 +10,15 @@ const DEFAULT_REFRESH_URL = "https://auth.openai.com/oauth/token";
 const DEFAULT_MODEL = "gpt-5.4";
 const DEFAULT_OPENCLAW_AGENT_ID = "main";
 const DEFAULT_CODEX_AUTH_PATH = path.join(os.homedir(), ".codex", "auth.json");
-const PACKAGE_VERSION = "0.2.2";
+const PACKAGE_VERSION = "0.2.6";
 const CODEX_OAUTH_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann";
-const DEFAULT_REFRESH_SKEW_SECONDS = 60;
+const DEFAULT_REFRESH_SKEW_SECONDS = 5 * 60;
 const DEFAULT_TIMEOUT_MS = 15 * 60 * 1000;
+const DEFAULT_OPENCLAW_TIMEOUT_MS = 5 * 60 * 1000;
+const FORCE_EXIT_AFTER_ABORT_MS = 10_000;
+const DEFAULT_RETRIES = 4;
+const MAX_RETRIES = 100;
+const RETRY_BASE_DELAY_MS = 200;
 const DEFAULT_IMAGE_DETAIL = "high";
 const LARGE_DATA_URL_WARNING_BYTES = 15 * 1024 * 1024;
 const FILE_LOCK_TIMEOUT_ERROR_CODE = "file_lock_timeout";
@@ -46,6 +51,22 @@ class UsageError extends Error {
   }
 }
 
+class TimeoutError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "TimeoutError";
+  }
+}
+
+class GenerationFailedError extends Error {
+  constructor(message, { backendErrors = [], seenEventTypes = [] } = {}) {
+    super(message);
+    this.name = "GenerationFailedError";
+    this.backendErrors = backendErrors;
+    this.seenEventTypes = seenEventTypes;
+  }
+}
+
 function usage() {
   return `Usage:
   codex-imagen "prompt" [options]
@@ -66,8 +87,9 @@ Options:
   --out-dir <path>      Output directory when --output is not provided.
   --model <name>        Model slug. Default: ${DEFAULT_MODEL}
   --auth <path>         Auth JSON path. Supports Codex auth.json, OpenClaw auth-profiles.json,
-                        OpenClaw legacy auth.json, and OpenClaw credentials/oauth.json.
-  --auth-profile <id>   OpenClaw auth profile id. Default: auth-state lastGood, then best openai-codex OAuth profile.
+                        OpenClaw agent/legacy auth.json, and OpenClaw credentials/oauth.json.
+  --auth-profile <id>   OpenClaw auth profile id. Default: OpenClaw config/order,
+                        auth-state lastGood, then best openai-codex OAuth profile.
   --base-url <url>      Codex backend base URL. Default: ${DEFAULT_BASE_URL}
   --refresh-url <url>   OAuth refresh endpoint. Default: ${DEFAULT_REFRESH_URL}
   --cwd <path>          Resolve relative input/output paths from this working directory.
@@ -75,7 +97,12 @@ Options:
   --force-refresh       Refresh Codex OAuth before generating.
   --refresh-only        Refresh Codex OAuth and exit. Does not require a prompt.
   --no-refresh          Disable proactive refresh and 401 refresh retry.
-  --timeout-ms <ms>     Abort after this many ms. Default: ${DEFAULT_TIMEOUT_MS}. Use 0 to disable.
+  --retries <count>     Retry transient empty failures this many times. Default: ${DEFAULT_RETRIES}.
+  --no-retry            Disable transient generation retries.
+  --timeout <seconds>   Abort after this many seconds. Default: ${DEFAULT_TIMEOUT_MS / 1000};
+                        ${DEFAULT_OPENCLAW_TIMEOUT_MS / 1000} when OpenClaw runtime is detected.
+  --timeout-seconds <s> Alias for --timeout.
+  --timeout-ms <ms>     Advanced: abort after this many milliseconds. Must be greater than 0.
   --no-stream           Request a non-streaming response.
   --json                Print a JSON summary instead of only the image path.
   --quiet               Do not print progress diagnostics to stderr.
@@ -88,10 +115,12 @@ Auth discovery order:
   1. --auth
   2. CODEX_IMAGEN_AUTH_JSON, OPENCLAW_CODEX_AUTH_JSON, CODEX_AUTH_JSON
   3. OPENCLAW_AGENT_DIR/auth-profiles.json or PI_CODING_AGENT_DIR/auth-profiles.json
-  4. ~/.openclaw/agents/main/agent/auth-profiles.json
-  5. ~/.openclaw/credentials/oauth.json
-  6. CODEX_HOME/auth.json
-  7. ~/.codex/auth.json
+  4. OPENCLAW_AGENT_DIR/auth.json or PI_CODING_AGENT_DIR/auth.json
+  5. ~/.openclaw/agents/main/agent/auth-profiles.json
+  6. ~/.openclaw/agents/main/agent/auth.json
+  7. ~/.openclaw/credentials/oauth.json
+  8. CODEX_HOME/auth.json
+  9. ~/.codex/auth.json
 `;
 }
 
@@ -105,6 +134,8 @@ function parseArgs(argv) {
     imageDetail: DEFAULT_IMAGE_DETAIL,
     imagePaths: [],
     imageUrls: [],
+    authPathCandidates: [],
+    authPathExplicit: false,
     json: false,
     model: DEFAULT_MODEL,
     outDir: null,
@@ -116,9 +147,12 @@ function parseArgs(argv) {
     refreshOnly: false,
     refreshSkewSeconds: DEFAULT_REFRESH_SKEW_SECONDS,
     refreshUrl: process.env.CODEX_REFRESH_TOKEN_URL_OVERRIDE || DEFAULT_REFRESH_URL,
+    retries: DEFAULT_RETRIES,
     smoke: false,
     stream: true,
-    timeoutMs: DEFAULT_TIMEOUT_MS,
+    timeoutMs: null,
+    timeoutMsExplicit: false,
+    timeoutFlag: null,
     verbose: false,
   };
 
@@ -188,8 +222,10 @@ function parseArgs(argv) {
       options.model = next();
     } else if (longValue("--auth") !== null) {
       options.authPath = longValue("--auth");
+      options.authPathExplicit = true;
     } else if (arg === "--auth") {
       options.authPath = next();
+      options.authPathExplicit = true;
     } else if (longValue("--auth-profile") !== null) {
       options.authProfile = longValue("--auth-profile");
     } else if (arg === "--auth-profile") {
@@ -214,18 +250,24 @@ function parseArgs(argv) {
       options.refreshOnly = true;
     } else if (arg === "--no-refresh") {
       options.refresh = false;
+    } else if (longValue("--retries") !== null) {
+      options.retries = parseRetries(longValue("--retries"));
+    } else if (arg === "--retries") {
+      options.retries = parseRetries(next());
+    } else if (arg === "--no-retry") {
+      options.retries = 0;
+    } else if (longValue("--timeout") !== null) {
+      setTimeoutOption(options, longValue("--timeout"), "seconds", "--timeout");
+    } else if (arg === "--timeout") {
+      setTimeoutOption(options, next(), "seconds", "--timeout");
+    } else if (longValue("--timeout-seconds") !== null) {
+      setTimeoutOption(options, longValue("--timeout-seconds"), "seconds", "--timeout-seconds");
+    } else if (arg === "--timeout-seconds") {
+      setTimeoutOption(options, next(), "seconds", "--timeout-seconds");
     } else if (longValue("--timeout-ms") !== null) {
-      const value = Number(longValue("--timeout-ms"));
-      if (!Number.isFinite(value) || value < 0) {
-        throw new UsageError("--timeout-ms must be a non-negative number");
-      }
-      options.timeoutMs = value;
+      setTimeoutOption(options, longValue("--timeout-ms"), "milliseconds", "--timeout-ms");
     } else if (arg === "--timeout-ms") {
-      const value = Number(next());
-      if (!Number.isFinite(value) || value < 0) {
-        throw new UsageError("--timeout-ms must be a non-negative number");
-      }
-      options.timeoutMs = value;
+      setTimeoutOption(options, next(), "milliseconds", "--timeout-ms");
     } else if (arg === "--no-stream") {
       options.stream = false;
     } else if (arg === "--json") {
@@ -252,6 +294,84 @@ function parseArgs(argv) {
   }
 
   return options;
+}
+
+function setTimeoutOption(options, value, unit, flag) {
+  if (options.timeoutMsExplicit) {
+    throw new UsageError(
+      `Use only one timeout option. ${options.timeoutFlag} was already provided; remove ${flag}.`
+    );
+  }
+
+  options.timeoutMs =
+    unit === "seconds" ? parseTimeoutSeconds(value, flag) : parseTimeoutMs(value, flag);
+  options.timeoutMsExplicit = true;
+  options.timeoutFlag = flag;
+}
+
+function parseRetries(value) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > MAX_RETRIES) {
+    throw new UsageError(`--retries must be an integer from 0 to ${MAX_RETRIES}`);
+  }
+  return parsed;
+}
+
+function parseTimeoutSeconds(value, flag = "--timeout") {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new UsageError(`${flag} must be greater than 0 seconds so generation cannot run unbounded`);
+  }
+  return Math.ceil(parsed * 1000);
+}
+
+function parseTimeoutMs(value, flag = "--timeout-ms") {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new UsageError(`${flag} must be greater than 0 milliseconds so generation cannot run unbounded`);
+  }
+  return Math.ceil(parsed);
+}
+
+function timeoutSeconds(timeoutMs) {
+  return Number((timeoutMs / 1000).toFixed(3));
+}
+
+function describeTimeout(timeoutMs) {
+  return `${timeoutSeconds(timeoutMs)}s (${timeoutMs}ms)`;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelayMs(retryNumber) {
+  const exp = 2 ** Math.max(0, retryNumber - 1);
+  const jitter = 0.9 + Math.random() * 0.2;
+  return Math.max(0, Math.round(RETRY_BASE_DELAY_MS * exp * jitter));
+}
+
+function formatDelay(ms) {
+  return `${Number((ms / 1000).toFixed(3))}s`;
+}
+
+function pathLooksInsideOpenClaw(pathname) {
+  const normalized = path.resolve(pathname).split(path.sep);
+  return normalized.includes(".openclaw") || normalized.includes(".clawdbot");
+}
+
+function isOpenClawRuntime() {
+  return Boolean(
+    process.env.OPENCLAW_AGENT_DIR?.trim() ||
+      process.env.PI_CODING_AGENT_DIR?.trim() ||
+      process.env.OPENCLAW_STATE_DIR?.trim() ||
+      process.env.OPENCLAW_OUTPUT_DIR?.trim() ||
+      pathLooksInsideOpenClaw(process.cwd())
+  );
+}
+
+function defaultTimeoutMs() {
+  return isOpenClawRuntime() ? DEFAULT_OPENCLAW_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
 }
 
 function resolveUserPath(input) {
@@ -314,12 +434,28 @@ function resolveOpenClawStateDir() {
   return current;
 }
 
+function resolveOpenClawConfigPath() {
+  const override = process.env.OPENCLAW_CONFIG_PATH?.trim();
+  if (override) {
+    return resolvePathFromCwd(override);
+  }
+  return path.join(resolveOpenClawStateDir(), "openclaw.json");
+}
+
 function resolveOpenClawAgentDir() {
   const override = process.env.OPENCLAW_AGENT_DIR?.trim() || process.env.PI_CODING_AGENT_DIR?.trim();
   if (override) {
     return resolvePathFromCwd(override);
   }
+  return resolveOpenClawMainAgentDir();
+}
+
+function resolveOpenClawMainAgentDir() {
   return path.join(resolveOpenClawStateDir(), "agents", DEFAULT_OPENCLAW_AGENT_ID, "agent");
+}
+
+function resolveOpenClawMainAuthProfilePath() {
+  return path.join(resolveOpenClawMainAgentDir(), "auth-profiles.json");
 }
 
 function resolveOpenClawOAuthDir() {
@@ -400,8 +536,13 @@ function normalizeOptions(options) {
     process.chdir(resolvePathFromCwd(options.cwd));
   }
 
+  if (!options.timeoutMsExplicit) {
+    options.timeoutMs = defaultTimeoutMs();
+  }
+
   options.outDir = options.outDir ? resolvePathFromCwd(options.outDir) : defaultOutputDir();
   options.authPath = resolveAuthPath(options);
+  options.authPathCandidates = options.authPathExplicit ? [options.authPath] : authPathCandidates();
   return options;
 }
 
@@ -631,6 +772,10 @@ function profileAccountId(profile) {
   return profile.accountId ?? profile.account_id ?? profile.account ?? null;
 }
 
+function profileEmail(profile) {
+  return profile.email ?? null;
+}
+
 function readSiblingAuthState(authPath) {
   const statePath = path.join(path.dirname(authPath), "auth-state.json");
   if (!existingFileSync(statePath)) {
@@ -643,8 +788,57 @@ function readSiblingAuthState(authPath) {
   }
 }
 
-function scoreOpenClawProfile(profileId, profile, state) {
+function readOpenClawConfig() {
+  const configPath = resolveOpenClawConfigPath();
+  if (!existingFileSync(configPath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fsSync.readFileSync(configPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeProfileIdList(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
+}
+
+function providerFromProfileId(profileId) {
+  return profileId.includes(":") ? profileId.split(":")[0] : profileId;
+}
+
+function configuredOpenClawProfileOrder(config) {
+  const order = normalizeProfileIdList(config?.auth?.order?.["openai-codex"]);
+  const configuredProfiles = Object.entries(config?.auth?.profiles ?? {})
+    .filter(([profileId, profile]) => {
+      const provider =
+        typeof profile?.provider === "string" && profile.provider.trim()
+          ? profile.provider.trim()
+          : providerFromProfileId(profileId);
+      return provider === "openai-codex";
+    })
+    .map(([profileId]) => profileId);
+  return uniq([...order, ...configuredProfiles]);
+}
+
+function sameResolvedPath(left, right) {
+  return path.resolve(left) === path.resolve(right);
+}
+
+function shouldUseOpenClawConfigProfileOrder(authPath, options = {}) {
+  return !options.authPathExplicit || sameResolvedPath(authPath, resolveOpenClawMainAuthProfilePath());
+}
+
+function scoreOpenClawProfile(profileId, profile, state, configuredOrder = []) {
   let score = 0;
+  const configuredIndex = configuredOrder.indexOf(profileId);
+  if (configuredIndex !== -1) {
+    score += 500_000 - configuredIndex;
+  }
   const lastGood = state?.lastGood?.["openai-codex"];
   if (lastGood && profileId === lastGood) {
     score += 1_000_000;
@@ -665,6 +859,18 @@ function scoreOpenClawProfile(profileId, profile, state) {
   return score;
 }
 
+function isOpenClawCodexOAuthProfile(profile) {
+  return profile?.type === "oauth" && profile.provider === "openai-codex";
+}
+
+function isUsableOpenClawCodexOAuthProfile(profile) {
+  return isOpenClawCodexOAuthProfile(profile) && Boolean(profileAccess(profile)) && Boolean(profileAccountId(profile));
+}
+
+function isSelectableOpenClawCodexOAuthProfile(profile) {
+  return isOpenClawCodexOAuthProfile(profile) && Boolean(profileAccess(profile));
+}
+
 function selectOpenClawProfile(store, authPath, options = {}) {
   const profiles = store.profiles ?? {};
   const requested = options.authProfile?.trim();
@@ -677,25 +883,37 @@ function selectOpenClawProfile(store, authPath, options = {}) {
   }
 
   const state = readSiblingAuthState(authPath);
+  const configuredOrder = shouldUseOpenClawConfigProfileOrder(authPath, options)
+    ? configuredOpenClawProfileOrder(readOpenClawConfig())
+    : [];
+  for (const profileId of configuredOrder) {
+    const profile = profiles[profileId];
+    if (isSelectableOpenClawCodexOAuthProfile(profile)) {
+      return { profileId, profile };
+    }
+  }
+
   const lastGood = state?.lastGood?.["openai-codex"];
-  if (lastGood && profiles[lastGood]?.type === "oauth" && profiles[lastGood]?.provider === "openai-codex") {
+  if (lastGood && isSelectableOpenClawCodexOAuthProfile(profiles[lastGood])) {
     return { profileId: lastGood, profile: profiles[lastGood] };
   }
 
   const candidates = Object.entries(profiles).filter(
-    ([, profile]) => profile?.type === "oauth" && profile.provider === "openai-codex"
+    ([, profile]) => isOpenClawCodexOAuthProfile(profile) && profileAccess(profile)
   );
-  candidates.sort(
+  const usableCandidates = candidates.filter(([, profile]) => profileAccountId(profile));
+  const rankedCandidates = usableCandidates.length > 0 ? usableCandidates : candidates;
+  rankedCandidates.sort(
     ([leftId, leftProfile], [rightId, rightProfile]) =>
-      scoreOpenClawProfile(rightId, rightProfile, state) -
-      scoreOpenClawProfile(leftId, leftProfile, state)
+      scoreOpenClawProfile(rightId, rightProfile, state, configuredOrder) -
+      scoreOpenClawProfile(leftId, leftProfile, state, configuredOrder)
   );
 
   if (candidates.length === 0) {
     throw new Error(`No openai-codex OAuth profile found in ${authPath}`);
   }
 
-  const [profileId, profile] = candidates[0];
+  const [profileId, profile] = rankedCandidates[0];
   return { profileId, profile };
 }
 
@@ -714,6 +932,7 @@ function buildAuthResult(params) {
   const accessToken = profileAccess(params.profile);
   const refreshToken = profileRefresh(params.profile);
   const accountId = profileAccountId(params.profile);
+  const email = profileEmail(params.profile);
   const provider =
     params.profile.provider ??
     (params.profileId?.includes(":") ? params.profileId.split(":")[0] : "openai-codex");
@@ -736,6 +955,7 @@ function buildAuthResult(params) {
     authPath: params.authPath,
     authFormat: params.authFormat,
     authMode: params.authMode ?? null,
+    email,
     expiresMs,
     lastRefresh: params.lastRefresh ?? null,
     profileId: params.profileId ?? null,
@@ -1077,6 +1297,31 @@ function refreshFailureMessage(status, body) {
   return `Refresh request failed: HTTP ${status}: ${message}`;
 }
 
+function isRefreshTokenReusedResponse(status, body) {
+  if (status !== 401) {
+    return false;
+  }
+
+  if (refreshErrorCode(body) === "refresh_token_reused") {
+    return true;
+  }
+
+  const text = String(body ?? "").toLowerCase();
+  return (
+    text.includes("refresh_token_reused") ||
+    text.includes("refresh token has already been used") ||
+    text.includes("already been used to generate a new access token")
+  );
+}
+
+function canUseExistingAccessAfterRefreshReuse(auth, reason) {
+  if (["forced refresh", "refresh-only", "401 from Codex backend"].includes(reason)) {
+    return false;
+  }
+  const secondsLeft = tokenSecondsLeft(auth.tokenPayload, auth.expiresMs);
+  return secondsLeft !== null && secondsLeft > 0;
+}
+
 async function writeAuthJsonAtomic(authPath, authJson) {
   await fs.mkdir(path.dirname(authPath), { recursive: true });
   const tempPath = path.join(
@@ -1208,6 +1453,95 @@ function authCredentialsChanged(left, right) {
   );
 }
 
+function normalizeIdentityToken(value) {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed || null;
+}
+
+function normalizeEmailToken(value) {
+  return normalizeIdentityToken(value)?.toLowerCase() ?? null;
+}
+
+function isSafeToAdoptOpenClawAuthIdentity(existingAuth, incomingAuth) {
+  const existingAccountId = normalizeIdentityToken(existingAuth.accountId);
+  const incomingAccountId = normalizeIdentityToken(incomingAuth.accountId);
+  if (existingAccountId && incomingAccountId) {
+    return existingAccountId === incomingAccountId;
+  }
+
+  const existingEmail = normalizeEmailToken(existingAuth.email);
+  const incomingEmail = normalizeEmailToken(incomingAuth.email);
+  if (existingEmail && incomingEmail) {
+    return existingEmail === incomingEmail;
+  }
+
+  if (existingAccountId || existingEmail) {
+    return false;
+  }
+
+  return true;
+}
+
+function areAuthIdentitiesCompatible(existingAuth, candidateAuth) {
+  return isSafeToAdoptOpenClawAuthIdentity(existingAuth, candidateAuth);
+}
+
+async function inheritFreshOpenClawMainAuth(options, auth) {
+  if (auth.authFormat !== "openclaw-auth-profiles" || !auth.profileId) {
+    return null;
+  }
+
+  const mainAuthPath = resolveOpenClawMainAuthProfilePath();
+  if (sameResolvedPath(mainAuthPath, auth.authPath) || !existingFileSync(mainAuthPath)) {
+    return null;
+  }
+
+  let mainAuth;
+  try {
+    mainAuth = await readAuthWithOptions(mainAuthPath, { ...options, authProfile: auth.profileId });
+  } catch (error) {
+    logVerbose(options, `main OpenClaw auth adoption skipped: ${error.message}`);
+    return null;
+  }
+
+  if (
+    mainAuth.authFormat !== "openclaw-auth-profiles" ||
+    mainAuth.profileId !== auth.profileId ||
+    mainAuth.provider !== auth.provider
+  ) {
+    return null;
+  }
+
+  if (!isSafeToAdoptOpenClawAuthIdentity(auth, mainAuth)) {
+    logVerbose(options, "main OpenClaw auth adoption skipped: identity mismatch");
+    return null;
+  }
+
+  if (staleRefreshReason(mainAuth, options)) {
+    return null;
+  }
+
+  if (!authCredentialsChanged(auth, mainAuth)) {
+    return null;
+  }
+
+  const sourceProfile = mainAuth.authJson.profiles?.[auth.profileId];
+  if (!sourceProfile) {
+    return null;
+  }
+
+  const nextAuthJson = structuredClone(auth.authJson);
+  if (!nextAuthJson.profiles || typeof nextAuthJson.profiles !== "object") {
+    return null;
+  }
+
+  nextAuthJson.profiles[auth.profileId] = structuredClone(sourceProfile);
+  await writeAuthJsonAtomic(auth.authPath, nextAuthJson);
+  const adoptedAuth = await readAuthWithOptions(auth.authPath, { ...options, authProfile: auth.profileId });
+  logVerbose(options, "refresh skipped: inherited fresh OpenClaw main auth");
+  return { auth: adoptedAuth, refreshed: false, skipped: "inherited fresh OpenClaw main auth" };
+}
+
 function skipRefreshAfterReload(originalAuth, currentAuth, options, reason) {
   const changed = authCredentialsChanged(originalAuth, currentAuth);
   const fresh = !staleRefreshReason(currentAuth, options);
@@ -1223,7 +1557,7 @@ function skipRefreshAfterReload(originalAuth, currentAuth, options, reason) {
   return null;
 }
 
-async function refreshAuthUnlocked(options, auth, reason) {
+async function refreshAuthUnlocked(options, auth, reason, { retryRotatedRefreshToken = true } = {}) {
   logVerbose(options, `refresh: ${reason}`);
   logVerbose(options, `refresh_endpoint: ${options.refreshUrl}`);
 
@@ -1232,9 +1566,29 @@ async function refreshAuthUnlocked(options, auth, reason) {
   if (!response.ok) {
     const body = await response.text();
     const currentAuth = await readAuthWithOptions(auth.authPath, { authProfile: auth.profileId }).catch(() => null);
-    if (currentAuth?.refreshToken && currentAuth.refreshToken !== auth.refreshToken && !staleRefreshReason(currentAuth, options)) {
-      logVerbose(options, "refresh skipped: auth.json changed while refresh was in progress");
-      return { auth: currentAuth, refreshed: false, skipped: "auth changed" };
+    if (currentAuth && authCredentialsChanged(auth, currentAuth)) {
+      if (!staleRefreshReason(currentAuth, options)) {
+        logVerbose(options, "refresh skipped: auth.json changed while refresh was in progress");
+        return { auth: currentAuth, refreshed: false, skipped: "auth changed" };
+      }
+      if (
+        retryRotatedRefreshToken &&
+        isRefreshTokenReusedResponse(response.status, body) &&
+        currentAuth.refreshToken &&
+        currentAuth.refreshToken !== auth.refreshToken
+      ) {
+        logVerbose(options, "refresh retry: auth refresh token changed after refresh_token_reused");
+        return refreshAuthUnlocked(options, currentAuth, "refresh_token_reused with rotated refresh token", {
+          retryRotatedRefreshToken: false,
+        });
+      }
+    }
+    if (isRefreshTokenReusedResponse(response.status, body)) {
+      const fallbackAuth = currentAuth ?? auth;
+      if (canUseExistingAccessAfterRefreshReuse(fallbackAuth, reason)) {
+        logVerbose(options, "refresh skipped: refresh_token_reused but access token is still usable");
+        return { auth: fallbackAuth, refreshed: false, skipped: "refresh_token_reused; access token still valid" };
+      }
     }
     throw new Error(refreshFailureMessage(response.status, body));
   }
@@ -1269,7 +1623,19 @@ async function refreshOpenClawAuthWithLocks(options, auth, reason) {
           logVerbose(options, `refresh skipped: ${skipped}`);
           return { auth: currentAuth, refreshed: false, skipped };
         }
-        return refreshAuthUnlocked(options, currentAuth, reason);
+        const inherited = await inheritFreshOpenClawMainAuth(options, currentAuth);
+        if (inherited) {
+          return inherited;
+        }
+        try {
+          return await refreshAuthUnlocked(options, currentAuth, reason);
+        } catch (error) {
+          const inheritedAfterFailure = await inheritFreshOpenClawMainAuth(options, currentAuth);
+          if (inheritedAfterFailure) {
+            return inheritedAfterFailure;
+          }
+          throw error;
+        }
       })
     );
   } catch (error) {
@@ -1296,8 +1662,34 @@ async function refreshAuth(options, auth, reason) {
   return refreshAuthUnlocked(options, auth, reason);
 }
 
-async function prepareAuth(options) {
-  let auth = await readAuthWithOptions(options.authPath, options);
+function attachAuthToError(error, auth) {
+  if (error && typeof error === "object") {
+    try {
+      Object.defineProperty(error, "auth", {
+        value: auth,
+        configurable: true,
+      });
+    } catch {
+      error.auth = auth;
+    }
+  }
+  return error;
+}
+
+function shouldTryNextAuthPath(error) {
+  const message = String(error?.message ?? error ?? "").toLowerCase();
+  return (
+    message.includes("refresh token was already used") ||
+    message.includes("refresh token expired") ||
+    message.includes("refresh token was revoked") ||
+    message.includes("refresh token was rejected") ||
+    message.includes("refresh request failed") ||
+    message.includes("no accountid found")
+  );
+}
+
+async function prepareAuthAtPath(options, authPath) {
+  let auth = await readAuthWithOptions(authPath, { ...options, authPath });
 
   if (auth.authMode && auth.authMode !== "chatgpt") {
     console.error(`warning: auth_mode is ${auth.authMode}, expected chatgpt.`);
@@ -1307,11 +1699,44 @@ async function prepareAuth(options) {
   const reason = options.forceRefresh ? "forced refresh" : staleRefreshReason(auth, options);
 
   if (reason) {
-    refresh = await refreshAuth(options, auth, reason);
+    try {
+      refresh = await refreshAuth({ ...options, authPath }, auth, reason);
+    } catch (error) {
+      throw attachAuthToError(error, auth);
+    }
     auth = refresh.auth;
   }
 
   return { auth, refresh };
+}
+
+async function prepareAuth(options) {
+  const candidates = uniq([options.authPath, ...(options.authPathCandidates ?? [])]).filter(existingFileSync);
+  let firstError = null;
+  let firstAuth = null;
+
+  for (const authPath of candidates) {
+    try {
+      const prepared = await prepareAuthAtPath(options, authPath);
+      if (firstAuth && !areAuthIdentitiesCompatible(firstAuth, prepared.auth)) {
+        logVerbose(options, `auth fallback skipped due to identity mismatch: ${authPath}`);
+        continue;
+      }
+      if (authPath !== options.authPath) {
+        logProgress(options, `codex-imagen: using fallback auth ${authPath}`);
+      }
+      return prepared;
+    } catch (error) {
+      firstError ??= error;
+      firstAuth ??= error?.auth ?? null;
+      if (options.authPathExplicit || !shouldTryNextAuthPath(error)) {
+        throw error;
+      }
+      logVerbose(options, `auth path failed, trying next candidate: ${authPath}: ${error.message}`);
+    }
+  }
+
+  throw firstError ?? new Error("No usable auth JSON found.");
 }
 
 function parseSseEvent(block) {
@@ -1428,6 +1853,176 @@ function eventTypeFromPayload(payload) {
   return payload.type ?? payload.event ?? payload.item?.type ?? "object";
 }
 
+function compactJson(value, maxLength = 1200) {
+  let text;
+  try {
+    text = JSON.stringify(value);
+  } catch {
+    text = String(value);
+  }
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength)}...`;
+}
+
+function normalizeBackendError(source, value) {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    return { source, message: value };
+  }
+
+  if (typeof value !== "object") {
+    return { source, message: String(value) };
+  }
+
+  const message =
+    value.message ??
+    value.error_description ??
+    value.reason ??
+    value.detail ??
+    value.code ??
+    value.status ??
+    null;
+
+  return {
+    source,
+    code: value.code ?? null,
+    type: value.type ?? null,
+    status: value.status ?? null,
+    param: value.param ?? null,
+    message: message ? String(message) : compactJson(value),
+  };
+}
+
+function backendErrorRetryReason(error) {
+  const text = [error.code, error.type, error.status, error.message].filter(Boolean).join(" ").toLowerCase();
+  if (
+    /\b(server_error|internal_error|server_overloaded|service_unavailable|temporarily_unavailable|backend_error)\b/.test(
+      text
+    ) ||
+    text.includes("overloaded") ||
+    text.includes("unavailable")
+  ) {
+    return error.code || error.type || error.status || "backend_error";
+  }
+  return null;
+}
+
+function retryReason(error) {
+  if (error instanceof TimeoutError || error instanceof UsageError) {
+    return null;
+  }
+
+  if (error instanceof HttpStatusError) {
+    if (error.status >= 500 && error.status < 600) {
+      return `HTTP ${error.status}`;
+    }
+    return null;
+  }
+
+  if (error instanceof GenerationFailedError) {
+    for (const backendError of dedupeBackendErrors(error.backendErrors ?? [])) {
+      const reason = backendErrorRetryReason(backendError);
+      if (reason) {
+        return reason;
+      }
+    }
+
+    const seen = new Set(error.seenEventTypes ?? []);
+    if (seen.has("response.failed")) {
+      return "response.failed";
+    }
+    if (error.seenEventTypes?.some((eventType) => eventType.startsWith("unparsed:"))) {
+      return "unparsed_stream_event";
+    }
+    if (error.seenEventTypes?.length === 0) {
+      return "empty_response_stream";
+    }
+    if (
+      !seen.has("response.completed") &&
+      (seen.has("response.created") ||
+        seen.has("response.in_progress") ||
+        seen.has("response.output_item.added") ||
+        seen.has("response.image_generation_call.in_progress") ||
+        seen.has("response.image_generation_call.generating") ||
+        seen.has("keepalive"))
+    ) {
+      return "stream_ended_before_completed_image";
+    }
+
+    return null;
+  }
+
+  const text = `${error?.name ?? ""} ${error?.message ?? ""} ${error?.cause?.code ?? ""} ${
+    error?.cause?.message ?? ""
+  }`;
+  if (/\b(ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|UND_ERR|network|fetch failed)\b/i.test(text)) {
+    return "transport";
+  }
+
+  return null;
+}
+
+function backendErrorsFromPayload(payload, payloadType) {
+  const errors = [];
+  const add = (source, value) => {
+    const normalized = normalizeBackendError(source, value);
+    if (normalized) {
+      errors.push(normalized);
+    }
+  };
+
+  if (payloadType === "error" || payload?.error) {
+    add("error", payload?.error ?? payload);
+  }
+
+  if (payloadType === "response.failed" || payload?.response?.status === "failed") {
+    add("response.error", payload?.response?.error);
+    add("response.incomplete_details", payload?.response?.incomplete_details);
+    if (!payload?.response?.error && !payload?.response?.incomplete_details) {
+      add("response.failed", {
+        status: payload?.response?.status,
+        id: payload?.response?.id,
+      });
+    }
+  }
+
+  add("item.error", payload?.item?.error);
+
+  return errors;
+}
+
+function formatBackendError(error) {
+  const parts = [error.source];
+  if (error.status) parts.push(`status=${error.status}`);
+  if (error.code) parts.push(`code=${error.code}`);
+  if (error.type) parts.push(`type=${error.type}`);
+  if (error.param) parts.push(`param=${error.param}`);
+  parts.push(error.message);
+  return parts.filter(Boolean).join(" ");
+}
+
+function dedupeBackendErrors(errors) {
+  const seen = new Set();
+  return errors.filter((error) => {
+    const key = [error.code, error.param, error.message].join("\u0000");
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function formatBackendErrors(errors) {
+  return dedupeBackendErrors(errors).map((error) => `  - ${formatBackendError(error)}`).join("\n");
+}
+
 async function parseStreamingResponse(response, options, onImageCall, streamState = {}) {
   const decoder = new TextDecoder();
   let buffer = "";
@@ -1435,6 +2030,7 @@ async function parseStreamingResponse(response, options, onImageCall, streamStat
   const seenEventTypes = streamState.seenEventTypes ?? new Set();
   streamState.seenEventTypes = seenEventTypes;
   const progressEvents = new Set();
+  const backendErrors = [];
 
   const noteProgress = (payloadType) => {
     if (progressEvents.has(payloadType)) {
@@ -1494,6 +2090,7 @@ async function parseStreamingResponse(response, options, onImageCall, streamStat
       seenEventTypes.add(payloadType);
       logVerbose(options, `event: ${payloadType}`);
       noteProgress(payloadType);
+      backendErrors.push(...backendErrorsFromPayload(payload, payloadType));
 
       for (const call of imageCallsFromPayload(payload, payloadType)) {
         await recordImageCall(call);
@@ -1515,6 +2112,7 @@ async function parseStreamingResponse(response, options, onImageCall, streamStat
         seenEventTypes.add(payloadType);
         logVerbose(options, `event: ${payloadType}`);
         noteProgress(payloadType);
+        backendErrors.push(...backendErrorsFromPayload(payload, payloadType));
         for (const call of imageCallsFromPayload(payload, payloadType)) {
           await recordImageCall(call);
         }
@@ -1527,6 +2125,7 @@ async function parseStreamingResponse(response, options, onImageCall, streamStat
   return {
     imageCalls: [...imageCalls.values()],
     seenEventTypes: [...seenEventTypes],
+    backendErrors,
   };
 }
 
@@ -1536,6 +2135,7 @@ async function parseJsonResponse(response) {
   return {
     imageCalls: imageCallsFromPayload(payload, payloadType),
     seenEventTypes: [payloadType],
+    backendErrors: backendErrorsFromPayload(payload, payloadType),
   };
 }
 
@@ -1685,6 +2285,30 @@ function buildResult({ requestId, sessionId, endpoint, model, images, seenEventT
   };
 }
 
+function createGenerationWatchdog(options, abortController) {
+  let forceExit = null;
+  const timeout = setTimeout(() => {
+    abortController.abort();
+    forceExit = setTimeout(() => {
+      console.error(
+        `codex-imagen: forced exit ${FORCE_EXIT_AFTER_ABORT_MS}ms after timeout; fetch did not settle`
+      );
+      process.exit(124);
+    }, FORCE_EXIT_AFTER_ABORT_MS);
+  }, options.timeoutMs);
+
+  timeout.unref?.();
+
+  return {
+    clear() {
+      clearTimeout(timeout);
+      if (forceExit) {
+        clearTimeout(forceExit);
+      }
+    },
+  };
+}
+
 async function requestImage(options, prompt, auth) {
   const requestId = randomUUID();
   const sessionId = randomUUID();
@@ -1693,9 +2317,7 @@ async function requestImage(options, prompt, auth) {
   const streamState = { seenEventTypes: new Set() };
   const streamingSaver = createStreamingImageSaver(options);
   const abortController = new AbortController();
-  const timeout = options.timeoutMs > 0
-    ? setTimeout(() => abortController.abort(), options.timeoutMs)
-    : null;
+  const watchdog = createGenerationWatchdog(options, abortController);
 
   logProgress(options, `codex-imagen: POST ${endpoint}`);
   logProgress(options, `codex-imagen: model ${options.model}`);
@@ -1724,8 +2346,15 @@ async function requestImage(options, prompt, auth) {
       : await saveImageCallsAtEnd(options, parsed.imageCalls);
 
     if (images.length === 0) {
-      throw new Error(
-        `No completed image_generation_call with result found. Seen event types: ${parsed.seenEventTypes.join(", ") || "(none)"}`
+      const backendErrorText = parsed.backendErrors?.length
+        ? `\nBackend error details:\n${formatBackendErrors(parsed.backendErrors)}`
+        : "";
+      throw new GenerationFailedError(
+        `No completed image_generation_call with result found. Seen event types: ${parsed.seenEventTypes.join(", ") || "(none)"}${backendErrorText}`,
+        {
+          backendErrors: parsed.backendErrors ?? [],
+          seenEventTypes: parsed.seenEventTypes,
+        }
       );
     }
 
@@ -1741,7 +2370,7 @@ async function requestImage(options, prompt, auth) {
     if (abortController.signal.aborted && streamingSaver.images.length > 0) {
       logProgress(
         options,
-        `codex-imagen: timed out after ${options.timeoutMs}ms; returning ${streamingSaver.images.length} saved image(s)`
+        `codex-imagen: timed out after ${describeTimeout(options.timeoutMs)}; returning ${streamingSaver.images.length} saved image(s)`
       );
       return buildResult({
         requestId,
@@ -1755,13 +2384,45 @@ async function requestImage(options, prompt, auth) {
     }
 
     if (abortController.signal.aborted) {
-      throw new Error(`Timed out after ${options.timeoutMs}ms before any image was saved.`);
+      throw new TimeoutError(
+        `Timed out after ${describeTimeout(options.timeoutMs)} before any image was saved.`
+      );
     }
 
     throw error;
   } finally {
-    if (timeout) {
-      clearTimeout(timeout);
+    watchdog.clear();
+  }
+}
+
+async function requestImageWithRetries(options, prompt, auth) {
+  const totalAttempts = options.retries + 1;
+
+  for (let attemptIndex = 0; ; attemptIndex += 1) {
+    if (totalAttempts > 1) {
+      logProgress(options, `codex-imagen: generation attempt ${attemptIndex + 1}/${totalAttempts}`);
+    }
+
+    try {
+      const result = await requestImage(options, prompt, auth);
+      if (attemptIndex > 0) {
+        result.retry_attempts = attemptIndex;
+        result.retryAttempts = attemptIndex;
+      }
+      return result;
+    } catch (error) {
+      const reason = retryReason(error);
+      if (!reason || attemptIndex >= options.retries) {
+        throw error;
+      }
+
+      const retryNumber = attemptIndex + 1;
+      const delayMs = retryDelayMs(retryNumber);
+      logProgress(
+        options,
+        `codex-imagen: transient generation failure (${reason}); retrying ${retryNumber}/${options.retries} in ${formatDelay(delayMs)}`
+      );
+      await sleep(delayMs);
     }
   }
 }
@@ -1793,6 +2454,7 @@ function authSummary(auth, options) {
     auth_mode: auth.authMode,
     profile_id: auth.profileId,
     provider: auth.provider,
+    email: auth.email ?? null,
     account_id: auth.accountId,
     last_refresh: auth.lastRefresh,
     access_token_expires_in_seconds: tokenSecondsLeft(auth.tokenPayload, auth.expiresMs),
@@ -1800,6 +2462,10 @@ function authSummary(auth, options) {
     endpoint: `${options.baseUrl.replace(/\/+$/, "")}/responses`,
     model: options.model,
     out_dir: options.outDir,
+    retries: options.retries,
+    total_attempts: options.retries + 1,
+    timeout_seconds: timeoutSeconds(options.timeoutMs),
+    timeout_ms: options.timeoutMs,
   };
 }
 
@@ -1877,7 +2543,7 @@ async function main() {
 
   let result;
   try {
-    result = await requestImage(options, prompt, auth);
+    result = await requestImageWithRetries(options, prompt, auth);
   } catch (error) {
     if (!(error instanceof HttpStatusError) || error.status !== 401 || !options.refresh) {
       throw error;
@@ -1885,7 +2551,7 @@ async function main() {
 
     const retryRefresh = await refreshAuth(options, auth, "401 from Codex backend");
     auth = retryRefresh.auth;
-    result = await requestImage(options, prompt, auth);
+    result = await requestImageWithRetries(options, prompt, auth);
     refresh = retryRefresh;
   }
 
@@ -1911,6 +2577,21 @@ main().catch((error) => {
   if (error instanceof UsageError) {
     console.error(`Error: ${error.message}`);
     process.exitCode = 2;
+    return;
+  }
+  if (error instanceof TimeoutError) {
+    console.error(`Error: ${error.message}`);
+    process.exitCode = 124;
+    return;
+  }
+  if (error instanceof GenerationFailedError) {
+    console.error(`Error: ${error.message}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (error instanceof HttpStatusError) {
+    console.error(`Error: ${error.message}`);
+    process.exitCode = 1;
     return;
   }
   console.error(error?.stack || error?.message || String(error));
