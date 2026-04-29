@@ -1,0 +1,29 @@
+{
+  "name": "Cross-border Crisis Communication Protocol",
+  "slug": "cb-crisis-communication-protocol",
+  "version": "1.0.0",
+  "description": "A response framework for overseas brand, product, service, cultural, or compliance crises across multiple markets and channels.",
+  "author": "Pearl-led OpenClaw team",
+  "tags": [
+    "cross-border",
+    "overseas",
+    "global-expansion",
+    "brand-strategy",
+    "crisis-communication"
+  ],
+  "trigger_keywords": [
+    "overseas PR crisis",
+    "cross-border crisis communication",
+    "international brand backlash",
+    "foreign customer complaint crisis",
+    "global reputation response"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "category": "cross-border-expansion",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "outputs": "structured descriptive framework",
+  "readiness": "stable",
+  "safety": "Crisis guidance is strategic communication support only; legal, regulatory, safety, or liability matters require qualified professional counsel."
+}
