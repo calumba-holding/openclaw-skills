@@ -1,11 +1,17 @@
 {
   "owner": "yangchao228",
   "slug": "family-cultivation-coach",
-  "displayName": "家庭培养协作官",
+  "displayName": "Family Cultivation Coach",
   "latest": {
-    "version": "1.4.0",
-    "publishedAt": 1776660423044,
-    "commit": "https://github.com/openclaw/skills/commit/84f15f96a4381f571c9e0eb4408924865d90d4cd"
+    "version": "1.6.1",
+    "publishedAt": 1777381753351,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.4.0",
+      "publishedAt": 1776660423044,
+      "commit": "https://github.com/openclaw/skills/commit/84f15f96a4381f571c9e0eb4408924865d90d4cd"
+    }
+  ]
 }
