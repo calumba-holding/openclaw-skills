@@ -1,0 +1,11 @@
+{
+  "owner": "gtht-tech",
+  "slug": "lingxi-realtimemarketdata-skill",
+  "displayName": "国泰海通证券实时行情",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776993488049,
+    "commit": null
+  },
+  "history": []
+}
