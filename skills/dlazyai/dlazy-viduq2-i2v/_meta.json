@@ -3,9 +3,15 @@
   "slug": "dlazy-viduq2-i2v",
   "displayName": "Dlazy Viduq2 I2v",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776847295489,
-    "commit": "https://github.com/openclaw/skills/commit/c6f6b5e5ee458d9e748b2905a600ce7447108206"
+    "version": "1.0.5",
+    "publishedAt": 1777430137576,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776847295489,
+      "commit": "https://github.com/openclaw/skills/commit/c6f6b5e5ee458d9e748b2905a600ce7447108206"
+    }
+  ]
 }
