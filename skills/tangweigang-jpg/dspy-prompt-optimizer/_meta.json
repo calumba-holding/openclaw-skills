@@ -1,0 +1,11 @@
+{
+  "owner": "tangweigang-jpg",
+  "slug": "dspy-prompt-optimizer",
+  "displayName": "Dspy Prompt Optimizer",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1777109946413,
+    "commit": null
+  },
+  "history": []
+}
