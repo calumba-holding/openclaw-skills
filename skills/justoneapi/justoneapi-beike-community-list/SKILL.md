@@ -1,6 +1,6 @@
 ---
 name: Beike Community List API
-description: Analyze Beike Community List workflows with JustOneAPI, including community List.
+description: Call GET /api/beike/community/list/v1 for Beike Community List through JustOneAPI with cityId.
 author: JustOneAPI
 homepage: https://api.justoneapi.com
 metadata: {"openclaw":{"homepage":"https://api.justoneapi.com","primaryEnv":"JUST_ONE_API_TOKEN","requires":{"bins":["node"],"env":["JUST_ONE_API_TOKEN"]},"skillKey":"justoneapi_beike_community_list"}}
@@ -8,56 +8,54 @@ metadata: {"openclaw":{"homepage":"https://api.justoneapi.com","primaryEnv":"JUS
 
 # Beike Community List
 
-This skill wraps 1 Beike Community List operations exposed by JustOneAPI. It is strongest for community List. Expect common inputs such as `cityId`, `condition`, `limitOffset`.
+Use this focused JustOneAPI skill for community List in Beike. It targets `GET /api/beike/community/list/v1`. Required non-token inputs are `cityId`. OpenAPI describes it as: Get Beike community List data, including - Community name and unique ID and Average listing price and historical price trends, for identifying popular residential areas in a city and comparing average housing prices across different communities.
 
-## When To Use It
+## Endpoint Scope
 
-- The user needs community List on Beike Community List.
-- The user can provide identifiers or filters such as `cityId`, `condition`, `limitOffset`.
-- The user wants an exact API-backed answer instead of a freeform summary.
+- Platform key: `beike`
+- Endpoint key: `community/list`
+- Platform family: Beike
+- Skill slug: `justoneapi-beike-community-list`
 
-## Representative Operations
+| Operation | Version | Method | Path | OpenAPI summary |
+| --- | --- | --- | --- | --- |
+| `communityListV1` | `v1` | `GET` | `/api/beike/community/list/v1` | Community List |
 
-- `communityListV1`: Community List — Get Beike community List data, including - Community name and unique ID and Average listing price and historical price trends, for identifying popular residential areas in a city and comparing average housing prices across different communities
+## Inputs
 
-## Available Versions
+| Parameter | In | Required by | Optional by | Type | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `cityId` | `query` | all | n/a | `string` | The ID of the city (e.g., '110000' for Beijing) |
+| `condition` | `query` | n/a | all | `string` | Filter conditions for communities |
+| `limitOffset` | `query` | n/a | all | `integer` | Pagination offset, starting from 0 (e.g., 0, 20, 40...) |
 
-These endpoint versions are grouped in this interface-level skill.
+Request body: none documented; send parameters through path or query arguments.
 
-- `v1`: `communityListV1` - `GET /api/beike/community/list/v1`
+## Version Choice
 
-## Request Pattern
+Use `communityListV1` for the documented `v1` endpoint. There are no alternate versions grouped in this skill.
 
-- 1 operations are available in this skill.
-- HTTP methods used here: `GET`.
-- The most common non-token parameters are `cityId`, `condition`, `limitOffset`.
-- All operations in this skill are parameter-driven requests; none require a request body.
-- This interface-level skill groups endpoint versions that share the same path after removing the trailing `/vN` version segment.
+## Run This Endpoint
 
-## How To Work
-
-1. Read `generated/operations.md` before choosing an endpoint.
-2. Start with one of these operations when it matches the user's request: `communityListV1`.
-3. Pick the smallest matching operation instead of guessing.
-4. Ask the user for any missing required parameter. Do not invent values.
-5. Call the helper with:
+Supported operation IDs in this skill: `communityListV1`.
 
 ```bash
-node {baseDir}/bin/run.mjs --operation "<operation-id>" --token "$JUST_ONE_API_TOKEN" --params-json '{"key":"value"}'
+node {baseDir}/bin/run.mjs --operation "communityListV1" --token "$JUST_ONE_API_TOKEN" --params-json '{"cityId":"<cityId>"}'
 ```
+
+Ask for any missing required parameter before calling the helper. Keep user-provided IDs, cursors, keywords, and filters unchanged.
 
 ## Environment
 
 - Required: `JUST_ONE_API_TOKEN`
-- This skill uses `JUST_ONE_API_TOKEN` only for authenticated Just One API requests.
-- Keep `JUST_ONE_API_TOKEN` private. Do not paste it into chat messages, screenshots, or logs.
+- Pass the token with `--token "$JUST_ONE_API_TOKEN"`; do not paste token values into chat messages, screenshots, or logs.
 - Get a token from [Just One API Dashboard](https://dashboard.justoneapi.com/en/login?utm_source=clawhub.ai&utm_medium=referral&utm_campaign=justoneapi_beike_community_list&utm_content=project_link).
 - Authentication details: [Just One API Usage Guide](https://docs.justoneapi.com/en/?utm_source=clawhub.ai&utm_medium=referral&utm_campaign=justoneapi_beike_community_list&utm_content=project_link).
 
-## Output Rules
+## Output Focus
 
-- Start with a plain-language answer tied to the Beike Community List task the user asked for.
-- Include the most decision-relevant fields from the selected endpoint before dumping raw JSON.
-- When using `communityListV1`, explain why the returned fields answer the user's question.
-- If the user gave filters such as `cityId`, `condition`, `limitOffset`, echo those back so the scope is explicit.
+- State the operation ID and endpoint path used, for example `communityListV1` on `/api/beike/community/list/v1`.
+- Echo the required lookup scope (`cityId`) before summarizing results.
+- Prioritize fields that support this endpoint purpose: Get Beike community List data, including - Community name and unique ID and Average listing price and historical price trends, for identifying popular residential areas in a city and comparing average housing prices across different communities.
+- Return raw JSON only after the short, endpoint-specific summary.
 - If the backend errors, include the backend payload and the exact operation ID.

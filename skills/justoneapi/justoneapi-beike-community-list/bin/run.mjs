@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const manifest = {
   "baseUrl": "https://api.justoneapi.com",
-  "description": "Analyze Beike Community List workflows with JustOneAPI, including community List.",
+  "description": "Call GET /api/beike/community/list/v1 for Beike Community List through JustOneAPI with cityId.",
   "displayName": "Beike Community List",
   "openapi": "3.1.0",
   "platformKey": "beike",
@@ -56,8 +56,8 @@ const manifest = {
       "requestBody": null,
       "responses": [
         {
-          "description": "default response",
-          "statusCode": "default"
+          "description": "OK",
+          "statusCode": "200"
         }
       ],
       "summary": "Community List",
