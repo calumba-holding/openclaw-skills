@@ -1,0 +1,11 @@
+{
+  "owner": "sdk-team",
+  "slug": "alibabacloud-sls-query",
+  "displayName": "Alibabacloud Sls Query",
+  "latest": {
+    "version": "0.0.1",
+    "publishedAt": 1777017447614,
+    "commit": null
+  },
+  "history": []
+}
