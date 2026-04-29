@@ -1,7 +1,7 @@
 ---
 name: hummingbot-market-maker
 description: |-
-  使用Hummingbot框架执行加密货币做市和套利策略，支持资金费率套利、流动性提供、价格监控等自动化交易场景。触发场景：(1) 用户要在交易所自动做市并设置买卖价差；(2) 用户要进行永续合约资金费率套利；(3) 用户要监控和记录订单簿与交易数据。
+  使用Hummingbot框架执行加密货币做市和套利策略，支持资金费率套利、流动性提供、价格监控等自动化交易场景。
 license: Proprietary. See LICENSE.txt in project root.
 compatibility: Designed for Doramagic-host ecosystem (Claude Code / openclaw / Cursor). Requires Python 3.12+ with uv package manager.
 metadata:
@@ -12,9 +12,9 @@ metadata:
   capability_activities: "crypto-trading"
   sop_version: "crystal-compilation-v6.1"
 ---
-# hummingbot-market-maker
+# Hummingbot 做市机器人 (hummingbot-market-maker)
 
-> I help you build quant strategies on A-share with ZVT — from data fetch to backtest, one flow. Just tell me what you want; I'll write the code, you don't have to dig docs. (Heads up: ZVT natively supports A-share, HK, and crypto. US stocks — stockus_nasdaq_AAPL — are half-baked; don't bother for serious work.)
+> 使用Hummingbot框架执行加密货币做市和套利策略，支持资金费率套利、流动性提供、价格监控等自动化交易场景。
 
 ## Pipeline
 
@@ -35,13 +35,6 @@ Places maker orders on one exchange and immediately hedges/hedging filled orders
 **Triggers**: xemm, cross-exchange, market making
 
 For all **14** use cases, see [references/USE_CASES.md](references/USE_CASES.md).
-
-## Install
-
-```bash
-# One-time setup before first use
-bash scripts/install.sh
-```
 
 **Execute trigger**: `When user intent matches intent_router.uc_entries[].positive_terms AND user uses action verb (run/execute/跑/执行/backtest/fetch/collect)`
 

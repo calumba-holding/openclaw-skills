@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "hummingbot-market-maker",
-  "displayName": "hummingbot-market-maker",
+  "displayName": "Hummingbot Market Maker",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776896108433,
-    "commit": "https://github.com/openclaw/skills/commit/4cdb5a8cc0b2734a4c60a44471fd3b2f83776e6d"
+    "version": "0.3.3",
+    "publishedAt": 1776954441263,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776896108433,
+      "commit": "https://github.com/openclaw/skills/commit/4cdb5a8cc0b2734a4c60a44471fd3b2f83776e6d"
+    }
+  ]
 }
