@@ -1,7 +1,7 @@
 ---
 name: cuemacro-finmarket
 description: |-
-  金融市场回测框架，支持FX G10货币对技术指标策略回测、ArcticDB高频tick数据本地与S3云端存储、Quandl等数据源的市场数据获取与缓存。触发场景：(1) 用户要做FX G10货币对的交叉策略回测；(2) 用户要把高频tick数据存到S3云端；(3) 用户要从Quandl获取历史市场数据。
+  金融市场回测框架，支持FX G10货币对技术指标策略回测、ArcticDB高频tick数据本地与S3云端存储、Quandl等数据源的市场数据获取与缓存。
 license: Proprietary. See LICENSE.txt in project root.
 compatibility: Designed for Doramagic-host ecosystem (Claude Code / openclaw / Cursor). Requires Python 3.12+ with uv package manager.
 metadata:
@@ -12,9 +12,9 @@ metadata:
   capability_activities: "portfolio-analytics"
   sop_version: "crystal-compilation-v6.1"
 ---
-# cuemacro-finmarket
+# Cuemacro 市场工具 (cuemacro-finmarket)
 
-> I help you build quant strategies on A-share with ZVT — from data fetch to backtest, one flow. Just tell me what you want; I'll write the code, you don't have to dig docs. (Heads up: ZVT natively supports A-share, HK, and crypto. US stocks — stockus_nasdaq_AAPL — are half-baked; don't bother for serious work.)
+> 金融市场回测框架，支持FX G10货币对技术指标策略回测、ArcticDB高频tick数据本地与S3云端存储、Quandl等数据源的市场数据获取与缓存。
 
 ## Pipeline
 
@@ -35,13 +35,6 @@ Demonstrates writing and reading tick market data to/from AWS S3 cloud storage u
 **Triggers**: s3 storage, aws, parquet
 
 For all **4** use cases, see [references/USE_CASES.md](references/USE_CASES.md).
-
-## Install
-
-```bash
-# One-time setup before first use
-bash scripts/install.sh
-```
 
 **Execute trigger**: `When user intent matches intent_router.uc_entries[].positive_terms AND user uses action verb (run/execute/跑/执行/backtest/fetch/collect)`
 

@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "cuemacro-finmarket",
-  "displayName": "cuemacro-finmarket",
+  "displayName": "Cuemacro Finmarket",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776884477641,
-    "commit": "https://github.com/openclaw/skills/commit/afbbf64ce6ff7689628fc150b5397046f915548e"
+    "version": "0.3.3",
+    "publishedAt": 1776954293537,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776884477641,
+      "commit": "https://github.com/openclaw/skills/commit/afbbf64ce6ff7689628fc150b5397046f915548e"
+    }
+  ]
 }
