@@ -1,6 +1,6 @@
 ---
 name: funasr-transcribe
-version: 1.4.0
+version: 1.6.0
 description: >
   This skill should be used when the user explicitly asks to "transcribe a meeting",
   "transcribe audio", "transcribe a meeting recording",
@@ -87,8 +87,23 @@ Before starting transcription, **always ask the user**:
   host + guest names, suggest `--speaker-context` for roles
   (do NOT use `--lang auto` — it lacks timestamps for speaker diarization)
 
+> **⚠️ `--speakers` must use the speaker's real name, not a podcast alias.**
+> The value passed to `--speakers` is used verbatim as the speaker label in the
+> output transcript. Always derive it from the host/guest's actual name (e.g.
+> from a shownotes "Host:" field), not from the podcast feed name or title.
+>
+> Example: if shownotes lists "Host: 张三（张三的播客）", pass `--speakers '张三'`
+> — not the alias "张三的播客". Add both the real name and the alias to
+> `hotwords.txt` so ASR can recognise both forms.
+>
+> When both `--speakers` and `--reference` are supplied, the script detects
+> this mistake at startup and prints an `ACTION REQUIRED` block naming the
+> suggested real name. **If you see that block, stop the run and re-invoke
+> with the corrected `--speakers` value before Phase 3** — the warning does
+> not abort the pipeline.
+
 If the user provides supporting materials:
-- Extract participant names and key terms → create `hotwords.txt`
+- Extract participant names and key terms → create `hotwords.txt` (include both real name and alias)
 - Extract per-person context → create `speaker-context.json`
 - Pass original reference document with `--reference`
 - Use all three together for best results
@@ -221,9 +236,13 @@ validates that no audio is lost (detects silent truncation).
 | `--num-speakers N` | Expected speaker count (improves diarization) |
 | `--speakers "A,B,C"` | Assign real names by first-appearance order |
 | `--speaker-context F` | JSON with per-speaker roles for LLM |
+| `--no-detect-gender` | Disable automatic speaker gender detection (CAM++ gender classifier) |
+| `--speaker-genders "A:female,B:male"` | Override per-speaker gender (also accepts positional `female,male`) |
 | `--audio-format` | `flac` (default), `opus`, `wav` |
 | `--device cpu` | Force CPU mode |
 | `--batch-size N` | Adjust for memory (60 for CPU, 100 if GPU OOM) |
+| `--phase1-only` | Exit after Phase 1 (VAD + ASR + diarization), skip Phase 2 + 3 |
+| `--json-out PATH` | Write raw transcript JSON to explicit path (overrides default naming) |
 | `--skip-transcribe` | Resume from saved `*_raw_transcript.json` |
 | `--skip-llm` | Skip LLM cleanup (default when `--model` is omitted) |
 | `--model ID` | Enable LLM cleanup with this model (auto-detects Bedrock/Anthropic/OpenAI) |
@@ -245,6 +264,22 @@ FunASR's CAM++ may merge acoustically similar speakers. To improve:
 2. **`--hotwords`** — Include participant names (Chinese names work best)
 3. **`--speaker-context`** — Provide per-person keywords for LLM splitting
 4. **Keyword matching** — Search `*_raw_transcript.json` for unique phrases
+
+### Speaker gender
+
+Enabled by default: each detected speaker is classified as `male` / `female`
+via 3D-Speaker's CAM++ gender classifier (`iic/speech_campplus_two_class_gender_16k`).
+The result appears next to each name in the **Speaker List** table and is
+injected into the LLM cleanup prompt so pronouns (他/她, he/she) get corrected.
+
+Precedence when combined:
+
+1. `--speaker-genders "Alice:female,Bob:male"` (explicit CLI) — always wins
+2. Reference text hints like `主播（女）：韩梅梅` or `Host (male): Alice` — override auto
+3. CAM++ auto-detection — fallback
+
+Disable with `--no-detect-gender` if you don't need gender and want to save
+the ~500 MB model download and extra inference time.
 
 ## CPU-only / Low-Memory Machines
 

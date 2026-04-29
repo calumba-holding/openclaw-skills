@@ -16,6 +16,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 from llm_utils import detect_llm_provider, is_retryable, call_llm
+import speaker_gender as sg
 import transcribe_funasr as tf
 import verify_speakers as vs
 
@@ -438,6 +439,21 @@ class TestTranscribeMergeConsecutive:
     def test_empty_transcript(self):
         assert tf.merge_consecutive([]) == []
 
+    def test_solo_podcast_keeps_timestamps(self):
+        # Long single-speaker run (solo podcast) with small gaps should NOT
+        # collapse into a single segment — we cap merged duration so
+        # periodic timestamps remain in the output.
+        transcript = [
+            make_segment(0, i * 10000, i * 10000 + 8000, f"sentence {i} ")
+            for i in range(60)  # 10 minutes of tightly-packed speech
+        ]
+        merged = tf.merge_consecutive(transcript, max_merge_ms=120000)
+        assert len(merged) >= 5, (
+            f"Expected periodic timestamps for solo podcast, got {len(merged)} segment(s)"
+        )
+        for seg in merged:
+            assert seg["end_ms"] - seg["start_ms"] <= 120000 + 8000
+
 
 class TestTranscribeBuildSpeakerMap:
     def test_with_names(self):
@@ -449,6 +465,101 @@ class TestTranscribeBuildSpeakerMap:
         transcript = [make_segment(0, 0, 1000, "a"), make_segment(1, 1000, 2000, "b")]
         m = tf.build_speaker_map(transcript)
         assert m == {0: "Speaker 1", 1: "Speaker 2"}
+
+    def test_solo_podcast_with_host_name(self):
+        transcript = [make_segment(0, 0, 1000, "a"), make_segment(0, 2000, 3000, "b")]
+        m = tf.build_speaker_map(transcript, ["李雷"])
+        assert m == {0: "李雷"}
+
+
+class TestExtractSpeakerNamesFromReference:
+    def test_chinese_host_label(self):
+        text = "节目信息\n主播：李雷\n更多内容..."
+        assert tf.extract_speaker_names_from_reference(text) == ["李雷"]
+
+    def test_host_and_guest(self):
+        text = "主播：关羽\n嘉宾：张飞"
+        assert tf.extract_speaker_names_from_reference(text) == ["关羽", "张飞"]
+
+    def test_english_labels(self):
+        text = "Host: Alice\nGuest - Bob"
+        assert tf.extract_speaker_names_from_reference(text) == ["Alice", "Bob"]
+
+    def test_no_labels_returns_empty(self):
+        assert tf.extract_speaker_names_from_reference("random show notes text") == []
+
+    def test_empty_input(self):
+        assert tf.extract_speaker_names_from_reference("") == []
+        assert tf.extract_speaker_names_from_reference(None) == []
+
+    def test_stops_at_punctuation(self):
+        text = "主播：李雷，资深宏观研究员"
+        assert tf.extract_speaker_names_from_reference(text) == ["李雷"]
+
+    def test_stops_at_chinese_period(self):
+        text = "主播：李雷。本期节目我们将..."
+        assert tf.extract_speaker_names_from_reference(text) == ["李雷"]
+
+    def test_stops_at_ascii_period(self):
+        text = "Host: Alice.senior analyst"
+        assert tf.extract_speaker_names_from_reference(text) == ["Alice"]
+
+    def test_stops_at_parenthesis(self):
+        text = "Host: Alice (senior analyst)\nGuest: Bob"
+        assert tf.extract_speaker_names_from_reference(text) == ["Alice", "Bob"]
+
+    def test_dedup_across_host_and_guest(self):
+        text = "主播：Alice\n嘉宾：Alice"
+        assert tf.extract_speaker_names_from_reference(text) == ["Alice"]
+
+
+class TestDetectAliasInSpeakers:
+    def test_alias_detected_chinese(self):
+        ref = "主播：张三（张三的播客）"
+        result = tf.detect_alias_in_speakers(["张三的播客"], ref)
+        assert result == [("张三的播客", "张三")]
+
+    def test_real_name_accepted(self):
+        ref = "主播：张三（张三的播客）"
+        assert tf.detect_alias_in_speakers(["张三"], ref) == []
+
+    def test_english_alias_detected(self):
+        ref = "Host: Alice (AlicePodcast)"
+        result = tf.detect_alias_in_speakers(["AlicePodcast"], ref)
+        assert result == [("AlicePodcast", "Alice")]
+
+    def test_ascii_parens_detected(self):
+        ref = "Host: 张三(张三的播客)\n嘉宾: 李四"
+        result = tf.detect_alias_in_speakers(["张三的播客", "李四"], ref)
+        assert result == [("张三的播客", "张三")]
+
+    def test_no_parens_in_reference(self):
+        ref = "主播：张三\n嘉宾：李四"
+        assert tf.detect_alias_in_speakers(["张三"], ref) == []
+
+    def test_multiple_mismatches(self):
+        ref = "主播：张三（张三的播客）\n嘉宾：李四（四哥）"
+        result = tf.detect_alias_in_speakers(["张三的播客", "四哥"], ref)
+        assert ("张三的播客", "张三") in result
+        assert ("四哥", "李四") in result
+
+    def test_partial_mismatch(self):
+        ref = "主播：张三（张三的播客）\n嘉宾：李四"
+        result = tf.detect_alias_in_speakers(["张三的播客", "李四"], ref)
+        assert result == [("张三的播客", "张三")]
+
+    def test_unknown_name_not_flagged(self):
+        ref = "主播：张三（张三的播客）"
+        assert tf.detect_alias_in_speakers(["王五"], ref) == []
+
+    def test_empty_inputs(self):
+        assert tf.detect_alias_in_speakers([], "主播：张三（张三的播客）") == []
+        assert tf.detect_alias_in_speakers(["张三"], None) == []
+        assert tf.detect_alias_in_speakers(["张三"], "") == []
+
+    def test_reference_without_role_label(self):
+        ref = "张三（张三的播客）是一位资深投资人"
+        assert tf.detect_alias_in_speakers(["张三的播客"], ref) == []
 
 
 class TestDetectMontageEnd:
@@ -678,7 +789,7 @@ class TestBuildSystemPrompt:
     def test_base_prompt(self):
         prompt = tf.build_system_prompt()
         assert "transcript editor" in prompt
-        assert "Keep timestamps unchanged" in prompt
+        assert "Preserve timestamps" in prompt
 
     def test_with_speaker_names(self):
         prompt = tf.build_system_prompt(speaker_names=["Alice", "Bob"])
@@ -699,6 +810,22 @@ class TestBuildSystemPrompt:
         long_ref = "x" * 5000
         prompt = tf.build_system_prompt(reference_text=long_ref)
         assert "[...truncated]" in prompt
+
+    def test_prompt_instructs_to_preserve_periodic_timestamps(self):
+        # Solo-speaker bug: when a 15-minute chunk has only one speaker the LLM
+        # used to collapse the entire chunk into a single timestamped block,
+        # losing every intermediate anchor. The prompt must require the model
+        # to keep a periodic timestamp (every ~2 minutes) even when the speaker
+        # does not change.
+        prompt = tf.build_system_prompt()
+        low = prompt.lower()
+        assert "every" in low and "minute" in low, (
+            "prompt must require LLM to emit a timestamp every ~2 minutes"
+        )
+        # Must explicitly cover the single-speaker case
+        assert "speaker" in low and ("same" in low or "single" in low or "solo" in low), (
+            "prompt must mention that the rule applies even when speaker is unchanged"
+        )
 
 
 # ──────────────────────────────────────────────
@@ -1041,6 +1168,575 @@ class TestVerifySpeakersMain:
         with pytest.raises(SystemExit) as exc_info:
             vs.main()
         assert exc_info.value.code == 1
+
+
+# ──────────────────────────────────────────────
+# Phase1-only and json-out flag tests
+# ──────────────────────────────────────────────
+
+class TestPhase1Flags:
+    """Tests for --phase1-only and --json-out CLI flags."""
+
+    def _parse(self, extra_args):
+        """Parse CLI args with defaults suitable for testing."""
+        base = ["test.wav"]
+        with patch("sys.argv", ["transcribe_funasr.py"] + base + extra_args):
+            p = argparse.ArgumentParser()
+            p.add_argument("audio_file")
+            p.add_argument("--phase1-only", action="store_true")
+            p.add_argument("--json-out", type=str, default=None)
+            p.add_argument("--skip-transcribe", action="store_true")
+            p.add_argument("--skip-llm", action="store_true")
+            p.add_argument("--model", default=None)
+            p.add_argument("--output", default=None)
+            return p.parse_args(base + extra_args)
+
+    def test_phase1_only_flag_parsed(self):
+        args = self._parse(["--phase1-only"])
+        assert args.phase1_only is True
+
+    def test_phase1_only_default_false(self):
+        args = self._parse([])
+        assert args.phase1_only is False
+
+    def test_json_out_flag_parsed(self):
+        args = self._parse(["--json-out", "/tmp/out.json"])
+        assert args.json_out == "/tmp/out.json"
+
+    def test_json_out_default_none(self):
+        args = self._parse([])
+        assert args.json_out is None
+
+    def test_json_out_overrides_default_path(self):
+        from pathlib import Path
+        args = self._parse(["--json-out", "/tmp/custom.json"])
+        raw_json = Path(args.json_out) if args.json_out else Path(f"{Path(args.audio_file).stem}_raw_transcript.json")
+        assert raw_json == Path("/tmp/custom.json")
+
+    def test_default_raw_json_path(self):
+        from pathlib import Path
+        args = self._parse([])
+        raw_json = Path(args.json_out) if args.json_out else Path(f"{Path(args.audio_file).stem}_raw_transcript.json")
+        assert raw_json == Path("test_raw_transcript.json")
+
+    def test_phase1_only_with_json_out(self):
+        args = self._parse(["--phase1-only", "--json-out", "/tmp/out.json"])
+        assert args.phase1_only is True
+        assert args.json_out == "/tmp/out.json"
+
+    def test_phase1_only_early_exit(self, tmp_path):
+        """--phase1-only exits after Phase 1 without producing .md output."""
+        transcript = [
+            make_segment(0, 0, 5000, "Hello world"),
+            make_segment(1, 5000, 10000, "Hi there"),
+        ]
+        raw_json = tmp_path / "test_raw_transcript.json"
+        with open(raw_json, "w") as f:
+            json.dump(transcript, f)
+
+        md_path = tmp_path / "test-transcript.md"
+        test_args = [
+            "transcribe_funasr.py",
+            str(tmp_path / "test.wav"),
+            "--phase1-only",
+            "--skip-transcribe",
+            "--json-out", str(raw_json),
+            "--device", "cpu",
+        ]
+        with patch("sys.argv", test_args), \
+             patch.object(sys, "exit") as mock_exit:
+            mock_exit.side_effect = SystemExit(0)
+            with pytest.raises(SystemExit) as exc_info:
+                tf.main()
+            assert exc_info.value.code == 0
+        assert not md_path.exists()
+
+    def test_json_out_writes_to_custom_path(self, tmp_path):
+        """--json-out writes transcript JSON to the specified path."""
+        custom_json = tmp_path / "custom_output.json"
+        transcript = [
+            make_segment(0, 0, 5000, "Hello"),
+            make_segment(1, 5000, 10000, "World"),
+        ]
+        with patch("sys.argv", [
+                "transcribe_funasr.py", str(tmp_path / "test.wav"),
+                "--json-out", str(custom_json),
+                "--skip-llm", "--device", "cpu",
+            ]), \
+             patch.object(tf, "transcribe_with_funasr", return_value=transcript), \
+             patch.object(tf, "preprocess_audio", return_value=str(tmp_path / "test.wav")), \
+             patch.object(tf, "detect_montage_end", return_value=0), \
+             patch("pathlib.Path.exists", return_value=True):
+            tf.main()
+        assert custom_json.exists()
+        saved = json.loads(custom_json.read_text())
+        assert len(saved) == 2
+        assert saved[0]["text"] == "Hello"
+
+    def test_without_new_flags_runs_all_phases(self, tmp_path):
+        """Without new flags, all phases run (backward compatibility)."""
+        transcript = [
+            make_segment(0, 0, 5000, "Hello"),
+            make_segment(1, 5000, 10000, "World"),
+        ]
+        output_md = tmp_path / "test-transcript.md"
+        raw_json = tmp_path / "test_raw_transcript.json"
+
+        def fake_exists(self_path=None):
+            return True
+
+        with patch("sys.argv", [
+                "transcribe_funasr.py", str(tmp_path / "test.wav"),
+                "--skip-llm", "--device", "cpu",
+                "--output", str(output_md),
+                "--json-out", str(raw_json),
+            ]), \
+             patch.object(tf, "transcribe_with_funasr", return_value=transcript), \
+             patch.object(tf, "preprocess_audio", return_value=str(tmp_path / "test.wav")), \
+             patch.object(tf, "detect_montage_end", return_value=0), \
+             patch("pathlib.Path.exists", return_value=True):
+            tf.main()
+        assert output_md.exists()
+        assert raw_json.exists()
+        content = output_md.read_text()
+        assert "Transcript" in content
+
+    def test_json_out_nonexistent_parent_exits(self, tmp_path):
+        """--json-out to a nonexistent directory exits with code 1."""
+        bad_path = tmp_path / "nonexistent" / "dir" / "out.json"
+        test_args = [
+            "transcribe_funasr.py",
+            str(tmp_path / "test.wav"),
+            "--json-out", str(bad_path),
+            "--device", "cpu",
+        ]
+        with patch("sys.argv", test_args):
+            with pytest.raises(SystemExit) as exc_info:
+                tf.main()
+            assert exc_info.value.code == 1
+
+    def test_phase1_only_empty_transcript_exits_error(self, tmp_path):
+        """--phase1-only with empty transcript exits with error, not success."""
+        raw_json = tmp_path / "empty_raw_transcript.json"
+        with open(raw_json, "w") as f:
+            json.dump([], f)
+        test_args = [
+            "transcribe_funasr.py",
+            str(tmp_path / "test.wav"),
+            "--phase1-only",
+            "--skip-transcribe",
+            "--json-out", str(raw_json),
+            "--device", "cpu",
+        ]
+        with patch("sys.argv", test_args):
+            with pytest.raises(SystemExit) as exc_info:
+                tf.main()
+            assert exc_info.value.code == 1
+
+    def test_phase1_only_writes_json_then_exits(self, tmp_path):
+        """--phase1-only writes raw JSON and exits 0 without --skip-transcribe."""
+        transcript = [
+            make_segment(0, 0, 5000, "Hello"),
+            make_segment(1, 5000, 10000, "World"),
+        ]
+        custom_json = tmp_path / "phase1_out.json"
+        with patch("sys.argv", [
+                "transcribe_funasr.py", str(tmp_path / "test.wav"),
+                "--phase1-only",
+                "--json-out", str(custom_json),
+                "--device", "cpu",
+            ]), \
+             patch.object(tf, "transcribe_with_funasr", return_value=transcript), \
+             patch.object(tf, "preprocess_audio", return_value=str(tmp_path / "test.wav")), \
+             patch("pathlib.Path.exists", return_value=True):
+            with pytest.raises(SystemExit) as exc_info:
+                tf.main()
+            assert exc_info.value.code == 0
+        assert custom_json.exists()
+        saved = json.loads(custom_json.read_text())
+        assert len(saved) == 2
+        assert saved[0]["text"] == "Hello"
+        md_path = tmp_path / "test-transcript.md"
+        assert not md_path.exists()
+
+
+# ──────────────────────────────────────────────
+# speaker_gender: classifier helpers
+# ──────────────────────────────────────────────
+
+class TestNormalizeGenderLabel:
+    def test_english_male_variants(self):
+        assert sg._normalize_gender_label("male") == "male"
+        assert sg._normalize_gender_label("M") == "male"
+        assert sg._normalize_gender_label("  Man ") == "male"
+
+    def test_english_female_variants(self):
+        assert sg._normalize_gender_label("Female") == "female"
+        assert sg._normalize_gender_label("f") == "female"
+        assert sg._normalize_gender_label("woman") == "female"
+
+    def test_chinese_variants(self):
+        assert sg._normalize_gender_label("男") == "male"
+        assert sg._normalize_gender_label("女") == "female"
+        assert sg._normalize_gender_label("男性") == "male"
+        assert sg._normalize_gender_label("女性") == "female"
+
+    def test_unknown_returns_none(self):
+        assert sg._normalize_gender_label("other") is None
+        assert sg._normalize_gender_label("") is None
+        assert sg._normalize_gender_label(None) is None
+
+
+class TestMajorityVote:
+    def test_clear_majority(self):
+        assert sg._majority_vote(["male", "male", "female"]) == "male"
+
+    def test_tie_returns_none(self):
+        assert sg._majority_vote(["male", "female"]) is None
+
+    def test_empty_returns_none(self):
+        assert sg._majority_vote([]) is None
+
+    def test_filters_invalid_labels(self):
+        assert sg._majority_vote(["male", "unknown", "male"]) == "male"
+
+
+class TestSelectSampleSegments:
+    def test_picks_longest_segments(self):
+        transcript = [
+            make_segment(0, 0, 2000, "short"),
+            make_segment(0, 2000, 10000, "long"),
+            make_segment(1, 10000, 12000, "other"),
+            make_segment(0, 12000, 18000, "medium"),
+        ]
+        picks = sg._select_sample_segments(transcript, speaker_id=0, max_samples=2)
+        durations = [p["end_ms"] - p["start_ms"] for p in picks]
+        assert durations == sorted(durations, reverse=True)
+        assert len(picks) == 2
+
+    def test_filters_short_segments(self):
+        transcript = [
+            make_segment(0, 0, 500, "too short"),
+            make_segment(0, 500, 1000, "also short"),
+        ]
+        picks = sg._select_sample_segments(transcript, speaker_id=0, min_duration_ms=1500)
+        assert picks == []
+
+    def test_returns_empty_when_speaker_absent(self):
+        transcript = [make_segment(1, 0, 5000, "hi")]
+        assert sg._select_sample_segments(transcript, speaker_id=0) == []
+
+
+class TestClassifySpeakerGender:
+    def test_uses_model_loader_hook(self):
+        transcript = [
+            make_segment(0, 0, 5000, "host talks"),
+            make_segment(0, 5000, 12000, "host talks more"),
+            make_segment(1, 12000, 18000, "guest talks"),
+        ]
+
+        class FakeModel:
+            def infer(self, start_ms, end_ms):
+                return "male" if start_ms < 12000 else "female"
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            _model_loader=lambda: FakeModel(),
+        )
+        assert result == {0: "male", 1: "female"}
+
+    def test_majority_vote_per_speaker(self):
+        transcript = [
+            make_segment(0, 0, 5000, "a"),
+            make_segment(0, 5000, 10000, "b"),
+            make_segment(0, 10000, 15000, "c"),
+        ]
+        calls = {"n": 0}
+
+        class FakeModel:
+            def infer(self, start_ms, end_ms):
+                calls["n"] += 1
+                # 2x male, 1x female — majority male
+                return ["female", "male", "male"][calls["n"] - 1]
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            _model_loader=lambda: FakeModel(),
+            max_samples=3,
+        )
+        assert result == {0: "male"}
+
+    def test_tie_produces_no_entry(self):
+        transcript = [
+            make_segment(0, 0, 5000, "a"),
+            make_segment(0, 5000, 10000, "b"),
+        ]
+
+        class FakeModel:
+            def infer(self, start_ms, end_ms):
+                return "male" if start_ms == 0 else "female"
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            _model_loader=lambda: FakeModel(),
+            max_samples=2,
+        )
+        assert result == {}
+
+    def test_skips_speakers_without_long_segments(self):
+        transcript = [
+            make_segment(0, 0, 500, "too short"),
+            make_segment(1, 500, 10000, "long"),
+        ]
+
+        class FakeModel:
+            def infer(self, start_ms, end_ms):
+                return "female"
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            _model_loader=lambda: FakeModel(),
+        )
+        assert result == {1: "female"}
+
+    def test_inference_exception_does_not_break_other_speakers(self, capsys):
+        transcript = [
+            make_segment(0, 0, 5000, "a"),
+            make_segment(1, 5000, 10000, "b"),
+        ]
+
+        class FakeModel:
+            def infer(self, start_ms, end_ms):
+                if start_ms == 0:
+                    raise RuntimeError("model blew up")
+                return "female"
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            _model_loader=lambda: FakeModel(),
+        )
+        assert result == {1: "female"}
+
+    def test_loader_failure_returns_empty(self, capsys):
+        transcript = [make_segment(0, 0, 5000, "a")]
+
+        def broken_loader():
+            raise ImportError("modelscope not installed")
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            _model_loader=broken_loader,
+        )
+        assert result == {}
+
+    def test_empty_transcript(self):
+        assert sg.classify_speaker_gender("/dev/null", []) == {}
+
+    def test_respects_speaker_ids_filter(self):
+        transcript = [
+            make_segment(0, 0, 5000, "a"),
+            make_segment(1, 5000, 10000, "b"),
+        ]
+
+        class FakeModel:
+            def infer(self, start_ms, end_ms):
+                return "male"
+
+        result = sg.classify_speaker_gender(
+            audio_path="/dev/null",
+            transcript=transcript,
+            speaker_ids=[1],
+            _model_loader=lambda: FakeModel(),
+        )
+        assert result == {1: "male"}
+
+
+# ──────────────────────────────────────────────
+# speaker_gender: reference-text extraction
+# ──────────────────────────────────────────────
+
+class TestExtractGenderFromReference:
+    def test_role_with_parenthetical_gender_chinese(self):
+        text = "主播（女）：韩梅梅\n嘉宾（男）：李雷"
+        assert sg.extract_gender_from_reference(text) == {
+            "韩梅梅": "female", "李雷": "male"}
+
+    def test_role_with_parenthetical_gender_english(self):
+        text = "Host (female): Alice\nGuest (male): Bob"
+        assert sg.extract_gender_from_reference(text) == {
+            "Alice": "female", "Bob": "male"}
+
+    def test_gender_prefixed_role(self):
+        text = "男主播 李雷\n女嘉宾 韩梅梅"
+        result = sg.extract_gender_from_reference(text)
+        assert result.get("李雷") == "male"
+        assert result.get("韩梅梅") == "female"
+
+    def test_name_followed_by_gender(self):
+        text = "Alice (female) is a researcher. 韩梅梅（女）"
+        result = sg.extract_gender_from_reference(text)
+        assert result.get("Alice") == "female"
+        assert result.get("韩梅梅") == "female"
+
+    def test_no_matches(self):
+        assert sg.extract_gender_from_reference("just some plain text") == {}
+
+    def test_empty_input(self):
+        assert sg.extract_gender_from_reference("") == {}
+        assert sg.extract_gender_from_reference(None) == {}
+
+    def test_first_match_wins(self):
+        text = "Host (female): Alice\nAlice (male) appears again"
+        assert sg.extract_gender_from_reference(text)["Alice"] == "female"
+
+
+# ──────────────────────────────────────────────
+# speaker_gender: merge + CLI parsing
+# ──────────────────────────────────────────────
+
+class TestMergeGenderSources:
+    def test_reference_overrides_auto(self):
+        auto = {0: "male", 1: "female"}
+        reference = {"Alice": "female"}
+        speaker_map = {0: "Alice", 1: "Bob"}
+        merged = sg.merge_gender_sources(auto, reference, speaker_map)
+        assert merged == {0: "female", 1: "female"}
+
+    def test_reference_fills_missing_auto(self):
+        auto = {}
+        reference = {"Alice": "female", "Bob": "male"}
+        speaker_map = {0: "Alice", 1: "Bob"}
+        assert sg.merge_gender_sources(auto, reference, speaker_map) == {
+            0: "female", 1: "male"}
+
+    def test_reference_without_matching_name_ignored(self):
+        auto = {0: "male"}
+        reference = {"Carol": "female"}
+        speaker_map = {0: "Alice"}
+        assert sg.merge_gender_sources(auto, reference, speaker_map) == {0: "male"}
+
+    def test_empty_inputs(self):
+        assert sg.merge_gender_sources(None, None, None) == {}
+        assert sg.merge_gender_sources({}, {}, {}) == {}
+
+
+class TestParseGenderCliArg:
+    def test_name_gender_pairs(self):
+        speaker_map = {0: "Alice", 1: "Bob"}
+        assert sg.parse_gender_cli_arg("Alice:female,Bob:male", speaker_map) == {
+            0: "female", 1: "male"}
+
+    def test_equals_separator(self):
+        speaker_map = {0: "Alice", 1: "Bob"}
+        assert sg.parse_gender_cli_arg("Alice=F,Bob=M", speaker_map) == {
+            0: "female", 1: "male"}
+
+    def test_bare_gender_list_positional(self):
+        speaker_map = {0: "Alice", 1: "Bob"}
+        assert sg.parse_gender_cli_arg("female,male", speaker_map) == {
+            0: "female", 1: "male"}
+
+    def test_ignores_unknown_names(self):
+        speaker_map = {0: "Alice"}
+        assert sg.parse_gender_cli_arg("Nobody:male", speaker_map) == {}
+
+    def test_empty_input(self):
+        assert sg.parse_gender_cli_arg("", {0: "Alice"}) == {}
+        assert sg.parse_gender_cli_arg(None, {0: "Alice"}) == {}
+
+    def test_chinese_name_mapping(self):
+        speaker_map = {0: "韩梅梅", 1: "李雷"}
+        assert sg.parse_gender_cli_arg("韩梅梅:女,李雷:男", speaker_map) == {
+            0: "female", 1: "male"}
+
+
+class TestFormatGenderLabel:
+    def test_known_labels(self):
+        assert sg.format_gender_label("male") == "(male)"
+        assert sg.format_gender_label("female") == "(female)"
+
+    def test_unknown_is_empty(self):
+        assert sg.format_gender_label(None) == ""
+        assert sg.format_gender_label("other") == ""
+
+
+# ──────────────────────────────────────────────
+# transcribe_funasr: gender-aware speaker list rendering
+# ──────────────────────────────────────────────
+
+class TestAssembleMarkdownWithGender:
+    def test_renders_gender_in_speaker_list(self):
+        md = tf.assemble_markdown(
+            ["[00:00:00] Alice: hi"],
+            {
+                "title": "Test",
+                "filename": "x.wav",
+                "duration_ms": 1000,
+                "num_speakers": 2,
+                "language": "zh",
+                "asr_engine": "FunASR",
+                "speakers": ["Alice", "Bob"],
+                "speaker_genders": {"Alice": "female", "Bob": "male"},
+            },
+        )
+        assert "Alice (female)" in md
+        assert "Bob (male)" in md
+
+    def test_omits_gender_when_unknown(self):
+        md = tf.assemble_markdown(
+            ["[00:00:00] Alice: hi"],
+            {
+                "title": "Test",
+                "filename": "x.wav",
+                "duration_ms": 1000,
+                "num_speakers": 1,
+                "language": "zh",
+                "asr_engine": "FunASR",
+                "speakers": ["Alice"],
+                "speaker_genders": {},
+            },
+        )
+        assert "Alice" in md
+        assert "(male)" not in md
+        assert "(female)" not in md
+
+    def test_works_without_speaker_genders_key(self):
+        md = tf.assemble_markdown(
+            ["line"],
+            {
+                "title": "T", "filename": "f", "duration_ms": 1,
+                "num_speakers": 1, "language": "zh", "asr_engine": "E",
+                "speakers": ["Alice"],
+            },
+        )
+        assert "Alice" in md
+
+
+class TestBuildSystemPromptWithGender:
+    def test_injects_gender_hints(self):
+        prompt = tf.build_system_prompt(
+            speaker_context=None,
+            reference_text=None,
+            speaker_names=["Alice", "Bob"],
+            speaker_genders={"Alice": "female", "Bob": "male"},
+        )
+        assert "Alice" in prompt and "female" in prompt
+        assert "Bob" in prompt and "male" in prompt
+
+    def test_no_gender_hints_when_empty(self):
+        prompt = tf.build_system_prompt(
+            speaker_context=None,
+            reference_text=None,
+            speaker_names=["Alice"],
+            speaker_genders=None,
+        )
+        assert "female" not in prompt.lower()
 
 
 if __name__ == "__main__":

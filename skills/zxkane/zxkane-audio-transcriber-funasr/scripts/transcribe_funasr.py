@@ -62,6 +62,13 @@ from pathlib import Path
 from typing import Optional
 
 from llm_utils import call_llm, detect_llm_provider
+from speaker_gender import (
+    classify_speaker_gender,
+    extract_gender_from_reference,
+    format_gender_label,
+    merge_gender_sources,
+    parse_gender_cli_arg,
+)
 
 
 # ──────────────────────────────────────────────
@@ -115,6 +122,9 @@ MODEL_PRESETS = {
 }
 
 SUPPORTED_LANGS = list(MODEL_PRESETS.keys())
+
+# 3D-Speaker CAM++ gender classifier (binary male/female, 16 kHz)
+DEFAULT_GENDER_MODEL = "iic/speech_campplus_two_class_gender_16k"
 
 
 def validate_lang_diarization(lang: str, num_speakers: Optional[int]) -> None:
@@ -325,14 +335,23 @@ def transcribe_with_funasr(audio_path: str, lang: str = "zh",
 # Phase 2: Post-processing
 # ──────────────────────────────────────────────
 
-def merge_consecutive(transcript: list, gap_ms: int = 2000) -> list:
-    """Merge consecutive sentences from the same speaker within gap_ms."""
+def merge_consecutive(transcript: list, gap_ms: int = 2000,
+                      max_merge_ms: int = 120000) -> list:
+    """Merge consecutive sentences from the same speaker within gap_ms.
+
+    Caps merged segment duration at max_merge_ms so long single-speaker
+    stretches (e.g. solo podcasts) retain periodic timestamps instead of
+    collapsing into one timestamp-less block.
+    """
     if not transcript:
         return []
     merged = []
     cur = dict(transcript[0])
     for sent in transcript[1:]:
-        if sent["speaker"] == cur["speaker"] and (sent["start_ms"] - cur["end_ms"]) < gap_ms:
+        same_speaker = sent["speaker"] == cur["speaker"]
+        small_gap = (sent["start_ms"] - cur["end_ms"]) < gap_ms
+        under_cap = (sent["end_ms"] - cur["start_ms"]) < max_merge_ms
+        if same_speaker and small_gap and under_cap:
             cur["end_ms"] = sent["end_ms"]
             cur["text"] += sent["text"]
         else:
@@ -340,6 +359,90 @@ def merge_consecutive(transcript: list, gap_ms: int = 2000) -> list:
             cur = dict(sent)
     merged.append(cur)
     return merged
+
+
+def extract_speaker_names_from_reference(reference_text: Optional[str]) -> list:
+    """Best-effort extraction of speaker names from show notes / reference text.
+
+    Recognizes common Chinese/English podcast role labels like
+    "主播：李雷", "嘉宾: Alice", "Host: Bob", "Guest — Carol". Host is
+    listed first so single-speaker recordings resolve to the host name.
+    Returns an empty list if no labels match.
+    """
+    if not reference_text:
+        return []
+
+    hosts, guests = [], []
+    # Name class: CJK chars, ASCII letters/digits, and a few name punctuations
+    # (·-·). Stops at anything else — whitespace, sentence terminators,
+    # parentheses, brackets, quotes, commas. Keeps us safe from
+    # "李雷.本期..." or "Alice (senior analyst)" being captured as names.
+    name_re = r"[\w一-鿿·\-]{1,30}"
+    role_patterns = [
+        (r"(?:主播|主持[人员]?|Host)\s*[:：\-—–]\s*(" + name_re + ")", hosts),
+        (r"(?:嘉宾|Guest)\s*[:：\-—–]\s*(" + name_re + ")", guests),
+    ]
+    for pat, bucket in role_patterns:
+        for m in re.finditer(pat, reference_text, re.IGNORECASE):
+            name = m.group(1).strip()
+            if name and name not in bucket:
+                bucket.append(name)
+
+    # Dedup across buckets so "主播：Alice\n嘉宾：Alice" doesn't produce
+    # duplicate speaker names downstream.
+    ordered = []
+    for n in hosts + guests:
+        if n not in ordered:
+            ordered.append(n)
+    return ordered
+
+
+def detect_alias_in_speakers(speaker_names: list,
+                             reference_text: Optional[str]) -> list:
+    """Detect when --speakers values look like aliases, not real names.
+
+    Show notes commonly use "Host: 张三（张三的播客）" — real name with a
+    parenthetical alias. If the user passes --speakers '张三的播客' (the alias)
+    it becomes the output label, which is almost always a mistake. Scan the
+    reference for "real_name(alias)" pairs and flag any user-supplied name
+    that matches an alias but not a real name.
+
+    Returns a list of (supplied_name, suggested_real_name) tuples for each
+    mismatch. Empty if everything looks fine or reference has no alias pairs.
+    """
+    if not speaker_names or not reference_text:
+        return []
+
+    # Match "real_name（alias）" or "real_name(alias)" after Host/Guest/主播/嘉宾 labels.
+    # Uses the same name_re as extract_speaker_names_from_reference for real name;
+    # alias class is looser (allow spaces) since aliases can be multi-word.
+    name_re = r"[\w一-鿿·\-]{1,30}"
+    alias_re = r"[\w一-鿿·\- ]{1,40}"
+    pair_patterns = [
+        r"(?:主播|主持[人员]?|Host|嘉宾|Guest)\s*[:：\-—–]\s*("
+        + name_re + r")\s*[（(]\s*(" + alias_re + r")\s*[)）]",
+    ]
+    pairs = []
+    for pat in pair_patterns:
+        for m in re.finditer(pat, reference_text, re.IGNORECASE):
+            real = m.group(1).strip()
+            alias = m.group(2).strip()
+            if real and alias and real != alias:
+                pairs.append((real, alias))
+
+    if not pairs:
+        return []
+
+    mismatches = []
+    real_names = {real for real, _ in pairs}
+    for supplied in speaker_names:
+        if supplied in real_names:
+            continue  # user picked the real name — good
+        for real, alias in pairs:
+            if supplied == alias:
+                mismatches.append((supplied, real))
+                break
+    return mismatches
 
 
 def build_speaker_map(transcript: list, speakers: Optional[list] = None) -> dict:
@@ -653,7 +756,11 @@ Rules:
 3. Merge stuttered/repeated expressions into fluent sentences
 4. Fix obvious ASR errors based on context
 5. Preserve original meaning — do not add content not in the original
-6. Keep timestamps unchanged
+6. Preserve timestamps: emit a [HH:MM:SS] marker every ~2 minutes of content \
+at minimum, using the closest original segment's timestamp. This rule applies \
+even when the speaker does not change — never collapse a long stretch of a \
+single speaker into one timestamped block. Keep the original timestamp values \
+unchanged; do not invent or interpolate new times.
 7. Preserve technical terms and proper nouns
 8. Output cleaned text only, format: [timestamp] Name: content
 9. Detect montage/highlight-reel sections at the start or end of the recording \
@@ -674,7 +781,8 @@ Outside montage sections, trust the existing speaker labels."""
 
 def build_system_prompt(speaker_context: Optional[dict] = None,
                         reference_text: Optional[str] = None,
-                        speaker_names: Optional[list] = None) -> str:
+                        speaker_names: Optional[list] = None,
+                        speaker_genders: Optional[dict] = None) -> str:
     """Build the LLM system prompt, enriched with all available context."""
     prompt = DEFAULT_SYSTEM_PROMPT
 
@@ -685,6 +793,17 @@ def build_system_prompt(speaker_context: Optional[dict] = None,
                    "If a speaker says their own name in the content, treat that as ground truth. "
                    "Common ASR errors for Chinese names include phonetically similar characters "
                    "(e.g., 关于→关羽, 张非→张飞, 刘备→刘备).")
+
+    # Inject speaker gender so the LLM can fix pronoun drift (他/她, he/she).
+    # This matters for podcasts where ASR sometimes misgenders the host.
+    if speaker_genders:
+        hints = [f"{name} is {gender}"
+                 for name, gender in speaker_genders.items()
+                 if gender in ("male", "female")]
+        if hints:
+            prompt += ("\n\nSpeaker gender (authoritative — use to fix incorrect "
+                       "pronouns such as 他/她, he/she, his/her in the transcript):\n"
+                       + "\n".join(f"- {h}" for h in hints))
 
     # Inject speaker context (roles, background)
     if speaker_context:
@@ -851,7 +970,8 @@ def _verify_multi_speakers(first_chunk_text: str, speaker_map: dict,
 
 def run_llm_cleanup(merged: list, speaker_map: dict, model_id: str, region: str,
                     speaker_context: Optional[dict] = None, cache_dir: Optional[Path] = None,
-                    reference_text: Optional[str] = None, speaker_names: Optional[list] = None) -> list:
+                    reference_text: Optional[str] = None, speaker_names: Optional[list] = None,
+                    speaker_genders: Optional[dict] = None) -> list:
     """Chunk merged transcript and clean each via LLM. Supports resume via cache_dir."""
     chunks = chunk_by_duration(merged)
 
@@ -861,7 +981,8 @@ def run_llm_cleanup(merged: list, speaker_map: dict, model_id: str, region: str,
         speaker_map = _verify_speaker_roles_via_llm(
             first_chunk_text, speaker_map, speaker_context, model_id, region)
 
-    system_prompt = build_system_prompt(speaker_context, reference_text, speaker_names)
+    system_prompt = build_system_prompt(speaker_context, reference_text,
+                                        speaker_names, speaker_genders)
     cleaned = []
     failed_chunks = []
     if cache_dir:
@@ -909,7 +1030,12 @@ def run_llm_cleanup(merged: list, speaker_map: dict, model_id: str, region: str,
 # ──────────────────────────────────────────────
 
 def assemble_markdown(cleaned_parts: list, metadata: dict) -> str:
-    speakers_list = "\n".join(f"- {name}" for name in metadata.get("speakers", []))
+    genders = metadata.get("speaker_genders") or {}
+    speaker_lines = []
+    for name in metadata.get("speakers", []):
+        suffix = format_gender_label(genders.get(name))
+        speaker_lines.append(f"- {name} {suffix}".rstrip())
+    speakers_list = "\n".join(speaker_lines)
     duration_s = metadata.get("duration_ms", 0) / 1000
     h, m = int(duration_s // 3600), int((duration_s % 3600) // 60)
 
@@ -1002,8 +1128,23 @@ def main():
                    help="AWS region for Bedrock (only used when provider is bedrock)")
     p.add_argument("--speaker-context", type=str, default=None,
                    help="JSON file with per-speaker context to help LLM identify speakers")
+    p.add_argument("--detect-gender", dest="detect_gender", action="store_true", default=True,
+                   help="Detect speaker gender via CAM++ gender classifier (default: on)")
+    p.add_argument("--no-detect-gender", dest="detect_gender", action="store_false",
+                   help="Disable speaker gender detection")
+    p.add_argument("--speaker-genders", type=str, default=None,
+                   help="Override gender per speaker (e.g. 'Alice:female,Bob:male' or "
+                        "positional 'female,male'). Takes precedence over auto-detection.")
+    p.add_argument("--gender-model", type=str, default=DEFAULT_GENDER_MODEL,
+                   help=f"Gender classifier model ID (default: {DEFAULT_GENDER_MODEL})")
     p.add_argument("--title", type=str, default="Meeting Transcript",
                    help="Title for the output document (default: 'Meeting Transcript')")
+    p.add_argument("--phase1-only", action="store_true",
+                   help="Exit after Phase 1 (VAD + ASR + diarization). "
+                        "Skips speaker verification and LLM cleanup.")
+    p.add_argument("--json-out", type=str, default=None, metavar="PATH",
+                   help="Write Phase 1 raw transcript JSON to this path "
+                        "(overrides default <stem>_raw_transcript.json naming)")
     p.add_argument("--skip-transcribe", action="store_true",
                    help="Skip ASR, load from *_raw_transcript.json")
     p.add_argument("--skip-llm", action="store_true", help="Skip LLM cleanup")
@@ -1030,8 +1171,14 @@ def main():
         print(f"  Model cache: {args.model_cache_dir}")
 
     audio_path = Path(args.audio_file)
-    raw_json = Path(f"{audio_path.stem}_raw_transcript.json")
+    raw_json = Path(args.json_out) if args.json_out else Path(f"{audio_path.stem}_raw_transcript.json")
     output_path = Path(args.output) if args.output else Path(f"{audio_path.stem}-transcript.md")
+
+    if args.json_out:
+        parent = raw_json.parent or Path(".")
+        if not parent.exists():
+            print(f"Error: --json-out directory does not exist: {parent}")
+            sys.exit(1)
 
     # Auto-detect device
     if args.device is None:
@@ -1070,6 +1217,39 @@ def main():
         else:
             print(f"  Warning: --reference file not found: {args.reference}")
 
+    # Alias check: when both --speakers and --reference are supplied, warn
+    # loudly if a user-supplied name matches a parenthetical alias in the
+    # reference instead of the real name. Does NOT modify speaker_names —
+    # the user's explicit choice still wins — but prints an ACTION REQUIRED
+    # block the operator must notice before shipping the transcript.
+    if speaker_names and reference_text:
+        mismatches = detect_alias_in_speakers(speaker_names, reference_text)
+        if mismatches:
+            print("\n" + "=" * 60)
+            print("  ACTION REQUIRED: --speakers looks like an alias")
+            print("=" * 60)
+            for supplied, real in mismatches:
+                print(f"  '{supplied}' appears in reference as an alias of '{real}'.")
+                print(f"  Labels in the output transcript will use '{supplied}'.")
+                print(f"  If you meant the real name, re-run with --speakers '{real}'.")
+            print("=" * 60 + "\n")
+
+    # Fallback: if --speakers not provided but reference has role labels
+    # (主播/嘉宾/Host/Guest), use those so the final output shows real names
+    # instead of "Speaker 1". Essential for solo podcasts where the host
+    # name only appears in the show notes.
+    if not speaker_names and reference_text:
+        extracted = extract_speaker_names_from_reference(reference_text)
+        if extracted:
+            speaker_names = extracted
+            if num_speakers is None:
+                num_speakers = len(extracted)
+                if len(extracted) == 1:
+                    print(f"  Note: only 1 speaker label ('{extracted[0]}') found in "
+                          f"reference. If the recording has more speakers, pass "
+                          f"--num-speakers explicitly.")
+            print(f"  Speaker names from reference: {', '.join(extracted)}")
+
     # ── Phase 0: Audio preprocessing ──
     asr_audio = str(audio_path)
     if not args.skip_transcribe and not args.skip_preprocess:
@@ -1100,6 +1280,10 @@ def main():
         print("Error: empty transcript")
         sys.exit(1)
 
+    if args.phase1_only:
+        print(f"--phase1-only: stopping after Phase 1 ({len(transcript)} sentences)")
+        sys.exit(0)
+
     # Runtime check: warn if most segments lack timestamps (diarization degraded)
     no_ts = sum(1 for s in transcript if s["start_ms"] == 0 and s["end_ms"] == 0)
     if no_ts > len(transcript) * 0.5:
@@ -1122,6 +1306,26 @@ def main():
     speaker_map = verify_speaker_assignment(transcript, speaker_map, speaker_names)
     print(f"[Phase 2] Merged: {len(transcript)} sentences -> {len(merged)} segments")
 
+    # Gender detection: reference hints + explicit CLI overrides + CAM++ classifier.
+    # Explicit CLI overrides always win; reference hints win over auto-detection.
+    speaker_genders_by_id: dict = {}
+    if args.detect_gender:
+        print("  Gender detection (CAM++)...")
+        auto = classify_speaker_gender(
+            asr_audio, transcript, list(speaker_map.keys()),
+            model_id=args.gender_model, device=args.device)
+        ref_gender = extract_gender_from_reference(reference_text)
+        speaker_genders_by_id = merge_gender_sources(auto, ref_gender, speaker_map)
+    cli_override = parse_gender_cli_arg(args.speaker_genders, speaker_map)
+    speaker_genders_by_id.update(cli_override)
+    speaker_genders_by_name = {
+        speaker_map[sid]: g for sid, g in speaker_genders_by_id.items()
+        if sid in speaker_map
+    }
+    if speaker_genders_by_name:
+        pretty = ", ".join(f"{n}={g}" for n, g in speaker_genders_by_name.items())
+        print(f"  Speaker genders: {pretty}")
+
     # ── Phase 3: LLM cleanup ──
     speaker_context = None
     if args.speaker_context:
@@ -1132,11 +1336,12 @@ def main():
         chunks = chunk_by_duration(merged)
         cleaned_parts = [format_chunk(chunk, speaker_map) for chunk in chunks]
     else:
-        cache_dir = Path(f"{audio_path.stem}_llm_cache")
+        cache_dir = audio_path.parent / f"{audio_path.stem}_llm_cache"
         print("[Phase 3] LLM cleanup...")
         cleaned_parts = run_llm_cleanup(merged, speaker_map, args.model,
                                         args.bedrock_region, speaker_context,
-                                        cache_dir, reference_text, speaker_names)
+                                        cache_dir, reference_text, speaker_names,
+                                        speaker_genders_by_name)
         if args.clean_cache and cache_dir.exists():
             for f in cache_dir.glob("chunk_*.txt"):
                 f.unlink()
@@ -1154,6 +1359,7 @@ def main():
         "language": preset["label"],
         "asr_engine": f"FunASR ({preset['asr'].split('/')[-1]})",
         "speakers": [speaker_map.get(s, f"Speaker {s+1}") for s in actual_speakers],
+        "speaker_genders": speaker_genders_by_name,
     })
     output_path.write_text(md, encoding="utf-8")
     print(f"\nDone: {output_path} ({len(merged)} segments, "
