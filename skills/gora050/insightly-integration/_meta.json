@@ -3,9 +3,15 @@
   "slug": "insightly-integration",
   "displayName": "Insightly",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776772100585,
-    "commit": "https://github.com/openclaw/skills/commit/eb1da60c293e1a599f93d64f722d0a04574e32a1"
+    "version": "1.0.3",
+    "publishedAt": 1777367660862,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776772100585,
+      "commit": "https://github.com/openclaw/skills/commit/eb1da60c293e1a599f93d64f722d0a04574e32a1"
+    }
+  ]
 }
