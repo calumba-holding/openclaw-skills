@@ -3,9 +3,15 @@
   "slug": "dlazy-veo-3-1-fast",
   "displayName": "Dlazy Veo 3.1 Fast",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776843224612,
-    "commit": "https://github.com/openclaw/skills/commit/8e8ecc5e23a1810328642213e98501db097103cd"
+    "version": "1.0.5",
+    "publishedAt": 1777430126767,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776843224612,
+      "commit": "https://github.com/openclaw/skills/commit/8e8ecc5e23a1810328642213e98501db097103cd"
+    }
+  ]
 }
