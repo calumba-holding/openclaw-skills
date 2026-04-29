@@ -3,9 +3,15 @@
   "slug": "introspect",
   "displayName": "Introspect",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776863703498,
-    "commit": "https://github.com/openclaw/skills/commit/5b7fba99e8142516d143e3796a4d930ad6b953c7"
+    "version": "1.2.0",
+    "publishedAt": 1776949891464,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776863703498,
+      "commit": "https://github.com/openclaw/skills/commit/5b7fba99e8142516d143e3796a4d930ad6b953c7"
+    }
+  ]
 }
