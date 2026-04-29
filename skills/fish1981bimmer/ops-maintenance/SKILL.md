@@ -1,16 +1,27 @@
 ---
 name: ops-maintenance
-description: 运维助手 - 支持本地、远程、多服务器集群监控 (健康检查、日志分析、性能监控、批量操作、密码过期检查)
+description: 运维助手 v2.0 - 支持本地、远程、多服务器集群监控 (健康检查、日志分析、性能监控、批量操作、文件传输)
 userInvocable: true
-argumentHint: <health|logs|perf|ports|process|disk|password|cluster|add-server|remove-server> [args]
+argumentHint: <health|logs|perf|ports|process|disk|cluster|add-server|remove-server|upload|download|list|audit> [args]
 allowedTools:
   - Bash
   - Read
 ---
 
-# 运维助手 (ops-maintenance)
+# 运维助手 (ops-maintenance) v2.0
 
 专业的运维助手，支持单服务器和多服务器集群监控。
+
+## v2.0 主要改进
+
+- 使用ssh2库替代child_process.exec，提升性能和安全性
+- 添加SSH连接池，支持连接复用
+- 移除StrictHostKeyChecking=no，增强安全性
+- 添加重试机制（指数退避）和错误处理
+- 添加审计日志，记录所有操作
+- 支持SFTP文件传输（上传/下载/目录操作）
+- 添加并发控制，避免同时打开过多连接
+- 改进错误分类和诊断信息
 
 ## 功能命令
 
@@ -49,21 +60,33 @@ allowedTools:
 /ops-maintenance user@host disk      # 远程
 ```
 
-### 密码过期检查
+### 文件传输 (新增)
 ```
-/ops-maintenance password            # 检查所有配置服务器的密码过期状态
+/ops-maintenance upload <local> <remote>    # 上传文件
+/ops-maintenance download <remote> <local>  # 下载文件
+/ops-maintenance list <remote>              # 列出远程目录
+```
+
+### 审计日志 (新增)
+```
+/ops-maintenance audit               # 查看审计统计
 ```
 
 ## 远程服务器配置
 
-### 方式 1: SSH Config (推荐)
-在 `~/.ssh/config` 中配置:
-```
-Host myserver
-    HostName 192.168.1.100
-    User root
-    Port 22
-    IdentityFile ~/.ssh/id_rsa
+### 方式 1: 配置文件 (推荐)
+在 `~/.config/ops-maintenance/servers.json` 中配置:
+```json
+[
+  {
+    "host": "192.168.1.100",
+    "user": "root",
+    "port": 22,
+    "keyFile": "~/.ssh/id_rsa",
+    "name": "web-1",
+    "tags": ["production", "web"]
+  }
+]
 ```
 
 ### 方式 2: 直接指定
@@ -78,6 +101,9 @@ root@server.com:2222 disk
 - ports: 端口占用检查
 - process: 进程查找
 - disk: 磁盘使用分析
+- upload: 文件上传
+- download: 文件下载
+- list: 目录列表
 
 ## 输出格式
 
@@ -85,18 +111,6 @@ root@server.com:2222 disk
 - 标题 (emoji + 操作名 + 服务器)
 - 代码块中的命令输出
 - 关键发现和建议
-
-### 密码过期检查输出示例
-
-```
-### 🔐 密码过期检查 (本地)
-
-| 用户 | 上次修改 | 过期日期 | 最大天数 | 状态 |
-|------|----------|----------|----------|------|
-| root | 2024-01-15 | 2024-07-15 | 180 | ✅ 有效 |
-| admin | 2024-02-01 | never | 90 | ⚠️ 永不过期 |
-| user1 | 2023-11-01 | 2024-01-01 | 60 | ❌ 已过期 |
-```
 
 ## 多服务器集群管理
 
@@ -148,7 +162,7 @@ EOF
 
 ### 服务器配置文件
 - 位置: `~/.config/ops-maintenance/servers.json`
-- 支持字段: host, port, user, keyFile, name, tags
+- 支持字段: host, port, user, keyFile, password, name, tags
 
 ### 示例配置
 ```json
@@ -168,161 +182,111 @@ EOF
 ]
 ```
 
-## 测试
+## 安全性说明
 
-### 运行测试
-```bash
-# 运行所有测试
-npm test
+### v2.0 安全改进
+- 移除 StrictHostKeyChecking=no，使用known_hosts验证
+- 支持密钥认证和密码认证
+- 连接超时保护（默认15秒）
+- 审计日志记录所有操作
+- 配置文件建议加密存储（待实现）
 
-# 运行核心功能测试（快速）
-npm test -- test/core.test.ts
+### 认证方式
+1. 密钥认证（推荐）:
+   ```json
+   {
+     "keyFile": "~/.ssh/id_rsa"
+   }
+   ```
 
-# 运行特定测试
-npm test -- --testNamePattern="健康检查"
+2. 密码认证:
+   ```json
+   {
+     "password": "your-password"
+   }
+   ```
+
+3. 默认密钥:
+   自动使用 ~/.ssh/id_rsa
+
+## 审计日志
+
+### 日志位置
+- ~/.config/ops-maintenance/logs/audit.log
+
+### 记录内容
+- 时间戳
+- 操作类型
+- 目标服务器
+- 执行命令
+- 执行状态（成功/失败/部分）
+- 执行时长
+- 错误信息
+
+### 查看统计
 ```
-
-### 测试覆盖
-- ✅ 平台检测与命令执行
-- ✅ 本地健康检查
-- ✅ 日志分析
-- ✅ 性能监控
-- ✅ 进程检查
-- ✅ 密码过期检查
-- ✅ 服务器配置管理
-- ⚠️ 端口检查（可能超时）
-- ⚠️ 磁盘使用（可能超时）
-- ⚠️ 远程SSH操作（需要真实服务器）
-
-## 故障排除
-
-### SSH连接问题
-1. **连接超时**: 检查网络连接和防火墙设置
-2. **认证失败**: 确认SSH密钥配置正确
-3. **主机密钥验证**: 首次连接需要手动确认主机密钥
-
-### 命令执行缓慢
-1. **网络延迟**: 远程命令受网络影响
-2. **系统负载**: 高负载时响应变慢
-3. **超时设置**: 可在代码中调整超时时间
-
-### 权限问题
-1. **文件访问**: 某些系统文件需要root权限
-2. **命令执行**: 部分命令需要sudo权限
-3. **日志读取**: 确保有日志文件读取权限
+/ops-maintenance audit
+```
 
 ## 性能优化
 
-### 缓存策略
-- 内存缓存: 30秒TTL，减少重复计算
-- 文件缓存: 持久化存储，跨会话复用
-- 连接池: SSH连接复用，减少握手开销
+### 连接池
+- 默认最大连接数: 10
+- 连接超时: 5分钟
+- 自动清理过期连接
 
-### 批量操作
-- 使用集群命令而非单台操作
-- 合并相关命令减少网络往返
-- 合理设置超时时间
+### 并发控制
+- 批量操作默认并发数: 5
+- 避免同时打开过多SSH连接
 
-### 监控建议
-- 定期检查服务器健康状态
-- 关注密码过期时间
-- 监控磁盘使用趋势
-- 设置关键服务端口监控
+### 重试机制
+- 默认重试次数: 3
+- 指数退避策略
+- 可配置重试延迟
 
-## 架构说明
+## 开发说明
 
-### Clean Architecture
-```
-src-new/
-├── core/              # 核心业务逻辑
-│   ├── usecases/     # 用例实现
-│   └── domain/       # 领域模型
-├── infrastructure/    # 基础设施
-│   ├── ssh/          # SSH客户端
-│   ├── cache/        # 缓存实现
-│   └── monitoring/   # 监控策略
-├── presentation/      # 表现层
-│   └── cli/          # CLI接口
-└── config/           # 配置管理
-```
-
-### 设计模式
-- **依赖注入**: 使用容器管理依赖
-- **策略模式**: 可插拔的监控策略
-- **适配器模式**: 兼容旧版API
-- **工厂模式**: 创建SSH连接
-
-### 数据流
-```
-用户命令 → CLI解析 → UseCase → Infrastructure → 外部系统
-                ↓
-            缓存层
-```
-
-## 开发指南
-
-### 添加新功能
-1. 在`core/usecases/`创建新的UseCase
-2. 在`infrastructure/`实现必要的适配器
-3. 在`presentation/cli/`添加CLI命令
-4. 更新`container.ts`注册依赖
-5. 添加测试用例
-
-### 代码规范
-- 使用TypeScript类型注解
-- 遵循Clean Architecture原则
-- 保持向后兼容性
-- 添加适当的错误处理
-- 编写单元测试
-
-### 调试技巧
+### 安装依赖
 ```bash
-# 启用详细日志
-DEBUG=* npm start
-
-# 测试单个功能
-node run.js health
-
-# 检查配置
-cat ~/.config/ops-maintenance/servers.json
+cd /Users/a1234/.openclaw/workspace/skills/ops-maintenance
+npm install
 ```
 
-## 限制与注意事项
+### 运行示例
+```bash
+npm run dev
+npm test
+```
 
-### 平台支持
-- ✅ Linux: 完整支持
-- ✅ macOS: 基本支持（部分功能受限）
-- ⚠️ Windows: 有限支持（通过WSL）
+### 构建
+```bash
+npm run build
+```
 
-### 网络要求
-- SSH连接需要稳定的网络
-- 防火墙需要开放SSH端口
-- 建议使用SSH密钥认证
+## 技术栈
 
-### 安全建议
-- 不要在代码中硬编码密码
-- 使用SSH密钥而非密码认证
-- 定期更新SSH密钥
-- 限制服务器访问权限
-- 加密敏感配置信息
+- Node.js + TypeScript
+- ssh2: SSH客户端库
+- ssh2-sftp-client: SFTP文件传输
+- 审计日志: JSON格式，支持查询和统计
 
-## 贡献指南
+## 常见问题
 
-### 报告问题
-提供详细的错误信息：
-- 操作系统版本
-- Node.js版本
-- 复现步骤
-- 错误日志
+### Q: 连接失败怎么办？
+A: 检查以下几点：
+1. SSH密钥或密码是否正确
+2. 服务器地址和端口是否正确
+3. 防火墙是否允许SSH连接
+4. 查看审计日志获取详细错误信息
 
-### 提交代码
-1. Fork项目
-2. 创建功能分支
-3. 编写测试
-4. 提交Pull Request
+### Q: 如何提高性能？
+A: 
+1. 使用连接池（已默认启用）
+2. 调整并发控制参数
+3. 使用密钥认证而非密码
 
-### 文档改进
-- 修正错误和不准确之处
-- 添加使用示例
-- 翻译文档
-- 改善代码注释
+### Q: 审计日志在哪里？
+A: ~/.config/ops-maintenance/logs/audit.log
+
+### Q: 如何清理连接池？
+A: 调用 cleanup() 函数或重启应用

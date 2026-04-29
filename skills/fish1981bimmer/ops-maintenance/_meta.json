@@ -1,11 +1,17 @@
 {
   "owner": "fish1981bimmer",
   "slug": "ops-maintenance",
-  "displayName": "运维助手",
+  "displayName": "运维助手 v2.0",
   "latest": {
-    "version": "2.0.0",
-    "publishedAt": 1776778071475,
-    "commit": "https://github.com/openclaw/skills/commit/a9d922579f53d24d6d544246eb0f6e9bc0d17ee4"
+    "version": "2.0.1",
+    "publishedAt": 1777164056616,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.0.0",
+      "publishedAt": 1776778071475,
+      "commit": "https://github.com/openclaw/skills/commit/a9d922579f53d24d6d544246eb0f6e9bc0d17ee4"
+    }
+  ]
 }
