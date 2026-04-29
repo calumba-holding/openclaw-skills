@@ -3,9 +3,15 @@
   "slug": "huo15-openclaw-design-critique",
   "displayName": "Huo15 Openclaw Design Critique",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776919693300,
-    "commit": "https://github.com/openclaw/skills/commit/abec968e5e81b7adb712a4bf4604e569c0f881bb"
+    "version": "1.0.1",
+    "publishedAt": 1777004150311,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776919693300,
+      "commit": "https://github.com/openclaw/skills/commit/abec968e5e81b7adb712a4bf4604e569c0f881bb"
+    }
+  ]
 }
