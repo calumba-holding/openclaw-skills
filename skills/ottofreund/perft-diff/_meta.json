@@ -1,0 +1,11 @@
+{
+  "owner": "ottofreund",
+  "slug": "perft-diff",
+  "displayName": "Chess Engine Perft Buddy",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1777191316800,
+    "commit": null
+  },
+  "history": []
+}
