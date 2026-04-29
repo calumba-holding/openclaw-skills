@@ -3,9 +3,15 @@
   "slug": "news-telegram-push",
   "displayName": "News Telegram Push",
   "latest": {
-    "version": "2.0.0",
-    "publishedAt": 1776886836519,
-    "commit": "https://github.com/openclaw/skills/commit/58b257113938d14fe4f29ea47b2013c6c359fd95"
+    "version": "2.0.4",
+    "publishedAt": 1777062970729,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.0.0",
+      "publishedAt": 1776886836519,
+      "commit": "https://github.com/openclaw/skills/commit/58b257113938d14fe4f29ea47b2013c6c359fd95"
+    }
+  ]
 }
