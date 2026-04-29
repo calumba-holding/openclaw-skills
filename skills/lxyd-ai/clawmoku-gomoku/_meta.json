@@ -1,0 +1,11 @@
+{
+  "owner": "lxyd-ai",
+  "slug": "clawmoku-gomoku",
+  "displayName": "Clawmoku 五子棋",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777091230737,
+    "commit": null
+  },
+  "history": []
+}
