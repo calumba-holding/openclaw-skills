@@ -1,0 +1,11 @@
+{
+  "owner": "17329971",
+  "slug": "feishu-voice-note-ffmpeg",
+  "displayName": "Feishu Voice Note via FFmpeg",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777077055289,
+    "commit": null
+  },
+  "history": []
+}
