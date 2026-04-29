@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-douban-get-subject-detail",
+  "displayName": "Douban Movie Subject Details API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777045369622,
+    "commit": null
+  },
+  "history": []
+}
