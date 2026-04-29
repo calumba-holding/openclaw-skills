@@ -1,56 +1,53 @@
 ---
-name: blog-image-generator
-description: Generate blog post hero images using Google Gemini's image generation model.
+name: Blog Image Generator
+description: "DEPRECATED — superseded by memorable-image-gen. This skill has been replaced by the Memorable Image Generator, which uses science-backed memorability scoring (ResMem, Brain Bridge Lab, University of Chicago) to ensure generated images are actually remembered. Install the new skill instead: clawhub install memorable-image-gen"
+metadata:
+  openclaw:
+    homepage: https://github.com/PhantomWorksIO/clawhub-skills
+    emoji: "🔄"
+    deprecated: true
+    superseded_by: "memorable-image-gen"
 ---
 
-# Blog Image Generator
+# Blog Image Generator — DEPRECATED
 
-Generate high-quality hero images for blog posts using Gemini's native image generation.
+> ⚠️ **This skill has been superseded.** Please install the new version instead.
 
-## Prerequisites
-- Google Gemini API key: set `GEMINI_API_KEY` env var or store at `~/.config/gemini/api_key`
+## Upgrade to Memorable Image Generator
 
-## Quick Start
+This skill has been replaced by **[memorable-image-gen](https://clawhub.com/skills/memorable-image-gen)** — a science-backed image generation agent that scores images for memorability before returning them.
 
 ```bash
-GEMINI_API_KEY=$(cat ~/.config/gemini/api_key 2>/dev/null || echo "$GEMINI_API_KEY")
-
-curl -s -X POST \
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$GEMINI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "parts": [{"text": "Generate a blog hero image: bright, modern, clean composition showing [YOUR SUBJECT]. No text in the image. Photorealistic editorial style, warm natural lighting."}]
-    }],
-    "generationConfig": {
-      "responseModalities": ["TEXT", "IMAGE"]
-    }
-  }' | python3 -c "
-import sys, json, base64
-data = json.load(sys.stdin)
-for part in data['candidates'][0]['content']['parts']:
-    if 'inlineData' in part:
-        img = base64.b64decode(part['inlineData']['data'])
-        with open('hero-image.png', 'wb') as f:
-            f.write(img)
-        print(f'Saved hero-image.png ({len(img)} bytes)')
-"
+clawhub install memorable-image-gen
 ```
 
-## Style Guidelines
+### Why the upgrade?
 
-**Good prompts:**
-- "Bright, clean workspace with laptop showing analytics dashboard, warm natural lighting, editorial photography"
-- "Overhead flat-lay of coffee, notebook, and pen on marble surface, soft morning light"
-- "Abstract geometric pattern in teal and warm earth tones, modern minimalist design"
+The old skill generated images and stopped. The new one:
 
-**Avoid:**
-- Baked-in text/words (Gemini renders text poorly)
-- Dark, moody aesthetics (unless that's your brand)
-- Generic stock photo compositions
+1. **Generates** via Google Gemini
+2. **Scores** memorability using ResMem (Brain Bridge Lab, University of Chicago) — a deep learning model trained to predict whether a human will remember the image
+3. **Iterates** until the image clears a memorability threshold (default 0.7/1.0)
+4. **Returns** the best result, not just the first
 
-## Tips
-- Always specify "no text in the image" — AI models love adding random words
-- Include lighting direction ("warm natural lighting", "soft diffused light")
-- Reference a photographic style ("editorial", "lifestyle", "product photography")
-- Aspect ratio defaults to square — crop after generation for blog headers (16:9)
+Every other image generator stops at "looks good." This one keeps going until the image will actually be remembered.
+
+## Migration
+
+Same interface — just install the new skill and update your command:
+
+```bash
+# Old
+python scripts/generate_blog_image.py --prompt "..." --output hero.png
+
+# New
+python scripts/generate_memorable_image.py --prompt "..." --output hero.png --threshold 0.7 --verbose
+```
+
+The `--threshold` and `--verbose` flags are new. Everything else carries over.
+
+## Install
+
+```bash
+clawhub install memorable-image-gen
+```
