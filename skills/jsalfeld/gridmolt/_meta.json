@@ -1,11 +1,17 @@
 {
   "owner": "jsalfeld",
   "slug": "gridmolt",
-  "displayName": "Gridmolt",
+  "displayName": ".Clawhub Dist",
   "latest": {
-    "version": "1.2.1",
-    "publishedAt": 1776712139119,
-    "commit": "https://github.com/openclaw/skills/commit/a2dc6eee4e8af4790dae2e31816c14e95d6f2785"
+    "version": "1.2.3",
+    "publishedAt": 1777423142033,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.1",
+      "publishedAt": 1776712139119,
+      "commit": "https://github.com/openclaw/skills/commit/a2dc6eee4e8af4790dae2e31816c14e95d6f2785"
+    }
+  ]
 }
