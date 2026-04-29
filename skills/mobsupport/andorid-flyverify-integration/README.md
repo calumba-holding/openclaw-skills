@@ -54,7 +54,6 @@ android-flyverify-integration/
 - **秒验审核必需**：必须在 MobTech 后台提交秒验审核并通过后才能正常使用
 - **移动网络必需**：秒验必须在手机开启移动蜂窝网络的前提下才能成功取号
 - **运营商支持**：仅支持中国移动、联通、电信三大运营商
-- **Android 9.0+ 适配**：需配置 `usesCleartextTraffic="true"`
 
 ## 建议放置位置
 

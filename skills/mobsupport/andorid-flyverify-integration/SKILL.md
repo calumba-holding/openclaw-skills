@@ -93,7 +93,10 @@ tags:
 
 #### 2-1 生成配置模板文件
 
-**操作**：将 `assets/FlyVerify_Config_Template.xlsx` 复制到用户项目根目录，命名为 `FlyVerify_Config.xlsx`
+**操作**：
+1. 执行 `assets/generate_excel_template.py`，生成 `assets/FlyVerify_Config_Template.xlsx`
+2. 将生成的 `assets/FlyVerify_Config_Template.xlsx` 复制到 `{path}` 下
+3. 在 `{path}` 下命名为 `FlyVerify_Config.xlsx`
 
 **告知用户**：
 ```

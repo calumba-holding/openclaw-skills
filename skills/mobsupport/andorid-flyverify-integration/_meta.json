@@ -3,9 +3,15 @@
   "slug": "andorid-flyverify-integration",
   "displayName": "Andorid Flyverify Integration",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1776927018950,
-    "commit": "https://github.com/openclaw/skills/commit/078b2871f633c7b3413921519c20315699d8b950"
+    "version": "2.0.0",
+    "publishedAt": 1777433435425,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1776927018950,
+      "commit": "https://github.com/openclaw/skills/commit/078b2871f633c7b3413921519c20315699d8b950"
+    }
+  ]
 }
