@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-douyin-search-video",
+  "displayName": "Douyin (TikTok China) Video Search API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777058229200,
+    "commit": null
+  },
+  "history": []
+}
