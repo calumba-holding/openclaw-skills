@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 summary: "The German biotech startup that changed the world — BioNTech's mRNA vaccine saved millions and created a €30B+ company in just 2 years."
 read_when:
   - "研究 BioNTech 的 mRNA 技术平台",
