@@ -1,0 +1,11 @@
+{
+  "owner": "snipercat69",
+  "slug": "edgeiq-sql-injection-scanner",
+  "displayName": "Sql Injection Scanner",
+  "latest": {
+    "version": "1.4.0",
+    "publishedAt": 1777136899818,
+    "commit": null
+  },
+  "history": []
+}
