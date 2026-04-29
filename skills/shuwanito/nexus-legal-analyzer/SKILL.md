@@ -1,16 +1,16 @@
 ---
 name: nexus-legal-analyzer
-description: "Legal analysis agent with RAG over Spanish, EU, and international law. Analyzes contracts, checks regulatory compliance, and monitors legislative changes."
-license: proprietary
-compatibility: "Python 3.11+, NEXUS AI Corp ecosystem"
+description: Legal RAG with GDPR, EU AI Act compliance, contract analysis, and regulatory
+  monitoring.
+version: '2.1.0'
 metadata:
-  department: legal
-  agents: ["legal-rag", "legal-compliance"]
-  price_per_execution: "$3.00"
-  ecosystem: "NEXUS AI Corp"
-  version: "1.0.0"
-  publishable: true
-allowed-tools: web-search web-fetch filesystem
+  openclaw:
+    emoji: ⚖️
+    homepage: https://github.com/Shuwanito/SkillsMP/tree/main/.claude/skills/nexus-legal-analyzer
+    os:
+    - macos
+    - linux
+    - windows
 ---
 
 # Nexus Legal Analyzer
