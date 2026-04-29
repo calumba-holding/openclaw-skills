@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "finance-kg-embedding",
-  "displayName": "finance-kg-embedding",
+  "displayName": "Finance Kg Embedding",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776888421368,
-    "commit": "https://github.com/openclaw/skills/commit/9365c6f83278cd2b79dfb0d5c6e0813a990c7912"
+    "version": "0.3.3",
+    "publishedAt": 1776954365996,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776888421368,
+      "commit": "https://github.com/openclaw/skills/commit/9365c6f83278cd2b79dfb0d5c6e0813a990c7912"
+    }
+  ]
 }
