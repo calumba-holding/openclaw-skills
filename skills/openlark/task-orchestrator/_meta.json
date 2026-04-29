@@ -1,0 +1,11 @@
+{
+  "owner": "openlark",
+  "slug": "task-orchestrator",
+  "displayName": "Task Orchestrator",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776995107772,
+    "commit": null
+  },
+  "history": []
+}
