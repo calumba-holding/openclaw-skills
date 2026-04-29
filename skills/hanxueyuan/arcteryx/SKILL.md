@@ -1,4 +1,5 @@
 ---
+version: 1.0.0
 name: arcteryx
 summary: Arc'teryx——加拿大顶级户外品牌，以极致工艺和始祖鸟化石标志定义高端机能服装。
 read_when:
