@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-beike-get-ershoufang-list",
+  "displayName": "Beike Resale Housing List API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776957138276,
+    "commit": null
+  },
+  "history": []
+}
