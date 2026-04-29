@@ -2,7 +2,8 @@
 
 ```bash
 tronclass todo [--fields f1,f2,...]
-tronclass td  [--fields f1,f2,...]
+tronclass td   [--fields f1,f2,...]
+tronclass t    [--fields f1,f2,...]
 ```
 
 Displays the user's current to-do list as a table.
