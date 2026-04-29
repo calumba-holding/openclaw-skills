@@ -14,7 +14,7 @@ ClawVault is a **man-in-the-middle (MITM) inspection proxy for AI traffic**. To 
 | Dashboard has no authentication by default | Default bind is `127.0.0.1` (localhost only); anyone with a shell on the machine already has more access than the dashboard exposes. | **Never** start with `--dashboard-host 0.0.0.0` on untrusted networks. Use SSH port-forwarding for remote viewing. |
 | The skill sees your API keys and prompts | API keys travel inside the HTTPS requests being inspected. A proxy that inspects requests will see them. | All traffic stays on `localhost`. Nothing is uploaded. Audit logs in `~/.ClawVault/audit.db` are local-only. |
 | Installer writes `HTTP_PROXY`/`HTTPS_PROXY` into `openclaw-gateway.service` | Required for OpenClaw to route traffic through ClawVault. Without this, the proxy is installed but inert. | Pass `--no-proxy` at install time to skip this step — you can wire it up manually later. The modification is only applied if the unit file already exists. |
-| Installs from GitHub, tag-pinned by default; main branch as fallback only | No PyPI distribution exists yet. Default install pins to `@v{VERSION}` for reproducibility; falls back to `main` only if that tag cannot be resolved upstream. | To further harden, edit the pip URL to pin to a specific commit SHA, or run in a disposable VM. See "Package Sources" below. |
+| Installs from pinned package sources | The installer uses the PyPI constraint `clawvault>=0.1.0,<1.0.0` first and falls back to the pinned GitHub tag `v0.1.0` if PyPI is unavailable. | Review the pinned package/tag before installing, or run in a disposable VM for higher assurance. See "Package Sources" below. |
 
 If any of these trade-offs are unacceptable for your threat model, **do not install this skill.**
 
@@ -100,7 +100,7 @@ clawvault start --dashboard-host 0.0.0.0
 The skill requires these permissions:
 
 ### `execute_command`
-- **Purpose:** Create a Python venv in `~/.clawvault-env/`, run `pip install git+https://github.com/tophant-ai/ClawVault.git` into that venv, and start/stop the proxy + dashboard services. On OpenClaw systems the installer also writes `HTTP_PROXY`/`HTTPS_PROXY` environment variables into `~/.config/systemd/user/openclaw-gateway.service` so the gateway routes AI traffic through ClawVault.
+- **Purpose:** Create a Python venv in `~/.clawvault-env/`, install `clawvault>=0.1.0,<1.0.0` from PyPI with pinned GitHub tag `v0.1.0` fallback, and start/stop the proxy + dashboard services. On OpenClaw systems the installer also writes `HTTP_PROXY`/`HTTPS_PROXY` environment variables into `~/.config/systemd/user/openclaw-gateway.service` so the gateway routes AI traffic through ClawVault.
 - **Risk:** Can execute arbitrary commands on your system; modifies one OpenClaw unit file when present.
 - **Mitigation:** All commands are explicit in `clawvault_manager.py`. Pass `--no-proxy` to skip the systemd modification, or `--no-start` to skip launching services. No command runs without being visible in `clawvault_manager.py:install()`.
 
@@ -153,18 +153,19 @@ ClawVault inspects:
 
 ### Package Sources
 
-The skill installs ClawVault **exclusively from the upstream GitHub repository**. There is currently no PyPI distribution.
+The skill installs ClawVault from pinned package sources. It first tries the PyPI constraint `clawvault>=0.1.0,<1.0.0`; if PyPI installation fails, it falls back to the pinned GitHub tag `v0.1.0`.
 
-1. **Primary (tag-pinned):** `pip install git+https://github.com/tophant-ai/ClawVault.git@v{VERSION}` — the installer tags its own release version and pins to that git tag by default, giving you a reproducible install.
-2. **Fallback (only if the tag is unavailable on the upstream repo):** `pip install git+https://github.com/tophant-ai/ClawVault.git` (tracks `main`)
+```
+pip install 'clawvault>=0.1.0,<1.0.0'
+pip install git+https://github.com/tophant-ai/ClawVault.git@v0.1.0
+```
 
 The installer does **not** perform:
-- Version pinning by default (main-branch install)
 - Checksum verification
 - Signature verification
 - Dependency-graph auditing
 
-**Supply-chain risk:** Installing from the upstream main branch means that **a compromise of the `tophant-ai/ClawVault` repository would propagate to all future installs**. This is a deliberate design trade-off to ship fixes quickly before PyPI distribution is set up.
+**Supply-chain risk:** Installing any package from PyPI or GitHub carries supply-chain risk, but the installer avoids tracking an unpinned main branch. Review the package/tag before installing in sensitive environments.
 
 **How to reduce supply-chain exposure:**
 1. Review the repository before installing: https://github.com/tophant-ai/ClawVault
@@ -179,7 +180,7 @@ What happens, in order, during `install --mode quick`:
 
 1. Verifies Python version (≥ 3.10)
 2. Creates a **dedicated virtual environment** at `~/.clawvault-env/` (isolates ClawVault from system Python — nothing is installed globally)
-3. Runs `pip install git+https://github.com/tophant-ai/ClawVault.git@v{VERSION}` inside that venv (tag-pinned; falls back to main branch only if the tag is unavailable)
+3. Runs `pip install 'clawvault>=0.1.0,<1.0.0'` inside that venv, with pinned GitHub tag `v0.1.0` fallback
 4. Copies `config.example.yaml` from the installed package to `~/.ClawVault/config.yaml`; if the template is unavailable, generates a complete 11-section default config
 5. If `~/.config/systemd/user/openclaw-gateway.service` exists, injects `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY`/`NODE_TLS_REJECT_UNAUTHORIZED` into it so OpenClaw routes AI traffic through ClawVault. Skipped if `--no-proxy` is passed or if the service file is absent.
 6. Launches the proxy (port 8765) and dashboard (port 8766) via `subprocess.Popen`. Skipped if `--no-start` is passed.

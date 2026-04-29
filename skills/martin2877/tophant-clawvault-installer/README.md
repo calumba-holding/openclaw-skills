@@ -54,6 +54,11 @@ openclaw restart
 ## Features
 
 - **AI-guided installation** - Quick, standard, or advanced setup modes
+- **Dedicated virtualenv** - Installs into `~/.clawvault-env` instead of the system Python
+- **Pinned install sources** - Uses `clawvault>=0.1.0,<1.0.0` and pinned GitHub fallback `v0.1.0`
+- **Failure-aware setup** - Reports configuration initialization failures as installation failures
+- **Secure dashboard defaults** - Binds the dashboard to `127.0.0.1` by default
+- **OpenClaw proxy integration** - Can configure OpenClaw gateway proxy settings, with `--no-proxy` opt-out
 - **Rule generation** - Create security rules from natural language
 - **Scenario templates** - Pre-configured policies (customer_service, development, production, finance)
 - **Detection testing** - Built-in test suites for validation

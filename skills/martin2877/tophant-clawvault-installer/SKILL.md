@@ -1,6 +1,6 @@
 ---
 name: tophant-clawvault-installer
-version: 0.2.3
+version: 0.2.9
 description: Install, configure, test, and uninstall ClawVault AI security proxy
 homepage: https://github.com/tophant-ai/ClawVault
 user-invocable: true
@@ -39,7 +39,7 @@ Add `--json` to any command for machine-readable JSON output.
 
 ### /tophant-clawvault-installer install
 
-Install ClawVault. The script handles everything automatically: creates a Python virtual environment, installs from GitHub, generates config, integrates OpenClaw proxy, and starts services. **No pip or system package manager needed.**
+Install ClawVault. The script handles everything automatically: creates a Python virtual environment, installs from pinned package sources (`clawvault>=0.1.0,<1.0.0` with GitHub tag `v0.1.0` fallback), generates config, integrates OpenClaw proxy, and starts services. **No pip or system package manager needed.**
 
 ```bash
 # Recommended: one command does everything

@@ -35,7 +35,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 REPO_URL = "https://github.com/tophant-ai/ClawVault"
-VERSION = "0.2.0"
+CLAWVAULT_PIP_SPEC = "clawvault>=0.1.0,<1.0.0"
+CLAWVAULT_GITHUB_REF = "v0.1.0"
+CLAWVAULT_GITHUB_SPEC = f"git+{REPO_URL}.git@{CLAWVAULT_GITHUB_REF}"
+DEFAULT_DASHBOARD_HOST = "127.0.0.1"
+VERSION = "0.2.9"
 
 
 class ClawVaultManager:
@@ -180,19 +184,39 @@ class ClawVaultManager:
             print(f"  ✗ {exc}")
             return {"success": False, "error": str(exc)}
 
-        # 3. Install from GitHub — pin to tag by default for reproducibility; fall back to main only if tag is unavailable
-        print(f"📦 Installing from GitHub (pinned to v{VERSION})...")
-        result = self._pip_install(f"git+{REPO_URL}.git@v{VERSION}")
-        if result.returncode != 0:
-            print(f"  ⚠️  Tag v{VERSION} unavailable, falling back to main branch...")
-            result = self._pip_install(f"git+{REPO_URL}.git")
+        # 3. Install from pinned package sources
+        print(f"📦 Installing from PyPI ({CLAWVAULT_PIP_SPEC})...")
+        result = self._pip_install(CLAWVAULT_PIP_SPEC)
+        install_source = "pypi"
+        install_warning = None
 
         if result.returncode != 0:
-            print(f"  ✗ Installation failed: {result.stderr}")
-            return {"success": False, "error": result.stderr}
+            pypi_error = result.stderr
+            print(f"  ⚠️  PyPI install failed, trying GitHub (pinned to {CLAWVAULT_GITHUB_REF})...")
+            result = self._pip_install(CLAWVAULT_GITHUB_SPEC)
+            install_source = "github"
+            install_warning = (
+                f"PyPI install failed for {CLAWVAULT_PIP_SPEC}; "
+                f"installed from pinned GitHub ref {CLAWVAULT_GITHUB_REF}."
+            )
+
+            if result.returncode != 0:
+                error = result.stderr or pypi_error
+                print(f"  ✗ Installation failed: {error}")
+                return {
+                    "success": False,
+                    "error": "Failed to install ClawVault from pinned PyPI spec and pinned GitHub fallback",
+                    "attempts": [
+                        {"source": "pypi", "spec": CLAWVAULT_PIP_SPEC, "stderr": pypi_error},
+                        {"source": "github", "spec": CLAWVAULT_GITHUB_SPEC, "stderr": result.stderr},
+                    ],
+                    "stderr": error,
+                }
 
         version = self.get_version()
-        print(f"  ✓ Installed ClawVault {version}")
+        print(f"  ✓ Installed ClawVault {version} from {install_source}")
+        if install_warning:
+            print(f"  ⚠️  {install_warning}")
 
         # 4. Config
         print("⚙️  Initializing configuration...")
@@ -200,7 +224,14 @@ class ClawVaultManager:
         if config_result["success"]:
             print(f"  ✓ Config created: {config_result['config_path']}")
         else:
-            print(f"  ⚠️  Config init failed: {config_result.get('error')}")
+            print(f"  ✗ Config init failed: {config_result.get('error')}")
+            return {
+                "success": False,
+                "error": f"Configuration failed: {config_result.get('error')}",
+                "config": config_result,
+                "version": version,
+                "install_source": install_source,
+            }
 
         # 5. Proxy integration
         proxy_result = {"skipped": True}
@@ -237,6 +268,9 @@ class ClawVaultManager:
         return {
             "success": True,
             "version": version,
+            "install_source": install_source,
+            "install_spec": CLAWVAULT_PIP_SPEC if install_source == "pypi" else CLAWVAULT_GITHUB_SPEC,
+            "warnings": [install_warning] if install_warning else [],
             "config_path": config_result.get("config_path"),
             "proxy_integration": proxy_result,
             "services": start_result,
@@ -321,7 +355,7 @@ class ClawVaultManager:
         """Full default config matching config.example.yaml."""
         return {
             "proxy": {
-                "host": "127.0.0.1",
+                "host": DEFAULT_DASHBOARD_HOST,
                 "port": 8765,
                 "ssl_verify": False,
                 "intercept_hosts": [
@@ -357,7 +391,7 @@ class ClawVaultManager:
             },
             "dashboard": {
                 "enabled": True,
-                "host": "127.0.0.1",
+                "host": DEFAULT_DASHBOARD_HOST,
                 "port": 8766,
             },
             "cloud": {
