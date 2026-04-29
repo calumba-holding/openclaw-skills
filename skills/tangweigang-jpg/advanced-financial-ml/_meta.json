@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "advanced-financial-ml",
-  "displayName": "advanced-financial-ml",
+  "displayName": "Advanced Financial Ml",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776876830556,
-    "commit": "https://github.com/openclaw/skills/commit/54e133596bf00f41d99533f16ef252decfb6668d"
+    "version": "0.3.3",
+    "publishedAt": 1776954180526,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776876830556,
+      "commit": "https://github.com/openclaw/skills/commit/54e133596bf00f41d99533f16ef252decfb6668d"
+    }
+  ]
 }
