@@ -3,9 +3,15 @@
   "slug": "money-never-sleep",
   "displayName": "Money Never Sleep",
   "latest": {
-    "version": "0.5.8",
-    "publishedAt": 1776778851948,
-    "commit": "https://github.com/openclaw/skills/commit/3adbc174c537fcc34112135532abf527231cfb08"
+    "version": "0.5.10",
+    "publishedAt": 1776937641761,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.5.8",
+      "publishedAt": 1776778851948,
+      "commit": "https://github.com/openclaw/skills/commit/3adbc174c537fcc34112135532abf527231cfb08"
+    }
+  ]
 }
