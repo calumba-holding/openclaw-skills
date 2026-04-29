@@ -3,9 +3,15 @@
   "slug": "presales-tech-support",
   "displayName": "presales-tech-support",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776844975712,
-    "commit": "https://github.com/openclaw/skills/commit/23c5afa63adb8d7a271051ba5875c63f9b281a63"
+    "version": "1.0.2",
+    "publishedAt": 1776925205569,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776844975712,
+      "commit": "https://github.com/openclaw/skills/commit/23c5afa63adb8d7a271051ba5875c63f9b281a63"
+    }
+  ]
 }
