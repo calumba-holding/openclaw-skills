@@ -23,14 +23,49 @@ Hermes-Memory 给AI装上了长期记忆：记住你的偏好、持仓、策略�
 - **类型自由定制** —— 内置交易、策略、教训等类型，也可以随时自定义任何新类型
 
 ### 和其他方案对比
-| | Hermes-Memory | 云端向量库(Qdrant/Milvus) | 纯文本记忆(MEMORY.md) |
-|---|---|---|---|
-| 部署难度 | pip install即可 | 需要启动独立服务 | 零部署 |
-| 语义搜索 | ✅ 中文优化 | ✅ 但需额外配置 | ❌ 只能关键词匹配 |
-| 隐私安全 | ✅ 完全本地 | ⚠️ 需自建服务 | ✅ 本地文件 |
-| 成本 | 免费 | 看方案 | 免费 |
-| 大规模性能 | 千条级优秀 | 百万级优秀 | 几百条就乱 |
-| 记忆管理 | 自动衰减+去重 | 手动管理 | 手动维护 |
+
+#### vs 纯文本记忆（MEMORY.md / 每日笔记）
+纯文本是大部分AI助手的默认方案——把记忆写在Markdown文件里，每次对话让AI自己翻。
+
+| 维度 | Hermes-Memory | 纯文本记忆 |
+|---|---|---|
+| 查找方式 | **语义搜索**（"我之前说过什么止损规则"→精准命中） | 关键词匹配或全文翻阅 |
+| 记忆容量 | 千条级，搜索毫秒级 | 几百条就开始乱、遗漏 |
+| 去重 | 向量相似度>0.95自动合并 | 手动检查，重复越积越多 |
+| 过期处理 | 自动衰减+归档 | 永远在文件里，越堆越旧 |
+| 结构化 | 按类型/实体/关系组织 | 平铺在一个大文件里 |
+| 实体关系 | 多跳图谱（某股→板块→策略→教训） | 无 |
+| Token消耗 | 只搜索需要的记忆，按需加载 | 每次要把整个文件喂给AI |
+
+**一句话：** 纯文本适合记10条备忘；Hermes-Memory适合构建一个真正可用的知识库。
+
+#### vs AGENTS.md 内置记忆逻辑
+很多用户会在AGENTS.md里写一段记忆规则，让AI自己维护Markdown文件。这个方案能用，但有几个本质限制：
+
+| 维度 | Hermes-Memory | AGENTS.md规则+Markdown |
+|---|---|---|
+| 存储引擎 | SQLite + 向量索引 + FTS5 | 纯文本文件 |
+| 搜索能力 | 向量语义搜索 + 全文搜索 + 关系查询 | 只能靠AI逐行读文件 |
+| 可靠性 | **确定性**——CLI命令执行即写入，不依赖AI"记得去写" | **不确定**——AI可能忘写、写错格式、漏写 |
+| 写入触发 | CLI工具一键写入（memdb.py add / memory_tool.py check） | 依赖AI每次对话后主动执行，无强制保证 |
+| 跨会话 | SQLite文件是唯一真相源，任何session读取一致 | 多个daily note + MEMORY.md，容易不一致 |
+| 关系推理 | 实体图谱支持多跳查询（"跟这只股票相关的所有教训"） | 无结构化关系，全靠AI自己关联 |
+| 自动维护 | decay归档+去重+export，cron一条命令搞定 | 需要AI手动整理文件，容易堆积垃圾 |
+| 可扩展性 | 类型自定义、关系自由扩展 | 文件越大AI越容易遗漏 |
+
+**核心差异：** AGENTS.md记忆规则是"靠AI自觉"——提示词让它记，但执行没有保证。Hermes-Memory是"工具保证"——CLI命令执行就写入，搜索就返回，不依赖AI的注意力。
+
+#### vs 云端向量库（Qdrant / Milvus / Pinecone）
+
+| 维度 | Hermes-Memory | 云端向量库 |
+|---|---|---|
+| 部署难度 | pip install即可 | 需要启动独立服务或注册云服务 |
+| 隐私安全 | ✅ 完全本地 | ⚠️ 需自建或信任第三方 |
+| 成本 | 免费 | 云服务按量计费 / 自建服务器成本 |
+| 大规模性能 | 千条级优秀 | 百万级优秀 |
+| 中文支持 | ✅ 专用中文模型 | ⚠️ 需额外配置embedding |
+
+**一句话：** 个人使用千条级别，Hermes-Memory更简单更安全；企业级百万条数据，上云端方案。
 
 ## 快速开始
 
@@ -135,6 +170,7 @@ python3 scripts/memdb.py relate "某股亏损" "教训应用于" "止损规则"
 ## CLI完整参考
 
 ```bash
+# ── 记忆操作 ──
 python3 scripts/memdb.py add "内容" --type <type> [--entity <实体>] [--severity high|medium|low] [--source manual|conversation|cron]
 python3 scripts/memdb.py search "查询" [--type <type>] [--status active|expired] [--entity <实体>] [--limit N] [--format text|json]
 python3 scripts/memdb.py list [--type <type>] [--status active] [--limit N]
@@ -146,12 +182,68 @@ python3 scripts/memdb.py archive
 python3 scripts/memdb.py export --dir <目录>
 python3 scripts/memdb.py import --dir <目录>
 python3 scripts/memdb.py stats
+
+# ── Skill进化 ──
+python3 scripts/skill_evolve.py record "操作模式" --tags "标签1,标签2"
+python3 scripts/skill_evolve.py detect
+python3 scripts/skill_evolve.py draft <pattern_id> [--name "skill-name"]
+python3 scripts/skill_evolve.py promote <pattern_id> --name "skill-name"
+python3 scripts/skill_evolve.py list
 ```
 
 ## 详细文档
 
 - **安装指南：** 见 [references/install.md](references/install.md)
 - **AGENTS.md集成：** 见 [references/integration.md](references/integration.md)
+
+## Skill进化系统
+
+受 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 的闭环学习启发，hermes-memory-cn 增加了自动模式检测和skill提炼能力。
+
+### 工作流
+```
+完成多步骤任务 → skill_evolve.py record → 向量检测相似模式
+                                                ↓
+                          同一模式出现≥3次 → 自动通知候选
+                                                ↓
+                          skill_evolve.py draft → 生成草案到 skill_drafts/
+                                                ↓
+                          用户审核 → skill_evolve.py promote → 正式skill
+```
+
+### 命令
+```bash
+# 记录操作模式
+python3 scripts/skill_evolve.py record "步骤1→步骤2→步骤3" --tags "标签"
+
+# 检测候选
+python3 scripts/skill_evolve.py detect
+
+# 生成草案
+python3 scripts/skill_evolve.py draft <id> --name "skill-name"
+
+# 确认升级
+python3 scripts/skill_evolve.py promote <id> --name "skill-name"
+
+# 查看所有模式
+python3 scripts/skill_evolve.py list
+```
+
+### 与 Hermes Agent 对比
+
+| 维度 | Hermes Agent | Hermes Memory CN |
+|------|-------------|-----------------|
+| **定位** | 完整Agent框架（自研内核+工具+消息平台） | 专注记忆层的工程优化 |
+| **记忆存储** | Markdown(3600字符硬上限) | SQLite+向量DB(千条级) |
+| **检索方式** | FTS5+LLM摘要 | 向量语义搜索+FTS5+关系图谱 |
+| **容量管理** | 硬上限强制精简 | 自动衰减+去重+归档 |
+| **skill进化** | ✅ 自动沉淀（成熟） | ✅ 模式检测+草案生成（新增） |
+| **冻结注入** | ✅ 保护prefix cache | ❌ 无 |
+| **中文优化** | 无 | 专用text2vec-base-chinese |
+| **实体关系** | 无 | 多跳图谱查询 |
+| **部署门槛** | 低（一个CLI） | 中（需装embedding模型） |
+
+**关系定位：** Hermes Agent 定义了"AI应该有长期记忆"的范式——反思循环、跨session持久化、skill自动沉淀。Hermes Memory CN 继承这个理念，在记忆存储层做了工程升级：从Markdown到向量数据库，从关键词搜索到语义检索，从几十条到千条级。两者互补，不是替代关系。
 
 ## 架构
 
