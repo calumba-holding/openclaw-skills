@@ -1,7 +1,7 @@
 ---
 name: pandas-ta-indicators
 description: |-
-  基于 pandas-ta 库计算技术分析指标（RSI、MACD、布林带、KAMA 等），支持多市场数据可视化与自定义参数调整。 触发场景：(1) 用户要计算某只股票的 RSI、MACD 等指标数值；(2) 用户要绘制布林带或其他技术分析图表观察价格波动；(3) 用户要快速获取多指标结果或导出到其他平台使用。
+  基于 pandas-ta 库计算技术分析指标（RSI、MACD、布林带、KAMA 等），支持多市场数据可视化与自定义参数调整。。
 license: Proprietary. See LICENSE.txt in project root.
 compatibility: Designed for Doramagic-host ecosystem (Claude Code / openclaw / Cursor). Requires Python 3.12+ with uv package manager.
 metadata:
@@ -12,9 +12,9 @@ metadata:
   capability_activities: "technical-analysis"
   sop_version: "crystal-compilation-v6.1"
 ---
-# pandas-ta-indicators
+# Pandas-TA 技术指标 (pandas-ta-indicators)
 
-> I help you build quant strategies on A-share with ZVT — from data fetch to backtest, one flow. Just tell me what you want; I'll write the code, you don't have to dig docs. (Heads up: ZVT natively supports A-share, HK, and crypto. US stocks — stockus_nasdaq_AAPL — are half-baked; don't bother for serious work.)
+> 基于 pandas-ta 库计算技术分析指标（RSI、MACD、布林带、KAMA 等），支持多市场数据可视化与自定义参数调整。
 
 ## Pipeline
 
@@ -29,13 +29,6 @@ Configures the Sphinx documentation builder for the Technical Analysis Library, 
 ### Technical Analysis Features Visualization (`UC-102`)
 Explores and visualizes various technical analysis indicators (Bollinger Bands, Keltner Channel, Donchian Channel, MACD) on historical price data to u
 **Triggers**: visualize, technical indicators, charting
-
-## Install
-
-```bash
-# One-time setup before first use
-bash scripts/install.sh
-```
 
 **Execute trigger**: `When user intent matches intent_router.uc_entries[].positive_terms AND user uses action verb (run/execute/跑/执行/backtest/fetch/collect)`
 
