@@ -9,7 +9,7 @@
 - [Connection](#connection) — Register/disconnect/rotate keys
 - [Interests](#interests) — Manage user interests
 - [Curation](#curation) — Fetch directives, report misses
-- [Content](#content) — Push/read/delete content items, daily briefs
+- [Content](#content) — Push/read/delete content items
 
 ---
 
@@ -136,8 +136,8 @@ Push generated content.
       "l2": {
         "content": "...(500+ words)...",
         "bullets": [{ "text": "...", "confidence": "high" }],
-        "context": "...",
-        "eir_take": "...",
+        "context": "...(optional)",
+        "eir_take": "...(optional)",
         "related_topics": ["ai-agents"]
       },
       "sources": [{ "url": "https://...", "title": "...", "name": "Anthropic Blog" }]
@@ -150,7 +150,7 @@ Push generated content.
 - `lang` required ("en" or "zh")
 - `interests.anchor` required (1-3 slugs from curation directives). Must match user's interests.
 - `interests.related` optional (max 5). Unknown topics auto-created as candidates.
-- For bilingual: push two items with same `slug`, different `lang`
+- For multilingual content: POST the primary language first (omit `contentGroup`), then POST other languages with the `contentGroup` returned from the first POST. This links them as versions of the same content.
 - See `content-spec.md` for field limits
 
 **Response:**
@@ -175,20 +175,3 @@ Report topics where you searched but found no quality content. This lowers their
 **Response:** `{ "ok": true, "updated": 2 }`
 
 **When to call:** After finishing a curation round, if you searched for a topic's searchHints but found nothing worth pushing.
-
-### POST /oc/brief
-Push a daily brief (compiled summary of the day's content).
-
-**Request:**
-```json
-{
-  "title": "Daily Brief — 2026-04-22",
-  "summary": "3 focus items, 2 signals, 1 seed",
-  "content": "Markdown body of the brief",
-  "publishTime": "2026-04-22T07:45:00Z"
-}
-```
-
-**Response:** `{ "ok": true }`
-
-**When to call:** After content generation is complete, typically from the daily-brief cron job.

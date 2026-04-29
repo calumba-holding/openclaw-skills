@@ -40,8 +40,8 @@
 |-------|------|-------------|------------|-------|
 | `content` | string | 200-600 CJK chars / 150-400 EN words | — | 2-4 paragraphs separated by `\n\n`. Starts where summary left off. |
 | `bullets` | array | 3-5 items | — | Each: `{text: string, confidence: "high"\|"medium"\|"low"}`. Concrete facts with numbers/names. Every bullet must have supporting detail in `content`. |
-| `context` | string | 1-2 sentences | — | "SO WHAT for the reader." Be specific and direct — address the reader. |
-| `eir_take` | string | 1 sentence | — | Eir's sharp opinion. **PUBLIC** (visible on share pages) — no user-specific info. |
+| `context` | string | 1-2 sentences | — | Optional. "SO WHAT for the reader." Omit or leave empty if not needed. |
+| `eir_take` | string | 1 sentence | — | Optional. Eir's sharp opinion. **PUBLIC** (visible on share pages) if included. |
 | `related_topics` | string[] | 3-5 items | — | Human-readable phrases in `lang`. NOT slugs. e.g. `"Vector Search and ANN Algorithms"` ✅, `"vector-search-ann"` ❌ |
 
 ### sources (provenance — machine-readable)
@@ -51,7 +51,7 @@
 | `url` | string | **Yes** | Must be valid URL. Used for server-side dedup — duplicate URLs are rejected. |
 | `title` | string | No | Original article title. |
 | `name` | string | No | Publisher/source name (e.g. "MIT Technology Review"). This is what `l1.via` selects from. |
-| `publish_time` | string | No | ISO date or date string from source. |
+| `publishTime` | string | **Recommended** | ISO 8601 date or date string from source. Used for freshness display and sorting. `eir_post.py` auto-extracts from `sources[0].publishTime` if omitted. |
 
 ### Top-level item fields
 
@@ -64,6 +64,7 @@
 | `l1` | object | **Yes** | See l1 section above. `l1.title` is required. |
 | `l2` | object | No | See l2 section above. Strongly recommended. |
 | `sources` | array | No | See sources section above. At least 1 recommended. |
+| `publishTime` | string | **Recommended** | ISO 8601 date of the primary source. Used for freshness display and sorting. If omitted, `eir_post.py` auto-extracts from `sources[0].publishTime`. Prefer providing explicitly. |
 | `visibility` | `"private"` \| `"public"` | **Yes** | `private` for user content, `public` for pool/shared content. Set by API, not writer. |
 | `channelId` | string | **Yes** | Content channel: `user-private`, `eir-express`, `shared-pick`, etc. Set by API, not writer. |
 
@@ -129,6 +130,7 @@
 - `lang` missing, or not `"zh"` or `"en"`
 - `lang` is `"en"` but hook contains CJK characters (language mismatch)
 - `items` empty, not an array, or >20 items
+- No source `publishTime` within the global freshness window (currently 3 days) → `stale content`
 
 ### API skips (returned as `status: "skipped"`)
 
@@ -150,8 +152,8 @@ Both use the same ID scheme:
 {8-char contentGroup}_{lang}    e.g. a3k9m2x7_zh
 ```
 
-- `contentGroup`: 8-char base64url, globally unique
-- All language versions of the same item share the `contentGroup`
+- `contentGroup`: 8-char base64url, globally unique, server-assigned on first POST
+- All language versions of the same content **must** share the same `contentGroup` — POST the primary language first (without `contentGroup`), then use the returned `contentGroup` when posting other languages
 
 ---
 

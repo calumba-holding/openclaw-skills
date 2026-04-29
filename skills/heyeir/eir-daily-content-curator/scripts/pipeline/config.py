@@ -7,9 +7,9 @@ import os
 import sys
 from pathlib import Path
 
-from .eir_config import (
+from .workspace import (
     WORKSPACE, CONFIG_DIR, DATA_DIR, SKILL_DIR,
-    load_config, get_api_url, get_api_key, load_settings,
+    load_settings,
 )
 
 # Pipeline data directories
@@ -29,14 +29,18 @@ USED_SOURCE_URLS_FILE = DATA_DIR / "used_source_urls.json"
 # Service URLs
 _settings = load_settings()
 _search_cfg = _settings.get("search", {})
-SEARXNG_URL = _search_cfg.get("searxng_url") or "http://localhost:8888"
-CRAWL4AI_URL = _search_cfg.get("crawl4ai_url") or "http://localhost:11235"
-SEARCH_GATEWAY_URL = _search_cfg.get("search_gateway_url") or "http://localhost:8899"
+SEARXNG_URL = _search_cfg.get("searxng_url") or None
+CRAWL4AI_URL = _search_cfg.get("crawl4ai_url") or None
+SEARCH_GATEWAY_URL = _search_cfg.get("search_gateway_url") or None
 
 # Freshness mapping: directive string → days
 FRESHNESS_DAYS = {
     "24h": 1, "1d": 1, "2d": 2, "3d": 3, "7d": 7, "14d": 14, "30d": 30,
 }
+
+# API global freshness window — sources older than this will be rejected by the API.
+# Task packing skips candidates where all sources exceed this limit.
+API_FRESHNESS_DAYS = 3
 
 # Map freshness strings to SearXNG time_range parameter
 FRESHNESS_TO_TIME_RANGE = {
@@ -88,3 +92,26 @@ def load_json(path, default=None):
         return json.loads(Path(path).read_text())
     except (FileNotFoundError, json.JSONDecodeError):
         return default if default is not None else {}
+
+
+def preflight_check(require_eir=False):
+    """Verify essential configuration before running pipeline.
+    Returns list of error strings. Empty = all good."""
+    errors = []
+    from .workspace import load_settings, load_config
+
+    settings = load_settings()
+    search_cfg = settings.get("search", {})
+
+    # Search API
+    if not search_cfg.get("search_base_url") and not search_cfg.get("search_api_key"):
+        if not SEARXNG_URL:
+            errors.append("No search provider configured. Set search_base_url + search_api_key in config/settings.json, or configure searxng_url.")
+
+    # Eir mode checks
+    if require_eir or settings.get("mode") == "eir":
+        eir_cfg = load_config()
+        if not eir_cfg.get("apiKey"):
+            errors.append("Eir API key missing. Run: python3 scripts/connect.py <PAIRING_CODE>")
+
+    return errors
