@@ -1,0 +1,11 @@
+{
+  "owner": "gold3bear",
+  "slug": "hk-stock-radar",
+  "displayName": "港股雷达",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777123130364,
+    "commit": null
+  },
+  "history": []
+}
