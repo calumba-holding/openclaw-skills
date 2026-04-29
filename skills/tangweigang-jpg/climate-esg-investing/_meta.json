@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "climate-esg-investing",
-  "displayName": "climate-esg-investing",
+  "displayName": "Climate Esg Investing",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776884387172,
-    "commit": "https://github.com/openclaw/skills/commit/9eb32a6f128457b972f5de277a1998ec361d2845"
+    "version": "0.3.3",
+    "publishedAt": 1776954256540,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776884387172,
+      "commit": "https://github.com/openclaw/skills/commit/9eb32a6f128457b972f5de277a1998ec361d2845"
+    }
+  ]
 }
