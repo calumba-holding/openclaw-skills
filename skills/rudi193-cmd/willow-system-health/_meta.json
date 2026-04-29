@@ -1,0 +1,11 @@
+{
+  "owner": "rudi193-cmd",
+  "slug": "willow-system-health",
+  "displayName": "Willow System Health",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777090014654,
+    "commit": null
+  },
+  "history": []
+}
