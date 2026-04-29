@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const manifest = {
   "baseUrl": "https://api.justoneapi.com",
-  "description": "Analyze Amazon Product Details workflows with JustOneAPI, including product Details.",
+  "description": "Call GET /api/amazon/get-product-detail/v1 for Amazon Product Details through JustOneAPI with asin.",
   "displayName": "Amazon Product Details",
   "openapi": "3.1.0",
   "platformKey": "amazon",
@@ -13,7 +13,7 @@ const manifest = {
     {
       "description": "Get Amazon product Details data, including title, brand, and price, for building product catalogs and enriching item content (e.g., images), price monitoring and availability tracking, and e-commerce analytics and competitor tracking.",
       "method": "GET",
-      "operationId": "getProductDetailV1",
+      "operationId": "getAmazonProductDetailV1",
       "parameters": [
         {
           "defaultValue": null,
@@ -72,8 +72,8 @@ const manifest = {
       "requestBody": null,
       "responses": [
         {
-          "description": "default response",
-          "statusCode": "default"
+          "description": "OK",
+          "statusCode": "200"
         }
       ],
       "summary": "Product Details",

@@ -1,6 +1,6 @@
 ---
 name: Amazon Product Details API
-description: Analyze Amazon Product Details workflows with JustOneAPI, including product Details.
+description: Call GET /api/amazon/get-product-detail/v1 for Amazon Product Details through JustOneAPI with asin.
 author: JustOneAPI
 homepage: https://api.justoneapi.com
 metadata: {"openclaw":{"homepage":"https://api.justoneapi.com","primaryEnv":"JUST_ONE_API_TOKEN","requires":{"bins":["node"],"env":["JUST_ONE_API_TOKEN"]},"skillKey":"justoneapi_amazon_get_product_detail"}}
@@ -8,56 +8,54 @@ metadata: {"openclaw":{"homepage":"https://api.justoneapi.com","primaryEnv":"JUS
 
 # Amazon Product Details
 
-This skill wraps 1 Amazon Product Details operations exposed by JustOneAPI. It is strongest for product Details. Expect common inputs such as `asin`, `country`.
+Use this focused JustOneAPI skill for product Details in Amazon. It targets `GET /api/amazon/get-product-detail/v1`. Required non-token inputs are `asin`. OpenAPI describes it as: Get Amazon product Details data, including title, brand, and price, for building product catalogs and enriching item content (e.g., images), price monitoring and availability tracking, and e-commerce analytics and competitor tracking.
 
-## When To Use It
+## Endpoint Scope
 
-- The user needs product Details on Amazon Product Details.
-- The user can provide identifiers or filters such as `asin`, `country`.
-- The user wants an exact API-backed answer instead of a freeform summary.
+- Platform key: `amazon`
+- Endpoint key: `get-product-detail`
+- Platform family: Amazon
+- Skill slug: `justoneapi-amazon-get-product-detail`
 
-## Representative Operations
+| Operation | Version | Method | Path | OpenAPI summary |
+| --- | --- | --- | --- | --- |
+| `getAmazonProductDetailV1` | `v1` | `GET` | `/api/amazon/get-product-detail/v1` | Product Details |
 
-- `getProductDetailV1`: Product Details — Get Amazon product Details data, including title, brand, and price, for building product catalogs and enriching item content (e.g., images), price monitoring and availability tracking, and e-commerce analytics and competitor tracking
+## Inputs
 
-## Available Versions
+| Parameter | In | Required by | Optional by | Type | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `asin` | `query` | all | n/a | `string` | ASIN (Amazon Standard Identification Number) |
+| `country` | `query` | n/a | all | `string` | Country code for the Amazon product. Available Values: - `US`: United States - `AU`: Australia - `BR`: Brazil - `CA`: Canada - `CN`: China - `FR`: France - `DE`: Germany - `IN`: India - `IT`: Italy - `MX`: Mexico - `NL`: Netherlands - `SG`: Singapore - `ES`: Spain - `TR`: Turkey - `AE`: United Arab Emirates - `GB`: United Kingdom - `JP`: Japan - `SA`: Saudi Arabia - `PL`: Poland - `SE`: Sweden - `BE`: Belgium - `EG`: Egypt - `ZA`: South Africa - `IE`: Ireland |
+| `country` enum | values | n/a | n/a | n/a | `AE`, `AU`, `BE`, `BR`, `CA`, `CN`, `DE`, `EG`, `ES`, `FR`, `GB`, `IE`, `IN`, `IT`, `JP`, `MX`, `NL`, `PL`, `SA`, `SE`, `SG`, `TR`, `US`, `ZA` |
 
-These endpoint versions are grouped in this interface-level skill.
+Request body: none documented; send parameters through path or query arguments.
 
-- `v1`: `getProductDetailV1` - `GET /api/amazon/get-product-detail/v1`
+## Version Choice
 
-## Request Pattern
+Use `getAmazonProductDetailV1` for the documented `v1` endpoint. There are no alternate versions grouped in this skill.
 
-- 1 operations are available in this skill.
-- HTTP methods used here: `GET`.
-- The most common non-token parameters are `asin`, `country`.
-- All operations in this skill are parameter-driven requests; none require a request body.
-- This interface-level skill groups endpoint versions that share the same path after removing the trailing `/vN` version segment.
+## Run This Endpoint
 
-## How To Work
-
-1. Read `generated/operations.md` before choosing an endpoint.
-2. Start with one of these operations when it matches the user's request: `getProductDetailV1`.
-3. Pick the smallest matching operation instead of guessing.
-4. Ask the user for any missing required parameter. Do not invent values.
-5. Call the helper with:
+Supported operation IDs in this skill: `getAmazonProductDetailV1`.
 
 ```bash
-node {baseDir}/bin/run.mjs --operation "<operation-id>" --token "$JUST_ONE_API_TOKEN" --params-json '{"key":"value"}'
+node {baseDir}/bin/run.mjs --operation "getAmazonProductDetailV1" --token "$JUST_ONE_API_TOKEN" --params-json '{"asin":"<asin>"}'
 ```
+
+Ask for any missing required parameter before calling the helper. Keep user-provided IDs, cursors, keywords, and filters unchanged.
 
 ## Environment
 
 - Required: `JUST_ONE_API_TOKEN`
-- This skill uses `JUST_ONE_API_TOKEN` only for authenticated Just One API requests.
-- Keep `JUST_ONE_API_TOKEN` private. Do not paste it into chat messages, screenshots, or logs.
+- Pass the token with `--token "$JUST_ONE_API_TOKEN"`; do not paste token values into chat messages, screenshots, or logs.
 - Get a token from [Just One API Dashboard](https://dashboard.justoneapi.com/en/login?utm_source=clawhub.ai&utm_medium=referral&utm_campaign=justoneapi_amazon_get_product_detail&utm_content=project_link).
 - Authentication details: [Just One API Usage Guide](https://docs.justoneapi.com/en/?utm_source=clawhub.ai&utm_medium=referral&utm_campaign=justoneapi_amazon_get_product_detail&utm_content=project_link).
 
-## Output Rules
+## Output Focus
 
-- Start with a plain-language answer tied to the Amazon Product Details task the user asked for.
-- Include the most decision-relevant fields from the selected endpoint before dumping raw JSON.
-- When using `getProductDetailV1`, explain why the returned fields answer the user's question.
-- If the user gave filters such as `asin`, `country`, echo those back so the scope is explicit.
+- State the operation ID and endpoint path used, for example `getAmazonProductDetailV1` on `/api/amazon/get-product-detail/v1`.
+- Echo the required lookup scope (`asin`) before summarizing results.
+- Prioritize fields that support this endpoint purpose: Get Amazon product Details data, including title, brand, and price, for building product catalogs and enriching item content (e.g., images), price monitoring and availability tracking, and e-commerce analytics and competitor tracking.
+- Return raw JSON only after the short, endpoint-specific summary.
 - If the backend errors, include the backend payload and the exact operation ID.

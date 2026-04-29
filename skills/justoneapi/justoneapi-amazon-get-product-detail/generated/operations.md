@@ -4,7 +4,7 @@ Generated from JustOneAPI OpenAPI for platform key `amazon`.
 
 Endpoint group: `get-product-detail`.
 
-## `getProductDetailV1`
+## `getAmazonProductDetailV1`
 
 - Method: `GET`
 - Path: `/api/amazon/get-product-detail/v1`
@@ -53,4 +53,4 @@ No request body.
 
 ### Responses
 
-- `default`: default response
+- `200`: OK

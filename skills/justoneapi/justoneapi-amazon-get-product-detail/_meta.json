@@ -3,9 +3,15 @@
   "slug": "justoneapi-amazon-get-product-detail",
   "displayName": "Amazon Product Details API",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776924169230,
-    "commit": "https://github.com/openclaw/skills/commit/09a9c9c9f34c6a3c3adee25f81eb78655fb045c1"
+    "version": "1.0.2",
+    "publishedAt": 1776957116763,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776924169230,
+      "commit": "https://github.com/openclaw/skills/commit/09a9c9c9f34c6a3c3adee25f81eb78655fb045c1"
+    }
+  ]
 }
