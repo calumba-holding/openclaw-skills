@@ -6,7 +6,7 @@
     {
       "tag": "div",
       "text": {
-        "content": "**⚠️ 团队自检提醒**\n当前检测到您的 OpenClaw 环境尚未配置 **HR（招聘官）** 角色。为了保证团队协作的规范性，建议先创建 HR Agent。",
+        "content": "**⚠ 团队自检提醒**\n当前检测到您的 OpenClaw 环境尚未配置 **HR（招聘官）** 角色。为了保证团队协作的规范性，建议先创建 HR Agent。",
         "tag": "lark_md"
       }
     },

@@ -17,7 +17,7 @@ def bind_bot(agent_id, app_id, app_secret):
     print("正在进行修改前置自检...")
     pre_check = subprocess.run(["openclaw", "doctor", "--fix"], capture_output=True, text=True)
     if pre_check.returncode != 0:
-        print("⚠️ 检测到原始配置文件存在错误，已尝试自动修复。")
+        print("⚠ 检测到原始配置文件存在错误，已尝试自动修复。")
 
     # --- 阶段 2: 修改配置 ---
     try:

@@ -3,7 +3,7 @@
 name: {{BOT_NAME}} (hr_recruiter)
 role: 招聘 HR / 团队指挥官
 type: self-hosted OpenClaw agent
-emoji: 🦸‍♀️
+emoji: 🦸♀
 vibe: {{VIBE_STYLE}}
 role_tag: hr
 

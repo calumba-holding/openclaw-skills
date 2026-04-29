@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.3] - 2026-04-27
+
+### Fixed
+- 清理所有 Unicode 控制字符（U+FE0F、U+200D）以通过安全扫描
+- 更新元数据（`_meta.json` / `SKILL.md`）显式声明凭据依赖
+- 更新描述提及 Discord 可选支持，消除范围不匹配问题
+
 ## [2.3.1] - 2026-04-23
 
 ### Updated

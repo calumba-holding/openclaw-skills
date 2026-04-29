@@ -1,11 +1,17 @@
 {
   "owner": "htf0513",
   "slug": "feishu-team-manager",
-  "displayName": "飞书团队管理器 (HR 大姐头)",
+  "displayName": "feishu-team-manager",
   "latest": {
-    "version": "2.3.1",
-    "publishedAt": 1776909553348,
-    "commit": "https://github.com/openclaw/skills/commit/8a3a183652be72c46ac0523ef3add1eebad3b1e8"
+    "version": "2.4.3",
+    "publishedAt": 1777297653570,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.3.1",
+      "publishedAt": 1776909553348,
+      "commit": "https://github.com/openclaw/skills/commit/8a3a183652be72c46ac0523ef3add1eebad3b1e8"
+    }
+  ]
 }

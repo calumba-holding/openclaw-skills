@@ -16,7 +16,7 @@ if [ -z "$TOKEN" ]; then
     exit 1
 fi
 
-echo "🚀 开始发布飞书团队管理器 v2.3.0..."
+echo "🚀 开始发布飞书团队管理器 v2.4.0..."
 echo ""
 
 # 1. 登录
@@ -32,8 +32,8 @@ echo "步骤 3/3: 发布技能..."
 clawhub publish . \
   --slug "feishu-team-manager" \
   --name "飞书团队管理器 (HR 大姐头)" \
-  --version "2.3.0" \
-  --changelog "v2.3: 自动化部署、独立工作空间、精准路由绑定" \
+  --version "2.4.0" \
+  --changelog "v2.4: 安全增强: 用户确认提示、依赖检查、配置备份、SKILL.md 清理优化" \
   --description "自动化招聘新 Agent，配置独立飞书机器人并重构多账号路由" \
   --tags "feishu,lark,hr,recruitment,agent-management,team"
 
