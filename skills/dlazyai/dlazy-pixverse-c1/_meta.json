@@ -3,11 +3,16 @@
   "slug": "dlazy-pixverse-c1",
   "displayName": "Dlazy Pixverse C1",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1777001421524,
-    "commit": "https://github.com/openclaw/skills/commit/b5178a08be5d9293b3e8c8916d9340d23b6555a0"
+    "version": "1.0.5",
+    "publishedAt": 1777430102962,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1777001421524,
+      "commit": "https://github.com/openclaw/skills/commit/b5178a08be5d9293b3e8c8916d9340d23b6555a0"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1776835451805,
