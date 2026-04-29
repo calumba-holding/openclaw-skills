@@ -1,0 +1,11 @@
+{
+  "owner": "zack-dev-cm",
+  "slug": "telegram-miniapp-security-auditor",
+  "displayName": "Telegram Mini App Security Auditor",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777139219958,
+    "commit": null
+  },
+  "history": []
+}
