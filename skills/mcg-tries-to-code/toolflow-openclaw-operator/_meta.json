@@ -1,0 +1,11 @@
+{
+  "owner": "mcg-tries-to-code",
+  "slug": "toolflow-openclaw-operator",
+  "displayName": "ToolFlow OpenClaw Operator",
+  "latest": {
+    "version": "0.3.0",
+    "publishedAt": 1776974042408,
+    "commit": null
+  },
+  "history": []
+}
