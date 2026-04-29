@@ -1,6 +1,6 @@
 {
   "name": "dingtalk-doc",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "钉钉文档管理技能 - 支持文档增删改查和白名单权限控制",
   "main": "scripts/index.js",
   "scripts": {

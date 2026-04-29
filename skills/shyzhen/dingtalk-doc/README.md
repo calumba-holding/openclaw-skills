@@ -1,5 +1,9 @@
 # 钉钉文档管理技能 (dingtalk-doc)
 
+> [https://clawhub.ai/shyzhen/dingtalk-doc](https://clawhub.ai/shyzhen/dingtalk-doc)
+> 
+> 是 [dingtalk-doc-enterprise](https://clawhub.ai/shyzhen/dingtalk-doc-enterprise) 的升级版(支持写入范围控制)
+
 通过钉钉开放平台 API 读取和管理钉钉文档、钉钉知识库中的文档。本文件面向人类读者，重点说明配置、上手方式和排障思路；执行规则与触发策略见 `SKILL.md`。
 
 ## 能力概览
@@ -42,52 +46,10 @@ DINGTALK_CLIENTSECRET=your_secret
 - `DINGTALK_DEBUG=true`：可选，仅输出请求方法、接口路径、状态码、requestId 等调试信息，不再打印文档正文和请求体
 - `operatorId` 不需要手工配置，脚本会优先从 `--senderId` 或 `OPENCLAW_SENDER_ID` / `DINGTALK_SENDER_ID` 解析当前钉钉用户
 
-### 1.1 运行路径说明
-
-推荐在 skill 目录下直接运行：
-
-```bash
-node scripts/index.js list-workspaces
-```
-
-如果需要使用绝对路径：
-
-Linux / macOS：
-
-```bash
-node ~/.openclaw/skills/dingtalk-doc/scripts/index.js list-workspaces
-```
-
-Windows PowerShell：
-
-```powershell
-node $env:USERPROFILE\.openclaw\skills\dingtalk-doc\scripts\index.js list-workspaces
-```
-
-注意：
-
-- Linux / macOS 中 `~` 会展开到用户主目录
-- Windows PowerShell 中 `~` 不适合这里，建议使用 `$env:USERPROFILE` 或完整绝对路径
-
 ### 2. 确认 workspaceId
 
-最直接的方式是运行：
-
-```bash
-node scripts/index.js list-workspaces
-```
-
-如果手里只有钉钉文档链接，也可以先拿 `nodeId` 再查详情。常见链接形态如下：
-
-```text
-https://alidocs.dingtalk.com/i/nodes/{nodeId}?utm_scene=team_space
-```
-
-然后运行：
-
-```bash
-node scripts/index.js get-doc --nodeId=vy20BglGWOq9ZLj3F0M9ajK0JA7depqY
-```
+- 白名单配置：只支持 【钉钉文档 -> 知识库】下新建的根目录，也就是说可写范围必须在【知识库】中。
+- 直接发一篇文档给你的钉钉机器人让他随便写入一段话，就会触发白名单检查，机器人会主动告知你当前文档的workspaceId，以及如何配置。
 
 ### 3. 配置白名单
 
@@ -103,8 +65,8 @@ node scripts/index.js get-doc --nodeId=vy20BglGWOq9ZLj3F0M9ajK0JA7depqY
 {
   "workspaces": [
     {
-      "workspaceId": "OQ0xySj6ng7lX58B",
-      "workspaceName": "主知识库",
+      "workspaceId": "eLvJDSRX3l4moO87",
+      "workspaceName": "AI可写知识库一级目录",
       "allowRootWrite": false,
       "whitelist": ["/"]
     }
@@ -114,7 +76,7 @@ node scripts/index.js get-doc --nodeId=vy20BglGWOq9ZLj3F0M9ajK0JA7depqY
 
 字段说明：
 
-- `workspaceId`：知识库 ID，必填
+- `workspaceId`：知识库 ID，必填 （只支持【钉钉文档 -> 知识库】下的目录）
 - `workspaceName`：可选，便于识别
 - `allowRootWrite`：保留字段；当前写入校验主要使用 `whitelist`
 - `whitelist`：允许写入的节点名（文档名）列表
