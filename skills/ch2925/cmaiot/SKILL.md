@@ -1,6 +1,6 @@
 ---
 name: cmaiot
-description: "查询并控制cmaiot平台上的产品和设备，并可获取视频设备的播放地址。cmaiot平台的正式名称是中国移动AIoT平台。连接需要的产品API Key和产品ID由cmaiot工具保存。目前只支持使用物模型的设备。"
+description: "查询并控制cmaiot平台上的产品和设备，并可获取视频设备的播放地址。cmaiot平台的正式名称是中国移动AIoT平台(iot.10086.cn)。连接需要的产品API Key和产品ID由cmaiot工具保存。目前只支持使用物模型的设备。"
 metadata:
   {
     "openclaw":
@@ -36,8 +36,12 @@ scripts/cmaiot.js model productId
 # 查询设备列表
 scripts/cmaiot.js ls productId
 
-# 读取设备属性
+# 读取设备缓存的最新属性
 scripts/cmaiot.js ls productId/deviceName
+
+# 读取设备实时属性
+# propertyId 需要通过查询物模型获取
+scripts/cmaiot.js ls productId/deviceName/propertyId
 
 # 查询设备详情
 # 可以查询视频设备的Sn
@@ -67,12 +71,12 @@ scripts/cmaiot.js disable productId/deviceName/imeiValue
 
 ### Exception
 
-设置属性和调用服务是同步接口，需要设备在线。但启用/停用设备不需要设备在线。
+读取实时属性、设置属性和调用服务是同步接口，需要设备在线。但启用/停用设备不需要设备在线。
 对离线或不存在的设备，应该跳过操作。设备控制超时，则认为操作失败。
 
 ### Output Format
 
-涉及OneNET的回答要严格按照以下格式输出
+涉及cmaiot的回答要严格按照以下格式输出
 
 ```
 中国移动AIoT平台

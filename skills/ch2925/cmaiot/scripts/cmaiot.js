@@ -28,8 +28,8 @@ function addProduct(productId, accessKey) {
         return false;
     }
 
-    const existingProduct = config.products.find(p => p.productId === productId);
-    if (existingProduct) {
+    const exist = config.products.find(p => p.productId === productId);
+    if (exist) {
         return false;
     }
 
@@ -94,7 +94,8 @@ function showHelp() {
     // log(`cmaiot algo productId/deviceName/deviceSn              获取视频设备的云端AI能力列表`);
     log(`cmaiot ls                                              列出已添加的产品`);
     log(`cmaiot ls productId                                    列出产品下的设备`);
-    log(`cmaiot ls productId/deviceName                         读取设备属性`);
+    log(`cmaiot ls productId/deviceName                         读取设备缓存的最新属性`);
+    log(`cmaiot ls productId/deviceName/propertyId              读取设备实时属性`);
     log(`cmaiot create productId/deviceName                     在产品下创建设备`);
     log(`cmaiot call productId/deviceName/serviceId jsonString  调用设备服务`);
     log(`cmaiot set productId/deviceName jsonString             设置设备属性`);
@@ -115,10 +116,10 @@ async function main() {
 
     config = readConfig();
 
-    let productId, accessKey, deviceName, serviceId, res, token, imeiValue, deviceSn;
+    let productId, accessKey, deviceName, identifier, res, token;
 
     if (target && cmd !== 'add') {
-        [productId, deviceName, serviceId] = target.split('/');
+        [productId, deviceName, identifier] = target.split('/');
         accessKey = getAccessKey(productId);
 
         res = `products/${productId}`;
@@ -148,28 +149,29 @@ async function main() {
         }
         break;
     case 'live':
-        deviceSn = serviceId;
         log('tips: 获取直播地址成功后，可以使用VLC播放器，也可以使用ffmpeg截图')
         log('ffmpeg截图命令: ffmpeg -i ${data.url} -ss 00:00:01 -vframes 1 ${deviceName}.jpg')
-        await http_post(`/video/device/live/url?pid=${productId}`, token, {deviceSn: deviceSn,urlType: 2,dataType: 1});
+        await http_post(`/video/device/live/url?pid=${productId}`, token, {deviceSn: identifier,urlType: 2,dataType: 1});
         break;
     case 'ability':
-        deviceSn = serviceId;
-        await http_post(`/video/device/ai/ability`, token, {deviceSn: deviceSn});
+        await http_post(`/video/device/ai/ability`, token, {deviceSn: identifier});
         break;
     case 'algo':
-        deviceSn = serviceId;
-        await http_post(`/video/aitask/algo-list-query`, token, {deviceSn: deviceSn});
+        await http_post(`/video/aitask/algo-list-query`, token, {deviceSn: identifier});
         break;
     case 'service':
-        deviceSn = serviceId;
-        await http_post(`/video/device/service`, token, {deviceSn: deviceSn});
+        await http_post(`/video/device/service`, token, {deviceSn: identifier});
         break;
     case 'ls':
         if (target) {
             if (deviceName) {
-                log("tips: 如果没有value字段，表示设备没有上传过数据")
-                await http_get(`/thingmodel/query-device-property?product_id=${productId}&device_name=${deviceName}`, token);
+                if(identifier) {
+                    await http_post(`/thingmodel/query-device-property-detail`, token, {product_id: productId,device_name: deviceName,params: [identifier]});
+                }
+                else {
+                    log("tips: 如果没有value字段，表示设备没有上传过数据")
+                    await http_get(`/thingmodel/query-device-property?product_id=${productId}&device_name=${deviceName}`, token);
+                }
             } else {
                 log('tips: 最多列出100个设备')
                 log('status数值含义: 0 离线 1 在线 2 未激活')
@@ -207,11 +209,8 @@ async function main() {
     case 'enable':
         enableValue = true;
     case 'disable':
-        if (serviceId) {
-            imeiValue = serviceId;
-        }
-        if (imeiValue) {
-            await http_post(`/device/enable`, token, {imei: imeiValue,enable: enableValue});
+        if (identifier) {
+            await http_post(`/device/enable`, token, {imei: identifier,enable: enableValue});
         } else {
             await http_post(`/device/enable`, token, {product_id: productId,device_name: deviceName,enable: enableValue});
         }
