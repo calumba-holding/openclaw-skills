@@ -3,9 +3,15 @@
   "slug": "huo15-mind-map",
   "displayName": "Huo15 Mind Map",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1776924188843,
-    "commit": "https://github.com/openclaw/skills/commit/6d320fee7896e7bad57d74db7dac2649d4388930"
+    "version": "1.1.1",
+    "publishedAt": 1777004120839,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1776924188843,
+      "commit": "https://github.com/openclaw/skills/commit/6d320fee7896e7bad57d74db7dac2649d4388930"
+    }
+  ]
 }
