@@ -31,28 +31,34 @@ URL/HTML原型分析器 - bie-zheng-luan-prototype技能
 用法: $0 [选项] <URL|本地文件路径>
 
 选项:
-  -h, --help          显示此帮助信息
-  -o, --output FILE   指定输出文件（默认：分析结果.md）
-  -f, --format FORMAT 输出格式：markdown、json、html（默认：markdown）
-  -v, --verbose       详细输出模式
-  --no-cache          禁用缓存，强制重新获取
+  -h, --help              显示此帮助信息
+  -o, --output FILE       指定输出文件（默认：分析结果.md）
+  -f, --format FORMAT     输出格式：markdown、json、html（默认：markdown）
+  -v, --verbose           详细输出模式
+  --no-cache              禁用缓存，强制重新获取
+  --allow-internal        允许分析内网URL（需用户确认SSRF风险）
 
 输入类型自动识别:
-  http(s)://...   → URL原型分析（从网络下载）
-  /path/to/file   → 本地HTML文件分析（直接读取）
+  http(s)://...           → URL原型分析（从网络下载）
+  /path/to/file           → 本地HTML文件分析（直接读取）
+
+安全提示:
+  - 内网URL默认被阻止，需使用 --allow-internal 确认
+  - URL和路径参数经过严格验证，阻止命令注入
+  - 请勿分析不应访问的内部系统
 
 示例:
   $0 https://www.figma.com/file/example/prototype
   $0 -o my-analysis.md https://app.mockplus.com/project/123
   $0 --format json /path/to/prototype.html
-  $0 --format json ./local-file.html
+  $0 --allow-internal http://internal.company.com/prototype
 EOF
 }
 
-# 检查依赖
+# 检查依赖（不自动安装，仅检查和提示）
 check_dependencies() {
     log_info "检查系统依赖..."
-    
+
     # 检查curl或wget
     if command -v curl &> /dev/null; then
         DOWNLOADER="curl -sL"
@@ -62,9 +68,10 @@ check_dependencies() {
         log_info "找到wget"
     else
         log_error "需要curl或wget来下载网页内容"
+        log_error "请手动安装: apt install curl 或 apt install wget"
         exit 1
     fi
-    
+
     # 检查Python
     if command -v python3 &> /dev/null; then
         PYTHON="python3"
@@ -74,35 +81,92 @@ check_dependencies() {
         log_info "找到Python"
     else
         log_error "需要Python来解析HTML"
+        log_error "请手动安装Python3"
         exit 1
     fi
-    
-    # 检查Python模块
+
+    # 检查Python模块（不自动安装）
     log_info "检查Python依赖..."
     if ! $PYTHON -c "import bs4" 2>/dev/null; then
-        log_warn "未找到BeautifulSoup4，尝试安装..."
-        if $PYTHON -m pip install beautifulsoup4 lxml html5lib; then
-            log_info "BeautifulSoup4安装成功"
-        else
-            log_error "无法安装BeautifulSoup4，请手动安装：pip install beautifulsoup4 lxml html5lib"
-            exit 1
-        fi
+        log_error "缺少BeautifulSoup4模块"
+        log_error "请手动安装: pip install beautifulsoup4 lxml html5lib"
+        log_error "建议在虚拟环境中安装依赖"
+        exit 1
     fi
+
+    log_info "依赖检查通过"
 }
 
-# 下载网页内容
+# 验证URL安全性
+validate_url() {
+    local url="$1"
+    local force_internal="$2"  # 是否强制允许内网URL
+
+    # 检查URL格式：只允许http和https协议
+    if [[ ! "$url" =~ ^https?:// ]]; then
+        log_error "无效URL: 仅允许http和https协议"
+        return 1
+    fi
+
+    # 检查URL中是否包含危险字符（命令注入防护）
+    # 阻止: ; | & $ ` ' " ( ) < > \n \r 等shell特殊字符
+    if [[ "$url" =~ [;\|&\$\`\'\"()<>] ]] || [[ "$url" =~ [\n\r] ]]; then
+        log_error "URL包含潜在危险字符，拒绝执行"
+        return 1
+    fi
+
+    # 检查URL长度（防止过长URL攻击）
+    if [[ ${#url} -gt 2048 ]]; then
+        log_error "URL过长（超过2048字符），拒绝执行"
+        return 1
+    fi
+
+    # 获取域名并验证
+    local domain=$(echo "$url" | sed -n 's|^https?://||p' | cut -d'/' -f1 | cut -d':' -f1)
+
+    # 检测私有网络地址/内网URL
+    if [[ "$domain" =~ ^(localhost|127\.|0\.0\.0\.0|::1|10\.|172\.1[6-9]|172\.2[0-9]|172\.3[0-1]|192\.168|169\.254|\.local|\.internal|\.intranet) ]]; then
+        log_warn "=============================================="
+        log_warn "警告: URL指向私有网络地址或内网服务器"
+        log_warn "域名: $domain"
+        log_warn "=============================================="
+        log_warn "这可能存在SSRF风险，请确认:"
+        log_warn "  1. 此URL是您预期分析的原型链接"
+        log_warn "  2. 您有权访问此内部资源"
+        log_warn "  3. 此资源不包含敏感数据"
+        log_warn ""
+
+        if [[ "$force_internal" != "true" ]]; then
+            log_error "内网URL需要用户确认才能继续"
+            log_error "请使用 --allow-internal 参数确认允许内网访问"
+            log_error "示例: $0 --allow-internal \"$url\""
+            return 1
+        fi
+
+        log_warn "用户已确认允许内网访问 (--allow-internal)"
+        log_warn "继续分析..."
+    fi
+
+    log_info "URL验证通过: $url"
+    return 0
+}
+
+# 下载网页内容（URL已在main中验证）
 download_page() {
     local url="$1"
     local output_file="$2"
-    
+
     log_info "下载网页内容: $url"
-    
+
     if [ "$NO_CACHE" = true ] || [ ! -f "$output_file" ]; then
-        if $DOWNLOADER "$url" > "$output_file"; then
+        # 使用--选项防止URL被解析为选项
+        # URL已在validate_url中验证安全性
+        if $DOWNLOADER -- "$url" > "$output_file" 2>/dev/null; then
             log_info "网页内容已保存到: $output_file"
             return 0
         else
             log_error "下载网页失败"
+            log_error "请检查URL是否可访问，或是否需要认证"
             return 1
         fi
     else
@@ -220,6 +284,31 @@ generate_spec() {
     fi
 }
 
+# 验证本地文件路径安全性
+validate_local_file() {
+    local filepath="$1"
+
+    # 检查路径是否包含危险字符（命令注入防护）
+    if [[ "$filepath" =~ [;\|&\$\`\'\"()<>] ]] || [[ "$filepath" =~ [\n\r] ]]; then
+        log_error "文件路径包含潜在危险字符，拒绝执行"
+        return 1
+    fi
+
+    # 检查路径长度
+    if [[ ${#filepath} -gt 4096 ]]; then
+        log_error "文件路径过长，拒绝执行"
+        return 1
+    fi
+
+    # 检查文件是否存在
+    if [ ! -f "$filepath" ]; then
+        log_error "文件不存在: $filepath"
+        return 1
+    fi
+
+    return 0
+}
+
 # 主函数
 main() {
     # 默认参数
@@ -227,7 +316,8 @@ main() {
     FORMAT="markdown"
     VERBOSE=false
     NO_CACHE=false
-    
+    ALLOW_INTERNAL=false
+
     # 解析参数
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -251,6 +341,11 @@ main() {
                 NO_CACHE=true
                 shift
                 ;;
+            --allow-internal)
+                ALLOW_INTERNAL=true
+                log_warn "用户已启用内网URL访问 (--allow-internal)"
+                shift
+                ;;
             -*)
                 log_error "未知选项: $1"
                 show_help
@@ -262,21 +357,36 @@ main() {
                 ;;
         esac
     done
-    
+
+    # 验证输出文件路径安全性
+    if [[ "$OUTPUT_FILE" =~ [;\|&\$\`\'\"()<>] ]] || [[ "$OUTPUT_FILE" =~ [\n\r] ]]; then
+        log_error "输出文件路径包含危险字符，拒绝执行"
+        exit 1
+    fi
+
     # 检查URL参数
     if [ -z "$URL" ]; then
         log_error "请提供要分析的URL"
         show_help
         exit 1
     fi
-    
+
     # 判断输入类型：URL还是本地文件
     if [[ "$URL" =~ ^https?:// ]]; then
         INPUT_TYPE="url"
         log_info "输入类型: URL原型"
+        # URL验证将在download_page中执行
+        # 先验证URL安全性
+        if ! validate_url "$URL" "$ALLOW_INTERNAL"; then
+            exit 1
+        fi
     elif [ -f "$URL" ]; then
         INPUT_TYPE="local"
         log_info "输入类型: 本地HTML文件"
+        # 验证本地文件路径
+        if ! validate_local_file "$URL"; then
+            exit 1
+        fi
     else
         log_error "输入无效：既不是有效的URL，也不是存在的文件路径"
         log_error "URL需以http://或https://开头"
@@ -314,6 +424,8 @@ main() {
     else
         trap "rm -f $ANALYSIS_JSON_FILE" EXIT
     fi
+    local script_dir=$(dirname "$0")
+    local extractor_script="$script_dir/html-extractor.py"
     $PYTHON "$extractor_script" "$HTML_FILE" json > "$ANALYSIS_JSON_FILE" 2>/dev/null
     
     # 生成技术文档

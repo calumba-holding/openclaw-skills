@@ -3,9 +3,15 @@
   "slug": "bie-zheng-luan-prototype",
   "displayName": "别整乱七八糟的原型",
   "latest": {
-    "version": "2.1.0",
-    "publishedAt": 1776922823182,
-    "commit": "https://github.com/openclaw/skills/commit/8e7e342b5e6e2b8fad0ea65c6c9c6123542712e9"
+    "version": "2.3.2",
+    "publishedAt": 1777445353511,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "2.1.0",
+      "publishedAt": 1776922823182,
+      "commit": "https://github.com/openclaw/skills/commit/8e7e342b5e6e2b8fad0ea65c6c9c6123542712e9"
+    }
+  ]
 }

@@ -1,5 +1,7 @@
 # bie-zheng-luan-prototype (别整乱原型分析技能)
 
+> **作者**: 杰哥 | **主页**: https://clawhub.ai/skills/bie-zheng-luan-prototype | **源码**: https://github.com/jermyn-zmj/bie-zheng-luan-prototype
+
 将产品原型转换为详细技术规范的技能，支持4种输入类型：URL原型、本地HTML文件、图片原型、XMind文件。
 
 ## 🎯 功能特性
@@ -97,13 +99,33 @@ cp -r bie-zheng-luan-prototype ~/.openclaw/workspace/skills/
 
 ## 🔧 内置工具
 
-### 脚本文件
-- `scripts/url-prototype-analyzer.sh` - URL原型解析主脚本
-- `scripts/html-extractor.py` - HTML内容提取工具
-- `scripts/spec-generator.py` - 技术文档生成工具
-- `scripts/image-prototype-analyzer.py` - 图片原型分析工具
-- `scripts/xmind-analyzer.py` - XMind文件分析工具
-- `scripts/run_analysis.sh` - 综合分析入口脚本
+### 脚本文件及功能说明
+
+| 脚本文件 | 功能 | 网络访问 | 文件操作 | 安全措施 |
+|---------|------|---------|---------|---------|
+| `url-prototype-analyzer.sh` | URL原型解析主脚本 | curl/wget下载公开URL | 读取HTML、写入输出文件 | URL验证、SSRF检测、命令注入防护 |
+| `run_analysis.sh` | 本地HTML综合分析入口 | 无 | 读取本地HTML、写入输出文件 | 路径验证、敏感路径警告 |
+| `html-extractor.py` | HTML内容深度提取 | 无 | 读取HTML文件 | 纯Python解析，无外部调用 |
+| `spec-generator.py` | 技术文档生成 | 无 | 写入输出文件 | 纯Python生成 |
+| `image-prototype-analyzer.py` | 图片原型分析 | 仅在设置ANTHROPIC_API_KEY时调用Claude API | 读取图片文件 | 默认本地分析，外部API需手动启用 |
+| `xmind-analyzer.py` | XMind文件分析 | 无 | 读取.xmind文件（zip解压） | 纯Python解析 |
+
+**脚本详细行为说明：**
+
+1. **url-prototype-analyzer.sh**
+   - 仅下载用户提供的原型URL（http/https协议）
+   - 内网URL默认阻止，需 `--allow-internal` 参数确认
+   - 不执行任何 pip install 命令
+   - 所有输入参数经过严格验证
+
+2. **run_analysis.sh**
+   - 仅处理本地文件，无网络访问
+   - 路径验证防止命令注入
+   - 敏感路径（.ssh/.env/.git等）会发出警告
+
+3. **image-prototype-analyzer.py**
+   - 默认使用本地分析（颜色提取、布局推断），无数据传输
+   - 设置 `ANTHROPIC_API_KEY` 后可启用视觉增强分析（图片会发送到Anthropic服务器）
 
 ### 参考模板
 - `references/template-spec.md` - 技术规范文档模板
@@ -171,30 +193,102 @@ bie-zheng-luan-prototype/
 - 后端：商品查询接口、购物车接口、下单接口
 - 数据库：products表、categories表、orders表
 
+## 🛡️ 安全措施
+
+本技能实施了严格的安全防护：
+
+### 内网URL控制
+- **默认阻止**：私有网络地址自动拒绝
+- **用户确认**：需 `--allow-internal` 参数才能访问内网
+- 检测范围：localhost、127.x、10.x、172.16-31.x、192.168.x
+
+### 外部API控制
+- **默认禁用**：未设置 `ANTHROPIC_API_KEY` 不调用外部API
+- **主动触发**：仅在用户设置环境变量后启用
+- 图片分析默认使用本地基础功能
+
+### 无自动安装
+- Shell脚本**不执行** `pip install`
+- 仅检查依赖，提示用户手动安装
+- 避免运行时写入操作
+
+### 命令注入防护
+- URL验证：只允许http/https协议
+- 阻止Shell特殊字符
+- 长度限制：URL最大2048字符
+
+---
+
 ## ⚠️ 安全注意事项
 
-> 🔴 **使用前必读**：本技能涉及网络访问和可选的外部API调用，请理解以下风险：
+> 🔴 **使用前必读**：本技能涉及网络访问和可选外部API调用，请理解以下风险：
 
-### 网络访问与SSRF风险
-- 支持**内网URL分析**，可访问内部原型链接
-- ⚠️ 请勿提供不应被访问的内部系统URL，可能存在SSRF风险
-- 建议：仅提供明确需要分析的原型链接
+### 内网URL访问控制
+- 内网URL**默认被阻止**
+- 需使用 `--allow-internal` 参数确认后才能访问
+- 请勿分析不应访问的内部系统
 
 ### 外部API数据传输
-- 图片"视觉增强分析"需要 `ANTHROPIC_API_KEY`
-- ⚠️ 启用此功能会将图片数据发送到Anthropic服务器
-- 建议：敏感设计稿仅使用本地基础分析（不设置API密钥）
+- 视觉增强分析需设置 `ANTHROPIC_API_KEY`
+- **默认禁用**：未设置环境变量时不调用外部API
+- 启用后图片会发送到Anthropic服务器
 
 ### 本地文件访问
 - 技能会读取您指定的本地文件路径
-- ⚠️ 确保路径指向预期文件，避免误读敏感内容
+- 请确保路径指向预期文件
 
 ### 首次使用建议
+- **手动安装依赖**：`pip install beautifulsoup4 pillow lxml`（脚本不会自动安装）
 - 检查 `scripts/` 目录下的脚本内容
-- 在虚拟环境中安装依赖：`python -m venv .venv && source .venv/bin/activate`
 - 在隔离环境中首次测试
 
 ## 🔄 版本历史
+
+### v2.9.2 (2026-04-29)
+- ✅ 增强文档透明度：补充脚本功能详细说明表格（网络访问、文件操作、安全措施）
+- ✅ 补充作者信息和项目链接在README顶部
+- ✅ 响应平台安全审查建议，提高脚本行为透明度
+
+### v2.9.1 (2026-04-29)
+- ✅ 修复spec-generator.py的Python 3.7兼容性问题（`str | None`改为`Optional[str]`）
+
+### v2.9.0 (2026-04-29)
+- ✅ **完全通用化重构**：移除所有硬编码的业务专有名词
+- ✅ 动态生成路由、API接口、数据库表，不依赖特定业务词汇映射
+- ✅ 可适配任何业务领域原型（仓储、ERP、WMS、CMS、CRM等）
+
+### v2.8.0 (2026-04-29)
+- ✅ **增强技术实现推断**：智能路由解析（处理javascript:void(0)等特殊值）
+- ✅ 增强按钮位置识别（多层级父元素检查）
+- ✅ 业务API接口推断、完整数据库表设计、实体关系图、状态枚举定义
+
+### v2.7.0 (2026-04-29)
+- ✅ **模块化重构**：将 html-extractor.py (2000+行) 拆分为 html_extractor 包（7个模块）
+- ✅ 提高代码可维护性和可读性
+
+### v2.6.0 (2026-04-24)
+- ✅ 补充弹窗/抽屉面板解析：弹窗内表单字段、锚点导航、统计信息
+- ✅ 补充状态筛选Tab、进度条组件解析
+
+### v2.5.0 (2026-04-24)
+- ✅ 补充缺失解析模块：消息通知卡片、采购员进度卡片、页面标签栏
+- ✅ 优化表格层级识别和数据类型推断
+
+### v2.4.0 (2026-04-24)
+- ✅ 重写HTML解析器，深度提取菜单结构、筛选条件、表格列、操作按钮
+- ✅ 支持多页面视图识别和独立分析
+
+### v2.3.0 (2026-04-23)
+- ✅ **内网URL默认阻止**，需 `--allow-internal` 参数确认
+- ✅ **禁止自动pip安装**，改为提示用户手动安装
+- ✅ **外部API默认禁用**，仅在设置 `ANTHROPIC_API_KEY` 后启用
+- ✅ 在skill.json中完善安全措施声明
+
+### v2.2.0 (2026-04-23)
+- ✅ 实施命令注入防护（URL/路径输入验证）
+- ✅ 添加SSRF检测警告（私有网络地址检测）
+- ✅ 添加路径遍历防护（敏感路径检测）
+- ✅ 在skill.json中声明安全缓解措施
 
 ### v2.1.0 (2026-04-23)
 - ✅ 增加安全警告声明（SSRF、数据泄露风险）
