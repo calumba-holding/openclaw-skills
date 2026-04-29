@@ -3,9 +3,15 @@
   "slug": "tj-maxx",
   "displayName": "Tj Maxx",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776891910757,
-    "commit": "https://github.com/openclaw/skills/commit/48193a15edebcbf19ba9dce782e3ad106fcf0d52"
+    "version": "1.0.1",
+    "publishedAt": 1776936389256,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776891910757,
+      "commit": "https://github.com/openclaw/skills/commit/48193a15edebcbf19ba9dce782e3ad106fcf0d52"
+    }
+  ]
 }
