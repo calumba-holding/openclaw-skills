@@ -1,0 +1,11 @@
+{
+  "owner": "kaizen-orca",
+  "slug": "lp-analytics",
+  "displayName": "orca-lp",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1776964962640,
+    "commit": null
+  },
+  "history": []
+}
