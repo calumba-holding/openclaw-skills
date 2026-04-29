@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "zipline-daily-backtest",
-  "displayName": "zipline-daily-backtest",
+  "displayName": "Zipline Daily Backtest",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776921129777,
-    "commit": "https://github.com/openclaw/skills/commit/53ec115281f03612d8ad5324f98d9fc23615fd7e"
+    "version": "0.3.3",
+    "publishedAt": 1776954678520,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776921129777,
+      "commit": "https://github.com/openclaw/skills/commit/53ec115281f03612d8ad5324f98d9fc23615fd7e"
+    }
+  ]
 }
