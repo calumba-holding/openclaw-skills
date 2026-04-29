@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "vectorbt-vectorized",
-  "displayName": "vectorbt-vectorized",
+  "displayName": "Vectorbt Vectorized",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776917339211,
-    "commit": "https://github.com/openclaw/skills/commit/87f7c8b8dba1a9a50173c5ae225ea113a99eac7d"
+    "version": "0.3.3",
+    "publishedAt": 1776954646731,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776917339211,
+      "commit": "https://github.com/openclaw/skills/commit/87f7c8b8dba1a9a50173c5ae225ea113a99eac7d"
+    }
+  ]
 }
