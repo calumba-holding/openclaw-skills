@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "macro-economic-model",
-  "displayName": "macro-economic-model",
+  "displayName": "Macro Economic Model",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776899987403,
-    "commit": "https://github.com/openclaw/skills/commit/a55dfd8039bfbcc088c157e3c445718f475679c1"
+    "version": "0.3.3",
+    "publishedAt": 1776954489351,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776899987403,
+      "commit": "https://github.com/openclaw/skills/commit/a55dfd8039bfbcc088c157e3c445718f475679c1"
+    }
+  ]
 }
