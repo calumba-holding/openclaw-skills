@@ -1,11 +1,17 @@
 {
   "owner": "tangweigang-jpg",
   "slug": "beancount-plaintext-ledger",
-  "displayName": "beancount-plaintext-ledger",
+  "displayName": "Beancount Plaintext Ledger",
   "latest": {
-    "version": "0.3.0",
-    "publishedAt": 1776880622714,
-    "commit": "https://github.com/openclaw/skills/commit/3703f10c11e5291b790b4c71b7ff7bdb819b2db3"
+    "version": "0.3.3",
+    "publishedAt": 1776954233117,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "0.3.0",
+      "publishedAt": 1776880622714,
+      "commit": "https://github.com/openclaw/skills/commit/3703f10c11e5291b790b4c71b7ff7bdb819b2db3"
+    }
+  ]
 }
