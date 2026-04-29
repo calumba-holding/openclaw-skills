@@ -1,0 +1,11 @@
+{
+  "owner": "mzfshark",
+  "slug": "axodus-security-checks",
+  "displayName": "Code Security Checks",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777042437000,
+    "commit": null
+  },
+  "history": []
+}
