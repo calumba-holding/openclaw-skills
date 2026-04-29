@@ -1,0 +1,11 @@
+{
+  "owner": "snazar-faberlens",
+  "slug": "snyk-hardened",
+  "displayName": "Snyk Hardened",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1776952865183,
+    "commit": null
+  },
+  "history": []
+}
