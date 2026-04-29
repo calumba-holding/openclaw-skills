@@ -190,16 +190,27 @@ npx @google/design.md export --format tailwind DESIGN.md  # 导出 Tailwind 配�
    **preview.html** - 浅色/默认模式预览
    **preview-dark.html** - 深色模式预览（如适用）
 
+   **字体 CDN 替换规则（必须遵循）**
+
+   生成网页/预览文件时，若引用 Google Fonts，必须使用国内镜像自动替换：
+   - `fonts.googleapis.com` → `fonts.loli.net`
+   - `fonts.gstatic.com` → `gstatic.loli.net`
+
    ```html
-   <style>
-     :root {
-       --color-primary: #533afd;
-       --color-background: #ffffff;
-       --spacing-1: 4px;
-       --spacing-2: 8px;
-       --rounded-md: 8px;
-     }
-   </style>
+   <!-- 错误 -->
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+   <!-- 正确 -->
+   <link href="https://fonts.loli.net/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+   ```
+
+   ```css
+   :root {
+     --color-primary: #533afd;
+     --color-background: #ffffff;
+     --spacing-1: 4px;
+     --spacing-2: 8px;
+     --rounded-md: 8px;
+   }
    ```
 
 ### 章节顺序（必须遵循）
