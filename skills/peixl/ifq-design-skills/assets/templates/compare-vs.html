@@ -8,8 +8,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=1440"/>
-<title>{ A_NAME } vs { B_NAME } · ifq.ai field note</title>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/>
+<title>{ A_NAME } vs { B_NAME } · ifq.ai</title>
+<!-- Optional Google Fonts (non-blocking; system-font fallback if blocked). See references/font-loading.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/></noscript>
 <style>
   :root{--accent:#D4532B;--accent-deep:#A83518;--accent-soft:#FFB27A;--ink:#111;--ink-soft:#3A3532;--paper:#FAF7F2;--cream:#F1EBE0;--display:'Newsreader','Noto Serif SC',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,monospace}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -53,7 +57,7 @@
       <h1>{ A_NAME }<span class="vs">vs</span>{ B_NAME }</h1>
     </div>
     <div class="meta">
-      Reviewed · 2026 · 04<br/>
+      Reviewed · <span data-ifq-authored-date="year-month">__IFQ_YEAR_MONTH__</span><br/>
       Source: ifq.ai / { SOURCE / RESEARCH LOG }<br/>
       Scope: { SCOPE }
     </div>
@@ -109,12 +113,16 @@
   </div>
 
   <footer>
-    <div>ifq.ai / field research / 2026</div>
+    <div>ifq.ai / field research</div>
     <div class="sig">
       <svg viewBox="-16 -16 32 32"><path d="M0 -10 L2.2 -2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2 -2.2 Z" fill="#D4532B"/></svg>
-      ifq.ai / field note
+      <span data-ifq-authored-year>ifq.ai / __IFQ_YEAR__</span>
     </div>
   </footer>
 </main>
+<script src="../ifq-brand/ifq_authored_year.js"></script>
+<script>
+  window.IfqAuthoredYear && window.IfqAuthoredYear.apply(document);
+</script>
 </body>
 </html>

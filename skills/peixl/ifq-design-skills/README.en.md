@@ -1,4 +1,4 @@
-<sub>🌐 <a href="README.md">中文</a> · <b>English</b> · <code>ifq.ai / field note / 2026</code></sub>
+<sub>🌐 <a href="README.md">中文</a> · <b>English</b> · <code>ifq.ai / &lt;authored year&gt;</code></sub>
 
 <div align="center">
 
@@ -19,15 +19,17 @@
 
 <br><br>
 
-[![License](https://img.shields.io/badge/license-commercial%20%2B%20personal-D4532B?style=flat-square&labelColor=111111)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-D4532B?style=flat-square&labelColor=111111)](LICENSE.md)
 [![ifq.ai native](https://img.shields.io/badge/ifq.ai-native-111111?style=flat-square)](assets/ifq-brand/BRAND-DNA.md)
 [![ambient brand](https://img.shields.io/badge/ambient_brand-embedded-A83518?style=flat-square&labelColor=111111)](references/ifq-brand-spec.md)
 [![proof first](https://img.shields.io/badge/proof--first-on-111111?style=flat-square)](references/verification.md)
 [![modes](https://img.shields.io/badge/modes-12-D4532B?style=flat-square&labelColor=111111)](references/modes.md)
+[![templates](https://img.shields.io/badge/templates-12-A83518?style=flat-square&labelColor=111111)](assets/templates/GALLERY.html)
+[![anti-slop](https://img.shields.io/badge/anti--slop-preflight-D4532B?style=flat-square&labelColor=111111)](references/anti-ai-slop.md)
 
 <br>
 
-<sub>Thesis &nbsp;·&nbsp; Install &nbsp;·&nbsp; What it hears &nbsp;·&nbsp; Anatomy &nbsp;·&nbsp; Five marks &nbsp;·&nbsp; 12 modes &nbsp;·&nbsp; Six layers &nbsp;·&nbsp; Verification &nbsp;·&nbsp; License</sub>
+<sub>Thesis &nbsp;·&nbsp; Install &nbsp;·&nbsp; What it hears &nbsp;·&nbsp; Anatomy &nbsp;·&nbsp; Five marks &nbsp;·&nbsp; 12 modes &nbsp;·&nbsp; 12 templates &nbsp;·&nbsp; Six layers &nbsp;·&nbsp; Verification &nbsp;·&nbsp; License</sub>
 
 </div>
 
@@ -43,19 +45,73 @@ It is **a way of making things**. Treat a web page like an editorial spread. An 
 
 The ifq.ai signature lives inside that craft. First you see the content. **Only on the second look do you notice — this is ifq.ai's hand.**
 
+## Human + Agent Promise
+
+| Audience | What they get |
+|----------|---------------|
+| **Human user** | Speak in goals instead of full PRDs; the skill reports assumptions, gaps, output files, and verification evidence. |
+| **AI agent** | No blank-page guessing: classify the mode, read `modeRoutes`, fork a template, fill context, run anti-slop checks, verify. |
+| **Maintainer** | The ClawHub bundle stays zero-dependency, hook-free, and auditable; heavy MP4/GIF/PDF/PPTX automation stays in the full GitHub repo. |
+
+The operating idea is simple: **make AI higher leverage**. Humans judge direction and facts; agents run the craft loop and collect proof.
+
 ---
 
 ## Install
 
 ```bash
-npx skills add peixl/ifq-design-skills -g -y
+# Install from ClawHub (recommended)
+openclaw skills install ifq-design-skills
 ```
 
-> `peixl/ifq-design-skills` is the GitHub shorthand → <https://github.com/peixl/ifq-design-skills>
+> ClawHub is the recommended install channel. For local development, clone the full repo: <https://github.com/peixl/ifq-design-skills>. The ClawHub packaging repo is <https://github.com/peixl/ifq-design-clawhub>.
 
 Then just talk to the agent. The skill routes, picks templates, and verifies itself.
 
-**One-liners for every agent**:
+### What first run should produce
+
+Do not let the first run turn into setup. Say one concrete design goal, for example:
+
+```text
+Make a command center dashboard for our internal AI operations. Dense, calm, not a BI skin.
+```
+
+A good first run returns six pieces of evidence: the output HTML file path, the mode route, the template id, assumptions written into the work, the verification performed (`verify:lite` or browser preview), and caveats that affect use. It should not require account login, global export dependencies, or broad environment changes.
+
+### Why it can compete for ClawHub Top 10
+
+Skills that keep getting installed are rarely "do everything" bundles. They make one job obvious, produce a useful first result, and keep the trust boundary easy to inspect. IFQ Design Skills bakes that growth loop into the package:
+
+| Conversion signal | How this skill handles it |
+|---|---|
+| Clear job | HTML-first visual artifacts only; no production frontend, backend, or SEO scope creep |
+| First-run artifact | natural-language prompt → mode route → forked template → local HTML → evidence packet |
+| Agent discipline | `modeRoutes`, evals, `verify:lite`, and `validate` constrain the execution path |
+| Marketplace trust | zero dependencies, zero install hooks, no required credentials, no persistent background tasks, ClawHub-clean packing |
+| Human shareability | output feels like ifq.ai craft without taking over the user's brand |
+
+### 🦞 OpenClaw · preferred channel (one-line install)
+
+```bash
+# Install from ClawHub (recommended)
+openclaw skills install ifq-design-skills
+
+# Inspect capabilities and verify readiness
+openclaw skills info ifq-design-skills
+openclaw skills check ifq-design-skills
+```
+
+**Why OpenClaw is the fastest fit**: the frontmatter declares a full `metadata.openclaw` block — triggers, permissions, `tool_map`, and `quick_commands`. OpenClaw learns *when to invoke*, *which plugins it needs*, and *how to translate every neutral verb in `SKILL.md`* the moment it loads. Details and troubleshooting: [references/agent-compatibility.md](references/agent-compatibility.md#3--openclaw--clawhub).
+
+Minimum permissions OpenClaw will request:
+
+- `filesystem` — read + write inside the active workspace only
+- `shell` — run bundled Node scripts only (`npm run validate` / `npm run pack`); Playwright / Python export helpers are opt-in in the full GitHub repo
+- `browser` — outbound HTTPS for Google Fonts + image CDNs (read-only, **degrades gracefully**)
+
+> **🌐 CN / offline friendly**: every generated HTML follows the Tier B non-blocking protocol in [references/font-loading.md](references/font-loading.md). When Google Fonts is blocked (mainland China, corporate intranet, offline preview), pages render immediately on the bundled `Noto Serif SC / Songti SC / PingFang SC` system stack — no blank screens, no tofu blocks. Tier A (system-only) and Tier C (self-hosted woff2 subset) are documented for full-offline and pixel-perfect needs.
+
+**One-liners for every other agent**:
 
 ```bash
 # Hermes (Nous Research)
@@ -64,8 +120,21 @@ hermes skills install github:peixl/ifq-design-skills
 # Claude Code (personal)
 git clone https://github.com/peixl/ifq-design-skills ~/.claude/skills/ifq-design-skills
 
+# Codex CLI (OpenAI) — honors AGENTS.md at the repo root
+git clone https://github.com/peixl/ifq-design-skills ~/.codex/skills/ifq-design-skills
+
+# CodeBuddy (Tencent)
+git clone https://github.com/peixl/ifq-design-skills ~/.codebuddy/skills/ifq-design-skills
+
 # Share across every agent (recommended)
 git clone https://github.com/peixl/ifq-design-skills ~/.agents/skills/ifq-design-skills
+```
+
+### For maintainers — pack for ClawHub
+
+```bash
+npm run validate   # one-minute smoke test: templates · brand toolkit · ClawHub cleanliness
+npm run pack       # builds ../ifq-design-clawhub-YYYY-MM-DD.tar.gz (excludes .git/ and junk)
 ```
 
 ---
@@ -88,7 +157,7 @@ Real prompts. Left: what you say. Right: what the skill actually does.
 </td>
 <td>
 
-<sub>M-08 Keynote · editorial dark · Newsreader display · chapter breaks as rust ledger verticals · mono slide index <code>01 / 20</code> · closing colophon · exports HTML + PPTX + PDF in one pass</sub>
+<sub>M-08 Keynote · editorial dark · Newsreader display · chapter breaks as rust ledger verticals · mono slide index <code>01 / 20</code> · closing colophon · ClawHub delivers the HTML deck + export plan; the full repo produces PPTX/PDF</sub>
 
 </td>
 </tr>
@@ -114,7 +183,7 @@ Real prompts. Left: what you say. Right: what the skill actually does.
 </td>
 <td>
 
-<sub>M-10 Card · 85×55mm + 3mm bleed · front: one-line offer + spark dot · back: mono info bar · third-party piece — explicit wordmark off · IFQ kept only as layout rhythm · print-ready PDF with crop marks</sub>
+<sub>M-10 Card · 85×55mm + 3mm bleed · front: one-line offer + spark dot · back: mono info bar · third-party piece — explicit wordmark off · IFQ kept only as layout rhythm · SVG/HTML bleed source; full repo produces PDF</sub>
 
 </td>
 </tr>
@@ -127,7 +196,7 @@ Real prompts. Left: what you say. Right: what the skill actually does.
 </td>
 <td>
 
-<sub>M-01 Launch Film · three directions first (matter-of-fact / editorial / kinetic-type) · Stage+Sprite timeline · 60fps · key shot + mono spec overlay + 2s quiet-URL close · mp4 + gif + keyposter</sub>
+<sub>M-01 Launch Film · three directions first (matter-of-fact / editorial / kinetic-type) · Stage+Sprite timeline · key shot + mono spec overlay + 2s quiet-URL close · ClawHub delivers HTML motion source + keyposter; full repo produces MP4/GIF</sub>
 
 </td>
 </tr>
@@ -179,7 +248,7 @@ Real prompts. Left: what you say. Right: what the skill actually does.
 </td>
 <td>
 
-<sub>M-03 Whitepaper · A4 print-ready HTML · cover / abstract / TOC / chapters / references / colophon · each chapter opens with a mono number and half a page of air · footer <code>ifq.ai / field note / 2026</code> · print-ready PDF with bookmarks</sub>
+<sub>M-03 Whitepaper · A4 print-ready HTML · cover / abstract / TOC / chapters / references / colophon · each chapter opens with a mono number and half a page of air · footer <code>ifq.ai / &lt;authored year&gt;</code> · ClawHub delivers print-ready HTML; full repo produces PDF + bookmarks</sub>
 
 </td>
 </tr>
@@ -270,7 +339,7 @@ The Ambient Brand is five environmental markers. Every deliverable weaves in at 
 |------|------------|----------------|
 | **Signal Spark** | 8-point spark. Intelligence, lit | hero · motion cue · stamp center |
 | **Rust Ledger** | Terracotta verticals, dividers, numbering, axes | hero · slides · infographic · dashboard |
-| **Mono Field Note** | `ifq.ai / field note / 2026` in JetBrains Mono | footer · closing · corner |
+| **Mono Field Note** | `ifq.ai / <authored year>` in JetBrains Mono | footer · closing · corner |
 | **Quiet URL** | The domain, once, quietly | footer · meta · end card |
 | **Editorial Contrast** | Newsreader italic + JetBrains Mono + warm paper | global typographic frame |
 
@@ -296,14 +365,14 @@ Not decoration. Layout grammar.
 |---|------|-------------|----------|
 | M-01 | Launch Film | launch video · product film | 25–40s motion + keyposter + social kit |
 | M-02 | Portfolio | personal site · about | one-pager + 5 direction variants |
-| M-03 | Whitepaper | whitepaper · annual report · research PDF | print-ready HTML → PDF |
+| M-03 | Whitepaper | whitepaper · annual report · research PDF | A4 print-ready HTML; PDF is a full-repo enhancement |
 | M-04 | Dashboard | command center · KPI · monitor | dense dashboard |
 | M-05 | Compare | A vs B · benchmark | matrix + cited sources |
 | M-06 | Onboarding | new-user flow · demo | 3–5 interactive screens |
 | M-07 | Changelog | release notes · dev log | vertical timeline |
-| M-08 | Keynote | talk deck · master template | HTML deck + PPTX + PDF |
+| M-08 | Keynote | talk deck · master template | HTML deck; PPTX/PDF are full-repo enhancements |
 | M-09 | Social Kit | IG / Xiaohongshu / OG card | multi-size statics |
-| M-10 | Card / Invite | business card · invite · VIP | SVG + print-ready PDF |
+| M-10 | Card / Invite | business card · invite · VIP | SVG/HTML bleed source; PDF is a full-repo enhancement |
 | M-11 | Brand Diagnosis | audit · upgrade | report + three directions |
 | M-12 | Full Brand | brand from scratch | logo + palette + type + six applications |
 
@@ -320,40 +389,65 @@ It reads as IFQ not because of color, but because six layers move together.
 | Layer | Role | Key file |
 |-------|------|----------|
 | **01 · Context Engine** | Grow the design from existing context. Never from blank | [design-context.md](references/design-context.md) |
-| **02 · Asset Protocol** | Capture facts, logo, product shots, UI before pixels move | [SKILL.md](SKILL.md) · [workflow.md](references/workflow.md) |
+| **02 · Asset Protocol** | Capture facts, logo, product shots, UI before pixels move | [asset-protocol.md](references/asset-protocol.md) · [workflow.md](references/workflow.md) |
 | **03 · House Marks** | Weave the five ambient marks into the layout | [ifq-brand-spec.md](references/ifq-brand-spec.md) · [assets/ifq-brand/](assets/ifq-brand/) |
 | **04 · Style Recipes** | Style as recipes + scene templates. Not mystique | [design-styles.md](references/design-styles.md) · [ifq-native-recipes.md](references/ifq-native-recipes.md) |
-| **05 · Output Compiler** | One export chain: HTML → MP4 / GIF / PPTX / PDF | [scripts/](scripts/) |
-| **06 · Proof Loop** | Screenshot + click-test + smoke + export check | [verification.md](references/verification.md) · [smoke-test.mjs](scripts/smoke-test.mjs) |
+| **05 · Output Compiler** | ClawHub edition keeps the HTML-first core; MP4 / GIF / PPTX / PDF helpers are opt-in in the full GitHub repo | [scripts/](scripts/) |
+| **06 · Proof Loop** | validate + pack + host-browser screenshots; deep export checks live in the full GitHub repo | [verification.md](references/verification.md) · [smoke-test.mjs](scripts/smoke-test.mjs) |
 
 ```text
 ifq-design-skills/
-├── SKILL.md                 # main protocol: fast path · role · principles
+├── SKILL.md                 # short router: trigger boundaries · safety contract · reference map
 ├── assets/
 │   ├── ifq-brand/           # logo · sparkle · tokens · BRAND-DNA
 │   └── templates/           # forkable templates with ambient marks pre-woven
 ├── references/              # methodology · mode manuals · verification · recipes
-├── scripts/                 # export · verify · smoke · pdf · pptx
+├── scripts/                 # ClawHub-safe smoke / pack; deep export helpers live in the full GitHub repo
 └── demos/                   # sample outputs
 ```
 
 ---
 
+## 12 Templates
+
+v3.0 expands templates from 8 to 12 — every mode now has a dedicated template:
+
+| Template | Mode | Purpose |
+|----------|------|---------|
+| T-hero-landing | M-01, M-02, M-06, M-12 | Editorial hero landing |
+| T-slide-title | M-08 | Keynote title slide |
+| T-dashboard | M-04 | Bloomberg-density command center |
+| T-infographic-vertical | M-03, M-07 | Long-form infographic / whitepaper |
+| T-social-x | M-09 | X/Twitter share card |
+| T-compare-vs | M-05, M-11 | A vs B comparison matrix |
+| T-changelog | M-07 | Vertical timeline |
+| T-business-card | M-10 | Print card (90x54mm + 3mm bleed) |
+| **T-portfolio** | M-02 | Essay-style portfolio with 5 switchable variants |
+| **T-onboarding** | M-06 | 5-screen flow prototype with device frames |
+| **T-diagnosis** | M-11 | Brand diagnosis with 6-dim radar chart |
+| **T-social-multi** | M-09 | Multi-platform social kit (X / RedNote / IG / WeChat) |
+
+Full preview: [assets/templates/GALLERY.html](assets/templates/GALLERY.html).
+
 ## Verification
 
 ```bash
-npm run smoke
+npm run validate
+npm run evals:validate
+npm run anti-slop -- path/to/artifact.html
+npm run verify:lite -- path/to/artifact.html
+npm run pack
 ```
 
-A one-minute health check: template index · IFQ brand toolkit · icon sprite · references router · `scripts/` syntax.
+A one-minute health check: template index · IFQ brand toolkit · references router · 12-mode evals · ClawHub manifest · package safety · script safety · secret hygiene · font loading · default-template remote runtime · anti-slop preflight.
 
-Per-deliverable verification runs Playwright screenshots, click tests, and export parity. See [references/verification.md](references/verification.md).
+Per-deliverable verification starts with host-browser screenshots and click tests; full-repo environments add Playwright and export parity. See [references/verification.md](references/verification.md).
 
 ---
 
 ## License
 
-Free for personal use. Commercial use — see [LICENSE](LICENSE).
+MIT open-source license — see [LICENSE.md](LICENSE.md). IFQ names, logos, and project identity boundaries are in [NOTICE.md](NOTICE.md).
 
 ---
 

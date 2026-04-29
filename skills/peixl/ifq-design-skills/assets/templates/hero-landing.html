@@ -9,9 +9,11 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=1440"/>
 <title>{ HEADLINE } · ifq.ai</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<!-- Optional Google Fonts (non-blocking; falls back to system stack via ifq-tokens.css if blocked / offline). See references/font-loading.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/></noscript>
 <style>
   :root {
     --ifq-accent:#D4532B; --ifq-accent-deep:#A83518; --ifq-accent-soft:#FFB27A;
@@ -83,7 +85,7 @@
 
   <section class="hero">
     <div>
-      <div class="hero__eyebrow">{ SIGNAL · 2026 }</div>
+      <div class="hero__eyebrow">{ SIGNAL } · <span data-ifq-authored-year>__IFQ_YEAR__</span></div>
       <h1 class="hero__title">{ HEADLINE.<br/> <em>Make it pretty.</em> }</h1>
       <p class="hero__sub">{ SUPPORTING SENTENCE — 20–30 words that situate the product and its audience. Keep it one paragraph. }</p>
       <a class="hero__cta" href="#">{ CTA TEXT }
@@ -115,5 +117,9 @@
     ifq.ai / field signal / { ISSUE }
   </div>
 </div>
+<script src="../ifq-brand/ifq_authored_year.js"></script>
+<script>
+  window.IfqAuthoredYear && window.IfqAuthoredYear.apply(document);
+</script>
 </body>
 </html>

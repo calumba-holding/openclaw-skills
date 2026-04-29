@@ -1,4 +1,4 @@
-<sub>🌐 <a href="README.en.md">English</a> · <b>中文</b> · <code>ifq.ai / field note / 2026</code></sub>
+<sub>🌐 <a href="README.en.md">English</a> · <b>中文</b> · <code>ifq.ai / &lt;authored year&gt;</code></sub>
 
 <div align="center">
 
@@ -19,15 +19,17 @@
 
 <br><br>
 
-[![License](https://img.shields.io/badge/license-commercial%20%2B%20personal-D4532B?style=flat-square&labelColor=111111)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-D4532B?style=flat-square&labelColor=111111)](LICENSE.md)
 [![ifq.ai native](https://img.shields.io/badge/ifq.ai-native-111111?style=flat-square)](assets/ifq-brand/BRAND-DNA.md)
 [![ambient brand](https://img.shields.io/badge/ambient_brand-embedded-A83518?style=flat-square&labelColor=111111)](references/ifq-brand-spec.md)
 [![proof first](https://img.shields.io/badge/proof--first-on-111111?style=flat-square)](references/verification.md)
 [![modes](https://img.shields.io/badge/modes-12-D4532B?style=flat-square&labelColor=111111)](references/modes.md)
+[![templates](https://img.shields.io/badge/templates-12-A83518?style=flat-square&labelColor=111111)](assets/templates/GALLERY.html)
+[![anti-slop](https://img.shields.io/badge/anti--slop-preflight-D4532B?style=flat-square&labelColor=111111)](references/anti-ai-slop.md)
 
 <br>
 
-<sub>立场 &nbsp;·&nbsp; 安装 &nbsp;·&nbsp; 说给它听 &nbsp;·&nbsp; 一页的解剖 &nbsp;·&nbsp; 五个标记 &nbsp;·&nbsp; 12 种模式 &nbsp;·&nbsp; 六层骨架 &nbsp;·&nbsp; 验证 &nbsp;·&nbsp; 许可</sub>
+<sub>立场 &nbsp;·&nbsp; 安装 &nbsp;·&nbsp; 说给它听 &nbsp;·&nbsp; 一页的解剖 &nbsp;·&nbsp; 五个标记 &nbsp;·&nbsp; 12 种模式 &nbsp;·&nbsp; 12 个模板 &nbsp;·&nbsp; 六层骨架 &nbsp;·&nbsp; 验证 &nbsp;·&nbsp; 许可</sub>
 
 </div>
 
@@ -43,17 +45,71 @@
 
 ifq.ai 的标识被埋在这份做工里。看第一眼是内容，**第二眼才意识到：这是 ifq.ai 的手感**。
 
+## 给人和 Agent 的承诺
+
+| 对象 | 得到什么 |
+|------|----------|
+| **人类用户** | 只要说目标，不必先写完整 PRD；skill 会把假设、缺口、输出文件和验证证据讲清楚。 |
+| **AI Agent** | 不从空白页乱猜：先路由模式，读 `modeRoutes`，fork 模板，填内容，跑 anti-slop 和验证。 |
+| **维护者** | ClawHub 包保持零依赖、零安装钩子、可审计；重型 MP4/GIF/PDF/PPTX 自动化留在完整 GitHub 仓库。 |
+
+理念很简单：**让 AI 发挥更大效能**。人类负责判断方向和事实，Agent 负责把流程走完整、把证据收齐。
+
 ---
 
 ## 安装
 
 ```bash
-npx skills add peixl/ifq-design-skills -g -y
+# 从 ClawHub 安装（推荐）
+openclaw skills install ifq-design-skills
 ```
 
-> `peixl/ifq-design-skills` 是 GitHub 仓库短路径 → <https://github.com/peixl/ifq-design-skills>
+> ClawHub 是推荐安装通道。需要本地开发请克隆完整仓库：<https://github.com/peixl/ifq-design-skills>；ClawHub 打包仓库是 <https://github.com/peixl/ifq-design-clawhub>。
 
 装完直接对 agent 说话。skill 自己判断任务、自己路由模式、自己挑模板、自己跑验证。
+
+### 首次运行应该得到什么
+
+第一轮不要变成环境配置。直接说一句设计目标，例如：
+
+```text
+给我们的内部 AI 运营做一个 command center。信息密度高，冷静，不要 BI 套壳。
+```
+
+合格的首次运行会返回 6 个证据：输出 HTML 文件路径、使用的 mode、使用的 template、写入的假设、执行过的验证（`verify:lite` 或浏览器预览）、以及影响使用的 caveat。它不应该要求登录账户、全局安装导出依赖，或改动 OpenClaw 之外的环境。
+
+### 为什么它适合冲 ClawHub Top 10
+
+ClawHub 上真正会被反复安装的 skill 通常不是"什么都能做"，而是**一个场景讲得很清楚、第一次使用马上有结果、安全边界让人放心**。IFQ Design Skills 把这个增长飞轮写进了包里：
+
+| 转化信号 | 这里怎么做到 |
+|---|---|
+| 一眼知道用途 | 只承诺 HTML-first 视觉产物，不抢生产前端 / 后端 / SEO 工作 |
+| 第一次就有成品 | 自然语言 prompt → mode route → fork template → local HTML → evidence packet |
+| Agent 不乱跑 | `modeRoutes`、evals、`verify:lite`、`validate` 共同约束执行路径 |
+| 平台放心收录 | 零依赖、零安装钩子、无必需凭据、无持久后台、ClawHub-clean 打包 |
+| 人类愿意分享 | 输出有 ifq.ai 的手感，但不抢客户品牌的主体位置 |
+
+### 🦞 OpenClaw 首选通道（一行装好即用）
+
+```bash
+# 从 ClawHub 安装（推荐）
+openclaw skills install ifq-design-skills
+
+# 验证并查看能力元数据
+openclaw skills info ifq-design-skills
+openclaw skills check ifq-design-skills
+```
+
+**OpenClaw 为什么上手最快**：本 skill 在 frontmatter 的 `metadata.openclaw` 里直接声明了 triggers、permissions、tool_map 和 quick_commands——OpenClaw 装上就知道什么 prompt 该进来、需要哪些插件、每个中性动词对应哪个 OpenClaw 工具。完整映射与排障见 [references/agent-compatibility.md](references/agent-compatibility.md#3--openclaw--clawhub)。
+
+需要的最小权限（OpenClaw 会自动请求）：
+
+- `filesystem`：仅在当前 workspace 读写
+- `shell`：仅运行工作区内的 Node 脚本（`npm run validate` / `npm run pack`）；Playwright / Python 导出辅助在完整 GitHub 仓库中按需使用
+- `browser`：出站 HTTPS 拉 Google Fonts / 图片 CDN（只读，**可降级**）
+
+> **🇨🇳 CN-friendly**：所有产出 HTML 走 [references/font-loading.md](references/font-loading.md) Tier B 非阻塞协议——Google Fonts 被墙 / 离线 / 内网时，自动回退到 `Noto Serif SC / Songti SC / PingFang SC` 等系统字体栈，**首屏不空白、不豆腐块**。需要完全离线可走 Tier A（删掉 Google Fonts link）；需要像素级匹配可走 Tier C（自托管 woff2 子集）。
 
 **其他 agent 一键安装**：
 
@@ -64,8 +120,21 @@ hermes skills install github:peixl/ifq-design-skills
 # Claude Code（personal）
 git clone https://github.com/peixl/ifq-design-skills ~/.claude/skills/ifq-design-skills
 
+# Codex CLI（OpenAI）—— 自动识别仓库根的 AGENTS.md
+git clone https://github.com/peixl/ifq-design-skills ~/.codex/skills/ifq-design-skills
+
+# CodeBuddy（Tencent）
+git clone https://github.com/peixl/ifq-design-skills ~/.codebuddy/skills/ifq-design-skills
+
 # 共享给所有 agent（推荐）
 git clone https://github.com/peixl/ifq-design-skills ~/.agents/skills/ifq-design-skills
+```
+
+### 给 skill 维护者：打包上架 ClawHub
+
+```bash
+npm run validate   # 一分钟体检：模板 · 品牌资产 · ClawHub 清洁度
+npm run pack       # 生成 ../ifq-design-clawhub-YYYY-MM-DD.tar.gz（自动排除 .git/ 等内部文件）
 ```
 
 ---
@@ -88,7 +157,7 @@ git clone https://github.com/peixl/ifq-design-skills ~/.agents/skills/ifq-design
 </td>
 <td>
 
-<sub>M-08 Keynote · editorial dark · Newsreader 大标题 · rust ledger 竖线分章 · 每页 mono 序号 <code>01 / 20</code> · 结尾 colophon · 同步导出 HTML + PPTX + PDF</sub>
+<sub>M-08 Keynote · editorial dark · Newsreader 大标题 · rust ledger 竖线分章 · 每页 mono 序号 <code>01 / 20</code> · 结尾 colophon · ClawHub 交付 HTML deck + 导出计划，完整仓库再出 PPTX/PDF</sub>
 
 </td>
 </tr>
@@ -114,7 +183,7 @@ git clone https://github.com/peixl/ifq-design-skills ~/.agents/skills/ifq-design
 </td>
 <td>
 
-<sub>M-10 名片 · 85×55mm + 3mm 出血 · 正面一行业务陈述 + spark 小点 · 反面 mono 信息条 · 第三方物料 · 显式 wordmark 关闭 · IFQ 只保留版面节奏 · 输出带 crop marks 的 PDF</sub>
+<sub>M-10 名片 · 85×55mm + 3mm 出血 · 正面一行业务陈述 + spark 小点 · 反面 mono 信息条 · 第三方物料 · 显式 wordmark 关闭 · IFQ 只保留版面节奏 · 输出 SVG/HTML 出血稿，完整仓库再出 PDF</sub>
 
 </td>
 </tr>
@@ -127,7 +196,7 @@ git clone https://github.com/peixl/ifq-design-skills ~/.agents/skills/ifq-design
 </td>
 <td>
 
-<sub>M-01 Launch Film · 先 3 方向 (matter-of-fact / editorial / kinetic-type) · Stage+Sprite 时间轴 · 60fps · key shot + spec mono 叠印 + 2s quiet URL 定版 · 输出 mp4 + gif + keyposter</sub>
+<sub>M-01 Launch Film · 先 3 方向 (matter-of-fact / editorial / kinetic-type) · Stage+Sprite 时间轴 · key shot + spec mono 叠印 + 2s quiet URL 定版 · ClawHub 交付 HTML motion source + keyposter，完整仓库再出 MP4/GIF</sub>
 
 </td>
 </tr>
@@ -179,7 +248,7 @@ git clone https://github.com/peixl/ifq-design-skills ~/.agents/skills/ifq-design
 </td>
 <td>
 
-<sub>M-03 白皮书 · A4 可打印 HTML · 扉页 / 摘要 / 目录 / 章节 / 参考 / colophon 全套 · 每章起首 mono 序号 + 半页留白 · 页脚 <code>ifq.ai / field note / 2026</code> · 导出 print-ready PDF + 书签</sub>
+<sub>M-03 白皮书 · A4 可打印 HTML · 扉页 / 摘要 / 目录 / 章节 / 参考 / colophon 全套 · 每章起首 mono 序号 + 半页留白 · 页脚 <code>ifq.ai / &lt;authored year&gt;</code> · ClawHub 交付 print-ready HTML，完整仓库再出 PDF + 书签</sub>
 
 </td>
 </tr>
@@ -270,7 +339,7 @@ Ambient Brand 由五个环境级标记组成。每份交付物默认至少融合
 |------|--------|----------|
 | **Signal Spark** | 8-point 火花。intelligence 被点亮的一瞬 | hero 右上 · 动画开场一帧 · 印章中心 |
 | **Rust Ledger** | 赤陶色竖线、分隔、编号、轴线 | hero · slides · infographic · dashboard |
-| **Mono Field Note** | JetBrains Mono 写的 `ifq.ai / field note / 2026` 小字 | footer · closing · 角落 |
+| **Mono Field Note** | JetBrains Mono 写的 `ifq.ai / <authored year>` 小字 | footer · closing · 角落 |
 | **Quiet URL** | 域名以极低姿态出现一次 | footer · meta · end card |
 | **Editorial Contrast** | Newsreader italic + JetBrains Mono + 暖纸白 | 整体排版骨架 |
 
@@ -296,14 +365,14 @@ Ambient Brand 由五个环境级标记组成。每份交付物默认至少融合
 |---|------|----------|------|
 | M-01 | Launch Film | 发布动画 · 产品宣传片 | 25–40s 动画 + keyposter + 社媒套件 |
 | M-02 | Portfolio | portfolio · 个人站 · about | 单页站 + 5 方向变体 |
-| M-03 | 白皮书 | 白皮书 · 年报 · 研究 PDF | 可打印 HTML → PDF |
+| M-03 | 白皮书 | 白皮书 · 年报 · 研究 PDF | A4 可打印 HTML；PDF 为完整仓库增强 |
 | M-04 | Dashboard | 数据看板 · KPI · 监控台 | 高密度 dashboard |
 | M-05 | Compare | A vs B · 横评 · benchmark | 对比矩阵 + 事实来源 |
 | M-06 | Onboarding | 新手引导 · flow demo | 3–5 屏交互流 |
 | M-07 | Changelog | release notes · 发布日记 | 纵向时间线 |
-| M-08 | Keynote | 演讲 PPT · 母版 | HTML deck + PPTX + PDF |
+| M-08 | Keynote | 演讲 PPT · 母版 | HTML deck；PPTX/PDF 为完整仓库增强 |
 | M-09 | Social Kit | 小红书 · 朋友圈 · OG 卡 | 多尺寸静态物料 |
-| M-10 | 名片 / 邀请函 | 名片 · VIP 卡 · 请柬 | SVG + 出血位 PDF |
+| M-10 | 名片 / 邀请函 | 名片 · VIP 卡 · 请柬 | SVG/HTML 出血稿；PDF 为完整仓库增强 |
 | M-11 | 品牌诊断 | 体检 · 升级建议 | 诊断报告 + 3 方向 |
 | M-12 | 全栈品牌 | brand from scratch | logo + 色板 + 字体 + 6 应用 |
 
@@ -320,40 +389,65 @@ Ambient Brand 由五个环境级标记组成。每份交付物默认至少融合
 | 层 | 做什么 | 关键文件 |
 |----|--------|----------|
 | **01 · Context Engine** | 从上下文长设计，不从白纸瞎猜 | [design-context.md](references/design-context.md) |
-| **02 · Asset Protocol** | 动视觉前先抓事实 / logo / 产品图 / UI | [SKILL.md](SKILL.md) · [workflow.md](references/workflow.md) |
+| **02 · Asset Protocol** | 动视觉前先抓事实 / logo / 产品图 / UI | [asset-protocol.md](references/asset-protocol.md) · [workflow.md](references/workflow.md) |
 | **03 · House Marks** | 把 5 个 ambient 标记写进版面 | [ifq-brand-spec.md](references/ifq-brand-spec.md) · [assets/ifq-brand/](assets/ifq-brand/) |
 | **04 · Style Recipes** | 风格靠配方和 scene template 组织 | [design-styles.md](references/design-styles.md) · [ifq-native-recipes.md](references/ifq-native-recipes.md) |
-| **05 · Output Compiler** | HTML → MP4 / GIF / PPTX / PDF 一条导出链 | [scripts/](scripts/) |
-| **06 · Proof Loop** | 截图 + 点击 + smoke + 导出核对 | [verification.md](references/verification.md) · [smoke-test.mjs](scripts/smoke-test.mjs) |
+| **05 · Output Compiler** | ClawHub 版保留 HTML-first 核心；MP4 / GIF / PPTX / PDF 导出在完整 GitHub 仓库中 opt-in | [scripts/](scripts/) |
+| **06 · Proof Loop** | validate + pack + 宿主浏览器截图；深度导出核对在完整 GitHub 仓库中完成 | [verification.md](references/verification.md) · [smoke-test.mjs](scripts/smoke-test.mjs) |
 
 ```text
 ifq-design-skills/
-├── SKILL.md                 # 主协议：fast path · 角色 · 原则
+├── SKILL.md                 # 短路由器：触发边界 · 安全契约 · reference map
 ├── assets/
 │   ├── ifq-brand/           # logo · sparkle · tokens · BRAND-DNA
 │   └── templates/           # 已内嵌 ambient marks 的可 fork 模板
 ├── references/              # 方法论 · 模式手册 · 验证 · 风格配方 · 宪章
-├── scripts/                 # 导出 · 验证 · smoke · pdf · pptx
+├── scripts/                 # ClawHub-safe smoke / pack（深度导出在完整 GitHub 仓库）
 └── demos/                   # 示例产物
 ```
 
 ---
 
+## 12 个模板
+
+v3.0 把模板从 8 个扩展到 12 个，每个模式都有专属模板。不再需要 fallback 到通用模板：
+
+| 模板 | 模式 | 做什么 |
+|------|------|--------|
+| T-hero-landing | M-01, M-02, M-06, M-12 | 编辑部风格 hero 落地页 |
+| T-slide-title | M-08 | 演讲 title slide |
+| T-dashboard | M-04 | Bloomberg 密度的 command center |
+| T-infographic-vertical | M-03, M-07 | 长图信息图 / 白皮书 |
+| T-social-x | M-09 | X/Twitter 分享卡 |
+| T-compare-vs | M-05, M-11 | A vs B 对比矩阵 |
+| T-changelog | M-07 | 纵向时间线 |
+| T-business-card | M-10 | 印刷名片 (90x54mm + 3mm 出血) |
+| **T-portfolio** | M-02 | 文章式个人站，5 种风格变体可切换 |
+| **T-onboarding** | M-06 | 5 屏横向 flow 原型，带设备框和用户心智标注 |
+| **T-diagnosis** | M-11 | 品牌诊断报告，6 维雷达图 + 3 方向 |
+| **T-social-multi** | M-09 | 多平台社媒套件 (X / 小红书 / IG / 微信) |
+
+完整预览：[assets/templates/GALLERY.html](assets/templates/GALLERY.html)。
+
 ## 验证
 
 ```bash
-npm run smoke
+npm run validate
+npm run evals:validate
+npm run anti-slop -- path/to/artifact.html
+npm run verify:lite -- path/to/artifact.html
+npm run pack
 ```
 
-一分钟内给出 skill 体检：模板索引 · IFQ brand toolkit · 图标 sprite · references 路由 · `scripts/` 语法。
+一分钟内给出 skill 体检：模板索引 · IFQ brand toolkit · references 路由 · 12 模式 evals · ClawHub manifest · package 安全 · 脚本安全 · secret hygiene · 字体加载 · 默认模板远程 runtime · anti-slop preflight。
 
-单件作品走 Playwright 截图 + 可点击验证 + 导出格式核对。详见 [references/verification.md](references/verification.md)。
+单件作品优先走宿主浏览器截图 + 可点击验证；完整仓库环境再跑 Playwright 和导出格式核对。详见 [references/verification.md](references/verification.md)。
 
 ---
 
 ## 许可
 
-个人用免费。商用见 [LICENSE](LICENSE)。
+MIT 开源许可见 [LICENSE.md](LICENSE.md)。IFQ 名称、logo 与项目标识使用边界见 [NOTICE.md](NOTICE.md)。
 
 ---
 

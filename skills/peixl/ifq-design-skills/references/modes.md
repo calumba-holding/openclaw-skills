@@ -2,26 +2,32 @@
 
 > 超越 Junior Designer / 设计方向顾问的**扩展模式**。每一种模式都是一条"开箱即用"的流水线，根据用户的请求自动路由。
 >
-> 模式路由规则见 SKILL.md `## 模式路由`。本文件是每种模式的操作手册。
+> 根路由见 [`SKILL.md`](../SKILL.md)；权威模式细节以本文件和 [`assets/templates/INDEX.json`](../assets/templates/INDEX.json) 为准。
 
 ---
+
+## 包边界
+
+ClawHub-safe bundle 的默认承诺是：生成可验证的 HTML-first 源文件、SVG/静态配套文件、清晰的导出计划和验收证据。MP4/GIF/PDF/PPTX 的自动化导出属于完整 GitHub repo 的增强能力，只有在对应脚本、依赖和用户意图都明确时才执行。
+
+所有模式都遵守同一条规则：**先产出可打开的 HTML 源，再衍生其他格式**。如果当前运行环境没有完整导出工具，就交付 HTML 源和操作计划，不假装已经生成衍生文件。
 
 ## 模式索引
 
 | Mode ID | 中文名 | 触发语 | 典型交付物 | 耗时 |
 |---------|-------|--------|-----------|------|
-| `M-01` | 品牌发布会模式 | 「发布会动画 / launch film / 产品发布物料」 | 25–40s 动画 + keyposter + 3 张社媒图 | 25–40 min |
+| `M-01` | 品牌发布会模式 | 「发布会动画 / launch film / 产品发布物料」 | 25–40s HTML motion source + keyposter + 社媒图；MP4/GIF 为完整 repo 增强 | 25–40 min |
 | `M-02` | 个人品牌页模式 | 「做我的个人站 / 个人主页 / portfolio / about me」 | 单页个人站 HTML + OG 图 | 15–20 min |
-| `M-03` | 白皮书 / 报告模式 | 「白皮书 / PDF 报告 / 年报 / research report」 | 可打印 HTML→PDF + 封面 + 目录 | 25–40 min |
+| `M-03` | 白皮书 / 报告模式 | 「白皮书 / PDF 报告 / 年报 / research report」 | A4 可打印 HTML + 封面 + 目录；PDF 为完整 repo 增强 | 25–40 min |
 | `M-04` | 数据仪表板模式 | 「Dashboard / 数据看板 / KPI 面板」 | 高密度 Dashboard HTML，真数据驱动 | 20–30 min |
 | `M-05` | 对比评测模式 | 「评测 / VS 对比 / 横评 / benchmark」 | 对比信息图 + 评分雷达 + 可分享卡片 | 20–30 min |
 | `M-06` | Onboarding 流程模式 | 「onboarding / 新手引导 / 首启流程」 | Flow-demo App 原型（3–5 屏）+ 埋点建议 | 25–35 min |
 | `M-07` | 发布日记模式 | 「changelog / release notes / 版本记录」 | 时间线信息图 + 社媒图 | 10–15 min |
-| `M-08` | 演讲 Keynote 模式 | 「做演讲 PPT / keynote / talk slides」 | 1920×1080 HTML deck + PPTX + PDF | 25–40 min |
+| `M-08` | 演讲 Keynote 模式 | 「做演讲 PPT / keynote / talk slides」 | 1920×1080 HTML deck；PPTX/PDF 为完整 repo 增强 | 25–40 min |
 | `M-09` | 社媒海报套件 | 「朋友圈图 / 小红书封面 / 微博长图 / 社媒物料」 | 3–6 张物料（1:1 / 9:16 / 4:5 / 1.91:1） | 15–25 min |
-| `M-10` | 印刷名片/邀请函 | 「名片 / 邀请函 / 活动票 / VIP 卡」 | 可打印 SVG + PDF（含出血位 3mm） | 10–15 min |
+| `M-10` | 印刷名片/邀请函 | 「名片 / 邀请函 / 活动票 / VIP 卡」 | 可打印 SVG/HTML + 出血位；PDF 为完整 repo 增强 | 10–15 min |
 | `M-11` | 品牌诊断模式 | 「给我家品牌诊断 / 品牌体检 / 升级现有品牌」 | 诊断报告 + 3 个升级方向 | 20–30 min |
-| `M-12` | 全栈品牌系统 | 「从零建立品牌 / brand from scratch」 | logo + 色板 + 字体 + 6 应用示例 | 40–60 min |
+| `M-12` | 全栈品牌系统 | 「从零建立品牌 / brand from scratch」 | logo SVG + 色板 + 字体 + 6 应用示例 | 40–60 min |
 
 ---
 
@@ -30,9 +36,9 @@
 **触发**：用户提到具体产品（实体/数字）要做"发布会"、"launch film"、"产品宣传片"、"产品物料"。
 
 **前置硬门**：
-1. 必先走 SKILL.md `#0 事实验证先于假设` — 产品必须已确认存在、版本、规格
-2. 必先走 SKILL.md `#1.a 核心资产协议` — logo / 产品渲染图 / UI 截图必须到位
-3. 素材未到 8/10 → **停下问用户**，不凑合
+1. 必先走 [`asset-protocol.md`](asset-protocol.md) 的事实验证与资产采集流程 — 产品必须已确认存在、版本、规格
+2. 必先走 [`asset-protocol.md`](asset-protocol.md) 的核心资产协议 — logo / 产品渲染图 / UI 截图必须到位
+3. 素材未到 8/10 → 不伪造。若能做 rough cut，用明确 placeholder 继续；若产品身份、授权或规格会改变画面，先问用户
 
 **交付件清单**（并行产出）：
 - `launch-film.html` · 25–40s HTML motion demo，Stage + Sprite 时间轴
@@ -40,12 +46,12 @@
 - `social-twitter.html` · 1200×675 社媒图
 - `social-xiaohongshu.html` · 1242×1656 竖版
 - `social-og.html` · 1200×630 OG 分享图
-- 导出 `.mp4 (25fps + 60fps 插帧)` + `.gif`
+- ClawHub-safe：交付 HTML motion source + export checklist；完整 repo：导出 `.mp4 (25fps + 60fps 插帧)` + `.gif`
 
 **IFQ 签名融入点**：
-- 片头第 8–12 帧：`IfqSpark` 从屏幕中心绽开，300ms 内切入品牌 logo
-- 片尾最后 20 帧：右下角浮现「made with ifq.ai」编辑体水印，opacity 0.4
-- Poster 右下 colophon：`IfqStamp` rust 边框邮戳
+- IFQ 自有物料：片头第 8–12 帧可用 `IfqSpark` 作为智能点亮 cue，再切入主品牌 logo
+- 第三方 / 客户物料：默认只保留 rust ledger、motion timing、warm paper、mono colophon 等 authored layer，不强行上水印
+- 只有用户接受共品牌或 IFQ 自有物料时，片尾才出现低对比 `made with ifq.ai`
 
 **执行模板**：
 ```text
@@ -76,7 +82,7 @@ Stage 时长：
 4. **Paper Journal** · 手绘 SVG 图标 + 纸质纹理 + 斜体 pull quote
 5. **Minimalist Card** · 一屏完事，居中 hero card
 
-每个变体都内嵌 `IfqWatermark` 右下角；footer 用 `IfqStamp`。
+IFQ 自有物料可在 footer 用 `IfqStamp`；第三方个人站默认只保留 editorial contrast、ledger rhythm、quiet colophon，不强行加显式 watermark。
 
 ---
 
@@ -86,7 +92,7 @@ Stage 时长：
 
 **硬要求**：
 - A4 打印尺寸（210×297mm），`@page { margin: 20mm }` 设置
-- 真数据驱动（提前问用户要数据源，没有则走设计方向顾问推荐）
+- 真数据驱动；没有数据源时用 labeled placeholder 或公开来源标注，不编造指标
 - 目录页自动生成（基于 `<h2>` 锚点 + page-break）
 - 封面 / 扉页 / 目录 / 章节页 / 正文 / 封底 六类模板
 
@@ -95,7 +101,7 @@ Stage 时长：
 - 每页 footer 中央：8pt rust spark + "ifq.ai · <报告简称>"
 - 封底：`IfqLogo` + 版权声明
 
-**导出**：`node scripts/export_deck_pdf.mjs --paper=A4 --print=true`
+**导出**：ClawHub-safe 先交付 A4 HTML；完整 repo 才运行 `node scripts/export_deck_pdf.mjs --paper=A4 --print=true`
 
 ---
 
@@ -103,7 +109,7 @@ Stage 时长：
 
 **触发**：「Dashboard」「看板」「KPI 面板」「monitoring UI」。
 
-**硬要求**（来自 SKILL.md 信息密度·高密度型）：
+**硬要求**（来自 [`content-guidelines.md`](content-guidelines.md) 与 [`ios-prototype.md`](ios-prototype.md) 的高密度规则）：
 - 每屏 ≥ 3 处产品差异化信息（非装饰性数据）
 - tabular-nums，mono font 数字列对齐
 - sparklines 用真数据，不画假波形
@@ -129,7 +135,7 @@ Stage 时长：
 - 尾部："最终推荐" + 使用场景矩阵
 - 可分享社媒卡片（正方形）
 
-**评分协议**：用户提供分数 or 让用户选"我来打分 / AI 代打+人工复核"。**不要 AI 独立打分不告知用户**。
+**评分协议**：用户提供分数 or AI 代打但明确标注「需人工复核」。**不要 AI 独立打分不告知用户**。
 
 ---
 
@@ -164,10 +170,10 @@ Stage 时长：
 
 **触发**：「演讲 PPT」「keynote」「talk slides」「做演讲」。
 
-沿用 `references/slide-decks.md` + `editable-pptx.md`，额外规则：
+沿用 `references/slide-decks.md`；只有用户明确需要可编辑 PPTX 时再加载 `editable-pptx.md`。额外规则：
 - 开场第 1 页：左下 `IfqSpark` 动画 + 右下 `IfqStamp`
 - Speaker notes 自动生成中英双语（中文主讲 + 英文 backup）
-- 导出走 `scripts/export_deck_pptx.mjs` 得到真文本框 PPTX
+- ClawHub-safe 交付 HTML deck；完整 repo 才运行 `scripts/export_deck_pptx.mjs` 得到真文本框 PPTX
 
 ---
 
@@ -186,7 +192,7 @@ Stage 时长：
 | 抖音 / TikTok | 1080×1920 | `social-tiktok.html` |
 | LinkedIn | 1200×627 | `social-linkedin.html` |
 
-每张都内嵌 `IfqWatermark` 或 `IfqStamp`（用户可一键去除）。
+IFQ 自有社媒图可内嵌 `IfqWatermark` 或 `IfqStamp`；第三方社媒套件默认主品牌优先，只保留结构性 IFQ 手感。
 
 ---
 
@@ -197,7 +203,7 @@ Stage 时长：
 **硬规格**：
 - 名片：90×54mm，+3mm 出血，安全线 3mm
 - 邀请函：支持 100×210mm 长邀请条 / 148×210mm A5 / 210×99mm DL
-- 输出：`.svg` + `.pdf` (300dpi, CMYK placeholder)
+- 输出：`.svg` / print HTML + 出血位标尺；完整 repo 才衍生 `.pdf`，CMYK 只作为印前提示不伪装已转换
 
 IFQ 签名：正面一枚微缩 spark（3mm）+ 反面 `IfqLogo` 14mm 高。
 
@@ -208,7 +214,7 @@ IFQ 签名：正面一枚微缩 spark（3mm）+ 反面 `IfqLogo` 14mm 高。
 **触发**：「品牌体检」「给我家品牌诊断」「品牌升级」「现有品牌优化」。
 
 **流程**：
-1. 请用户提供 3–5 个**现有物料**截图（logo 使用、网站、产品、社媒图）
+1. 如果用户已提供物料，先读 3–5 个**现有物料**截图（logo 使用、网站、产品、社媒图）；未提供时先出「诊断框架 + 需要的素材清单」，不编造品牌现状
 2. 从 6 维度打分（识别度 / 一致性 / 时代感 / 情感传达 / 差异化 / 应用扩展性），每维 0–10
 3. 输出雷达图 + 3 条"Keep / 3 条"Fix" / 3 条"Quick Wins"
 4. 给 3 个升级方向的 moodboard（每方向并排 2 张参考 + 1 个风格 demo）
@@ -220,14 +226,14 @@ IFQ 签名：正面一枚微缩 spark（3mm）+ 反面 `IfqLogo` 14mm 高。
 **触发**：「从零建立品牌」「brand from scratch」「给新公司做品牌」。
 
 **完整交付**：
-1. `brand-spec.md` · 按 SKILL.md 模板填充
+1. `brand-spec.md` · 按 [`asset-protocol.md`](asset-protocol.md) 模板填充
 2. `logo.svg` · 主版 + 反色版 + 方版 + 横版
 3. `palette.html` · 色板可视化（带 oklch 值 + WCAG 对比度）
 4. `type-system.html` · 字体阶梯（H1–H6 + body + mono）
 5. **6 个应用示例**：名片 / 网站 hero / App icon / 社媒头图 / 邀请函 / 产品包装
-6. 打包 zip
+6. 交付源文件清单；zip 打包只在运行环境允许写入归档时执行
 
-**强流程**：必须走 SKILL.md `设计方向顾问` 先让用户选流派，不能凭空给 logo。
+**强流程**：必须用 [`design-styles.md`](design-styles.md) + [`ifq-native-recipes.md`](ifq-native-recipes.md) 先给用户 3 个方向，不能凭空给 logo。
 
 ---
 

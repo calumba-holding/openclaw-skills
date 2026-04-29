@@ -1,7 +1,7 @@
-# Design Philosophy Showcases — 样例资产索引
+# Legacy HTML Showcases — 样例资产索引
 
 > 8 种场景 × 3 种风格 = 24 个预制设计样例
-> 用于 Phase 3 推荐设计方向时，直接展示「这个风格做出来长什么样」
+> 用于风格对齐和 fallback 演示；当前 ClawHub 包只包含 HTML 源，不包含预渲染 PNG 截图
 >
 > 注：这一批 showcase 目前仍属于 **legacy comparative references**，用于风格对齐和 fallback 演示，不代表 IFQ 当前模板体系的最终上限。后续将逐步重生成，替换掉旧样例骨架。
 
@@ -33,15 +33,15 @@
 | 7 | SaaS落地页 | 1440×900 | `website-saas/saas-pentagram` | `website-saas/saas-build` | `website-saas/saas-takram` |
 | 8 | 开发者文档 | 1440×900 | `website-devdocs/devdocs-pentagram` | `website-devdocs/devdocs-build` | `website-devdocs/devdocs-takram` |
 
-> 每个条目同时有 `.html`（源码）和 `.png`（截图）两个文件
+> 每个条目当前只有 `.html` 源码。需要截图时，先用宿主浏览器或完整 GitHub repo 的 Playwright 流程现渲染，不要引用不存在的 PNG。
 
 ## 使用说明
 
 ### Phase 3 推荐时引用
-推荐设计方向后，可展示对应场景的预制截图：
+推荐设计方向后，可先渲染对应场景的 HTML，再展示截图：
 ```
-「这是 Pentagram 风格做公众号封面的效果 → [展示 cover/cover-pentagram.png]」
-「Takram 风格做 PPT 数据页是这种感觉 → [展示 ppt/ppt-takram.png]」
+「这是 Pentagram 风格做公众号封面的效果 → 先打开 cover/cover-pentagram.html，再截图」
+「Takram 风格做 PPT 数据页是这种感觉 → 先打开 ppt/ppt-takram.html，再截图」
 ```
 
 ### 场景匹配优先级
@@ -107,11 +107,12 @@
 ## 文件统计
 
 - HTML 源文件：24 个
-- PNG 截图：24 个
-- 总资产：48 个文件
+- PNG 截图：0 个（按需现渲染）
+- 总资产：24 个文件
 
 ---
 
-**版本**：v1.0
+**版本**：v1.1
 **创建日期**：2026-02-13
-**适用于**：design-philosophy skill Phase 3 推荐环节
+**更新日期**：2026-04-28
+**适用于**：IFQ Design Skills legacy showcase fallback

@@ -8,7 +8,11 @@
 <head>
 <meta charset="utf-8"/>
 <title>{ TALK TITLE } · ifq.ai keynote</title>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/>
+<!-- Optional Google Fonts (non-blocking; system-font fallback if blocked). See references/font-loading.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/></noscript>
 <style>
   :root {
     --ifq-accent:#D4532B; --ifq-ink:#111; --ifq-paper:#FAF7F2; --ifq-cream:#F1EBE0;
@@ -51,7 +55,7 @@
   </div>
 
   <header>
-    <div class="eyebrow">{ IFQ KEYNOTE · 2026 }</div>
+    <div class="eyebrow">{ IFQ KEYNOTE } · <span data-ifq-authored-year>__IFQ_YEAR__</span></div>
   </header>
 
   <main>
@@ -66,9 +70,13 @@
     </div>
     <div class="stamp">
       <svg viewBox="-12 -12 24 24"><path d="M0 -10 L2.2 -2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2 -2.2 Z" fill="#D4532B"/></svg>
-      IFQ / FIELD NOTE
+      IFQ · CHAPTER
     </div>
   </footer>
 </div>
+<script src="../ifq-brand/ifq_authored_year.js"></script>
+<script>
+  window.IfqAuthoredYear && window.IfqAuthoredYear.apply(document);
+</script>
 </body>
 </html>

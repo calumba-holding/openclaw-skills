@@ -39,6 +39,114 @@ const IfqBrand = {
   },
 };
 
+function getIfqAuthoredYearFromDate(value) {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      return null;
+    }
+
+    return String(value.getFullYear());
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const authoredDate = new Date(value);
+    if (Number.isNaN(authoredDate.getTime())) {
+      return null;
+    }
+
+    return String(authoredDate.getFullYear());
+  }
+
+  return null;
+}
+
+function getIfqAuthoredYearFromDateParts(year, month, day) {
+  const parsedYear = Number.parseInt(year, 10);
+  const parsedMonth = Number.parseInt(month, 10);
+  const parsedDay = Number.parseInt(day, 10);
+
+  if (!Number.isInteger(parsedYear) || !Number.isInteger(parsedMonth) || !Number.isInteger(parsedDay)) {
+    return null;
+  }
+
+  const authoredDate = new Date(Date.UTC(parsedYear, parsedMonth - 1, parsedDay));
+  if (Number.isNaN(authoredDate.getTime())) {
+    return null;
+  }
+
+  if (
+    authoredDate.getUTCFullYear() !== parsedYear
+    || authoredDate.getUTCMonth() !== parsedMonth - 1
+    || authoredDate.getUTCDate() !== parsedDay
+  ) {
+    return null;
+  }
+
+  return String(parsedYear);
+}
+
+function getIfqAuthoredYearFromString(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  if (/^\d{4}$/.test(normalized)) {
+    return normalized;
+  }
+
+  if (/^\d{10}$/.test(normalized) || /^\d{13}$/.test(normalized)) {
+    const numericYear = getIfqAuthoredYearFromDate(Number(normalized));
+    if (numericYear) {
+      return numericYear;
+    }
+  }
+
+  const isoMatch = normalized.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:\b|T|\s|$)/);
+  if (isoMatch) {
+    const isoYear = getIfqAuthoredYearFromDateParts(isoMatch[1], isoMatch[2], isoMatch[3]);
+    if (isoYear) {
+      return isoYear;
+    }
+  }
+
+  const usMatch = normalized.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\b|\s|$)/);
+  if (usMatch) {
+    const usYear = getIfqAuthoredYearFromDateParts(usMatch[3], usMatch[1], usMatch[2]);
+    if (usYear) {
+      return usYear;
+    }
+  }
+
+  const rfcMatch = normalized.match(/\b(19|20)\d{2}\b/);
+  if (rfcMatch) {
+    return rfcMatch[0];
+  }
+
+  const parsedTimestamp = Date.parse(normalized);
+  if (Number.isFinite(parsedTimestamp)) {
+    return getIfqAuthoredYearFromDate(parsedTimestamp);
+  }
+
+  return null;
+}
+
+function getIfqAuthoredYear(lastModified = typeof document !== 'undefined' ? document.lastModified : '') {
+  if (
+    typeof globalThis !== 'undefined'
+    && globalThis.IfqAuthoredYear
+    && typeof globalThis.IfqAuthoredYear.resolve === 'function'
+  ) {
+    return globalThis.IfqAuthoredYear.resolve(lastModified);
+  }
+
+  return getIfqAuthoredYearFromDate(lastModified) || getIfqAuthoredYearFromString(lastModified) || String(new Date().getFullYear());
+}
+
 function IfqLogo({ height = 28, variant = 'light', style }) {
   // variant: 'light' (dark text on light bg) | 'dark' (light text on dark bg)
   const inkColor = variant === 'dark' ? IfqBrand.paper : IfqBrand.ink;
@@ -125,10 +233,11 @@ function IfqWatermark({ position = 'bottom-right', opacity = 0.55, scale = 1 }) 
   );
 }
 
-function IfqStamp({ label = 'ifq.ai / field note', theme = 'light' }) {
+function IfqStamp({ label, theme = 'light' }) {
   // Editorial rectangular stamp — good for slide footers / infographic colophon
   const bg = theme === 'dark' ? '#151515' : '#fff';
   const fg = theme === 'dark' ? IfqBrand.paper : IfqBrand.ink;
+  const resolvedLabel = label ?? `ifq.ai / ${getIfqAuthoredYear()}`;
   return (
     <div style={{
       display: 'inline-flex',
@@ -148,7 +257,7 @@ function IfqStamp({ label = 'ifq.ai / field note', theme = 'light' }) {
         <path d="M0 -10 L2.2 -2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2 -2.2 Z"
               fill={IfqBrand.accent} />
       </svg>
-      <span>{label}</span>
+      <span>{resolvedLabel}</span>
     </div>
   );
 }

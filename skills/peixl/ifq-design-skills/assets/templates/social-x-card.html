@@ -9,7 +9,11 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=1200"/>
 <title>{ HEADLINE } · ifq.ai</title>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,700;1,700&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/>
+<!-- Optional Google Fonts (non-blocking; system-font fallback if blocked). See references/font-loading.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,700;1,700&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,700;1,700&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet"/></noscript>
 <style>
   :root{--accent:#D4532B;--accent-deep:#A83518;--ink:#111;--paper:#FAF7F2;--cream:#F1EBE0;--display:'Newsreader','Noto Serif SC',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,monospace}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -43,7 +47,7 @@
   <div class="inner">
     <div class="top">
       <div class="brand">ifq<span class="dot">.ai</span></div>
-      <div class="tag">{ TAG · e.g. LAUNCH · 2026 }</div>
+      <div class="tag">{ TAG · e.g. LAUNCH } · <span data-ifq-authored-year>__IFQ_YEAR__</span></div>
     </div>
 
     <h1>{ HEADLINE — punchy, <em>italic</em> for key word. }</h1>
@@ -57,5 +61,9 @@
     </div>
   </div>
 </div>
+<script src="../ifq-brand/ifq_authored_year.js"></script>
+<script>
+  window.IfqAuthoredYear && window.IfqAuthoredYear.apply(document);
+</script>
 </body>
 </html>

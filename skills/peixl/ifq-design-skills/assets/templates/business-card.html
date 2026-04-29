@@ -10,7 +10,11 @@
 <head>
 <meta charset="utf-8"/>
 <title>{ NAME } · Business Card</title>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@700&display=swap" rel="stylesheet"/>
+<!-- Optional Google Fonts (non-blocking; system-font fallback if blocked). See references/font-loading.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@700&display=swap" rel="stylesheet"/></noscript>
 <style>
   @page{size:96mm 60mm;margin:0}
   :root{--accent:#D4532B;--accent-deep:#A83518;--ink:#111;--paper:#FAF7F2;--cream:#F1EBE0;--display:'Newsreader','Noto Serif SC',Georgia,serif;--mono:'JetBrains Mono',ui-monospace,monospace}
@@ -66,14 +70,18 @@
         <div class="row"><span>ifq.ai/{ path }</span><span>{ HANDLE · @... }</span></div>
       </div>
       <div class="colophon">
-        <span>ifq.ai / design systems / 2026</span>
+        <span data-ifq-authored-year>ifq.ai / design systems / __IFQ_YEAR__</span>
         <span class="sig">
           <svg viewBox="-16 -16 32 32"><path d="M0 -10 L2.2 -2.2 L10 0 L2.2 2.2 L0 10 L-2.2 2.2 L-10 0 L-2.2 -2.2 Z" fill="#D4532B"/></svg>
-          field note
+          correspondence
         </span>
       </div>
     </div>
   </article>
 </main>
+<script src="../ifq-brand/ifq_authored_year.js"></script>
+<script>
+  window.IfqAuthoredYear && window.IfqAuthoredYear.apply(document);
+</script>
 </body>
 </html>

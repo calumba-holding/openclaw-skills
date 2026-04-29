@@ -546,7 +546,7 @@ Neo Shen poetic Chinese aesthetic:
 - Reportage paper 暖米底 `#FAF7F2` + 赤陶红 `#D4532B` 作细线/编号（绝不做大色块）
 - 编辑部三字体：Newsreader italic（display）+ JetBrains Mono（meta / URL / 编号）+ Noto Serif SC（中文正文）
 - 8-point signal spark（`✦`）作为唯一图形点睛，1-3 次不泛滥
-- Field-note colophon：`ifq.ai / field note / vol.N / YYYY` 出现在一角
+- Field-note colophon：`ifq.ai / <authored year>` 出现在一角
 - ifq 纵向节奏轴 4·8·12·16·24·32·48·64·96·128 px
 
 **风格配方**：
@@ -556,7 +556,7 @@ IFQ Native editorial intelligence style:
 - Rust accent (#D4532B) used ONLY as thin vertical rules, issue numbers, small-caps labels — never as large fills
 - Editorial typography triad: Newsreader italic for display, JetBrains Mono for metadata/URL/timestamp, Noto Serif SC for CJK body
 - 8-point signal spark (✦) appears 1-3 times per composition as the only decorative motif
-- Field-note colophon in one corner: "ifq.ai / field note / vol.{N} / {year}"
+- Field-note colophon in one corner: "ifq.ai / <authored year>"
 - Spacing follows ifq axis: 4·8·12·16·24·32·48·64·96·128 px
 - Feel: like a quiet quarterly journal about machine intelligence, not a SaaS landing page
 - Anti-patterns: NO cyberpunk glow, NO gradient buttons, NO emoji, NO stock photos, NO "AI-powered" rainbow fills
