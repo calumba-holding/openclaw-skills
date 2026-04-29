@@ -10,7 +10,7 @@
 
 开始前先准备这些输入：
 
-使用curl调用GET 接口 https://oauth.kujiale.com/open-skill/upload
+使用curl调用GET 接口 https://oauth.kujiale.com/oauth2/openapi/ai-design-skill/upload/token
 鉴权参数说明：
 |参数   |是否必须   |参数类型   |参数说明   |例子|
 | ------------ | :------------: | :------------: | ------------ | ------------ |
