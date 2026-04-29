@@ -1,0 +1,30 @@
+{
+  "name": "Overseas Go-to-Market Launch Playbook",
+  "slug": "cb-go-to-market-launch-playbook",
+  "version": "1.0.0",
+  "description": "An end-to-end descriptive launch planning framework for overseas market entry, aligning positioning, channels, content, partnerships, operations, and learning loops.",
+  "author": "Pearl-led OpenClaw team",
+  "tags": [
+    "cross-border",
+    "overseas",
+    "global-expansion",
+    "content-strategy",
+    "partnerships",
+    "go-to-market"
+  ],
+  "trigger_keywords": [
+    "overseas go to market",
+    "international launch plan",
+    "foreign market launch playbook",
+    "global GTM strategy",
+    "cross-border product launch"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "category": "cross-border-expansion",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "outputs": "structured descriptive framework",
+  "readiness": "stable",
+  "safety": "Launch planning is strategic support only; legal, tax, employment, logistics, and regulated-market decisions need local expert review."
+}
