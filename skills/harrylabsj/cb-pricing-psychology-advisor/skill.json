@@ -1,0 +1,20 @@
+{
+  "name": "International Pricing Psychology Advisor",
+  "slug": "cb-pricing-psychology-advisor",
+  "version": "1.0.0",
+  "description": "A descriptive framework for adapting price presentation, discount framing, bundles, and trust signals to different overseas customer expectations.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["pricing", "psychology", "international", "ecommerce", "conversion", "marketing"],
+  "trigger_keywords": [
+    "pricing psychology overseas",
+    "international discount strategy",
+    "foreign market price perception",
+    "localized pricing page",
+    "global conversion pricing"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
