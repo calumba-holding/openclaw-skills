@@ -10,7 +10,7 @@ description: >
   <person>', 'find <person>'s email|linkedin|phone|company', 'tell me about
   <company|person>', 'enrich <person>', 'pull a lead', 'surface a prospect'.
   Normally invoked by the outclaw orchestrator.
-version: 2.1.31
+version: 2.1.33
 metadata:
   openclaw:
     emoji: "🔬"
