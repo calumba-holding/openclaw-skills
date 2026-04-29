@@ -1,7 +1,7 @@
 {
   "empire": {
-    "name": "帝国架构 v1.8",
-    "version": "1.8.0"
+    "name": "Empire Architecture 2.0.2 lite",
+    "version": "2.0.2"
   },
   "llm": {
     "provider": "openclaw",

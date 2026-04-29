@@ -1,11 +1,17 @@
 {
   "owner": "aaroncxxx",
   "slug": "empire-architecture",
-  "displayName": "帝国架构 Empire Architecture",
+  "displayName": "Empire Architecture",
   "latest": {
-    "version": "1.8.1",
-    "publishedAt": 1777147900687,
-    "commit": "https://github.com/openclaw/skills/commit/78e7ada51f5809f51efc85da21377d5b4f56c184"
+    "version": "2.0.1",
+    "publishedAt": 1777439897828,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.8.1",
+      "publishedAt": 1777147900687,
+      "commit": "https://github.com/openclaw/skills/commit/78e7ada51f5809f51efc85da21377d5b4f56c184"
+    }
+  ]
 }
