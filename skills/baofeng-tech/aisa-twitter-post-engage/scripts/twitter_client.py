@@ -23,24 +23,55 @@ import unicodedata
 from typing import Any, Dict, List, Optional
 
 
+DEFAULT_RELAY_BASE_URL = "https://api.aisa.one/apis/v1/twitter"
 DEFAULT_RELAY_TIMEOUT = 30
 TWITTER_MAX_WEIGHT = 280
 TWITTER_URL_WEIGHT = 23
 URL_PATTERN = re.compile(r"https?://\S+", re.IGNORECASE)
 
 
+def normalize_base_url(base_url: str) -> str:
+    value = base_url.strip().rstrip("/")
+    if not value:
+        raise ValueError("TWITTER_RELAY_BASE_URL must not be empty.")
+    parsed = urllib.parse.urlparse(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("TWITTER_RELAY_BASE_URL must be a valid http(s) URL.")
+    if value.endswith("/twitter"):
+        value = value[: -len("/twitter")]
+    return value
+
+
+def parse_timeout(value: Any) -> int:
+    try:
+        timeout = int(str(value).strip())
+    except (TypeError, ValueError) as exc:
+        raise ValueError("TWITTER_RELAY_TIMEOUT must be a positive integer.") from exc
+    if timeout <= 0:
+        raise ValueError("TWITTER_RELAY_TIMEOUT must be a positive integer.")
+    return timeout
+
+
 class TwitterClient:
     """OpenClaw Twitter - Twitter/X API Client."""
 
-    BASE_URL = "https://api.aisa.one/apis/v1"
-
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        *,
+        base_url: Optional[str] = None,
+        timeout: Optional[Any] = None,
+    ):
         """Initialize the client with an API key."""
         self.api_key = api_key or os.environ.get("AISA_API_KEY")
         if not self.api_key:
             raise ValueError(
                 "AISA_API_KEY is required. Set it via environment variable or pass to constructor."
             )
+        relay_base_url = base_url or os.environ.get("TWITTER_RELAY_BASE_URL") or DEFAULT_RELAY_BASE_URL
+        timeout_source = timeout if timeout is not None else os.environ.get("TWITTER_RELAY_TIMEOUT", str(DEFAULT_RELAY_TIMEOUT))
+        self.base_url = normalize_base_url(relay_base_url)
+        self.timeout = parse_timeout(timeout_source)
 
     def _request(
         self,
@@ -50,7 +81,7 @@ class TwitterClient:
         data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Make an HTTP request to the AIsa API."""
-        url = f"{self.BASE_URL}{endpoint}"
+        url = f"{self.base_url}{endpoint}"
 
         if params:
             query_string = urllib.parse.urlencode(
@@ -71,7 +102,7 @@ class TwitterClient:
         req = urllib.request.Request(url, data=request_data, headers=headers, method=method)
 
         try:
-            with urllib.request.urlopen(req, timeout=60) as response:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8")
@@ -218,6 +249,8 @@ def main():
         description="OpenClaw Twitter - Twitter/X read APIs",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument("--base-url", help="Override TWITTER_RELAY_BASE_URL")
+    parser.add_argument("--timeout", type=int, help="Override TWITTER_RELAY_TIMEOUT")
 
     subparsers = parser.add_subparsers(dest="command", help="Command")
 
@@ -337,7 +370,10 @@ def main():
         sys.exit(1)
 
     try:
-        client = TwitterClient()
+        client = TwitterClient(
+            base_url=getattr(args, "base_url", None),
+            timeout=getattr(args, "timeout", None),
+        )
     except ValueError as e:
         print(json.dumps({"success": False, "error": {"code": "AUTH_ERROR", "message": str(e)}}))
         sys.exit(1)

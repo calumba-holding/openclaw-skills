@@ -50,13 +50,31 @@ def normalize_base_url(base_url: str) -> str:
     parsed = urllib.parse.urlparse(value)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise RelayConfigError("Relay base URL must be a valid http(s) URL.")
+    if not value.endswith("/twitter"):
+        value = f"{value}/twitter"
     return value
 
 
+def parse_timeout(value: Any) -> int:
+    try:
+        timeout = int(str(value).strip())
+    except (TypeError, ValueError) as exc:
+        raise RelayConfigError("TWITTER_RELAY_TIMEOUT must be a positive integer.") from exc
+    if timeout <= 0:
+        raise RelayConfigError("TWITTER_RELAY_TIMEOUT must be a positive integer.")
+    return timeout
+
+
 def load_config(args: argparse.Namespace) -> Dict[str, Any]:
-    base_url = normalize_base_url(DEFAULT_BASE_URL)
+    base_url_source = getattr(args, "base_url", None)
+    if base_url_source is None:
+        base_url_source = get_env("TWITTER_RELAY_BASE_URL", DEFAULT_BASE_URL)
+    base_url = normalize_base_url(base_url_source)
     aisa_api_key = get_env("AISA_API_KEY")
-    timeout = DEFAULT_TIMEOUT
+    timeout_source = getattr(args, "timeout", None)
+    if timeout_source is None:
+        timeout_source = get_env("TWITTER_RELAY_TIMEOUT", str(DEFAULT_TIMEOUT))
+    timeout = parse_timeout(timeout_source)
 
     if not aisa_api_key:
         raise RelayConfigError("AISA_API_KEY is required.")
@@ -556,6 +574,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Twitter relay client for local OAuth and posting",
     )
+    parser.add_argument("--base-url", help="Override TWITTER_RELAY_BASE_URL")
+    parser.add_argument("--timeout", type=int, help="Override TWITTER_RELAY_TIMEOUT")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
