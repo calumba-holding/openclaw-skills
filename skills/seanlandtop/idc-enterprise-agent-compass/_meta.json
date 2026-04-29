@@ -1,11 +1,17 @@
 {
   "owner": "seanlandtop",
   "slug": "idc-enterprise-agent-compass",
-  "displayName": "IDC Enterprise Agent Landing COMPASS",
+  "displayName": "IDC Enterprise Agent COMPASS",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776850526963,
-    "commit": "https://github.com/openclaw/skills/commit/b01db0d68c74bbf96ff8ba0492fc427e6da58e2f"
+    "version": "1.0.3",
+    "publishedAt": 1777259850805,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776850526963,
+      "commit": "https://github.com/openclaw/skills/commit/b01db0d68c74bbf96ff8ba0492fc427e6da58e2f"
+    }
+  ]
 }
