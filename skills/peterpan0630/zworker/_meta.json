@@ -3,9 +3,15 @@
   "slug": "zworker",
   "displayName": "Zworker",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1776841999446,
-    "commit": "https://github.com/openclaw/skills/commit/c5f40bd655eab41aa761ff3377f6d5abf2a1608b"
+    "version": "1.0.3",
+    "publishedAt": 1777186487344,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1776841999446,
+      "commit": "https://github.com/openclaw/skills/commit/c5f40bd655eab41aa761ff3377f6d5abf2a1608b"
+    }
+  ]
 }

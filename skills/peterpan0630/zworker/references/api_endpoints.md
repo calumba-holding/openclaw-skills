@@ -2,7 +2,7 @@
 
 **基础URL**: `http://localhost:18803`
 
-所有接口均返回JSON格式响应。成功时通常包含 `success: true` 字段，失败时包含 `success: false` 和 `message` 字段说明错误原因。
+所有接口均返回JSON格式响应（UTF-8编码方式）。成功时通常包含 `success: true` 字段，失败时包含 `success: false` 和 `message` 字段说明错误原因。
 
 ---
 

@@ -14,7 +14,7 @@ zworker 是一个AI自动化任务的Electron应用，本技能提供与zworker�
 - **任务管理**：获取、执行zworker任务
 - **定时计划管理**：获取、启用、关闭zworker的定时计划
 
-所有操作通过zworker暴露的HTTP接口（http://localhost:18803）完成。
+所有操作通过zworker暴露的HTTP接口（http://localhost:18803）完成，HTTP接口均以UTF-8的编码返回，因此你需要按UTF-8编码方式接收和输出数据。
 
 ## 快速开始
 
@@ -28,7 +28,7 @@ zworker 是一个AI自动化任务的Electron应用，本技能提供与zworker�
 **触发语句**：`帮我调用zworker技能，同步用户信息至zworker`、`帮我同步用户信息至zworker`
 
 **工作流程**：
-1. 读取当前OpenClaw的openclaw.json文件中的channels字段，获取当前可用的channel以及该channel的userid，把数据平铺得到 `[{channel: 'xxx', userid: 'xxx'}, ...]`，作为下一步的users参数
+1. 读取当前OpenClaw的openclaw.json文件中的channels字段，获取当前可用的channel以及该channel的userid（**如果openclaw.json没有找到userid，你必须想尽办法拿到，拿不到就过滤掉该数据**），把数据平铺得到 `[{channel: 'xxx', userid: 'xxx'}, ...]`，作为下一步的users参数，如果users数据里面存在不真实的userid，直接报错和终止流程
 2. 调用 `POST /control/setClawUserInfo` 接口，把user信息同步到zworker，参数格式为 `{ users: [{channel: '', userid: ''}, ...] }`
 3. 调用 `POST /control/setClawUserInfo` 接口同步到zworker
 4. 输出同步结果
@@ -56,9 +56,9 @@ zworker 是一个AI自动化任务的Electron应用，本技能提供与zworker�
 
 **工作流程**：
 1. 解析用户请求中的任务名称过滤条件和分页参数
-2. 调用 `GET /control/getTaskList` 接口，传入 `name`、`pageNumber`、`limit` 参数
-3. 默认：`pageNumber=1`、`limit=24`
-4. 以列表形式输出任务ID和任务名称
+2. 调用 `GET /control/getTaskList` 接口，传入 `name`、`pageNumber`、`limit`、`encodingMethod` 参数，其中 `encodingMethod` 是当前调用接口的上下文编码，可传入 utf-8 或 gbk 
+3. 以下参数带有默认值：`pageNumber=1`、`limit=24`
+4. 严格按照输出格式输出任务ID和任务名称，任务名称已按 `encodingMethod` 进行编码
 5. 如果还有下一页数据，提示可获取更多数据
 
 **输出格式**：
@@ -86,9 +86,9 @@ zworker 是一个AI自动化任务的Electron应用，本技能提供与zworker�
 
 **工作流程**：
 1. 解析用户请求中的计划名称过滤条件和分页参数
-2. 调用 `GET /control/getScheduleList` 接口，传入 `name`、`pageNumber`、`limit` 参数
-3. 默认：`pageNumber=1`、`limit=24`
-4. 以列表形式输出计划ID、计划名称、状态（已启动/未启动）
+2. 调用 `GET /control/getScheduleList` 接口，传入 `name`、`pageNumber`、`limit`、`encodingMethod` 参数，其中 `encodingMethod` 是当前调用接口的上下文编码，可传入 utf-8 或 gbk 
+3. 以下参数带有默认值：`pageNumber=1`、`limit=24`
+4. 严格按照输出格式输出计划ID、计划名称、状态（已启动/未启动）
 5. 如果还有下一页数据，提示可获取更多数据
 
 **输出格式**：
@@ -160,3 +160,4 @@ zworker 是一个AI自动化任务的Electron应用，本技能提供与zworker�
 1. 用户信息同步应在channel配置变更后执行
 2. 消息通知功能依赖cron任务定期执行，也可手动触发
 3. 所有HTTP接口为本地调用，确保网络环境安全
+4. 所有HTTP接口均以UTF-8编码返回，确保网络环境安全
