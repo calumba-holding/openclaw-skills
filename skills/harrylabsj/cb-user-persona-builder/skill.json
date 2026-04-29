@@ -1,0 +1,20 @@
+{
+  "name": "Overseas Market User Persona Builder",
+  "slug": "cb-user-persona-builder",
+  "version": "1.0.0",
+  "description": "A research-backed method for building foreign-market personas across demographic, behavioral, cultural, and jobs-to-be-done dimensions.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["persona", "user research", "international", "UX", "marketing", "cross-cultural"],
+  "trigger_keywords": [
+    "overseas user persona",
+    "international buyer persona",
+    "foreign customer profile",
+    "cross-cultural user research",
+    "global audience segmentation"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
