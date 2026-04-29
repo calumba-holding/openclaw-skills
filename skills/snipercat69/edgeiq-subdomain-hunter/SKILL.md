@@ -135,8 +135,9 @@ example.com
 **Lifetime License: $39** — your tool forever, all features included permanently.
 
 **Optional Monthly: $7/mo** — for those who prefer recurring billing (cancel anytime).
-👉 [Buy Lifetime — $39](https://buy.stripe.com/5kQdRbbqbfNHf2A7wA7wA0S_lifetime  ·  [Monthly $7/mo](https://buy.stripe.com/5kQdRbbqbfNHf2A7wA7wA0S_monthly))
-👉 [Subscribe Monthly — $7/mo](https://buy.stripe.com/5kQdRbbqbfNHf2A7wA7wA0S_lifetime)
+👉 [Buy Lifetime — $39](https://buy.stripe.com/5kQdRbbqbfNHf2A7wA7wA0S)
+👉 [Subscribe Monthly — $7/mo](https://buy.stripe.com/8x2aEZeCn44ZcUs18c7wA11)
+👉 [Subscribe Monthly — $7/mo](https://buy.stripe.com/8x2aEZeCn44ZcUs18c7wA11)
 
 ## Pro Upgrade *(deprecated)*
 All features now included in Lifetime purchase.
