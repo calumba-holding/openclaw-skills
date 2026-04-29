@@ -1,0 +1,11 @@
+{
+  "owner": "hanxueyuan",
+  "slug": "interactive-brokers",
+  "displayName": "Interactive Brokers",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777111815610,
+    "commit": null
+  },
+  "history": []
+}
