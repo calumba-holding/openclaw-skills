@@ -2,19 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - 2026-04-22
+## [2.0.0] - 2026-04-23
 
 ### Added
-- 完整一键搬家技能包 v1.0.0
-- `SKILL.md` — 完整使用说明与交互流程
-- `pack.py` — 自动检测并打包团队配置
-- `migrate.py` — 用户选择式迁移恢复
-- `cron_tasks.json` — 定时任务配置模板
-- `openclaw-agents.json` — Agent 配置模板
-- `MATERIAL_PACKING.md` — 打包材料清单文档
+- `metadata.name` 字段（clawhub 识别必需）
+- `SKILL.md` 精简重组，移除与 MATERIAL_PACKING.md 的重复内容
 
-### 核心功能
-- 自动检测 workspace 结构
-- 自动备份现有配置
-- 配置合并（不覆盖已有配置）
-- 支持 Main Agent + 子代理完整迁移
+### Changed
+- `SKILL.md`：全面精简（9768→4262字节），保留核心操作文档
+- `README.md`：精简为快速入口文档
+- `migrate.py`：修复选项1 bug（找workspace逻辑写错，candidates循环里写成死代码）
+
+### Fixed
+- `SKILL.md` 的 `metadata.name` 从 `team-resurrection` 修正为 `quick-resurrection`（与 clawhub slug 一致）
+
+### Removed
+- `MATERIAL_PACKING.md`：内容70%与SKILL.md重复，已废弃
+
+---
+
+## [1.0.0] - 2026-04-22
+
+- 初始版本：pack.py + migrate.py
+- 支持有/无团队的通用化检测
+- Main Agent 三个选项（选项1/2 当时执行逻辑残缺）

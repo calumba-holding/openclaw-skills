@@ -71,12 +71,36 @@ def detect_active_workspace():
                 if wp.exists() and (wp / "SOUL.md").exists():
                     return wp
 
+    # fallback：从agents.list推断主agent workspace
+    # 策略：收集所有workspace路径的父级链，找包含SOUL.md的最深公共父目录
+    workspaces = [Path(a['workspace']) for a in agents
+                  if a.get('workspace') and Path(a.get('workspace', '')).exists()]
+    if workspaces:
+        # 收集所有workspace的所有祖先目录（到home为止）
+        candidate_dirs = set()
+        home = Path.home()
+        for ws in workspaces:
+            for parent in ws.parents:
+                if parent == home or not str(parent).startswith(str(home)):
+                    break
+                candidate_dirs.add(parent)
+        # 在候选目录中找包含SOUL.md+MEMORY.md的，选最深的（最接近workspace）
+        for candidate in sorted(candidate_dirs, key=lambda x: len(x.parts), reverse=True):
+            if (candidate / 'SOUL.md').exists() and (candidate / 'MEMORY.md').exists():
+                return candidate
+
     # fallback：遍历 workspace- 开头的目录，找包含 SOUL.md + MEMORY.md 的
     workspace_base = Path.home() / ".qclaw"
+    candidates = []
     for d in workspace_base.iterdir():
-        if d.is_dir() and d.name.startswith("workspace-"):
-            if (d / "SOUL.md").exists() and (d / "MEMORY.md").exists():
-                return d
+        if not (d.is_dir() and d.name.startswith("workspace-")):
+            continue
+        has_identity = (d / "SOUL.md").exists() and (d / "MEMORY.md").exists()
+        subagent_count = sum(1 for sub in d.iterdir() if sub.is_dir() and (sub / "SOUL.md").exists())
+        candidates.append((d, has_identity, subagent_count))
+    candidates.sort(key=lambda x: (x[1], x[2]), reverse=True)
+    if candidates:
+        return candidates[0][0]
 
     # fallback:找当前 cwd 的父链
     cwd = Path.cwd()
@@ -88,19 +112,30 @@ def detect_active_workspace():
 
 def get_agent_name(workspace):
     """从 workspace 推断 agent 名称"""
-    memory = workspace / "MEMORY.md"
+    soul = workspace / "SOUL.md"
     identity = workspace / "IDENTITY.md"
 
-    name = workspace.name  # 默认用目录名
-
+    # 优先从 IDENTITY.md 的 Name 字段读取
     if identity.exists():
         with open(identity, 'r', encoding='utf-8') as f:
-            content = f.read()
-        for line in content.split('\n'):
-            if line.startswith('**What to call them:**'):
-                return line.split('**What to call them:**')[1].strip().rstrip('*').strip()
+            for line in f.read().split('\n'):
+                if line.startswith('- **Name:**'):
+                    name = line.split('**Name:**')[1].strip()
+                    if name:
+                        return name
 
-    return name
+    # 从 SOUL.md 的第一个 # 标题读取
+    if soul.exists():
+        with open(soul, 'r', encoding='utf-8') as f:
+            for line in f.read().split('\n'):
+                if line.startswith('# '):
+                    title = line[2:].strip()
+                    # 去掉 SOUL.md 标记
+                    title = title.replace('SOUL.md', '').replace('—', '').strip()
+                    if title:
+                        return title
+
+    return workspace.name  # 默认用目录名
 
 # =============================================
 # 主流程
@@ -116,14 +151,17 @@ def get_agent_info():
     return config.get('agents', {}).get('list', [])
 
 def get_cron_tasks():
-    """获取 cron 任务列表"""
-    output, code = run_cmd("openclaw tasks list --json")
-    if code == 0 and output:
-        try:
-            return json.loads(output)
-        except:
-            pass
-    return []
+    """从 ~/.qclaw/cron/jobs.json 读取 cron 任务定义"""
+    cron_file = Path.home() / ".qclaw" / "cron" / "jobs.json"
+    if not cron_file.exists():
+        return []
+    try:
+        data = json.loads(cron_file.read_text(encoding="utf-8"))
+        jobs = data.get("jobs", [])
+        # 只取 enabled=True 的任务
+        return [j for j in jobs if j.get("enabled", True)]
+    except Exception:
+        return []
 
 def main():
     print()
@@ -257,22 +295,11 @@ def main():
 
     cron_tasks = get_cron_tasks()
     if cron_tasks:
-        cron_config = []
-        for task in cron_tasks:
-            if isinstance(task, str):
-                cron_config.append({"name": task})
-            elif isinstance(task, dict):
-                cron_config.append({
-                    "name": task.get('name', ''),
-                    "schedule": task.get('schedule', {}),
-                    "sessionTarget": task.get('sessionTarget', 'isolated'),
-                    "payload": task.get('payload', {})
-                })
+        # 存完整 jobs 定义，migrate 时直接重建
+        with open(package_dir / "cron_jobs.json", 'w', encoding='utf-8') as f:
+            json.dump(cron_tasks, f, indent=2, ensure_ascii=False)
 
-        with open(package_dir / "cron_tasks.json", 'w', encoding='utf-8') as f:
-            json.dump(cron_config, f, indent=2, ensure_ascii=False)
-
-        log(f"  cron_tasks.json ({len(cron_tasks)} 个任务)")
+        log(f"  cron_jobs.json ({len(cron_tasks)} 个任务)")
     else:
         warn("  未能获取 cron 任务列表")
     print()
@@ -335,7 +362,7 @@ tales/ 目录是团队的创作成果仓库。
                 "defaults": {
                     "model": {"primary": "qclaw/modelroute"},
                     "maxConcurrent": 10,
-                    "subagents": {"allowAgents": ["*"]}
+                    "subagents": {"allowAgents": [a["id"] for a in agents if a.get("id") != "main"]}
                 },
                 "list": agents
             },
@@ -394,7 +421,7 @@ tales/ 目录是团队的创作成果仓库。
 ├── skills/              ← Skills({skill_count}个)
 │
 ├── openclaw-agents.json ← Agent 配置片段
-├── cron_tasks.json      ← Cron 任务配置
+├── cron_jobs.json       ← Cron 任务配置
 ├── 工作目录说明.md      ← git工作目录提示
 │
 ├── README.md            ← 本文件
@@ -438,14 +465,14 @@ python3 migrate.py
 
 ---
 
-**生成脚本:** skills/team-resurrection/pack.py v2.0
+**生成脚本:** skills/quick-resurrection/pack.py v2.0
 """
 
     with open(package_dir / "README.md", 'w', encoding='utf-8') as f:
         f.write(readme_content)
 
     # 把 migrate.py 也复制进包(从 skill 目录复制)
-    skill_dir = main_workspace / "skills" / "team-resurrection"
+    skill_dir = main_workspace / "skills" / "quick-resurrection"
     migrate_src = skill_dir / "migrate.py"
     if migrate_src.exists():
         shutil.copy2(migrate_src, package_dir / "migrate.py")
