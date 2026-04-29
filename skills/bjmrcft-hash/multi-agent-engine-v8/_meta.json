@@ -1,0 +1,11 @@
+{
+  "owner": "bjmrcft-hash",
+  "slug": "multi-agent-engine-v8",
+  "displayName": "Multi-Agent Engine v8",
+  "latest": {
+    "version": "8.2.1",
+    "publishedAt": 1776943589835,
+    "commit": null
+  },
+  "history": []
+}
