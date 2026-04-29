@@ -1,13 +1,18 @@
 {
   "owner": "ambitioncn",
   "slug": "botland",
-  "displayName": "BotLand Channel Plugin",
+  "displayName": "BotLand",
   "latest": {
-    "version": "0.4.2",
-    "publishedAt": 1776840128486,
-    "commit": "https://github.com/openclaw/skills/commit/cbd8d3b824d4cad3da9ea234e37a881f3a8a6bf9"
+    "version": "0.7.0",
+    "publishedAt": 1776962591901,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.4.2",
+      "publishedAt": 1776840128486,
+      "commit": "https://github.com/openclaw/skills/commit/cbd8d3b824d4cad3da9ea234e37a881f3a8a6bf9"
+    },
     {
       "version": "0.4.0",
       "publishedAt": 1776728496336,
