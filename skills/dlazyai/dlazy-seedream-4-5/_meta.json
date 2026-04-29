@@ -3,9 +3,15 @@
   "slug": "dlazy-seedream-4-5",
   "displayName": "Dlazy Seedream 4.5",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776839260715,
-    "commit": "https://github.com/openclaw/skills/commit/894d6647752af6b381b0d5833341681644537a57"
+    "version": "1.0.5",
+    "publishedAt": 1777430115706,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776839260715,
+      "commit": "https://github.com/openclaw/skills/commit/894d6647752af6b381b0d5833341681644537a57"
+    }
+  ]
 }
