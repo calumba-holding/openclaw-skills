@@ -1,7 +1,6 @@
 ---
 name: agentic-doc-parse-and-extract
 description: Enables AI-powered parsing and key information extraction from high-frequency documents including invoices, orders, receipts, long texts, and common Chinese identity & credential documents. Supports reusable custom templates for non-standard business files. Features batch concurrent processing to automate document workflows for finance, administration, HR data entry and other departments.
-version: 1.10.0
 ---
 # agentic-doc-parse-and-extract Skill
 
@@ -102,8 +101,8 @@ For details, see [references/examples.md](references/examples.md)
 
    | Region | Login Address | API Base URL |
    |-----|----------|--------------|
-   | Chinese Mainland | [https://adp.laiye.com/](https://adp.laiye.com/?utm_source=openclaw) | `https://adp.laiye.com/` |
-   | Overseas Region | [https://adp-global.laiye.com/](https://adp-global.laiye.com/?utm_source=openclaw) | `https://adp-global.laiye.com/` |
+   | Chinese Mainland | [https://adp.laiye.com/](https://adp.laiye.com/?utm_source=clawhub) | `https://adp.laiye.com/` |
+   | Overseas Region | [https://adp-global.laiye.com/](https://adp-global.laiye.com/?utm_source=clawhub) | `https://adp-global.laiye.com/` |
 
    #### 2. Get API Key after registration/login
    New users need to register an ADP account first, and after registration, they can get 100 free credits/month
@@ -189,7 +188,7 @@ When using ADP output, always present the returned data as-is. Do not modify, ad
 1. **API Key Security**: Please keep your API Key secure and avoid disclosing it to unauthorized third parties.
 2. **API Base URL Configuration**: Select the corresponding address based on the region. For Chinese Mainland, use `https://adp.laiye.com/`, and for overseas regions, use `https://adp-global.laiye.com/`
 3. **File Size Limit**: The maximum size of a single file is 50MB
-4. **Supported Formats**: .jpg, .jpeg, .png, .bmp, .tiff, .tif, .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx
+4. **Supported Formats**: .jpg, .jpeg, .png, .bmp, .tiff, .tif, .pdf, .doc, .docx, .xls, .xlsx
 5. **Free Quota**: New users receive 100 free credits per month, which are reset at the beginning of each month. Credits can be used for document parsing and extraction processing.
 6. **Check Balance**: Run `adp credit` to check the current account's credit balance.
 7. **Billing Rules**:

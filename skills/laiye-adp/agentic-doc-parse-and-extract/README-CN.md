@@ -57,7 +57,7 @@ agentic-doc-parse-and-extract/
 
 ## 📋 API Key
 ### 获取API Key
-1. 访问 [ADP 中国地区网址](https://adp.laiye.com/?utm_source=openclaw)、 [ADP 全球地区网址](https://adp-global.laiye.com/?utm_source=openclaw)
+1. 访问 [ADP 中国地区网址](https://adp.laiye.com/?utm_source=clawhub)、 [ADP 全球地区网址](https://adp-global.laiye.com/?utm_source=clawhub)
 2. 注册新账户（新用户每月 100 免费积分）
 
 
@@ -70,12 +70,11 @@ agentic-doc-parse-and-extract/
 | **macOS** | macOS 10.14 (Mojave) 或更高版本 |
 ---
 
-### 获取安装包
+### 安装
 
   ```bash
   # 方法 1: npm（推荐，全平台通用，国内可通过 npmmirror 镜像加速）
   npm install -g @laiye-adp/agentic-doc-parse-and-extract-cli --registry=https://registry.npmmirror.com/ || npm install -g @laiye-adp/agentic-doc-parse-and-extract-cli
-  export PATH="$(npm prefix -g)/bin:$PATH"
 
   # 方法 2: Shell 脚本（Linux / macOS，无 npm 环境时使用）
   curl -fsSL https://raw.githubusercontent.com/laiye-ai/adp-cli/main/scripts/adp-init.sh | bash
@@ -85,115 +84,6 @@ agentic-doc-parse-and-extract/
   ```
 
 ---
-### 本地安装指南
-ADP CLI 提供预编译的可执行文件，无需安装Python环境即可直接使用。
-
-#### Windows 系统安装
-- 步骤 1：下载可执行文件
-  Windows：下载 [adp.exe](https://laiye-devops.oss-cn-beijing.aliyuncs.com/release/adp/cli/v1.10.0/win/adp.exe) 可执行文件
-
-- 步骤 2：运行可执行文件
-  在命令提示符中运行：
-  ```
-    # 在当前目录运行
-    adp.exe --help
-
-    # 或者添加到PATH后直接使用
-    adp --help
-    ```
-- 步骤 3：添加到系统PATH（可选）
-  为了在任意位置使用 adp 命令，可以将文件所在目录添加到系统PATH：
-    ```
-    # 方式一：临时添加（当前会话窗口）
-    set PATH=%PATH%;C:\path\to\adp-cli
-
-    # 方式二：永久添加（需要管理员权限）
-    setx PATH "%PATH%;C:\path\to\adp-cli"
-    ```
-- 步骤 4：验证安装
-    ```
-    # 查看版本信息
-    adp.exe --version
-
-    # 或如果已添加到PATH
-    adp --version
-    ```
----
-
-#### Linux 系统安装
-- 步骤 1：下载可执行文件
-  Linux/macOS：下载对应平台[二进制文件](https://laiye-devops.oss-cn-beijing.aliyuncs.com/release/adp/cli/v1.10.0/linux/adp)
-
-- 步骤 2：设置可执行权限
-    ```
-    # 设置可执行权限
-    chmod +x adp
-
-    # 运行测试
-    ./adp --help
-    ```
-- 步骤 3：添加到PATH环境变量（推荐）
-  为了在任意位置使用 adp 命令，推荐以下两种方式之一：
-    ```
-    # 方式一：临时添加（当前会话窗口）
-    export PATH=$PATH:$(pwd)
-
-    # 方式二：永久添加（添加到 ~/.bashrc 或 ~/.zshrc）
-    echo 'export PATH=$PATH:/path/to/adp' >> ~/.bashrc
-    source ~/.bashrc
-
-    # 方式三：创建软链接（需要sudo权限）
-    sudo ln -s $(pwd)/adp /usr/local/bin/adp
-
-    # 验证
-    adp --version
-    ```
-- 步骤 4：验证安装
-    ```
-    # 使用相对路径
-    ./adp --version
-
-    # 或者如果已添加到PATH
-    adp --version
-    ```
-
----
-#### macOS 系统安装
-- 步骤 1：下载可执行文件
-  Linux/macOS：下载对应平台[二进制文件](https://laiye-devops.oss-cn-beijing.aliyuncs.com/release/adp/cli/v1.10.0/linux/adp)
-
-- 步骤 2：设置可执行权限
-    ```
-    # 设置可执行权限
-    chmod +x adp
-
-    # 运行测试
-    ./adp --help
-    ```
-- 步骤 3：添加到PATH环境变量（推荐）
-  为了在任意位置使用 adp 命令，推荐以下两种方式之一：
-    ```
-    # 方式一：临时添加（当前会话窗口）
-    export PATH=$PATH:$(pwd)
-
-    # 方式二：永久添加（添加到 ~/.zshrc）
-    echo 'export PATH=$PATH:/path/to/adp' >> ~/.zshrc
-    source ~/.zshrc
-
-    # 方式三：创建软链接（需要sudo权限）
-    sudo ln -s $(pwd)/adp /usr/local/bin/adp
-
-    # 验证
-    adp --version
-    ```
-- 步骤 4：验证安装
-    ```
-    # 使用相对路径
-    ./adp --version
-
-    # 或者如果已添加到PATH
-    adp --version
-    ```
 
 ## ✨ 核心特性
 
@@ -208,7 +98,7 @@ ADP CLI 提供预编译的可执行文件，无需安装Python环境即可直接
 
 ### 🛠️ 技术能力
 
-- **10+ 种文件格式** ： 覆盖主流图片与办公文档格式（.jpg, .jpeg, .png, .bmp, .tiff, .tif, .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx）
+- **10+ 种文件格式** ： 覆盖主流图片与办公文档格式（.jpg, .jpeg, .png, .bmp, .tiff, .tif, .pdf, .doc, .docx, .xls, .xlsx）
 - **VLM + LLM 双引擎** ： 视觉理解 + 语义提取，实现最大准确率
 - **同步与异步模式** ： 所有功能均对外开放同步、异步 API
 - **文件限制：** 最大文件大小：50MB
@@ -235,8 +125,8 @@ ADP CLI 提供预编译的可执行文件，无需安装Python环境即可直接
     | 自定义抽取 | 1 积分/页 |
 
 - **资产充值：** 可直接登录ADP门户网站进行资产充值，我们为国内外用户提供了独立公有云接入地址，需要按区域分开配置，就近访问可更大程度保障全网高速稳定调用。
-  - 中国大陆地区[登录](https://adp.laiye.com/?utm_source=openclaw)
-  - 非中国大陆地区用户[登录](https://adp-global.laiye.com/?utm_source=openclaw)
+  - 中国大陆地区[登录](https://adp.laiye.com/?utm_source=clawhub)
+  - 非中国大陆地区用户[登录](https://adp-global.laiye.com/?utm_source=clawhub)
 
   如支付遇到问题，请联系支持邮箱：📧 global_product@laiye.com
 
