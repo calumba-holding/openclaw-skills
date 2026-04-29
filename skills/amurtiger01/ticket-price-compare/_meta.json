@@ -3,9 +3,15 @@
   "slug": "ticket-price-compare",
   "displayName": "Ticket Price Compare",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1776623892433,
-    "commit": "https://github.com/openclaw/skills/commit/c142aec6c7507f5d41a98c852829282630d87bf5"
+    "version": "1.2.6",
+    "publishedAt": 1777134501307,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1776623892433,
+      "commit": "https://github.com/openclaw/skills/commit/c142aec6c7507f5d41a98c852829282630d87bf5"
+    }
+  ]
 }
