@@ -3,9 +3,15 @@
   "slug": "dlazy-wan2-6-r2v",
   "displayName": "Dlazy Wan2.6 R2v",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776847320207,
-    "commit": "https://github.com/openclaw/skills/commit/276aa30c2ca3c65388f792f1b4c87f662ccaa651"
+    "version": "1.0.5",
+    "publishedAt": 1777430141961,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776847320207,
+      "commit": "https://github.com/openclaw/skills/commit/276aa30c2ca3c65388f792f1b4c87f662ccaa651"
+    }
+  ]
 }
