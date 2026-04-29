@@ -1,0 +1,11 @@
+{
+  "owner": "wangm-a3",
+  "slug": "agent-cluster",
+  "displayName": "Agent Cluster",
+  "latest": {
+    "version": "3.0.3",
+    "publishedAt": 1777434657891,
+    "commit": null
+  },
+  "history": []
+}
