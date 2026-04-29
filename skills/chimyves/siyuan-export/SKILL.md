@@ -1,8 +1,6 @@
 ---
 name: siyuan-export
-description: "思源笔记文档导出工具。将思源笔记文档导出为 Word(docx) 格式，支持按文档 ID 或路径导出，图片自动打包进文档（单个文件输出）。支持单个文档导出和批量导出子文档。触发词：导出文档、导出 Word、siyuan export、思源导出、批量导出、导出子文档"
-version: "1.1.0"
-author: Matrix for Neo
+description: "思源笔记文档导出工具。将思源笔记文档导出为 Word(docx) 格式，支持按文档 ID/路径/名称搜索导出，图片自动打包进文档。支持单个文档导出和批量导出子文档。触发词：导出文档、导出 Word、siyuan export、思源导出、批量导出、导出子文档"
 ---
 
 # 思源笔记文档导出 (siyuan-export)
@@ -22,41 +20,59 @@ author: Matrix for Neo
 ## 前置条件
 
 1. 思源笔记正在运行
-2. 已配置 `config.json`（技能目录下）：
-   ```json
-   {"baseURL": "http://127.0.0.1:6806", "token": "你的API Token", "timeout": 10000}
+2. 配置 Token
+
+   **方式 A：环境变量（推荐）**
+   ```bash
+   # Windows PowerShell
+   $env:SIYUAN_TOKEN = "你的token"
+   $env:SIYUAN_BASE_URL = "http://127.0.0.1:6806"
+   $env:SIYUAN_TIMEOUT = "10000"  # 可选，超时 ms
    ```
+
+   **方式 B：config.json**（在技能目录下创建）
+   ```json
+   {
+       "baseURL": "http://127.0.0.1:6806",
+       "token": "你的token",
+       "timeout": 10000
+   }
+   ```
+
+   **方式 C：复制 config.example.json 重命名为 config.json**
+   ```
+   config.example.json → config.json
+   ```
+   然后填入 token
+
    Token 获取：思源笔记 → 设置 → 关于 → 复制 Token
 
 ## 使用方法
 
 ```bash
-# 按 ID 导出单个文档到桌面（最常用）
+# 按文档名搜索导出（推荐）
+python scripts/siyuan_export.py -s "关键词" -o C:/Desktop
+
+# 按 ID 导出单个文档
 python scripts/siyuan_export.py --doc-id <ID>
 
-# 按路径导出，指定输出目录
-python scripts/siyuan_export.py --path "/AI/AIGC/绘画" --output C:/output
+# 按路径导出
+python scripts/siyuan_export.py --path "/AI/Test" --output C:/output
 
-# 导出文档下所有子文档
+# 导出所有子文档
 python scripts/siyuan_export.py --doc-id <ID> --children --output C:/Desktop/Midjourney
-
-# 导出文档本身 + 所有子文档
-python scripts/siyuan_export.py --doc-id <ID> --children --include-self --output C:/Desktop/Midjourney
-
-# 纯 JSON 输出（供程序调用）
-python scripts/siyuan_export.py --doc-id <ID> --json
 ```
 
 ### 参数说明
 
 | 参数 | 缩写 | 必选 | 说明 |
 |------|------|:----:|------|
-| `--doc-id` | `-i` | 二选一 | 文档 ID（如 `20260404211618-s3bjc3l`） |
-| `--path` | `-p` | 二选一 | 文档路径（如 `/AI/AIGC/绘画`） |
-| `--children` | `-c` | 否 | 批量模式：导出该文档下所有子文档 |
-| `--include-self` | | 否 | 批量模式时同时导出父文档本身（需配合 `--children`） |
-| `--output` | `-o` | 否 | 输出**目录**路径（默认：桌面），API 会在该目录下以文档标题命名生成文件 |
-| `--json` | | 否 | 仅输出 JSON，无 stderr 提示 |
+| `--doc-id` | `-i` | 二选一 | 文档 ID |
+| `--path` | `-p` | 二选一 | 文档路径 |
+| `--search` | `-s` | 二选一 | 按文档名搜索 |
+| `--children` | `-c` | 否 | 批量模式：导出所有子文档 |
+| `--include-self` | | 否 | 批量模式时同时导出父文档 |
+| `--output` | `-o` | 否 | 输出目录（默认：桌面） |
 
 ## 返回值
 
@@ -117,7 +133,7 @@ python scripts/siyuan_export.py --doc-id <ID> --json
 ```
 siyuan-export/
 ├── SKILL.md
-├── config.json         # 配置文件（需手动填写 token）
+├── config.example.json  # 配置模板（含 timeout 字段）
 └── scripts/
     └── siyuan_export.py
 ```
