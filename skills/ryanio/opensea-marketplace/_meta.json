@@ -1,0 +1,11 @@
+{
+  "owner": "ryanio",
+  "slug": "opensea-marketplace",
+  "displayName": "OpenSea Skill",
+  "latest": {
+    "version": "2.2.2",
+    "publishedAt": 1777066241184,
+    "commit": null
+  },
+  "history": []
+}
