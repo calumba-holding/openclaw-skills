@@ -4,21 +4,9 @@
 
 const BASE_URL = 'https://api.search.brave.com/res/v1';
 const VALID_FRESHNESS = new Set(['pd', 'pw', 'pm', 'py']);
+const { parseArgs, fetchWithRetry } = require('./utils');
 
-function parseArgs(argv) {
-  const args = {};
-  for (let i = 2; i < argv.length; i++) {
-    if (argv[i].startsWith('--')) {
-      const key = argv[i].slice(2);
-      const val = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : 'true';
-      args[key] = val;
-    }
-  }
-  return args;
-}
-
-async function braveGet(path, params) {
-  const apiKey = process.env.BRAVE_SEARCH_API_KEY;
+async function braveGet(path, params, apiKey) {
   if (!apiKey) {
     console.error('Error: BRAVE_SEARCH_API_KEY environment variable not set.');
     console.error('Get your key at: https://api-dashboard.search.brave.com');
@@ -30,7 +18,7 @@ async function braveGet(path, params) {
     if (v !== '' && v !== undefined && v !== null) url.searchParams.set(k, v);
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await fetchWithRetry(url.toString(), {
     headers: {
       'Accept': 'application/json',
       'Accept-Encoding': 'gzip',
@@ -80,7 +68,6 @@ function formatSummary(data) {
     const text = data.summary.map(s => s.data || '').join('');
     lines.push(text);
   }
-  if (data.enrichments?.raw) lines.push(`\n${data.enrichments.raw}`);
   if (data.followups?.length) {
     lines.push('\n**Related questions:**');
     for (const q of data.followups) lines.push(`- ${q}`);
@@ -93,7 +80,17 @@ async function main() {
 
   const query = args.query;
   if (!query) {
-    console.error('Usage: brave_search.js --query "search terms" [--count 10] [--country us] [--freshness pd] [--extra-snippets true] [--summary true]');
+    console.error(
+      'Usage: brave_search.js --query "search terms" [--count 10] [--country us]\n' +
+      '  [--freshness pd|pw|pm|py] [--extra-snippets true] [--summary true]'
+    );
+    process.exit(1);
+  }
+
+  const apiKey = process.env.BRAVE_SEARCH_API_KEY;
+  if (!apiKey) {
+    console.error('Error: BRAVE_SEARCH_API_KEY environment variable not set.');
+    console.error('Get your key at: https://api-dashboard.search.brave.com');
     process.exit(1);
   }
 
@@ -103,28 +100,41 @@ async function main() {
   const extraSnippets = args['extra-snippets'] === 'true';
   const wantSummary = args.summary === 'true';
 
-  const params = {
+  // Build params for main search
+  const searchParams = {
     q: query,
     count,
     country,
     freshness,
     extra_snippets: extraSnippets ? '1' : undefined,
-    summary: wantSummary ? '1' : undefined,
   };
 
-  const data = await braveGet('/web/search', params);
+  // If summary wanted, add summary=1 flag to primary search
+  if (wantSummary) searchParams.summary = '1';
+
+  // Fetch search (and summary key if --summary) in parallel with other independent fetches
+  const [data] = await Promise.all([braveGet('/web/search', searchParams, apiKey)]);
+
   console.log(formatResults(data, extraSnippets));
 
+  // If summary requested, fetch summary in parallel with main output
   if (wantSummary && data.summarizer?.key) {
     const summaryData = await braveGet('/summarizer/search', {
       key: data.summarizer.key,
       inline_references: 'true',
-    });
+    }, apiKey);
+
     const summary = formatSummary(summaryData);
     if (summary) {
       console.log('\n---\n**AI Summary:**\n');
       console.log(summary);
     }
+  }
+
+  // Print more-results-available hint
+  if (data.query?.more_results_available) {
+    const offset = parseInt(args.offset || '0', 10);
+    console.log(`\n*(More results available. Next page: --offset ${offset + 20})*`);
   }
 }
 

@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 // Brave Autosuggest - uses Brave Search API suggest endpoint
-// Requires: BRAVE_SEARCH_API_KEY env var
+// Requires: AUTOSUGGEST_API_KEY, BRAVE_AUTOSUGGEST_API_KEY, or BRAVE_SEARCH_API_KEY env var
 
 const BASE_URL = 'https://api.search.brave.com/res/v1';
+const { parseArgs, fetchWithRetry, createCache } = require('./utils');
 
-function parseArgs(argv) {
-  const args = {};
-  for (let i = 2; i < argv.length; i++) {
-    if (argv[i].startsWith('--')) {
-      const key = argv[i].slice(2);
-      const val = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : 'true';
-      args[key] = val;
-    }
-  }
-  return args;
+// Shared cache: key = query+country+rich, TTL = 60s
+const cache = createCache();
+
+function getApiKey() {
+  return (
+    process.env.AUTOSUGGEST_API_KEY ||
+    process.env.BRAVE_AUTOSUGGEST_API_KEY ||
+    process.env.BRAVE_SEARCH_API_KEY ||
+    null
+  );
 }
 
-async function braveSuggest(path, params) {
-  const apiKey = process.env.BRAVE_SEARCH_API_KEY;
+async function braveSuggest(path, params, apiKey) {
   if (!apiKey) {
-    console.error('Error: BRAVE_SEARCH_API_KEY environment variable not set.');
+    console.error('Error: AUTOSUGGEST_API_KEY or BRAVE_SEARCH_API_KEY environment variable not set.');
     console.error('Get your key at: https://api-dashboard.search.brave.com');
     process.exit(1);
   }
@@ -29,7 +29,7 @@ async function braveSuggest(path, params) {
     if (v !== '' && v !== undefined && v !== null) url.searchParams.set(k, v);
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await fetchWithRetry(url.toString(), {
     headers: {
       'Accept': 'application/json',
       'Accept-Encoding': 'gzip',
@@ -52,10 +52,9 @@ function formatSuggestions(data, rich) {
     return 'No suggestions found.';
   }
 
-  const lines = [`Got ${results.length} suggestion(s) for: ${data.query?.original || ''}\n`;
+  const lines = [`Got ${results.length} suggestion(s) for: ${data.query?.original || ''}\n`];
 
   if (rich) {
-    // Rich suggestions with enhanced metadata
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
       lines.push(`${i + 1}. **${r.query}**`);
@@ -74,7 +73,6 @@ function formatSuggestions(data, rich) {
       lines.push('');
     }
   } else {
-    // Simple suggestions
     for (let i = 0; i < results.length; i++) {
       lines.push(`${i + 1}. ${results[i].query}`);
     }
@@ -88,8 +86,10 @@ async function main() {
 
   const query = args.query || args.q;
   if (!query) {
-    console.error('Usage: brave_suggest.js --query "search terms" [--count 5] [--country us] [--rich true]');
-    console.error('Short form: --q "search terms"');
+    console.error(
+      'Usage: brave_suggest.js --query "search terms" [--count 5] [--country us] [--rich true]\n' +
+      '  Short form: --q "search terms"'
+    );
     process.exit(1);
   }
 
@@ -97,17 +97,23 @@ async function main() {
   const country = (args.country || 'US').toUpperCase();
   const rich = args.rich === 'true';
 
+  const cacheKey = `${query}|${count}|${country}|${rich}`;
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    console.log('(cached) ' + formatSuggestions(cached, rich));
+    return;
+  }
+
+  const apiKey = getApiKey();
   const params = {
     q: query,
     count,
     country,
   };
+  if (rich) params.rich = 'true';
 
-  if (rich) {
-    params.rich = 'true';
-  }
-
-  const data = await braveSuggest('/suggest/search', params);
+  const data = await braveSuggest('/suggest/search', params, apiKey);
+  cache.set(cacheKey, data, 60_000);
   console.log(formatSuggestions(data, rich));
 }
 

@@ -4,7 +4,7 @@ description: Real-time web search, autosuggest, and AI-powered answers using the
 license: MIT
 metadata:
   author: Broedkrummen
-  version: 3.0.0
+  version: 4.0.0
 ---
 
 # Brave API Search
@@ -22,17 +22,17 @@ Set your Brave API keys in a local `.env` file (recommended):
 # .env (do not commit)
 BRAVE_SEARCH_API_KEY=your_key_here
 BRAVE_ANSWERS_API_KEY=your_key_here
+AUTOSUGGEST_API_KEY=your_key_here   # optional, for autosuggest only
 ```
-
-Or export them in your shell session if needed.
 
 Get your keys at: https://api-dashboard.search.brave.com
 
-Both keys can be the same if your plan supports both Search and AI Answers endpoints.
+**Key routing:**
+- `brave_search` → `BRAVE_SEARCH_API_KEY`
+- `brave_answers` → `BRAVE_ANSWERS_API_KEY`
+- `brave_suggest` → `AUTOSUGGEST_API_KEY` → `BRAVE_AUTOSUGGEST_API_KEY` → `BRAVE_SEARCH_API_KEY` (tries in order)
 
-> Note: `brave_search` and `brave_suggest` use `BRAVE_SEARCH_API_KEY`. `brave_answers` requires `BRAVE_ANSWERS_API_KEY`.
-
-> Note: This skill explicitly requires `BRAVE_SEARCH_API_KEY` and `BRAVE_ANSWERS_API_KEY`. It does **not** use a generic `BRAVE_API_KEY` fallback.
+> Note: `brave_answers` uses streaming by default. Streaming is required for citations, entities, and research mode.
 
 ## When to Use This Skill
 
@@ -64,11 +64,11 @@ Both keys can be the same if your plan supports both Search and AI Answers endpo
 
 Web search returning ranked results with titles, URLs, and descriptions.
 
-```
-brave_search(query="latest Node.js release", count=5)
-brave_search(query="TypeScript generics", extra_snippets=true)
-brave_search(query="current weather Copenhagen", freshness="pd")
-brave_search(query="React Server Components", summary=true)
+```bash
+brave_search --query "latest Node.js release" --count 5
+brave_search --query "TypeScript generics" --extra-snippets true
+brave_search --query "current weather Copenhagen" --freshness pd
+brave_search --query "React Server Components" --summary true
 ```
 
 **Parameters:**
@@ -76,28 +76,29 @@ brave_search(query="React Server Components", summary=true)
 - `count` — Results to return (1-20, default: 10)
 - `country` — 2-letter country code (default: `us`)
 - `freshness` — Date filter: `pd` (24h), `pw` (7 days), `pm` (31 days), `py` (1 year)
-- `extra_snippets` — Include up to 5 extra text excerpts per result (default: false)
+- `extra-snippets` — Include up to 5 extra text excerpts per result (default: false)
 - `summary` — Fetch Brave AI summarizer result (default: false)
+- `offset` — Pagination offset for next page results
 
-**Returns:** Formatted list of results with title, URL, description, and optional AI summary.
+**Returns:** Formatted list of results with title, URL, description, optional AI summary, and a hint for next page if `more_results_available`.
 
 ### brave_suggest
 
 Query autosuggest API providing intelligent query autocompletion as users type.
 
-```
-brave_suggest(query="hello")
-brave_suggest(query="pyt", count=5, country="US")
-brave_suggest(query="einstein", rich=true)
+```bash
+brave_suggest --query "hello"
+brave_suggest --query "pyt" --count 5 --country US
+brave_suggest --query "einstein" --rich true
 ```
 
 **Parameters:**
 - `query` (required) — Partial query to get suggestions for
 - `count` — Number of suggestions (1-10, default: 5)
 - `country` — 2-letter country code (default: `US`)
-- `rich` — Include enhanced metadata: titles, descriptions, images, entity detection (default: false, requires paid plan)
+- `rich` — Include enhanced metadata: titles, descriptions, images, entity detection (default: false, requires paid Autosuggest plan)
 
-**Returns:** List of query suggestions, optionally with rich metadata.
+**Returns:** List of query suggestions, optionally with rich metadata. Results are cached for 60 seconds.
 
 **Best Practices:**
 - Implement debouncing (150-300ms) to avoid excessive API calls as users type
@@ -107,19 +108,30 @@ brave_suggest(query="einstein", rich=true)
 
 AI-powered answers grounded in live web search with inline citations.
 
-```
-brave_answers(query="How does React Server Components work?")
-brave_answers(query="Compare Postgres vs MySQL for OLAP", enable_research=true)
-brave_answers(query="Latest Python release notes", enable_citations=true)
+```bash
+brave_answers --query "How does React Server Components work?"
+brave_answers --query "Compare Postgres vs MySQL for OLAP" --enable-research true
+brave_answers --query "Latest Python release notes" --enable-citations true
 ```
 
 **Parameters:**
 - `query` (required) — Question or topic to research
-- `enable_citations` — Include inline source citations (default: true)
-- `enable_research` — Multi-search deep research mode (default: false)
 - `country` — Target country for search context (default: `us`)
+- `enable-citations` — Include inline source citations (default: true)
+- `enable-research` — Multi-search deep research mode (default: false)
+- `enable-entities` — Include entity information in responses (default: false, streaming required)
+- `stream` — Enable streaming output (default: true — required for citations/entities/research)
 
-**Returns:** AI answer with cited sources extracted from the response, plus token usage.
+**Returns:** AI answer with cited sources extracted from the response, plus token usage and cost breakdown.
+
+> ⚠️ **Citations, entities, and research mode require streaming (`--stream true`, which is the default).** If you disable streaming with `--stream false`, citations will not be available.
+
+**Streaming mode output:**
+- Text streams progressively to stdout
+- Sources printed at the end (sorted by citation number)
+- Token usage and cost breakdown included
+
+**Non-streaming fallback:** Use `--stream false` for simpler output at the cost of losing citations and entity data.
 
 ## Pricing & Limits
 
@@ -136,17 +148,46 @@ Always check your live limits and usage in:
 - https://api-dashboard.search.brave.com
 - https://brave.com/search/api/
 
+## Technical Details
+
+### Architecture
+
+The skill uses a shared `utils.js` module containing:
+- `parseArgs()` — CLI argument parser
+- `fetchWithRetry()` — fetch with exponential backoff retry on 429 and 5xx
+- `createCache()` — in-memory TTL cache (used by `brave_suggest`)
+
+### bravesearch.js
+
+The core search script with the following optimizations:
+- **Parallel summary fetch:** When `--summary` is enabled, the summary key is extracted from the search response and fetched in parallel with the search results
+- **Pagination hint:** Response includes a hint for the next page offset when `more_results_available` is true
+- **Rate limit handling:** Retries on 429 (honors `Retry-After` header) and 5xx (exponential backoff)
+
+### braveanswers.js
+
+The AI answers script supports two modes:
+- **Streaming (default):** Progressive output with citations parsed from SSE stream, token usage, and cost breakdown
+- **Non-streaming:** Simpler batch output, no citations available
+
+### brave_suggest.js
+
+The autosuggest script with the following optimizations:
+- **In-memory cache:** 60-second TTL cache keyed by `query|count|country|rich` — deduplicates rapid successive calls
+- **Key fallback chain:** `AUTOSUGGEST_API_KEY` → `BRAVE_AUTOSUGGEST_API_KEY` → `BRAVE_SEARCH_API_KEY`
+
+### brave_answers streaming
+
+When streaming is enabled (`stream: true`):
+- SSE chunks are parsed in real-time
+- Citations are collected and printed at end (sorted by citation number)
+- Entity items (`<enum_item>`) pass through as-is
+- Usage block (`<usage>`) parsed and displayed with token counts and total cost
+
 ## Security & Packaging Notes
 
 - This skill only calls Brave official endpoints under `https://api.search.brave.com/res/v1`.
-- It requires exactly two env vars: `BRAVE_SEARCH_API_KEY` and `BRAVE_ANSWERS_API_KEY` (keep them in `.env`, not inline in commands/chats).
+- It requires `BRAVE_SEARCH_API_KEY` and `BRAVE_ANSWERS_API_KEY` (keep them in `.env`, not inline in commands/chats).
+- Optionally accepts `AUTOSUGGEST_API_KEY` or `BRAVE_AUTOSUGGEST_API_KEY` for autosuggest.
 - It does not request persistent/system privileges and does not modify system config.
-- It is source-file based (three local Node scripts), with no external install/download step.
-
-## API vs Web Scraping
-
-This skill uses the **official Brave Search API** — not web scraping. Benefits:
-- Reliable, structured JSON responses
-- Rate limit headers and proper error messages
-- Access to AI summarizer, AI answers, and autosuggest endpoints
-- Terms of service compliant
+- All scripts are Node.js 18+ native (no external dependencies).
