@@ -3,9 +3,15 @@
   "slug": "image-social-media",
   "displayName": "Image Social Media",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776931291951,
-    "commit": "https://github.com/openclaw/skills/commit/d29b7134d42e915abbb6517bb7b0c354961eed94"
+    "version": "1.0.5",
+    "publishedAt": 1777430155872,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776931291951,
+      "commit": "https://github.com/openclaw/skills/commit/d29b7134d42e915abbb6517bb7b0c354961eed94"
+    }
+  ]
 }
