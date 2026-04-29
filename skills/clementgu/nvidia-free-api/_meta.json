@@ -1,0 +1,11 @@
+{
+  "owner": "clementgu",
+  "slug": "nvidia-free-api",
+  "displayName": "NVIDIA Free API",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1776952351752,
+    "commit": null
+  },
+  "history": []
+}
