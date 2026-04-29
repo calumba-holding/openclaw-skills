@@ -19,6 +19,7 @@ clone.py - 一键分身脚本 v1.0
 """
 
 import os
+import sys
 import json
 import shutil
 import subprocess
@@ -206,12 +207,17 @@ def merge_agents_config(original_config: dict, new_agents: list, suffix: str) ->
         config["agents"]["list"].append(agent)
         log(f"  追加 agent: {agent['id']} ({agent.get('name', 'N/A')})")
 
-    # 确保 allowAgents
+    # 确保 allowAgents（最小白名单，不用通配符）
+    all_ids = [a["id"] for a in config["agents"]["list"] if a.get("id") != "main"]
     if "defaults" not in config["agents"]:
         config["agents"]["defaults"] = {}
     if "subagents" not in config["agents"]["defaults"]:
         config["agents"]["defaults"]["subagents"] = {}
-    config["agents"]["defaults"]["subagents"]["allowAgents"] = ["*"]
+    existing_allow = config["agents"]["defaults"]["subagents"].get("allowAgents", [])
+    if existing_allow != ["*"]:
+        # 合并白名单，不用通配符
+        config["agents"]["defaults"]["subagents"]["allowAgents"] = sorted(set(existing_allow + all_ids))
+    # 如果已有通配符，保留用户原有设置
 
     # hooks.allowedAgentIds 追加
     new_member_ids = [a["id"] for a in new_agents if a["id"] != "main"]
@@ -228,8 +234,10 @@ def merge_agents_config(original_config: dict, new_agents: list, suffix: str) ->
 # =============================================
 
 def restart_gateway():
-    """重启 Gateway"""
+    """重启 Gateway（用户已通过确认流程）"""
     info("重启 Gateway...")
+    print()
+    warn("⚠️ 重启将中断当前所有会话和正在运行的任务")
     output, code = run_cmd("openclaw gateway restart")
     if code == 0:
         log("  Gateway 已重启")
@@ -246,7 +254,6 @@ def restart_gateway():
 # =============================================
 
 def main():
-    import sys
 
     print()
     print("=" * 60)
@@ -291,6 +298,26 @@ def main():
         err(f"目标 workspace 已存在：{new_main_ws}")
         err("请更换后缀或手动删除后再试")
         return
+
+    # ---- Step 2.5: 操作确认 ----
+    print("─" * 40)
+    print()
+    print("即将执行以下操作：")
+    print(f"  · 复制 {1 + len(members)} 个 workspace（加后缀 -{suffix}）")
+    print(f"  · 追加 {1 + len(members)} 个 agent 到 openclaw.json")
+    print(f"  · allowAgents 白名单将更新为包含新成员 ID")
+    print(f"  · 自动重启 Gateway（将中断当前会话）")
+    print()
+    warn("⚠️ 确认后将自动执行以上所有操作")
+    print()
+    
+    confirm = input("确认继续？（y/n）：").strip().lower()
+    if confirm != 'y':
+        err("用户取消，分身中止")
+        return
+    print()
+    log("用户已确认，开始执行...")
+    print()
 
     # ---- Step 3: 备份 ----
     backup_config()
@@ -363,7 +390,7 @@ def main():
     log(f"openclaw.json 已更新")
     print()
 
-    # ---- Step 6: 重启 Gateway ----
+    # ---- Step 6: 提醒重启 Gateway ----
     restart_gateway()
     print()
 

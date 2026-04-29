@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 """
-一键搬家执行脚本 v2.0（通用版）
-功能：检测环境 → 备份 → 合并配置 → 复制文件 → 完成搬家
+一键搬家执行脚本 v3.0（审查确认 + 细粒度控制）
+功能：审查确认 → 备份 → 合并配置 → 复制文件 → 完成搬家
 
-修复（v2.0）：
-- P0: 执行前自动备份，无覆盖丢失风险
-- P0: config merge 而非 replace，保护新环境原有配置
-- P0: create_main_agent() 逻辑补全
-- P1: 优化找包逻辑，兼容解压后直接运行
+v3.0 变更：
+- 新增 --dry-run / --no-cron / --no-restart 细粒度控制
+- agents.list 按 agent.id 追加/更新，不整体替换
+- 审查步骤移到修改配置之前
+- copy_team_members 使用配置中的实际 workspace 路径
+- Zip Slip 路径穿越防御
+- 审查展示 cron payload
+- restart_gateway 改 subprocess list 参数
 """
 
 import os
+import sys
 import json
 import shutil
 import subprocess
+import time
 import zipfile
+import argparse
+import difflib
 from datetime import datetime
 from pathlib import Path
 
@@ -49,13 +56,11 @@ def backup_existing():
     """
     info("检查是否需要备份...")
     
-    need_backup = False
     targets = []
     
     # 检查 workspace
-    for d in Path.home() / ".qclaw".iterdir():
+    for d in (Path.home() / ".qclaw").iterdir():
         if d.is_dir() and d.name.startswith("workspace-"):
-            need_backup = True
             targets.append(d)
     
     # 检查 openclaw.json
@@ -136,6 +141,16 @@ def merge_config(package_dir):
         if 'agents' not in merged:
             merged['agents'] = {}
         merged['agents'] = deep_merge(merged['agents'], agents_patch['agents'])
+        
+        # allowAgents: 如果搬家包含 ["*"]，转换为最小白名单（仅实际成员ID）
+        defaults = merged.get('agents', {}).get('defaults', {})
+        subagents = defaults.get('subagents', {})
+        if subagents.get('allowAgents') == ["*"]:
+            all_agent_ids = [a.get('id') for a in merged.get('agents', {}).get('list', [])
+                             if a.get('id') and a.get('id') != 'main']
+            subagents['allowAgents'] = all_agent_ids
+            log(f"  allowAgents 已从 ["*"] 转为最小白名单（{len(all_agent_ids)} 个成员ID）")
+        
         log("  agents 配置已合并")
     
     if 'hooks' in agents_patch:
@@ -147,6 +162,32 @@ def merge_config(package_dir):
         merged['hooks']['allowedAgentIds'] = list(existing_ids | patch_ids)
         log("  hooks 配置已合并")
     
+    # 展示 diff（before → after）
+    if config_path.exists():
+        existing_text = json.dumps(existing, indent=2, ensure_ascii=False).splitlines(keepends=True)
+        merged_text = json.dumps(merged, indent=2, ensure_ascii=False).splitlines(keepends=True)
+        diff = list(difflib.unified_diff(existing_text, merged_text,
+                                          fromfile="现有 openclaw.json", tofile="合并后",
+                                          n=3))
+        if diff:
+            info("  openclaw.json 变更 diff：")
+            for line in diff[:60]:
+                line = line.rstrip("\n")
+                if line.startswith("+") and not line.startswith("+++"):
+                    print(f"    {GREEN}{line}{NC}")
+                elif line.startswith("-") and not line.startswith("---"):
+                    print(f"    {RED}{line}{NC}")
+                elif line.startswith("@@"):
+                    print(f"    {YELLOW}{line}{NC}")
+                else:
+                    print(f"    {line}")
+            if len(diff) > 60:
+                info(f"    ...（共 {len(diff)} 行 diff，已截断）")
+        else:
+            info("  openclaw.json 无变更")
+    else:
+        info("  将创建新的 openclaw.json")
+
     # 写回
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(merged, f, indent=2, ensure_ascii=False)
@@ -162,11 +203,31 @@ def find_package_dir():
     """
     找到搬家包目录。
     优先顺序：
-    1. 命令行参数传入
+    1. 命令行参数传入（zip 路径或目录路径）
     2. 当前目录本身就是包目录（解压后直接 cd 进去）
     3. 当前目录下有 搬家包_* 目录
     4. 当前目录下有 *.zip
     """
+    # 检查命令行参数
+    if len(sys.argv) > 1:
+        arg = Path(sys.argv[1])
+        if arg.is_file() and arg.suffix == '.zip':
+            # 解压 zip
+            extract_dir = arg.with_suffix("")
+            if not extract_dir.exists():
+                info(f"  解压：{arg.name}")
+                with zipfile.ZipFile(arg, 'r') as zip_ref:
+                    for member in zip_ref.namelist():
+                        member_path = (arg.parent / member).resolve()
+                        if not str(member_path).startswith(str(arg.parent.resolve())):
+                            err(f"  安全警告：zip包含路径穿越文件 {member}，中止")
+                            return None
+                    zip_ref.extractall(arg.parent)
+            if (extract_dir / "身份层").exists():
+                return extract_dir
+        elif arg.is_dir() and (arg / "身份层").exists():
+            return arg
+    
     # 如果目录里有人身份层，说明当前就在包目录里
     if Path("身份层").exists():
         return Path.cwd()
@@ -186,6 +247,11 @@ def find_package_dir():
         else:
             info(f"  解压到：{extract_dir}")
             with zipfile.ZipFile(zf, 'r') as zip_ref:
+                for member in zip_ref.namelist():
+                    member_path = (Path.cwd() / member).resolve()
+                    if not str(member_path).startswith(str(Path.cwd().resolve())):
+                        err(f"  安全警告：zip包含路径穿越文件 {member}，跳过此包")
+                        continue
                 zip_ref.extractall(Path.cwd())
         if (extract_dir / "身份层").exists():
             return extract_dir
@@ -280,10 +346,26 @@ def copy_team_members(package_dir):
     else:
         main_ws_path = workspace_base / "workspace-main"
     
+    # 读 openclaw-agents.json 获取每个成员的实际 workspace 路径
+    agents_file = package_dir / "openclaw-agents.json"
+    member_workspaces = {}
+    if agents_file.exists():
+        try:
+            agents_data = load_json(agents_file)
+            for a in agents_data.get('agents', {}).get('list', []):
+                if a.get('id') != 'main' and a.get('workspace'):
+                    member_workspaces[a.get('name', a.get('id'))] = a['workspace']
+        except:
+            pass
+    
     count = 0
     for member_dir in team_dir.iterdir():
         if member_dir.is_dir():
-            dst = main_ws_path / member_dir.name
+            member_name = member_dir.name
+            if member_name in member_workspaces:
+                dst = Path(member_workspaces[member_name])
+            else:
+                dst = main_ws_path / member_name
             dst.mkdir(parents=True, exist_ok=True)
             for fname in ["SOUL.md", "MEMORY.md", "TOOLS.md"]:
                 src = member_dir / fname
@@ -340,10 +422,12 @@ def copy_skills(package_dir):
     return True
 
 def create_cron_tasks(package_dir):
-    """创建 cron 任务"""
+    """创建 cron 任务（用户已在审查步骤确认）"""
     info("创建 cron 任务...")
     
     cron_file = package_dir / "cron_tasks.json"
+    if not cron_file.exists():
+        cron_file = package_dir / "cron_jobs.json"
     if not cron_file.exists():
         warn("  未检测到 cron 配置")
         return True
@@ -371,8 +455,11 @@ def create_cron_tasks(package_dir):
             continue
         
         task_json = json.dumps(task, ensure_ascii=False)
-        cmd = f"openclaw tasks add --job '{task_json}'"
-        output, code = run_cmd(cmd)
+        result = subprocess.run(
+            ["openclaw", "tasks", "add", "--job", task_json],
+            capture_output=True, text=True
+        )
+        code = result.returncode
         
         if code == 0:
             log(f"  创建：{task_name}")
@@ -385,14 +472,16 @@ def create_cron_tasks(package_dir):
     return True
 
 def restart_gateway():
-    """重启 Gateway"""
+    """重启 Gateway（可通过 --no-restart 跳过）"""
     info("重启 Gateway...")
-    output, code = run_cmd("openclaw gateway restart")
+    result = subprocess.run(
+        ["openclaw", "gateway", "restart"],
+        capture_output=True, text=True
+    )
     
-    if code == 0:
+    if result.returncode == 0:
         log("  Gateway 已重启")
         info("  等待5秒让 channel 注册...")
-        import time
         time.sleep(5)
     else:
         warn("  Gateway 重启命令可能失败")
@@ -447,16 +536,15 @@ def prompt_main_agent_handling():
         
         config = load_json(config_path)
         
-        # 找当前 agent 的 id
-        # 先找 workspace-agent-* 目录
+        # 找 workspace-agent-* 目录，优先选含 SOUL.md 的
         main_ws = None
         candidates = [d for d in workspace_base.iterdir()
                       if d.is_dir() and d.name.startswith("workspace-")]
         
         for c in candidates:
-            soul = c / "SOUL.md"
-            if candidates:
-                main_ws = str(candidates[0])  # 直接取第一个候选
+            if (c / "SOUL.md").exists():
+                main_ws = str(c)
+                break
         
         if not main_ws and candidates:
             main_ws = str(candidates[0])
@@ -564,67 +652,271 @@ def prompt_main_agent_handling():
 # 主流程
 # =============================================
 
-def main():
+def review_and_confirm(package_dir, args=None):
+    """
+    搬家前审查步骤——在执行任何敏感操作之前，
+    展示即将写入的配置内容，由用户确认后继续。
+    
+    这是安全关键步骤，不允许跳过。
+    """
     print()
-    print("=" * 60)
-    print("  一键搬家执行脚本 v2.0")
-    print("=" * 60)
+    print("🔍 Step 0.8: 搬家包内容审查")
+    print("─" * 40)
+    print()
+    print("以下内容将从搬家包写入你的系统，请仔细核对：")
     print()
     
+    # ---- 1. agents 配置 ----
+    agents_file = package_dir / "openclaw-agents.json"
+    if agents_file.exists():
+        print("【1/3】Agent 配置（将写入 ~/.qclaw/openclaw.json）：")
+        agents_patch = load_json(agents_file)
+        
+        # agents.list
+        agents_list = agents_patch.get('agents', {}).get('list', [])
+        if agents_list:
+            print(f"  将追加/更新 {len(agents_list)} 个 agent（不删除现有 agent）：")
+            for a in agents_list:
+                aid = a.get('id', '?')
+                name = a.get('name', '?')
+                ws = a.get('workspace', '?')
+                print(f"    · {aid}（{name}）→ {ws}")
+        
+        # subagents 配置
+        defaults = agents_patch.get('agents', {}).get('defaults', {})
+        allow = defaults.get('subagents', {}).get('allowAgents', [])
+        if allow == ["*"]:
+            print()
+            print("  ⚠️ 注意：搬家包设置了 allowAgents 为 [\"*\"]")
+            print("    安装时会改为最小白名单（仅实际成员ID）。")
+            print("    如确实需要通配符，请安装后手动修改。")
+        
+        # hooks 配置
+        hooks_ids = agents_patch.get('hooks', {}).get('allowedAgentIds', [])
+        if hooks_ids:
+            print()
+            print(f"  hooks.allowedAgentIds 将追加：{hooks_ids}")
+    else:
+        print("【1/3】Agent 配置：无")
+    
+    print()
+    
+    # ---- 2. cron 任务 ----
+    cron_file = package_dir / "cron_tasks.json"
+    if not cron_file.exists():
+        cron_file = package_dir / "cron_jobs.json"
+    if cron_file.exists():
+        cron_tasks = load_json(cron_file)
+        print(f"【2/3】Cron 定时任务（将创建 {len(cron_tasks)} 个）：")
+        for t in cron_tasks:
+            tname = t.get('name', 'unnamed')
+            schedule = t.get('schedule', '?')
+            payload_preview = str(t.get('payload', ''))[:80]
+            print(f"    · {tname} — {schedule}")
+            if payload_preview:
+                print(f"      payload: {payload_preview}...")
+    else:
+        print("【2/3】Cron 任务：无")
+    
+    print()
+    
+    # ---- 3. 文件清单 ----
+    print("【3/3】将从搬家包复制的文件：")
+    
+    # 身份文件
+    identity_dir = package_dir / "身份层"
+    if identity_dir.exists():
+        identity_files = list(identity_dir.glob("*.md"))
+        print(f"  身份文件（→ main workspace）：{len(identity_files)} 个")
+        for f in identity_files:
+            print(f"    · {f.name}")
+        # 敏感文件提示
+        if (identity_dir / "MEMORY.md").exists():
+            print("    ⚠️ 含 MEMORY.md（可能含私人信息）")
+        if (identity_dir / "TOOLS.md").exists():
+            print("    ⚠️ 含 TOOLS.md（可能含 API keys）")
+    
+    # 团队成员
+    team_dir = package_dir / "团队成员层"
+    if team_dir.exists():
+        members = [d for d in team_dir.iterdir() if d.is_dir()]
+        print(f"  团队成员：{len(members)} 个 → main workspace/{members[0].name if members else '??'}/")
+        for m in members:
+            print(f"    · {m.name}/")
+    
+    # skills
+    skills_src = package_dir / "skills"
+    if skills_src.exists():
+        skills = [d for d in skills_src.iterdir() if d.is_dir()]
+        print(f"  Skills：{len(skills)} 个 → workspace/skills/")
+        for s in skills:
+            print(f"    · {s.name}/")
+    
+    print()
+    print("─" * 40)
+    print()
+    
+
+    if args and args.dry_run:
+        print("🔍 DRY RUN 模式：以下操作只展示不执行")
+    else:
+        print("⚠️ 确认后将执行：复制文件 → 合并配置" + (" → 创建 cron" if not (args and args.no_cron) else "（跳过cron）") + (" → 重启 Gateway" if not (args and args.no_restart) else "（跳过重启）"))
+    # ---- 用户确认 ----
+    while True:
+        print("是否确认执行以上操作？")
+        print()
+        print("  y  — 确认，继续搬家")
+        print("  n  — 取消，中止操作")
+        print()
+        choice = input("请输入（y/n）：").strip().lower()
+        if choice == 'y':
+            print()
+            log("用户已确认，继续执行...")
+            return True
+        elif choice == 'n':
+            print()
+            err("用户取消，搬家中止")
+            return False
+        else:
+            err("无效选项，请输入 y 或 n")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="一键搬家执行脚本 v3.0")
+    parser.add_argument("package", nargs="?", help="搬家包 zip 或目录路径")
+    parser.add_argument("--dry-run", action="store_true", help="只展示不执行")
+    parser.add_argument("--no-cron", action="store_true", help="跳过 cron 任务创建")
+    parser.add_argument("--no-restart", action="store_true", help="跳过 Gateway 重启")
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+
+    print()
+    print("=" * 60)
+    print("  一键搬家执行脚本 v3.0（审查确认 + 细粒度控制）")
+    if args.dry_run:
+        print("  🔍 DRY RUN 模式——只展示不执行")
+    print("=" * 60)
+    print()
+
     # ---- 找到搬家包 ----
     info("定位搬家包...")
     package_dir = find_package_dir()
-    
+
     if not package_dir:
         err("找不到搬家包！")
         print()
-        print("请确保处于以下状态之一：")
-        print()
-        print("  方式 A：解压后进入目录")
-        print("    unzip 搬家包.zip")
-        print("    cd 搬家包")
-        print("    python3 migrate.py")
-        print()
-        print("  方式 B：zip 文件在当前目录")
-        print("    python3 搬家包/migrate.py")
-        print()
-        print("  方式 C：传入 zip 路径")
-        print("    python3 migrate.py /path/to/搬家包.zip")
-        print()
+        print("用法：python3 migrate.py <搬家包路径> [--dry-run] [--no-cron] [--no-restart]")
         return
-    
+
     log(f"  搬家包目录：{package_dir.name}/")
     print()
-    
+
+    # ---- 搬家包审查（必须在修改配置之前） ----
+    if not review_and_confirm(package_dir, args):
+        return
+
+    # ---- dry-run: 展示 merge diff 但不写入 ----
+    if args.dry_run:
+        print()
+        info("DRY RUN: 展示配置合并 diff（不写入文件）...")
+        agents_file = package_dir / "openclaw-agents.json"
+        if agents_file.exists():
+            agents_patch = load_json(agents_file)
+            config_path = Path.home() / ".qclaw" / "openclaw.json"
+            existing = load_json(config_path) if config_path.exists() else {}
+            merged = existing.copy()
+            if 'agents' in agents_patch:
+                if 'agents' not in merged:
+                    merged['agents'] = {}
+                if 'defaults' in agents_patch['agents']:
+                    if 'defaults' not in merged['agents']:
+                        merged['agents']['defaults'] = {}
+                    merged['agents']['defaults'] = deep_merge(
+                        merged['agents']['defaults'], agents_patch['agents']['defaults'])
+                if 'list' in agents_patch['agents']:
+                    if 'list' not in merged['agents']:
+                        merged['agents']['list'] = []
+                    existing_ids = {a.get('id') for a in merged['agents']['list']}
+                    for agent in agents_patch['agents']['list']:
+                        aid = agent.get('id')
+                        if aid in existing_ids:
+                            merged['agents']['list'] = [
+                                agent if a.get('id') == aid else a
+                                for a in merged['agents']['list']
+                            ]
+                        else:
+                            merged['agents']['list'].append(agent)
+            if 'hooks' in agents_patch:
+                if 'hooks' not in merged:
+                    merged['hooks'] = {}
+                existing_ids = set(merged['hooks'].get('allowedAgentIds', []))
+                patch_ids = set(agents_patch['hooks'].get('allowedAgentIds', []))
+                merged['hooks']['allowedAgentIds'] = list(existing_ids | patch_ids)
+            existing_text = json.dumps(existing, indent=2, ensure_ascii=False).splitlines(keepends=True)
+            merged_text = json.dumps(merged, indent=2, ensure_ascii=False).splitlines(keepends=True)
+            import difflib
+            diff = list(difflib.unified_diff(existing_text, merged_text,
+                                              fromfile="现有 openclaw.json", tofile="合并后", n=3))
+            if diff:
+                info("  openclaw.json 变更 diff：")
+                for line in diff[:80]:
+                    line = line.rstrip("\n")
+                    if line.startswith("+") and not line.startswith("+++"):
+                        print(f"    {GREEN}{line}{NC}")
+                    elif line.startswith("-") and not line.startswith("---"):
+                        print(f"    {RED}{line}{NC}")
+                    elif line.startswith("@@"):
+                        print(f"    {YELLOW}{line}{NC}")
+                    else:
+                        print(f"    {line}")
+            else:
+                info("  openclaw.json 无变更")
+        print()
+        print("=" * 60)
+        print("  🔍 DRY RUN 完成——以上操作未实际执行")
+        print("  去掉 --dry-run 参数后重新运行以执行搬家")
+        print("=" * 60)
+        return
+
     # ---- 备份 ----
     print("🔒 Step 0: 备份现有配置...")
     backup_existing()
     print()
-    
+
     # ---- 用户选择 main agent 处理方式 ----
     print("🔧 Step 0.5: Main Agent 配置...")
     if not prompt_main_agent_handling():
         err("Main Agent 配置失败，中止搬家")
         return
     print()
-    
+
     # ---- 主流程 ----
     steps = [
         ("Step 1: 复制身份文件",     copy_identity_files),
         ("Step 2: 复制团队成员",     copy_team_members),
         ("Step 3: 复制 skills",       copy_skills),
         ("Step 4: 合并 agent 配置",  merge_config),
-        ("Step 5: 创建 cron 任务",   create_cron_tasks),
-        ("Step 6: 重启 Gateway",     restart_gateway),
     ]
-    
+
+    if not args.no_cron:
+        steps.append(("Step 5: 创建 cron 任务", create_cron_tasks))
+    else:
+        info("跳过 cron 任务创建（--no-cron）")
+
+    if not args.no_restart:
+        steps.append(("Step 6: 重启 Gateway", restart_gateway))
+    else:
+        info("跳过 Gateway 重启（--no-restart），请手动执行：openclaw gateway restart")
+
     for label, fn in steps:
         print(f"{label}...")
         result = fn(package_dir)
         if not result:
             err(f"{label} 失败")
         print()
-    
+
     # ---- 完成 ----
     print("=" * 60)
     print("  ✅ 一键搬家完成！")
@@ -635,13 +927,17 @@ def main():
     print("  1. 检查 SOUL.md：")
     print("     ls ~/.qclaw/workspace-*/SOUL.md")
     print()
-    print("  2. 测试子代理激活（在 agent 对话中）：")
-    print("     '测试激活团队成员'")
+    print("  2. 测试子代理激活：")
+    print("     在 agent 对话中说：测试激活团队成员")
     print()
-    print("  3. 检查 cron 任务：")
+    if args.no_restart:
+        print("  3. 手动重启 Gateway：")
+        print("     openclaw gateway restart")
+        print()
+    print("  检查 cron 任务：")
     print("     openclaw tasks list")
     print()
-    print("  4. 如需回滚（从备份恢复）：")
+    print("  如需回滚：")
     backup_list = sorted(BACKUP_DIR.iterdir(), key=lambda d: d.name)
     if backup_list:
         latest = backup_list[-1].name
@@ -649,6 +945,7 @@ def main():
     print()
     print("=" * 60)
     print()
+
 
 if __name__ == "__main__":
     main()

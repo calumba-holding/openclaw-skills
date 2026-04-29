@@ -71,9 +71,27 @@ def detect_active_workspace():
                 if wp.exists() and (wp / "SOUL.md").exists():
                     return wp
 
+    # fallback：从agents.list推断主agent workspace
+    # 策略：收集所有workspace路径的父级链，找包含SOUL.md的最深公共父目录
+    workspaces = [Path(a['workspace']) for a in agents
+                  if a.get('workspace') and Path(a.get('workspace', '')).exists()]
+    if workspaces:
+        # 收集所有workspace的所有祖先目录（到home为止）
+        candidate_dirs = set()
+        home = Path.home()
+        for ws in workspaces:
+            for parent in ws.parents:
+                if parent == home or not str(parent).startswith(str(home)):
+                    break
+                candidate_dirs.add(parent)
+        # 在候选目录中找包含SOUL.md+MEMORY.md的，选最深的（最接近workspace）
+        for candidate in sorted(candidate_dirs, key=lambda x: len(x.parts), reverse=True):
+            if (candidate / 'SOUL.md').exists() and (candidate / 'MEMORY.md').exists():
+                return candidate
+
     # fallback：遍历 workspace- 开头的目录，找包含 SOUL.md + MEMORY.md 的
     workspace_base = Path.home() / ".qclaw"
-    for d in workspace_base.iterdir():
+    for d in sorted(workspace_base.iterdir(), key=lambda x: len(x.name)):
         if d.is_dir() and d.name.startswith("workspace-"):
             if (d / "SOUL.md").exists() and (d / "MEMORY.md").exists():
                 return d
@@ -170,11 +188,13 @@ def main():
     main_dir.mkdir(exist_ok=True)
 
     core_files = ["SOUL.md", "MEMORY.md", "TOOLS.md", "AGENTS.md", "IDENTITY.md", "USER.md", "SKILLS.md"]
+    sensitive_files = ["MEMORY.md", "TOOLS.md"]  # 可能含私人信息/API keys
     for filename in core_files:
         src = main_workspace / filename
         if src.exists():
             shutil.copy2(src, main_dir / filename)
-            log(f"  {filename}")
+            flag = " ⚠️ 可能含敏感数据" if filename in sensitive_files else ""
+            log(f"  {filename}{flag}")
 
     memory_src = main_workspace / "memory"
     if memory_src.exists():
@@ -330,17 +350,19 @@ tales/ 目录是团队的创作成果仓库。
     print("📝 Step 5: 生成 Agent 配置片段...")
 
     if agents:
+        # 收集所有非 main 的 agent ID 作为白名单
+        agent_ids = [a['id'] for a in agents if a.get('id') != 'main']
         agents_config = {
             "agents": {
                 "defaults": {
                     "model": {"primary": "qclaw/modelroute"},
                     "maxConcurrent": 10,
-                    "subagents": {"allowAgents": ["*"]}
+                    "subagents": {"allowAgents": agent_ids}
                 },
                 "list": agents
             },
             "hooks": {
-                "allowedAgentIds": [a['id'] for a in agents if a['id'] != 'main']
+                "allowedAgentIds": agent_ids
             }
         }
 
@@ -434,7 +456,9 @@ python3 migrate.py
 
 1. 搬家前会**自动备份**现有配置到 `~/.qclaw/backup/`
 2. agent 配置会与现有配置**合并**,不会覆盖其他配置
-3. 完成后请重启一次 Gateway(如果未自动重启)
+3. allowAgents 使用**最小白名单**（仅实际成员ID），不使用通配符
+4. 执行前**展示所有变更内容**，用户确认后全自动执行
+5. MEMORY.md 和 TOOLS.md 可能含敏感数据，请妥善保管搬家包
 
 ---
 

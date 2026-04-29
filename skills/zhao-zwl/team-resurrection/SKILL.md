@@ -1,13 +1,50 @@
-# Team Resurrection —— 一键复刻你的团队
+---
+name: team-resurrection
+description: 打包/搬家/分身 Agent 团队配置。保留 SOUL.md、团队成员、skills，换电脑或开新团队时一键搞定。执行前展示配置内容供用户确认，支持 --dry-run/--no-cron/--no-restart 细粒度控制。
+metadata:
+  openclaw:
+    requires:
+      bins: [openclaw]
+    install: []
+    version: "1.1.2"
+    permissions:
+      - action: "修改 ~/.qclaw/openclaw.json（添加 agent 配置）"
+        risk: "修改运行时配置，影响 agent spawn 行为"
+        mitigation: "修改前展示完整 diff，用户确认后再写入；allowAgents 默认最小白名单，不用通配符"
+      - action: "读写 ~/.qclaw/ 目录（复制 workspace、备份配置）"
+        risk: "可能暴露 MEMORY.md/TOOLS.md 等敏感文件"
+        mitigation: "打包时标注敏感文件，搬家包妥善保管"
+      - action: "创建 cron 定时任务"
+        risk: "定时任务可自动执行任意命令"
+        mitigation: "执行前展示所有 cron 任务内容（含 payload），用户确认后自动创建"
+      - action: "重启 OpenClaw Gateway"
+        risk: "中断当前所有会话和正在运行的任务"
+        mitigation: "执行前明确告知将重启，用户确认后自动执行"
+      - action: "打包含敏感文件（MEMORY.md/TOOLS.md 可能含 API keys、账号密码）"
+        risk: "搬家包泄露会暴露所有敏感配置和私人记忆"
+        mitigation: "SKILL.md 明确警告不要分享搬家包；建议传输时加密"
+---
 
-> **搬家 · 分身 · 备份，三合一。** 快速复刻你的多 Agent 团队到新环境、新项目、新实验。
+# Team Resurrection —— 团队打包 / 搬家 / 分身工具
+
+> **触发：** 用户说「我要搬家」「换电脑了」「帮我分身一个团队」「备份团队」等。
+>
+> **核心理念：** 搬家·分身·备份，三合一。
+>
+> **⚠️ 权限说明**：本 skill 会修改 openclaw.json、创建 cron 任务、重启 Gateway。所有敏感操作前自动展示内容供用户确认，确认后全自动执行。allowAgents 使用最小白名单（仅实际成员ID），不使用通配符 `["*"]`。
+>
+> **🔐 安全提示**：
+> - **搬家包含敏感信息** — pack.py 会打包 MEMORY.md（含个人记忆/偏好）、TOOLS.md（含 API keys、账号、服务器地址）等文件。**不要公开分享搬家包**，传输时使用加密介质。
+> - **务必先 `--dry-run`** — 在新环境运行前，先用 `python3 migrate.py 搬家包.zip --dry-run` 审查 diff，确认无误后再正式执行。
+> - **敏感操作可跳过** — 使用 `--no-cron` 跳过 cron 创建、`--no-restart` 跳过 Gateway 重启，逐步验证。
+> - **检查 cron payload** — 执行前检查 cron_tasks.json 中的 payload 字段，确认不会触发意外操作。
+> - **确认备份存在** — 操作前确认 `~/.qclaw/backup/` 下有备份目录，如需回滚可恢复。
+> - **低信任环境** — 如对搬家包来源不确定，先逐行审计 pack.py/migrate.py/clone.py，或在隔离环境中测试。
 >
 > **三大场景：**
 > - 🚚 **搬家** — 换电脑、重装系统，一键把整个团队迁到新环境
 > - 👯 **分身** — 同环境快速复制一支团队，跑实验、做测试、开新项目
 > - 📦 **打包** — 备份团队快照，随时可还原
->
-> **版本：** v3.0
 
 ---
 
@@ -112,7 +149,7 @@ openclaw gateway restart
 | 脚本 | 功能 | 版本 |
 |------|------|------|
 | `pack.py` | 打包所有资料（生成搬家包） | v2.0 |
-| `migrate.py` | 一键搬家执行（从搬家包恢复） | v2.0 |
+| `migrate.py` | 一键搬家执行（从搬家包恢复） | v3.0 |
 | `clone.py` | 一键分身（同环境复制团队） | v1.0 🆕 |
 | ~~`setup_config.py`~~ | ~~仅更新配置~~ | ❌ 已废弃 |
 | ~~`init.sh`~~ | ~~创建 main agent~~ | ❌ 已废弃 |
@@ -140,15 +177,26 @@ python3 pack.py
 
 **执行方式：**
 ```bash
-# 方式A（推荐）：解压后直接运行
-unzip 搬家包.zip && cd 搬家包 && python3 migrate.py
-
-# 方式B：zip 在当前目录
-python3 migrate.py
-
-# 方式C：传入路径
+# 基本用法：传入搬家包路径
 python3 migrate.py /path/to/搬家包.zip
+
+# 审查模式：只看不做
+python3 migrate.py /path/to/搬家包.zip --dry-run
+
+# 跳过危险操作
+python3 migrate.py /path/to/搬家包.zip --no-cron --no-restart
+
+# 交互式（在搬家包目录内运行）
+unzip 搬家包.zip && cd 搬家包 && python3 migrate.py
 ```
+
+**参数说明：**
+
+| 参数 | 说明 |
+|------|------|
+| `--dry-run` | 只展示将要执行的操作，不实际执行 |
+| `--no-cron` | 跳过 cron 任务创建 |
+| `--no-restart` | 跳过 Gateway 重启 |
 
 **执行步骤：**
 
@@ -299,7 +347,7 @@ workspace:
 
 **原因：** openclaw.json 缺少 `allowAgents` 白名单
 
-**解决：** migrate.py / clone.py 执行时自动补上 `["*"]`
+**解决：** migrate.py / clone.py 执行时自动补上最小白名单（仅实际成员ID），如需通配符请手动修改
 
 ### 问题2：子代理读错 SOUL.md
 
@@ -346,7 +394,7 @@ rm -rf ~/.qclaw/workspace-xxx-旧后缀
 - [ ] `openclaw gateway status` 显示 running
 - [ ] `ls ~/.qclaw/workspace-*/SOUL.md` 找到 SOUL.md
 - [ ] openclaw.json 包含所有 agent 配置
-- [ ] `agents.defaults.subagents.allowAgents: ["*"]` 已设置
+- [ ] `agents.defaults.subagents.allowAgents` 已设置（最小白名单，仅实际成员ID）
 - [ ] 测试 spawn 至少 2 个 agent，确认人格正确
 
 ### 分身验证
@@ -368,43 +416,4 @@ rm -rf ~/.qclaw/workspace-xxx-旧后缀
 
 ---
 
-## 八、相关文档
 
-- OpenClaw 官方文档：https://docs.openclaw.ai/
-- Sessions 文档：https://docs.openclaw.ai/automation/sessions
-- Cron 文档：https://docs.openclaw.ai/automation/cron
-- Agent 配置：https://docs.openclaw.ai/config/agents
-- **材料打包记录：** `MATERIAL_PACKING.md`
-
----
-
-## 附录：版本变更记录
-
-### v3.0（2026-04-23）
-
-**新增：**
-- ✅ `clone.py` 一键分身脚本——同环境复制整个团队，ID/路径自动加后缀
-- ✅ SKILL.md 全面升级：介绍改为"搬家·分身·备份三合一"，新增分身场景文档
-- ✅ 分身命名策略：后缀式（`agent-xxx-后缀`），交互式或 `--suffix` 参数指定
-- ✅ 冲突检测：目标路径已存在则中止，不覆盖
-- ✅ AGENTS.md 自动更新：分身 workspace 内的 agent ID 同步加后缀
-
-### v2.0（2026-04-22）
-
-**P0 修复：**
-- ✅ pack.py 不再硬编码 workspace-xxx，改为自动检测 active workspace
-- ✅ migrate.py 执行前自动备份，现有配置不再丢失
-- ✅ config 改为 deep merge，保护新环境其他配置
-- ✅ create_main_agent() 三个选项逻辑补全
-
-**P1 修复/优化：**
-- ✅ 删除了 init.sh/setup_config.py 的误导文档
-- ✅ migrate.py 找包逻辑优化，兼容多种运行方式
-- ✅ backup_existing() 自动检测需备份的目标
-- ✅ cron 创建区分已存在/失败
-
-### v1.0（2026-04-21）
-
-- 初始版本：pack.py + migrate.py + setup_config.py + init.sh
-- 支持有/无团队的通用化检测
-- 三个 main agent 选项（选项1/2 执行逻辑残缺）
