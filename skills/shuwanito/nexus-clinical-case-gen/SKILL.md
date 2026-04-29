@@ -1,16 +1,16 @@
 ---
 name: nexus-clinical-case-gen
-description: "Medical clinical case generator for education. Creates interactive patient scenarios with differential diagnosis, OSCE evaluations, and evidence-based medicine references."
-license: proprietary
-compatibility: "Python 3.11+, NEXUS AI Corp ecosystem"
+description: Medical clinical case generator for education with PubMed RAG and OSCE
+  evaluations.
+version: '2.1.0'
 metadata:
-  department: healthcare
-  agents: ["medical-content", "clinical-simulator"]
-  price_per_execution: "$5.00"
-  ecosystem: "NEXUS AI Corp"
-  version: "1.0.0"
-  publishable: true
-allowed-tools: web-search web-fetch filesystem
+  openclaw:
+    emoji: 🏥
+    homepage: https://github.com/Shuwanito/SkillsMP/tree/main/.claude/skills/nexus-clinical-case-gen
+    os:
+    - macos
+    - linux
+    - windows
 ---
 
 # Nexus Clinical Case Gen
