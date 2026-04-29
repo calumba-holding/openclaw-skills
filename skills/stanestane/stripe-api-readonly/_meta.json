@@ -1,0 +1,11 @@
+{
+  "owner": "stanestane",
+  "slug": "stripe-api-readonly",
+  "displayName": "Stripe API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777099197029,
+    "commit": null
+  },
+  "history": []
+}
