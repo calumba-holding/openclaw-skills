@@ -1,6 +1,6 @@
 # openclaw-xiaomi-home
 
-[![Version](https://img.shields.io/badge/version-v1.1.3-blue.svg)](https://github.com/canmaxfire/openclaw-xiaomi-home)
+[![Version](https://img.shields.io/badge/version-v1.2.0-blue.svg)](https://github.com/canmaxfire/openclaw-xiaomi-home)
 [![ClawHub](https://img.shields.io/badge/ClawHub-openclaw--xiaomi--home-green.svg)](https://clawhub.com/openclaw-xiaomi-home)
 
 **Your OpenClaw can now control your smart home.** Connect to Xiaomi/Mijia devices through Home Assistant and control everything with plain text or voice.
@@ -8,16 +8,13 @@
 ## The Problem It Solves
 
 Smart home devices are scattered across apps:
-- Open Mi Home app
-- Find the right room
-- Find the right device
-- Tap the right button
+- Open Mi Home app → find device → tap button
 
-**This skill fixes that.** Once set up, just tell your AI what you want:
+**This skill fixes that.** Just tell your AI what you want:
 
 ```
 "Turn on the living room light"
-"Set AC to 26 degrees"
+"Set bedroom AC to 26 degrees"
 "Is the front door locked?"
 ```
 
@@ -26,14 +23,15 @@ Done.
 ## What You Can Control
 
 | Category | Examples |
-|----------|---------|
+|----------|----------|
 | 💡 Lights | On/off, brightness |
 | ❄️ Air Conditioning | Temperature, mode, fan speed |
 | 🔐 Door Locks | Lock/unlock from anywhere |
 | 🌡️ Sensors | Temperature, humidity, motion |
 | 💨 Fans & Humidifiers | On/off, speed |
 | 🪟 Blinds & Curtains | Open/close |
-| 🤖 Robot Vacuums | Start, stop, return to charger |
+| 🤖 Robot Vacuums | Start, stop, return to base |
+| 🔊 **XiaoAI Speakers** | **Voice announcements (TTS)** |
 
 Works with **1837+ Xiaomi/Mijia devices**.
 
@@ -120,6 +118,33 @@ Just talk to your AI assistant:
 "Start the vacuum"
 ```
 
+## XiaoAI TTS Voice Announcement
+
+Use XiaoAI speakers as a voice announcement system — your AI can "speak" reminders and alerts through the speaker.
+
+**⚠️ Note:** Entity IDs are device-specific. You must find your own XiaoAI speaker's `notify` entity in Home Assistant (see [Finding Your Entity IDs](#finding-your-entity-ids) below).
+
+**Python script:** `~/.openclaw/workspace/scripts/xiaoai_announce.py`
+
+```bash
+# Find your notify entity ID first (see below), then:
+python3 ~/.openclaw/workspace/scripts/xiaoai_announce.py "06:30 该起床了" "notify.YOUR_ENTITY_ID"
+```
+
+**MCP tool:** `xiaoai_announce(message, entity_id?)`
+
+**Use cases:** Health reminders, smart home alerts, agent notifications.
+
+### Finding Your Entity IDs
+
+XiaoAI speaker entity IDs are unique to your account. To find them:
+
+1. Open Home Assistant → **Developer Tools → States**
+2. Filter by `notify` and look for entities containing `xiaoai`, `play_text`, or `speaker`
+3. Copy the entity ID (format: `notify.xiaomi_cn_XXXXXXXXXX_xxxx`)
+
+---
+
 ## Security & Privacy
 
 ### Required Credentials
@@ -146,10 +171,6 @@ Just talk to your AI assistant:
 - ❌ Does NOT use any LLM or AI processing
 - ❌ Does NOT expose unauthenticated endpoints
 
-### CORS Configuration
-
-CORS is restricted to `http://localhost` only. The MCP server will reject any request with a different origin, preventing LAN-based abuse.
-
 ## Troubleshooting
 
 ### HA won't start
@@ -175,6 +196,7 @@ docker logs homeassistant
 
 | Version | Date | Changes |
 |---------|------|---------|
+| [v1.2.0](https://github.com/canmaxice-maker/openclaw-xiaomi-home/releases/tag/v1.2.0) | 2026-04-24 | Added XiaoAI TTS voice announcement via `xiaoai_announce` tool |
 | [v1.1.0](https://github.com/canmaxice-maker/openclaw-xiaomi-home/releases/tag/v1.1.0) | 2026-04-21 | Plain language rewrite — user benefit focus |
 | [v1.0.0](https://github.com/canmaxice-maker/openclaw-xiaomi-home/releases/tag/v1.0.0) | 2026-04-21 | Initial release |
 

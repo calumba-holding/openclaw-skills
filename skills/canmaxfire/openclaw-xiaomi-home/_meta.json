@@ -3,9 +3,15 @@
   "slug": "openclaw-xiaomi-home",
   "displayName": "Xiaomi Home Control",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1776752970455,
-    "commit": "https://github.com/openclaw/skills/commit/58286a38732d7045943acbb834d89e286de1cc77"
+    "version": "1.2.2",
+    "publishedAt": 1777017324492,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1776752970455,
+      "commit": "https://github.com/openclaw/skills/commit/58286a38732d7045943acbb834d89e286de1cc77"
+    }
+  ]
 }
