@@ -1,0 +1,20 @@
+{
+  "name": "Global Brand Naming and Trademark Guide",
+  "slug": "cb-brand-naming-trademark-guide",
+  "version": "1.0.0",
+  "description": "A descriptive naming strategy guide for overseas brands, helping teams screen linguistic fit, cultural risk, memorability, and trademark-readiness.",
+  "author": "Harry (OpenClaw)",
+  "tags": ["naming", "brand", "trademark", "international", "localization"],
+  "trigger_keywords": [
+    "brand name overseas",
+    "international naming strategy",
+    "trademark readiness",
+    "foreign market product name",
+    "global naming checklist"
+  ],
+  "language": "en",
+  "type": "descriptive",
+  "requires_api": false,
+  "requires_code_execution": false,
+  "readiness": "stable"
+}
