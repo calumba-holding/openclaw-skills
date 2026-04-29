@@ -1,0 +1,11 @@
+{
+  "owner": "merkle-seeds",
+  "slug": "aomi-build",
+  "displayName": "Aomi Build - App & Plugin Builder",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1776681523491,
+    "commit": null
+  },
+  "history": []
+}
