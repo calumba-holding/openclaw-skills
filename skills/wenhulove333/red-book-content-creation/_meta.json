@@ -3,9 +3,15 @@
   "slug": "red-book-content-creation",
   "displayName": "Red book content creation",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776753528498,
-    "commit": "https://github.com/openclaw/skills/commit/f7c5b6e5ce33ceb642fa0c9176e7f94dc2565ce0"
+    "version": "1.0.1",
+    "publishedAt": 1777257609085,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776753528498,
+      "commit": "https://github.com/openclaw/skills/commit/f7c5b6e5ce33ceb642fa0c9176e7f94dc2565ce0"
+    }
+  ]
 }
