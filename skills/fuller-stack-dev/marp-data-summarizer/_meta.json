@@ -3,9 +3,15 @@
   "slug": "marp-data-summarizer",
   "displayName": "Marp Slide Deck Generator",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1776910525441,
-    "commit": "https://github.com/openclaw/skills/commit/ff1d0ffb1b9eccb24af3ae8b138a86375dca55a3"
+    "version": "1.0.3",
+    "publishedAt": 1777403673129,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1776910525441,
+      "commit": "https://github.com/openclaw/skills/commit/ff1d0ffb1b9eccb24af3ae8b138a86375dca55a3"
+    }
+  ]
 }

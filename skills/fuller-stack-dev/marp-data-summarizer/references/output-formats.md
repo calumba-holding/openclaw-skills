@@ -5,7 +5,7 @@
 - If the user does not specify an output format, render the deck as `.html`.
 - Keep the editable source deck as `*.slides.md`.
 - If the user explicitly asks for markdown only, stop at `*.slides.md`.
-- Prefer `node {baseDir}/scripts/render-marp.js` as the render entrypoint.
+- Use the installed `marp` CLI as the render entrypoint.
 
 ## Supported Outputs
 
@@ -19,7 +19,7 @@ Use when:
 Command:
 
 ```bash
-node {baseDir}/scripts/render-marp.js input.slides.md output.slides.html --format html
+marp input.slides.md -o output.slides.html
 ```
 
 ### PDF
@@ -32,7 +32,7 @@ Use when:
 Command:
 
 ```bash
-node {baseDir}/scripts/render-marp.js input.slides.md output.slides.pdf --format pdf
+marp input.slides.md --pdf -o output.slides.pdf
 ```
 
 ### PowerPoint
@@ -44,7 +44,7 @@ Use when:
 Command:
 
 ```bash
-node {baseDir}/scripts/render-marp.js input.slides.md output.slides.pptx --format pptx
+marp input.slides.md --pptx -o output.slides.pptx
 ```
 
 Optional editable mode:
@@ -53,7 +53,7 @@ Optional editable mode:
 npx --yes @marp-team/marp-cli input.slides.md --pptx --pptx-editable -o output.slides.pptx
 ```
 
-Note: the bundled helper currently targets standard `.pptx` export only.
+Note: use standard `.pptx` export unless the user specifically asks for editable PowerPoint output.
 
 ### Notes text
 
@@ -64,7 +64,7 @@ Use when:
 Command:
 
 ```bash
-node {baseDir}/scripts/render-marp.js input.slides.md output.notes.txt --format notes
+marp input.slides.md --notes -o output.notes.txt
 ```
 
 ### Single-slide image
@@ -76,8 +76,8 @@ Use when:
 Commands:
 
 ```bash
-node {baseDir}/scripts/render-marp.js input.slides.md output.png --format png
-node {baseDir}/scripts/render-marp.js input.slides.md output.jpeg --format jpeg
+marp input.slides.md --image png -o output.png
+marp input.slides.md --image jpeg -o output.jpeg
 ```
 
 ### One image per slide
@@ -89,8 +89,8 @@ Use when:
 Commands:
 
 ```bash
-node {baseDir}/scripts/render-marp.js input.slides.md output-dir/ --format pngs
-node {baseDir}/scripts/render-marp.js input.slides.md output-dir/ --format jpegs
+marp input.slides.md --images png -o output-dir/
+marp input.slides.md --images jpeg -o output-dir/
 ```
 
 ## Format Selection Rules
@@ -115,4 +115,4 @@ Choose format in this order:
 - When producing a rendered artifact, mention both the source `*.slides.md` and the rendered output path.
 - If the user asks for multiple outputs, render from the same source deck rather than maintaining separate slide variants.
 - If a requested format is unsupported by Marp CLI, ask a short clarification question or offer the nearest supported format.
-- If the helper script is unavailable for some reason, fall back to direct Marp CLI commands.
+- If `marp` is unavailable, install `@marp-team/marp-cli` before rendering.

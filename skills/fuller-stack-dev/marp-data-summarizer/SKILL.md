@@ -1,8 +1,8 @@
 ---
 name: marp-data-summarizer
-description: Turn docs, notes, reports, CSV/JSON, logs, research, screenshots, and code summaries into polished Marp slide decks. Produces `*.slides.md` plus rendered `.html` by default, and can export `.pdf`, `.pptx`, notes, or slide images.
+description: Turn docs, notes, data, logs, screenshots, and code summaries into polished Marp slide decks.
 homepage: https://marp.app
-metadata: { "openclaw": { "emoji": "📊", "requires": { "anyBins": ["marp", "npx", "pnpm", "bunx", "yarn"] }, "install": [{ "id": "node-marp", "kind": "node", "package": "@marp-team/marp-cli", "bins": ["marp"], "label": "Install Marp CLI (node)" }] } }
+metadata: { "openclaw": { "emoji": "📊", "requires": { "bins": ["marp"] }, "install": [{ "id": "node-marp", "kind": "node", "package": "@marp-team/marp-cli", "bins": ["marp"], "label": "Install Marp CLI (node)" }] } }
 ---
 
 # Marp Slide Deck Generator
@@ -34,7 +34,7 @@ This skill should work from almost any information that can be summarized into a
 6. Choose a slide arc: title, context, key insights, supporting visuals, recommendation, close.
 7. Build the source deck as Marp markdown, typically named `*.slides.md`.
 8. Add visual structure with charts, diagrams, timelines, callouts, and section slides where useful.
-9. Render the deck into the requested format with `node {baseDir}/scripts/render-marp.js ...`.
+9. Render the deck into the requested format with the installed `marp` CLI.
 10. Verify the rendered deck in its target aspect ratio and confirm that no slide content is cropped or vertically cut off.
 
 ## Output Rules
@@ -46,7 +46,7 @@ This skill should work from almost any information that can be summarized into a
 - Keep the Marp source deck as `*.slides.md` when rendering to another format.
 - If the user asks for multiple formats, render all requested formats from the same `*.slides.md` source.
 - If the user asks for an unsupported format, ask one short question or offer the closest supported option.
-- Prefer the bundled helper `node {baseDir}/scripts/render-marp.js <input> [output]` over handwritten Marp CLI command assembly.
+- Use direct `marp` CLI commands for rendering.
 - Use a strong title slide, then 4 to 8 content slides by default.
 - Keep one idea per slide.
 - Convert tables into short bullets or focused comparison slides when possible.
@@ -90,9 +90,6 @@ See `references/output-formats.md` for supported output formats, default behavio
 
 ### references/
 Use references for reusable guidance on slide structure and visual decisions.
-
-### scripts/
-Use `node {baseDir}/scripts/render-marp.js` for rendering. It prefers a local `marp` binary when installed and falls back to package-manager execution.
 
 ### assets/
 No bundled assets are required for this skill.
