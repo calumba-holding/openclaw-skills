@@ -1,0 +1,11 @@
+{
+  "owner": "gtht-tech",
+  "slug": "lingxi-smartstockselection-skill",
+  "displayName": "国泰海通证券智能选股",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777001106501,
+    "commit": null
+  },
+  "history": []
+}
