@@ -1,0 +1,291 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CrawlHub API",
+    "description": "X (Twitter) Data Crawling API - Access tweets, profiles, followers, timelines and more.\n\n## Authentication\n1. Login to get JWT: `POST /auth/login`\n2. Use JWT as Bearer token + your API Key in X-API-KEY header\n\n## Base URL\n```\nhttps://api.thecrawlhub.com/api/v1\n```\n\n## Pricing\n- **0.015 ETH per 24 hours** - Unlimited crawling for Platform X during the validity period\n- Payment to: `0x19c4455Bf8C5D8662B434e1985cd31B8947A7C39`",
+    "version": "1.0.0",
+    "contact": {
+      "name": "CrawlHub Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.thecrawlhub.com/api/v1",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Login to get JWT token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {"type": "string", "example": "user@example.com"},
+                  "password": {"type": "string", "example": "yourpassword"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {"type": "string", "description": "JWT Bearer token"},
+                        "refresh_token": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh JWT token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refresh_token"],
+                "properties": {
+                  "refresh_token": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed"
+          }
+        }
+      }
+    },
+    "/execution/endpoints/{endpointId}/execute": {
+      "post": {
+        "summary": "Execute any endpoint",
+        "tags": ["Execution"],
+        "parameters": [
+          {
+            "name": "endpointId",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "Endpoint ID (see Endpoints section)"
+          }
+        ],
+        "headers": {
+          "Authorization": {
+            "type": "string",
+            "description": "Bearer {JWT from login}",
+            "required": true
+          },
+          "X-API-KEY": {
+            "type": "string",
+            "description": "Your API key",
+            "required": true
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "description": "Endpoint-specific parameters"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Execution successful"},
+          "401": {"description": "Authentication error"}
+        }
+      }
+    },
+    "/profile/user/by-id": {
+      "get": {
+        "summary": "Get User Profile by ID",
+        "tags": ["Profile"],
+        "parameters": [
+          {"name": "user_id", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "User profile data"}
+        }
+      }
+    },
+    "/profile/user/by-screen-name": {
+      "get": {
+        "summary": "Get User Profile by Screen Name",
+        "tags": ["Profile"],
+        "parameters": [
+          {"name": "screen_name", "in": "query", "required": true, "schema": {"type": "string"}, "example": "elonmusk"}
+        ],
+        "responses": {
+          "200": {"description": "User profile data"}
+        }
+      }
+    },
+    "/profile/tweets/by-id": {
+      "get": {
+        "summary": "Get Profile Tweets by User ID",
+        "tags": ["Profile"],
+        "parameters": [
+          {"name": "user_id", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Tweets from user"}
+        }
+      }
+    },
+    "/profile/tweets/by-screen-name": {
+      "get": {
+        "summary": "Get Profile Tweets by Screen Name",
+        "tags": ["Profile"],
+        "parameters": [
+          {"name": "screen_name", "in": "query", "required": true, "schema": {"type": "string"}, "example": "elonmusk"}
+        ],
+        "responses": {
+          "200": {"description": "Tweets from user"}
+        }
+      }
+    },
+    "/timeline/search": {
+      "get": {
+        "summary": "Search Timeline",
+        "tags": ["Timeline"],
+        "parameters": [
+          {"name": "query", "in": "query", "required": true, "schema": {"type": "string"}, "description": "Search query"},
+          {"name": "mode", "in": "query", "schema": {"type": "string", "enum": ["latest", "top", "people", "media", "lists"]}, "description": "Search mode"},
+          {"name": "since", "in": "query", "schema": {"type": "string"}, "description": "Start date (YYYY-MM-DD)"},
+          {"name": "until", "in": "query", "schema": {"type": "string"}, "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {"description": "Search results"}
+        }
+      }
+    },
+    "/timeline/by-id": {
+      "get": {
+        "summary": "Get Timeline by User ID (with Followers/Following support)",
+        "tags": ["Timeline"],
+        "parameters": [
+          {"name": "user_id", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "initial_page", "in": "query", "schema": {"type": "string", "enum": ["Followers", "Following"]}, "description": "For crawling followers/following lists"},
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}, "description": "Pagination cursor"},
+          {"name": "context", "in": "query", "schema": {"type": "integer"}, "description": "Request context (max 100)"}
+        ],
+        "responses": {
+          "200": {"description": "Timeline data with pagination"}
+        }
+      }
+    },
+    "/timeline/by-screen-name": {
+      "get": {
+        "summary": "Get Timeline by Screen Name (with Followers/Following support)",
+        "tags": ["Timeline"],
+        "parameters": [
+          {"name": "screen_name", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "initial_page", "in": "query", "schema": {"type": "string", "enum": ["Followers", "Following"]}},
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Timeline data"}
+        }
+      }
+    },
+    "/timeline/conversation": {
+      "get": {
+        "summary": "Get Timeline Conversation",
+        "tags": ["Timeline"],
+        "parameters": [
+          {"name": "tweet_id", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Conversation thread"}
+        }
+      }
+    },
+    "/tweet/by-id": {
+      "get": {
+        "summary": "Get Tweet by ID",
+        "tags": ["Tweet"],
+        "parameters": [
+          {"name": "tweet_id", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Tweet data"}
+        }
+      }
+    },
+    "/scraper/platforms": {
+      "get": {
+        "summary": "Get All Platforms",
+        "tags": ["Admin"],
+        "responses": {
+          "200": {"description": "List of all platforms"}
+        }
+      }
+    },
+    "/scraper/platforms/{platformId}": {
+      "get": {
+        "summary": "Get Platform Details",
+        "tags": ["Admin"],
+        "parameters": [
+          {"name": "platformId", "in": "path", "required": true, "schema": {"type": "integer"}}
+        ],
+        "responses": {
+          "200": {"description": "Platform info with modules and endpoints"}
+        }
+      }
+    }
+  },
+  "tags": [
+    {"name": "Authentication", "description": "Login and token management"},
+    {"name": "Profile", "description": "User profile endpoints"},
+    {"name": "Timeline", "description": "Timeline and follower crawling"},
+    {"name": "Tweet", "description": "Single tweet retrieval"},
+    {"name": "Execution", "description": "Execute any endpoint"},
+    {"name": "Admin", "description": "Platform and endpoint management"}
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
+    }
+  }
+}
