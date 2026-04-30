@@ -1,0 +1,11 @@
+{
+  "owner": "jmarbach",
+  "slug": "encryptedenergy-uptime",
+  "displayName": "Uptime Monitoring with Encrypted Energy - Know the second your OpenClaw agent goes silent",
+  "latest": {
+    "version": "0.2.4",
+    "publishedAt": 1777259402243,
+    "commit": null
+  },
+  "history": []
+}
