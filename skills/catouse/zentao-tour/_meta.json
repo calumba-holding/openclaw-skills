@@ -1,0 +1,11 @@
+{
+  "owner": "catouse",
+  "slug": "zentao-tour",
+  "displayName": "以轻松聊天的方式带用户上手禅道（ZenTao）与 zentao-cli，让用户顺着自己的角色（产品经理/项目经理/测试/开发/高管）在真实禅道环境里边聊边动手，熟悉产品、需求、计划、任务、Bug、测试用例等模块的增删改查与状态流转。",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777269656894,
+    "commit": null
+  },
+  "history": []
+}
