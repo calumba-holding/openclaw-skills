@@ -1,0 +1,11 @@
+{
+  "owner": "zvirb",
+  "slug": "google-drive-delete-file",
+  "displayName": "Google Drive Delete File",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777263338642,
+    "commit": null
+  },
+  "history": []
+}
