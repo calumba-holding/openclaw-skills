@@ -3,8 +3,16 @@ name: simmer
 description: The best prediction market interface for AI agents. Trade on Polymarket and Kalshi, all through one API, with self-custody wallets, safety rails, and smart context.
 metadata:
   author: "Simmer (@simmer_markets)"
-  version: "1.21.1"
+  version: "1.22.2"
   homepage: "https://simmer.markets"
+  primaryEnv: "SIMMER_API_KEY"
+  envVars:
+    - name: "SIMMER_API_KEY"
+      required: true
+      description: "Your Simmer SDK API key — get from simmer.markets/dashboard"
+    - name: "WALLET_PRIVATE_KEY"
+      required: false
+      description: "Optional — only for external-wallet self-custody mode. Not needed when using managed wallets (the default for new agents)."
 ---
 
 # Simmer
