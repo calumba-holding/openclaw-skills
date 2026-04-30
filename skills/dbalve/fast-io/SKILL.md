@@ -15,14 +15,14 @@ compatibility: >-
   via Streamable HTTP (/mcp) or SSE (/sse).
 metadata:
   author: fast-io
-  version: "1.167.0"
+  version: "1.185.0"
 homepage: "https://fast.io"
 ---
 
 # Fast.io MCP Server -- AI Agent Guide
 
-**Version:** 1.167
-**Last Updated:** 2026-04-16
+**Version:** 1.185
+**Last Updated:** 2026-04-23
 
 The definitive guide for AI agents using the Fast.io MCP server. Covers why and how to use the platform: product capabilities, the free agent plan, authentication, core concepts (workspaces, shares, intelligence, previews, comments, URL import, metadata, workflow, ownership transfer), 12 end-to-end workflows, interactive MCP App widgets, and all 19 consolidated tools with action-based routing.
 
@@ -123,7 +123,7 @@ The response includes proper `Content-Type`, `Content-Length`, and `Content-Disp
 
 ### Workflow Overview
 
-The server includes workflow features for project tracking: **tasks** (structured work items with priorities and assignees), **worklogs** (append-only activity logs), **approvals** (formal sign-off requests), and **todos** (simple checklists). Enable workflow on a workspace with `workspace` action `enable-workflow` before using these tools. See the **Full Agent Workflow** recipe in section 6 for the complete pattern.
+The server includes workflow features for project tracking: **tasks** (structured work items with priorities and assignees), **worklogs** (append-only activity logs), **approvals** (formal sign-off requests — see **Workflow Approvals -- Quick Start** below), and **todos** (simple checklists). Enable workflow on a workspace with `workspace` action `enable-workflow` before using these tools. See the **Full Agent Workflow** recipe in section 6 for the complete pattern.
 
 **Best practice (IMPORTANT):** After state-changing actions (uploading files, creating shares, changing task status, member changes, file moves/deletes), append a worklog entry describing what you did and why. Without worklog entries, agent work is invisible to humans reviewing the workspace. For multiple related actions (e.g., uploading several files), you may log once after the batch completes rather than after each individual action. Worklog entries are append-only and permanent.
 
@@ -220,7 +220,7 @@ When creating a new account (Options 1 and 3 above), agents **MUST** use `auth` 
 
 **Steps:**
 
-1. Optionally call `auth` action `email-check` with the desired `email` to verify it is available for registration before attempting signup.
+1. (Optional) `auth` action `email-check` -- advisory hint only; do NOT gate on the result. Always attempt `signup`; see Section 9 for why.
 2. Call `auth` action `signup` with `first_name`, `last_name`, `email`, and `password`. The `agent=true` flag is sent automatically by the MCP server.
 3. The account is created and a session is established automatically -- the agent is signed in immediately.
 4. **Verify your email** (required before using most endpoints): Call `auth` action `email-verify` with `email` to send a verification code, then call `auth` action `email-verify` again with `email` and `email_token` to validate the code.
@@ -434,7 +434,7 @@ Nodes have versions. Each file modification creates a new version. Version histo
 4. The `node_id` is unchanged. The previous content becomes a version entry.
 5. Inspect history with `storage` action `version-list` (returns all versions for the node). Roll back to any earlier version with `storage` action `version-restore`.
 
-Deterministic overwrite by node_id: if the filename may have drifted (e.g., a previous rename), or you want to guarantee the overwrite hits a specific `node_id` without re-resolving the parent folder, pass `target_node_id` on `create-session`. This pins the update target explicitly — the server uses `action=update` + `file_id=<target_node_id>`; `parent_node_id` is ignored and `filename` is optional (omit to keep the current name, or pass a new one to rename-on-replace). See the `target_node_id` documentation in the Upload section below.
+Deterministic overwrite by node_id: if the filename may have drifted (e.g., a previous rename), or you want to guarantee the overwrite hits a specific `node_id` without re-resolving the parent folder, pass `target_node_id` on `create-session`. This pins the update target explicitly — the server uses `action=update` + `file_id=<target_node_id>`; `parent_node_id` is ignored and `filename` is optional (omit to keep the current name, or pass a new one to rename-on-replace). When `filename` is omitted, the tool performs one extra `storage` `details` lookup to fetch the current name (the Fast.io API still requires `name` in update mode); pass `filename` explicitly if you want to skip that call. See the `target_node_id` documentation in the Upload section below.
 
 **Worked example — edit a file's content and recover the prior version:**
 
@@ -763,7 +763,7 @@ Comments use JSON request bodies (`Content-Type: application/json`), unlike most
 
 **Listing comments:** Use `comment` action `list` for per-file comments and `comment` action `list-all` for all comments across a workspace or share. Both support `sort`, `limit` (2-200), `offset`, `include_deleted`, `reference_type` filter, and `include_total`.
 
-**Adding comments:** Use `comment` action `add` with `profile_type`, `profile_id`, `node_id`, and `text`. Optionally include `parent_comment_id` for replies and `reference` to anchor to a specific position. Supports mention tags in the body. Two character limits apply: total body including tags max 8,192 chars, display text (body with `@[...]` tags stripped) max 2,048 chars. Optionally include `linked_entity_type` and `linked_entity_id` to link the comment to a task or approval at creation time.
+**Adding comments:** Use `comment` action `add` with `profile_type`, `profile_id`, `node_id`, and `text`. Optionally include `parent_comment_id` for replies and `reference` to anchor to a specific position. Supports mention tags in the body. Two character limits apply: total body including tags max 8,192 chars, display text (body with `@[...]` tags stripped) max 500 chars. Optionally include `linked_entity_type` and `linked_entity_id` to link the comment to a task or approval at creation time.
 
 **Deleting comments:** `comment` action `delete` is recursive -- deleting a parent also removes all replies. `comment` action `bulk-delete` is NOT recursive -- replies to deleted comments are preserved.
 
@@ -848,7 +848,7 @@ Key points:
 - **`metadata-template-suggest-fields` concurrency** -- the server rate-limits concurrent calls per user+workspace and returns **409 Conflict** when another suggest-fields call is in flight. Wait a few seconds and retry. (Earlier internal notes incorrectly said 406; live docs are authoritative — it is 409.)
 - **`nodes/add/` cap-exceeded** (REST endpoint, not exposed as an MCP action) -- returns **400 (Fast.io error code 1605, "Invalid Input")** with a structured "would exceed cap" message. Concurrent calls cannot collectively exceed the cap. To pre-flight, read the per-template nodes listing endpoint and compute remaining slots from `plan_node_limit - total_count_unfiltered`.
 - **Auto-match silently caps** -- the server-side `auto-match` endpoint (not currently exposed as an MCP action) caps at `plan_node_limit` even when more files are matchable (saves credits and LLM cost). Because neither `auto-match` nor the per-template `nodes/` listing is currently driveable from the MCP tool, agents needing to know exactly how many files were mapped after auto-match must call those REST endpoints directly or surface the gap to the user.
-- **MCP tool coverage** -- the `workspace` MCP tool exposes template CRUD (`metadata-template-{create,delete,list,details,update,clone}`), workspace assignment (`metadata-template-{assign,unassign,resolve,assignments}`), the new view-creation flow (`metadata-template-{preview-match,suggest-fields}`), and file-level metadata (`metadata-{get,set,delete,extract}`, `metadata-list-files`, `metadata-list-templates-in-use`, `metadata-versions`). It does **not** currently expose `nodes/add`, `nodes/remove`, the per-template `nodes/` listing, `auto-match`, `extract-all`, or `/metadata/eligible/`. Agents needing those workflows must surface the gap to the user.
+- **MCP tool coverage** -- the `workspace` MCP tool exposes template CRUD (`metadata-template-{create,delete,list,details,update,clone}`), workspace assignment (`metadata-template-{assign,unassign,resolve,assignments}`), the view-creation flow (`metadata-template-{preview-match,suggest-fields}`), per-user saved views (`metadata-view-{get,save,delete}`, `metadata-views-list`), and file-level metadata (`metadata-{get,set,delete,extract}`, `metadata-list-files`, `metadata-list-templates-in-use`, `metadata-versions`). It does **not** currently expose `nodes/add`, `nodes/remove`, the per-template `nodes/` listing, `auto-match`, `extract-all`, or `/metadata/eligible/`. Agents needing those workflows must surface the gap to the user.
 - **Template categories** -- legal, financial, business, medical, technical, engineering, insurance, educational, multimedia, hr.
 - **Field types** -- string, int, float, bool, json, url, datetime -- each with optional constraints (min, max, default, fixed_list, can_be_null).
 - **Two metadata types** -- template metadata conforms to template field definitions; custom metadata is freeform key-value pairs not tied to any template.
@@ -937,6 +937,69 @@ Worklogs are append-only chronological activity logs scoped to tasks, task lists
 - **Filtered lists:** `worklog` action `filtered-list` returns worklogs filtered by category -- "authored" (worklogs authored by me) or "interjections" (interjections targeted at me). Optional `type` sub-filter ("info" or "interjection").
 - **Summary:** `worklog` action `summary` returns lightweight counts -- total entries, breakdown by entry type, authored-by-me, and pending interjections.
 - **Markdown output:** Pass `format: "md"` for human-readable output.
+
+### Comments & Discussions -- Quick Start
+
+**When to use:** leave feedback on a file, start a container-level discussion, or attach a note to a workflow approval/task.
+
+**Comments are JSON** -- always use JSON request bodies (`Content-Type: application/json`). This is the #1 source of 406 errors on the comment API.
+
+**Three relationship modes -- pick one before you call:**
+
+**1. Node-attached (thread on a specific file/folder):**
+- `comment` action `add` with `profile_type`, `profile_id`, `node_id`, `text` (and optional `reference` for anchoring, `parent_comment_id` for replies).
+- Wraps `POST /comments/{entity_type}/{parent_id}/{node_id}/`. List with action `list`.
+
+**2. Workspace/share-attached (top-level container thread):**
+- Not exposed by `comment` action `add` (which requires `node_id`). For container-level comments, call the underlying endpoint via `execute`: `POST /comments/{entity_type}/{parent_id}/` with JSON body `{body, parent_id?}`. List via `comment` action `list-all`.
+
+**3. Workflow-linked (attach existing comment to an approval or task):**
+- Step A: create a comment via mode 1 or 2.
+- Step B: `comment` action `link` with `comment_id`, `linked_entity_type: "task" | "approval"`, `linked_entity_id`.
+- Reverse-lookup with `comment` action `linked`. Detach with `comment` action `unlink`. A comment can have at most one workflow link at a time.
+
+**Valid `entity_type` / `profile_type` values:**
+- Create/list endpoints: `"workspace"` or `"share"` ONLY.
+- Link/unlink/linked endpoints: `"task"` or `"approval"` ONLY (not `worklog_entry`, not `node`, not `share`).
+
+**Threading:** single-level only. Set `parent_comment_id` (body field: `parent_id`) to the top-level comment id. Replies to replies auto-flatten as siblings.
+
+**Reactions:** `comment` action `reaction-add` with `comment_id` + `emoji`. One reaction per user per comment -- new ones replace the previous.
+
+**Anti-patterns:**
+- Don't pass `entity_type: "approval"` (or `"task"`) to a create endpoint -- they only accept `"workspace"` or `"share"`. To comment on an approval, create on the parent workspace/share first, then LINK.
+- Don't hand-roll `/approvals/{id}/comments/` or `/tasks/{id}/comments/` -- no such paths exist.
+- Don't use form-encoded bodies -- comments are JSON everywhere. In code-mode, that's `fastio.postJson()`, not `fastio.post()`.
+- Don't mix a `node_id` with a `parent_id` from a different workspace/share -- the node must live under the parent you name. 404 usually means wrong parent.
+- Don't try to link to `worklog_entry` -- only `task` and `approval` are link targets.
+
+### Workflow Approvals -- Quick Start
+
+**When to use:** a file, folder, or task needs formal sign-off from one or more reviewers.
+
+**Approvals attach to entities directly** -- not to shares. Common mistake: creating a share to hold approvals. Don't. Shares are for distribution (Send/Receive/Exchange); approvals are review gates that live on the entity itself.
+
+**Step 1 -- Enable workflow on the workspace (one time, per workspace):**
+- `workspace` action `enable-workflow` with `workspace_id`.
+
+**Step 2 -- Create one approval per reviewer on the target node:**
+- `approval` action `create` with:
+  - `profile_type: "workspace"` (or `"share"`), `profile_id: <workspace_id_or_share_id>`
+  - `entity_type: "node"` (for a file or folder)
+  - `entity_id: <node_id>`
+  - `description` (the review request, 1-65535 chars)
+  - `approver_id: <user_id>` -- the reviewer (must be a member of the profile; pending members are fine)
+- For multiple reviewers, repeat this call N times with different `approver_id` values. There is no bulk-create mode.
+
+**Valid `entity_type` values:** `node` (file/folder), `task`, `worklog_entry`, `share`. Use `node` for file/folder reviews.
+
+**Resolve:** `approval` action `resolve` with `approval_id` and `resolve_action: "approve" | "reject"` (optional `comment`).
+
+**Anti-patterns to avoid:**
+- Don't create a share of the file -- approvals go on the node directly.
+- Don't create a task just to hold an approval on a file -- use `entity_type: "node"`.
+- Don't create todos -- todos are checklists, not review gates.
+- `approver_id` is a single user, not a group. For 3 reviewers, make 3 calls.
 
 #### Approvals
 
@@ -1133,7 +1196,7 @@ Organization CRUD, member management, billing and subscription operations, works
 
 Workspace-level settings, lifecycle operations (update, delete, archive, unarchive), listing and importing shares, managing workspace assets, workspace discovery, notes (create, read, update), quickshare management, metadata operations (template CRUD, assignment, file metadata get/set/delete, AI extraction), and workflow toggle (enable/disable tasks, worklogs, approvals, and todos).
 
-**Actions:** list, details, update, delete, archive, unarchive, members, list-shares, import-share, available, check-name, create-note, read-note, update-note, quickshare-get, quickshare-delete, quickshares-list, metadata-template-create, metadata-template-delete, metadata-template-list, metadata-template-details, metadata-template-update, metadata-template-clone, metadata-template-preview-match, metadata-template-suggest-fields, metadata-template-assign, metadata-template-unassign, metadata-template-resolve, metadata-template-assignments, metadata-get, metadata-set, metadata-delete, metadata-extract, jobs-status, metadata-list-files, metadata-list-templates-in-use, metadata-versions, enable-workflow, disable-workflow
+**Actions:** list, details, update, delete, archive, unarchive, members, list-shares, import-share, available, check-name, create-note, read-note, update-note, quickshare-get, quickshare-delete, quickshares-list, metadata-template-create, metadata-template-delete, metadata-template-list, metadata-template-details, metadata-template-update, metadata-template-clone, metadata-template-preview-match, metadata-template-suggest-fields, metadata-template-assign, metadata-template-unassign, metadata-template-resolve, metadata-template-assignments, metadata-view-get, metadata-view-save, metadata-view-delete, metadata-views-list, metadata-get, metadata-set, metadata-delete, metadata-extract, jobs-status, metadata-list-files, metadata-list-templates-in-use, metadata-versions, enable-workflow, disable-workflow
 
 ### share
 
@@ -1235,7 +1298,7 @@ See **Choosing the Right Approach** in section 2 for which option fits your scen
 
 **Option 1 -- Autonomous agent (new account):**
 
-1. Optionally call `auth` action `email-check` with the desired `email` to verify availability.
+1. (Optional) `auth` action `email-check` — advisory hint only; do not gate on the result. `email-check` can return `available: false` for emails that `signup` then accepts. Always call `signup` and let its error be authoritative.
 2. `auth` action `signup` with `first_name`, `last_name`, `email`, and `password` -- registers as an agent account (agent=true is sent automatically) and signs in immediately.
 3. `auth` action `email-verify` with `email` -- sends a verification code. Then `auth` action `email-verify` with `email` and `email_token` -- validates the code. Required before using most endpoints.
 4. `org` action `create` to create a new org on the agent plan, or `org` action `list` to check existing orgs.
@@ -1306,7 +1369,7 @@ Two options for passing chunk data (provide exactly one):
 
 **Same-name uploads (REPLACE in place, versioned):** If a file with the same name already exists in the target folder, the upload **overwrites the existing node in place**. The `node_id` is preserved and the prior content is kept as a version. **This is how you "edit" a file — do not delete and re-upload.** After any same-name overwrite, the previous content is recoverable via `storage` action `version-list` (list versions) and `version-restore` (restore by `version_id`). The `node_id` is stable across versions, so references from comments, tasks, approvals, metadata, etc. keep working. To keep both files instead of overwriting, rename before uploading. See **Overwriting files** in section 4 for the full pattern and a worked example.
 
-**Deterministic overwrite by node_id:** If the filename may have drifted, or you want to avoid re-resolving the parent folder, pass `target_node_id` on `create-session` to pin the overwrite to a specific node. When set, `parent_node_id` is ignored and `filename` is optional (omit to keep the existing name, or pass a new one to rename-on-replace). The server uses `action=update` + `file_id=<target_node_id>` under the hood. `node_id` is preserved; the new version shows up in `storage` action `version-list`. Typical sequence: find the node via `storage` action `list`/`details` → `upload` action `create-session` with `target_node_id` → `POST /blob` → `chunk`/`stream` → `finalize`.
+**Deterministic overwrite by node_id:** If the filename may have drifted, or you want to avoid re-resolving the parent folder, pass `target_node_id` on `create-session` to pin the overwrite to a specific node. When set, `parent_node_id` is ignored and `filename` is optional (omit to keep the existing name, or pass a new one to rename-on-replace). Omitting `filename` triggers one extra `storage` `details` lookup so the tool can forward the existing name to the API (update mode still requires `name`); pass `filename` to skip that round-trip. The server uses `action=update` + `file_id=<target_node_id>` under the hood. `node_id` is preserved; the new version shows up in `storage` action `version-list`. Typical sequence: find the node via `storage` action `list`/`details` → `upload` action `create-session` with `target_node_id` → `POST /blob` → `chunk`/`stream` → `finalize`.
 
 ### 4. Import a File from URL
 
@@ -1891,7 +1954,7 @@ All 19 tools with their actions organized by functional area. Each entry shows t
 
 **2fa-verify** -- Complete two-factor authentication by submitting a 2FA code. Call this after signin returns two_factor_required: true. The new full-scope token is stored automatically.
 
-**email-check** -- Check if an email address is available for registration. No authentication required.
+**email-check** -- Advisory hint for whether an email appears available for registration. **Not authoritative:** `available: false` responses have been observed for emails that `signup` subsequently accepts (suspected: response caching or domain-specific policy in the upstream `POST /user/email/` endpoint). Always proceed to `signup` regardless of the `email-check` result and treat the signup error as the source of truth. No authentication required.
 
 **password-reset-request** -- Request a password reset email. Always returns success for security (does not reveal whether the email exists). No authentication required.
 
@@ -2119,6 +2182,34 @@ All 19 tools with their actions organized by functional area. Each entry shows t
 
 **metadata-template-assignments** -- List all template assignments in the workspace.
 
+**metadata-view-get** -- Retrieve the caller's saved view for a template. Requires `workspace_id` and `template_id`. Returns the saved view record `{id, user_id, template_id, config, created, updated}`, or error 1609 if the caller has no saved view for that template. Saved views are **private per user** — the identity tuple is `(workspace, user, template)` and there is at most one saved view per tuple.
+
+**metadata-view-save** -- Upsert the caller's saved view for a template. Requires `workspace_id`, `template_id`, and `config` (a JSON-encoded string — the MCP tool accepts the stringified JSON, parses it to validate the JSON is well-formed, then forwards the re-stringified form as the `config` field of a form-urlencoded body to the API). `config` schema: `version` (must equal `1`), `columns` (array; order is display order; each entry: `field` string required, `visible?` bool, `width?` positive int), `sort` (`{field: string, dir: "asc" | "desc"}`), `filters` (array, max 5, AND-chained; each entry: `field` string, `operator` one of `= != < <= > >=`, `value_type` one of `string | int | float | bool` — `json` is rejected, `value` matching the declared `value_type`). Unknown keys anywhere in `config` are rejected with error 1605. Upsert semantics: if a view already exists for `(workspace, user, template)` it is replaced in place — the row's `id` and `created` are preserved and `updated` is refreshed; otherwise a new row is inserted. Returns the stored view.
+
+Example `config`:
+
+```json
+{
+  "version": 1,
+  "columns": [
+    { "field": "vendor", "visible": true, "width": 180 },
+    { "field": "amount", "visible": true, "width": 120 },
+    { "field": "notes", "visible": false }
+  ],
+  "sort": { "field": "amount", "dir": "desc" },
+  "filters": [
+    { "field": "vendor", "operator": "=", "value_type": "string", "value": "Acme" },
+    { "field": "amount", "operator": ">=", "value_type": "float", "value": 100.0 }
+  ]
+}
+```
+
+**metadata-view-delete** -- Remove the caller's saved view for a template. Requires `workspace_id` and `template_id`. Only affects the caller's own saved view (other users' views for the same template are untouched).
+
+**metadata-views-list** -- List all of the caller's saved views across templates in a workspace. Requires `workspace_id`. Returns `{items, count}` where `items` is an array of saved view records (one per template the caller has a saved view for).
+
+**Saved-view auto-apply on the nodes listing endpoint.** The per-template nodes listing endpoint (`GET /workspace/{id}/metadata/templates/{tid}/nodes/`) auto-applies the caller's saved `config.sort` and `config.filters` whenever the corresponding query params (`sort_field` / `filters`) are omitted. Explicit query params always win — there is no server-side merge between stateless query params and saved-view state. `columns` is **not** auto-applied server-side; clients must render column order/visibility/width from the saved `columns` array themselves. Note the field-name quirk: the stateless `filters` query param uses `key` per entry (the legacy contract, unchanged), while saved-view `config.filters` entries use `field` — the server translates `field` → `key` internally when auto-applying a saved view. **This endpoint is not currently exposed as an MCP `workspace` action** (see the "MCP tool coverage" bullet above) — to exercise the auto-apply, call the endpoint via code-mode `execute` with `fastio.get()`.
+
 **metadata-get** -- Get all metadata for a file, including both template-conforming metadata and custom (freeform) key-value pairs. Returns node details, template_id, template_metadata array, custom_metadata array, and a top-level `autoextractable` boolean (sibling of `template_id`, not nested inside either metadata array). `autoextractable` is `true` only when the node is a file (not a folder), not trashed, and has a completed AI summary — the same signal the extraction pipeline uses internally. Use it to gate "extract now" / "re-extract" UI affordances: if false, calling `metadata-extract` will fail or no-op (wait for the AI summary to finish first). Requires node_id.
 
 **metadata-set** -- Set or update metadata key-value pairs on a file. Values must conform to the template field definitions. Requires node_id, template_id, and key_values (JSON object of key-value pairs).
@@ -2221,9 +2312,9 @@ All storage actions require `profile_type` parameter (also accepted as `context_
 
 ### upload
 
-**create-session** -- Create a chunked upload session for a file. Accepts optional `target_node_id` to deterministically overwrite a specific existing node (`action=update` + `file_id=<target_node_id>`): when set, `parent_node_id` is ignored and `filename` is optional (keeps existing name unless a new one is provided — enables rename-on-replace). Preserves `node_id`; new version is visible via `storage` action `version-list`. Use this instead of delete+reupload when you need to update a file's bytes. Without `target_node_id`, same-name + same-parent uploads still overwrite in place (the standard REPLACE behavior). After any overwrite, prior content is recoverable via `storage` action `version-list` / `version-restore`.
+**create-session** -- Create a chunked upload session for a file. Accepts optional `target_node_id` to deterministically overwrite a specific existing node (`action=update` + `file_id=<target_node_id>`): when set, `parent_node_id` is ignored and `filename` is optional (keeps existing name unless a new one is provided — enables rename-on-replace). When `filename` is omitted, the tool does one extra `storage` `details` round-trip to fetch the current name (the API still requires `name` in update mode); pass `filename` to skip it. Preserves `node_id`; new version is visible via `storage` action `version-list`. Use this instead of delete+reupload when you need to update a file's bytes. Without `target_node_id`, same-name + same-parent uploads still overwrite in place (the standard REPLACE behavior). After any overwrite, prior content is recoverable via `storage` action `version-list` / `version-restore`.
 
-**stream-upload** -- Create a stream session, upload the file body, and auto-finalize in a single call. Use for generated or piped content where the size isn't known upfront and you don't need the session ID between calls. Requires `profile_type`, `profile_id`, `parent_node_id`, `filename`, and exactly one of `content` | `blob_id`. Optional: `max_size` (see guidance above — omit to use the plan's file-size limit), `target_node_id` (overwrite a specific node; `parent_node_id` is ignored and `filename` is optional when set), `hash`, `hash_algo`. If the stream POST fails after the session is created, the dangling session is canceled automatically.
+**stream-upload** -- Create a stream session, upload the file body, and auto-finalize in a single call. Use for generated or piped content where the size isn't known upfront and you don't need the session ID between calls. Requires `profile_type`, `profile_id`, `parent_node_id`, `filename`, and exactly one of `content` | `blob_id`. Optional: `max_size` (see guidance above — omit to use the plan's file-size limit), `target_node_id` (overwrite a specific node; `parent_node_id` is ignored and `filename` is optional when set — omitting `filename` triggers the same extra `storage` `details` lookup noted under `create-session`), `hash`, `hash_algo`. If the stream POST fails after the session is created, the dangling session is canceled automatically.
 
 **chunk** -- Upload a single chunk. Use `content` for text/strings or `blob_id` for binary staged via `POST /blob`. Provide exactly one.
 
@@ -2303,7 +2394,7 @@ All comment endpoints use the path pattern `/comments/{entity_type}/{parent_id}/
 
 **list-all** -- List all comments across a workspace or share (not node-specific). Same listing params as list.
 
-**add** -- Add a comment to a specific file. Body: text (max 8,192 chars total, max 2,048 chars display text with `@[...]` mention tags stripped). Supports mention tags: `@[profile:id]`, `@[user:opaqueId:Name]`, `@[file:fileId:name.ext]`. Optional parent_comment_id (single-level threading, replies to replies auto-flatten), optional reference (type, timestamp, page, region, text_snippet for content anchoring; exact, prefix, suffix, start_offset, end_offset for text anchoring on markdown/notes -- use type `"document"` or `"text"`), optional linked_entity_type (`task` or `approval`) and linked_entity_id to link the comment to a workflow entity at creation time. Uses JSON body.
+**add** -- Add a comment to a specific file. Body: text (max 8,192 chars total, max 500 chars display text with `@[...]` mention tags stripped). Supports mention tags: `@[profile:id]`, `@[user:opaqueId:Name]`, `@[file:fileId:name.ext]`. Optional parent_comment_id (single-level threading, replies to replies auto-flatten), optional reference (type, timestamp, page, region, text_snippet for content anchoring; exact, prefix, suffix, start_offset, end_offset for text anchoring on markdown/notes -- use type `"document"` or `"text"`), optional linked_entity_type (`task` or `approval`) and linked_entity_id to link the comment to a workflow entity at creation time. Uses JSON body.
 
 **delete** -- Delete a comment. Recursive: deleting a parent also removes all its replies.
 
@@ -2449,13 +2540,13 @@ Formal approval requests scoped to tasks, storage nodes, worklog entries, or sha
 
 **list** -- List approval requests for a workspace or share. Requires `profile_type` and `profile_id`. Supports `status` filter (pending, approved, rejected), `limit` (1-200, default 50), `offset`, and `format`.
 
-**create** -- Create a new approval request. Requires `profile_type`, `profile_id`, `entity_type` ("task", "node", "worklog_entry", or "share"), `entity_id`, and `description` (1-65535 chars). Optional `approver_id` (profile ID of designated approver — can be a pending member), `deadline` (ISO 8601), `node_id` (artifact reference).
+**create** -- Create a new approval request. Requires `profile_type`, `profile_id`, `entity_type` ("task", "node", "worklog_entry", or "share"), `entity_id`, and `description` (1-65535 chars). Optional `approver_id` (profile ID of designated approver — can be a pending member), `deadline` (`YYYY-MM-DD HH:MM:SS` — NOT ISO-8601), `node_id` (artifact reference).
 
 **details** -- Get full details of an approval request including approver list and resolution. Requires `profile_type`, `profile_id`, and `approval_id` (opaque alphanumeric). Supports `format`.
 
 **resolve** -- Resolve an approval request. Requires `profile_type`, `profile_id`, `approval_id`, and `resolve_action` ("approve" or "reject"). Optional `comment` (max 5000 chars). Only designated approvers can resolve.
 
-**bulk-create** -- Bulk-create node approvals for every file and note in a share (max 50 nodes). Requires `profile_id` and `description` (1-65535 chars). Optional `approver_id` (can be a pending member), `deadline` (ISO 8601). Share-only, members/admins only.
+**bulk-create** -- Bulk-create node approvals for every file and note in a share (max 50 nodes). Requires `profile_id` and `description` (1-65535 chars). Optional `approver_id` (can be a pending member), `deadline` (`YYYY-MM-DD HH:MM:SS` — NOT ISO-8601). Share-only, members/admins only.
 
 **bulk-approve** -- Bulk-approve all pending approvals in a share. Requires `profile_id`. Optional `comment` (max 5000 chars). Skips stale approvals (version_match=false). Guests can approve their assigned approvals.
 
@@ -2465,7 +2556,7 @@ Formal approval requests scoped to tasks, storage nodes, worklog entries, or sha
 
 **summary** -- Lightweight approval counts for a workspace or share. Requires `profile_type` and `profile_id`. Returns created-by-me and assigned-to-me breakdowns with pending/approved/rejected counts. Supports `format`.
 
-**update** -- Update a pending approval. Requires `profile_type`, `profile_id`, and `approval_id`. At least one of: `description` (1-65535 chars), `approver_id` (can be a pending member), `deadline` (ISO 8601), `node_id`, `properties` (JSON object). Only pending approvals can be updated. Status, entity_type, entity_id, and profile_id are immutable.
+**update** -- Update a pending approval. Requires `profile_type`, `profile_id`, and `approval_id`. At least one of: `description` (1-65535 chars), `approver_id` (can be a pending member), `deadline` (`YYYY-MM-DD HH:MM:SS` — NOT ISO-8601), `node_id`, `properties` (JSON object). Only pending approvals can be updated. Status, entity_type, entity_id, and profile_id are immutable.
 
 **delete** -- Permanently delete an approval (any status). Requires `profile_type`, `profile_id`, and `approval_id`. Irreversible. Members and admins only; guests blocked.
 
@@ -2515,24 +2606,71 @@ When connecting from a headless agent (Claude Code, Cursor, Continue, etc.), the
 |------|---------|
 | `auth` | Authentication (signin, signup, API keys, PKCE, 2FA) |
 | `upload` | File uploads (chunked, text, web-import) |
-| `search` | Discover API endpoints by keyword, tag, or concept |
+| `search` | Find content (files, notes, folders) OR discover API endpoints |
 | `execute` | Make authenticated API calls to Fast.io |
 
 Clients with MCP Apps support (Claude Desktop, Cline) continue to receive the full 19-tool set plus 6 app-* widget tools (one per widget in the registry). Unknown clients default to the full tool set.
 
-### search Tool
+### Finding Content (USE THIS FIRST)
 
-Query the API spec by keywords, paths, or concepts. Returns matching endpoints with method, path, parameters, and descriptions.
+When the user asks "find my X", "where is my Y", or "do I have a Z" in their Fast.io data, call `search` **without** setting `target` (defaults to `content`). Do NOT compose `/storage/search/` calls by hand through `execute` — the `search` tool already wraps the right endpoints, fans out across workspaces, and normalizes results.
 
 ```
-search query="list files in workspace" tag="storage"
-search query="create share" tag="share"
-search query="authentication"
-search query="pagination" include_concepts=true
+search query="tax return 2023"                               (fan out across ALL workspaces)
+search query="Q3 budget" workspace_id="1234567890123456789"  (scoped to one workspace)
+search query="invoice" share_id="9876543210987654321"        (scoped to one share)
+search query="meeting notes from last quarter" details=true  (semantic, with full node details)
 ```
 
-Parameters:
-- `query` (string, required) -- Keywords, endpoint paths, or concepts to search for
+Result shape:
+
+```json
+{
+  "results": [
+    { "id": "<30-char node id>", "type": "file", "name": "tax-return-2023.pdf",
+      "parent_id": "<folder id>", "workspace_id": "1234…",
+      "score": 0.87, "snippet": "…2023 tax return for…" }
+  ],
+  "total": 1,
+  "scope": { "type": "workspace", "workspace_ids": ["1234…"] },
+  "next_offset": 50
+}
+```
+
+**Keyword vs. semantic search:** With workspace intelligence OFF (the default), search matches file and folder **names** only — fast and free. With intelligence ON, the same endpoint also runs semantic (RAG) search over indexed document content and returns `score` and `snippet` fields. Enable intelligence with `execute POST /workspace/{id}/update/ intelligence=true`. Indexing costs ~10 credits per document page; queries themselves are free.
+
+**Narrowing semantic search:** Pass `folders_scope` (`nodeId:depth` pairs, depth 1-10) to limit results to a subtree, or `files_scope` (`nodeId:versionId` pairs) to limit to specific file versions. Both are silently ignored when intelligence is off.
+
+**Scopes:**
+- `workspace_id` given → single-workspace search with `limit`/`offset` pagination.
+- `share_id` given → single-share search.
+- Neither → fan out across the top 10 accessible workspaces (4-way concurrent). Pagination is not available across the fanout; for deep pagination, pass an explicit `workspace_id`.
+
+### search Tool (API-endpoint discovery)
+
+When you need to call a REST endpoint that is NOT already wrapped by the code-mode tools (`auth`, `upload`, `search` content mode), flip `target` to `"api"` to search the API spec. Returns matching endpoints with method, path, parameters, and descriptions — pass the chosen path to `execute`.
+
+```
+search target="api" query="list files in workspace" tag="storage"
+search target="api" query="create share" tag="share"
+search target="api" query="authentication"
+search target="api" query="pagination" include_concepts=true
+```
+
+Parameters (all modes):
+- `query` (string, required) -- Keywords, endpoint paths, or concepts (api mode) or the thing you're trying to find (content mode)
+- `target` (enum, optional) -- `"content"` (default) or `"api"`
+
+Parameters (content mode only):
+- `workspace_id` (string, optional) -- 19-digit workspace ID to scope to one workspace
+- `share_id` (string, optional) -- 19-digit share ID to scope to one share
+- `limit` (number, optional) -- Max results 1-200 (default 50 single-scope, 25 per-workspace on fanout)
+- `offset` (number, optional) -- Pagination offset for single-scope search
+- `details` (boolean, optional) -- Include full node details (previews, AI state, metadata). Default false
+- `folders_scope` (string, optional) -- Narrow semantic search to folder subtrees (requires intelligence)
+- `files_scope` (string, optional) -- Narrow semantic search to specific file versions (requires intelligence)
+
+Parameters (api mode only):
 - `tag` (string, optional) -- Filter by domain: auth, workspace, storage, ai, share, upload, org, user, member, comment, event, metadata, etc.
 - `include_concepts` (boolean, optional) -- Include concept docs (pagination, IDs, errors). Default true.
 
