@@ -1,0 +1,11 @@
+{
+  "owner": "victorosondu",
+  "slug": "review-my-agent",
+  "displayName": "Review my skill",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777283835743,
+    "commit": null
+  },
+  "history": []
+}
