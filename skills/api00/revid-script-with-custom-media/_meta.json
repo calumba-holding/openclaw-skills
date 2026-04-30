@@ -1,0 +1,11 @@
+{
+  "owner": "api00",
+  "slug": "revid-script-with-custom-media",
+  "displayName": "Script + Custom Media",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777220138546,
+    "commit": null
+  },
+  "history": []
+}
