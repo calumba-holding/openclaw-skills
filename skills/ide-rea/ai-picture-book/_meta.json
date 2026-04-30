@@ -1,13 +1,18 @@
 {
   "owner": "ide-rea",
   "slug": "ai-picture-book",
-  "displayName": "Baidu Wenku AIPictureBook",
+  "displayName": "Baidu Wenku AI picture book of video",
   "latest": {
-    "version": "1.1.1",
-    "publishedAt": 1775031924634,
-    "commit": "https://github.com/openclaw/skills/commit/a9975ca1c122c78ef31c295534a30335b9702f93"
+    "version": "1.1.2",
+    "publishedAt": 1777368716946,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.1",
+      "publishedAt": 1775031924634,
+      "commit": "https://github.com/openclaw/skills/commit/a9975ca1c122c78ef31c295534a30335b9702f93"
+    },
     {
       "version": "1.1.0",
       "publishedAt": 1770956044284,

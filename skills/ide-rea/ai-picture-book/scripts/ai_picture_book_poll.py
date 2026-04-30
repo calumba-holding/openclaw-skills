@@ -9,7 +9,9 @@ import sys
 import json
 import time
 import requests
-from typing import Dict, Any
+import argparse
+from typing import Dict, Any, Tuple
+from urllib.parse import urlparse
 
 STATUS_CODES = {
     0: "in_progress",
@@ -18,15 +20,42 @@ STATUS_CODES = {
     3: "in_progress",
 }
 
+BASE_URL = "https://qianfan.baidubce.com/v2"
+
+def resolve_sandbox_url(api_key: str, original_url: str) -> Tuple[str, Dict[str, str]]:
+    """若当前在沙盒环境中，将目标 URL 替换为代理 URL，并返回需要附加的 headers。"""
+    session_id = os.environ.get("DUMATE_SESSION_ID")
+    scheduler_url = os.environ.get("DUMATE_SCHEDULER_URL")
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+    if not session_id or not scheduler_url:
+        if not api_key:
+            raise ValueError("未设置 API Key，请通过环境变量 BAIDU_API_KEY 设置或使用")
+        headers.update({
+            "Authorization": f"Bearer {api_key}",
+            "X-Appbuilder-From": "openclaw",
+        })
+        return original_url, headers
+
+    parsed = urlparse(original_url)
+    proxy_url = f"{scheduler_url}/api/qianfanproxy{parsed.path}"
+    if parsed.query:
+        proxy_url += f"?{parsed.query}"
+
+    headers.update({
+        "Host": parsed.netloc,
+        "X-Dumate-Session-Id": session_id,
+        "X-Appbuilder-From": "desktop",
+    })
+    return proxy_url, headers
+
 
 def query_task(api_key: str, task_id: str) -> Dict[str, Any]:
     """Query task status."""
-    url = "https://qianfan.baidubce.com/v2/tools/ai_picture_book/query"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "X-Appbuilder-From": "openclaw",
-        "Content-Type": "application/json"
-    }
+    url = f"{BASE_URL}/tools/ai_picture_book/query"
+    url, headers = resolve_sandbox_url(api_key, url)
     params = {"task_ids": [task_id]}
 
     response = requests.post(url, headers=headers, json=params, timeout=5)
@@ -96,23 +125,20 @@ def poll_task(api_key: str, task_id: str, max_attempts: int = 20, interval: int 
 
 
 def main():
-    if len(sys.argv) < 2:
-        print(json.dumps({
-            "error": "Missing task ID",
-            "usage": "python ai_picture_book_poll.py <task_id> [max_attempts] [interval_seconds]"
-        }, indent=2))
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="查询AI视频笔记生成任务状态")
+    parser.add_argument("--task_id", required=True, help="任务ID")
+    parser.add_argument("--max_attempts", type=int, help="最大轮询次数")
+    parser.add_argument("--interval", type=int, help="每次轮询间隔（秒）")
+    parser.add_argument("--api_key", default=os.environ.get("BAIDU_API_KEY"), help="API Key")
+    args = parser.parse_args()
+    task_id = args.task_id
+    api_key = args.api_key
+    max_attempts = args.max_attempts
+    interval = args.interval
 
-    task_id = sys.argv[1]
-    max_attempts = int(sys.argv[2]) if len(sys.argv) > 2 else 20
-    interval = int(sys.argv[3]) if len(sys.argv) > 3 else 5
-
-    api_key = os.getenv("BAIDU_API_KEY")
-    if not api_key:
-        print(json.dumps({
-            "error": "BAIDU_API_KEY environment variable not set"
-        }, indent=2))
-        sys.exit(1)
+    # task_id = sys.argv[1]
+    max_attempts = max_attempts if max_attempts else 20
+    interval = interval if interval else 5
 
     print(f"Polling task: {task_id}")
     print(f"Max attempts: {max_attempts}, Interval: {interval}s")

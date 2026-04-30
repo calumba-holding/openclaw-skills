@@ -2,15 +2,44 @@ import os
 import sys
 import requests
 import json
+import argparse
+from typing import Dict, Any, Tuple
+from urllib.parse import urlparse
 
+BASE_URL = "https://qianfan.baidubce.com/v2"
+
+def resolve_sandbox_url(api_key: str, original_url: str) -> Tuple[str, Dict[str, str]]:
+    """若当前在沙盒环境中，将目标 URL 替换为代理 URL，并返回需要附加的 headers。"""
+    session_id = os.environ.get("DUMATE_SESSION_ID")
+    scheduler_url = os.environ.get("DUMATE_SCHEDULER_URL")
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+    if not session_id or not scheduler_url:
+        if not api_key:
+            raise ValueError("未设置 API Key，请通过环境变量 BAIDU_API_KEY 设置或使用")
+        headers.update({
+            "Authorization": f"Bearer {api_key}",
+            "X-Appbuilder-From": "openclaw",
+        })
+        return original_url, headers
+
+    parsed = urlparse(original_url)
+    proxy_url = f"{scheduler_url}/api/qianfanproxy{parsed.path}"
+    if parsed.query:
+        proxy_url += f"?{parsed.query}"
+
+    headers.update({
+        "Host": parsed.netloc,
+        "X-Dumate-Session-Id": session_id,
+        "X-Appbuilder-From": "desktop",
+    })
+    return proxy_url, headers
 
 def ai_picture_book_task_query(api_key: str, task_id: str):
-    url = "https://qianfan.baidubce.com/v2/tools/ai_picture_book/query"
-    headers = {
-        "Authorization": "Bearer %s" % api_key,
-        "X-Appbuilder-From": "openclaw",
-        "Content-Type": "application/json"
-    }
+    url = f"{BASE_URL}/tools/ai_picture_book/query"
+    url, headers = resolve_sandbox_url(api_key, url)
     task_ids = task_id.split(",")
     params = {
         "task_ids": task_ids,
@@ -34,18 +63,15 @@ def ai_picture_book_task_query(api_key: str, task_id: str):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python ai_picture_book_task_query.py <task_ids>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="查询AI绘本生成任务状态")
+    parser.add_argument("--task_id", required=True, help="任务ID")
+    parser.add_argument("--api_key", default=os.environ.get("BAIDU_API_KEY"), help="API Key")
+    args = parser.parse_args()
+    task_id = args.task_id
+    api_key = args.api_key
 
-    task_ids = sys.argv[1]
-
-    api_key = os.getenv("BAIDU_API_KEY")
-    if not api_key:
-        print("Error: BAIDU_API_KEY must be set in environment.")
-        sys.exit(1)
     try:
-        results = ai_picture_book_task_query(api_key, task_ids)
+        results = ai_picture_book_task_query(api_key, task_id)
         print(json.dumps(results, ensure_ascii=False, indent=2))
     except Exception as e:
         print(f"Error: {str(e)}")
