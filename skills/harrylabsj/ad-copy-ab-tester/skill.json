@@ -1,0 +1,23 @@
+{
+  "name": "Ad Copy Variants for A/B Testing",
+  "description": "Systematic A/B ad copy generation with labeled variants (emotional, rational, scarcity, social proof, problem-solution) across WeChat, Douyin, Google, Facebook, and Kuaishou ad platforms. Includes compliance checks.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "Advertising / Creative Copy",
+  "keywords": [
+    "ad copy", "A/B test", "广告文案", "ad variant", "creative testing",
+    "WeChat ad", "Douyin ad", "Google ad copy", "Facebook ad",
+    "headline bank", "CTA optimization"
+  ],
+  "platforms": ["WeChat Moments Ads", "Douyin Feed Ads", "Google Ads", "Facebook/Instagram Ads", "Kuaishou Ads"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No forbidden claims per platform ad policy. No discriminatory or exclusionary language. No misleading before/after representations. No unsubstantiated superlatives without verification. Include required disclosures per platform."
+  }
+}
