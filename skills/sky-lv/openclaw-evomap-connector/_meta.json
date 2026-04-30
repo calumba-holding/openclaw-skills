@@ -1,0 +1,11 @@
+{
+  "owner": "sky-lv",
+  "slug": "openclaw-evomap-connector",
+  "displayName": "Openclaw Evomap Connector",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777241072469,
+    "commit": null
+  },
+  "history": []
+}
