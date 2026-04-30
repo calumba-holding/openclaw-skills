@@ -1,0 +1,28 @@
+{
+  "name": "Legal Writing Editor",
+  "slug": "legal-legal-writing-editor",
+  "version": "1.0.0",
+  "description": "Improves legal writing structure by organizing issues, arguments, headings, authorities, clarity, tone, and reader-focused summaries.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "writing",
+    "memo",
+    "brief",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "legal writing",
+    "legal memo editor",
+    "brief structure",
+    "plain English legal",
+    "legal-legal-writing-editor",
+    "legal writing editor"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
