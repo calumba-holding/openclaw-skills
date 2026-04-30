@@ -61,18 +61,29 @@ rm -rf /tmp/reeltalk_*
 mkdir -p /tmp/reeltalk_work
 ```
 
-### 1. Get metadata
+### 1. Validate URL
+Store the user-provided URL in a variable and reject anything that looks like a shell injection. Only allow `http://`, `https://`, or `www.` prefixes. Reject inputs containing shell metacharacters (`;`, `|`, `&`, `` ` ``, `$`, `(`, `)`).
 ```bash
-yt-dlp --print title --print description --print uploader "<url>" \
+URL="<url>"
+# Reject shell metacharacters
+if printf '%s' "$URL" | grep -qE '[;|&`$()]'; then
+  echo "Invalid URL: contains disallowed characters"
+  exit 1
+fi
+```
+
+### 2. Get metadata
+```bash
+yt-dlp --print title --print description --print uploader "$URL" \
   2>/dev/null > /tmp/reeltalk_work/metadata.txt
 ```
 
-### 2. Audio
+### 3. Audio
 ```bash
-yt-dlp -f "bestaudio" -o "/tmp/reeltalk_work/audio.%(ext)s" "<url>"
+yt-dlp -f "bestaudio" -o "/tmp/reeltalk_work/audio.%(ext)s" "$URL"
 ```
 
-### 3. Check length & split
+### 4. Check length & split
 ```bash
 ffprobe -v error -show_entries format=duration -of \
   default=noprint_wrappers=1:nokey=1 /tmp/reeltalk_work/audio.m4a
@@ -108,10 +119,10 @@ for f in /tmp/reeltalk_work/transcript_chunk_*.txt; do
 done
 ```
 
-### 6. OCR fallback
+### 7. OCR fallback
 If transcript is empty or under 20 words:
 ```bash
-yt-dlp -f "bv*+ba/b" -o "/tmp/reeltalk_work/video.mp4" "<url>"
+yt-dlp -f "bv*+ba/b" -o "/tmp/reeltalk_work/video.mp4" "$URL"
 mkdir -p /tmp/reeltalk_work/frames
 ffmpeg -i /tmp/reeltalk_work/video.mp4 -vf "fps=1" -vsync vfr \
   -q:v 2 /tmp/reeltalk_work/frames/frame_%04d.jpg
@@ -125,7 +136,11 @@ Combine metadata + transcript (or OCR) into a plain English summary.
 
 ## Platform notes
 
-- **X/Twitter**: use fxtwitter API (yt-dlp fails). Get video URL from `api.fxtwitter.com/<user>/status/<id>`, download with curl.
+- **X/Twitter**: use fxtwitter API (yt-dlp fails). Extract the user and status ID from the original URL, then call the API with a constructed URL (do not pass the raw user URL to curl):
+  ```bash
+  curl -sL "https://api.fxtwitter.com/<user>/status/<id>" | jq -r '.media.videos[0].url'
+  ```
+  Validate the returned video URL (must start with `https://`) before downloading with curl.
 - **TikTok**: yt-dlp handles fine.
 - **Instagram**: yt-dlp handles fine.
 
