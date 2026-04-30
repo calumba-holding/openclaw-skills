@@ -1,13 +1,18 @@
 {
   "owner": "therohitdas",
   "slug": "youtube-data",
-  "displayName": "Youtube Data",
+  "displayName": "youtube-data",
   "latest": {
-    "version": "1.4.1",
-    "publishedAt": 1770817062852,
-    "commit": "https://github.com/openclaw/skills/commit/4f8347a82e1bf0d7fff84700fb8594bdfe83b44d"
+    "version": "1.5.0",
+    "publishedAt": 1777475136603,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.4.1",
+      "publishedAt": 1770817062852,
+      "commit": "https://github.com/openclaw/skills/commit/4f8347a82e1bf0d7fff84700fb8594bdfe83b44d"
+    },
     {
       "version": "1.3.2",
       "publishedAt": 1769930225396,
