@@ -1,0 +1,11 @@
+{
+  "owner": "lotfinity",
+  "slug": "browser-cdp-tailnet",
+  "displayName": "Browser CDP Tailnet",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777226296073,
+    "commit": null
+  },
+  "history": []
+}
