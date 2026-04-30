@@ -16,7 +16,6 @@ on:
       - ".github/CODEOWNERS"
       - ".github/codeql/**"
       - ".github/workflows/**"
-      - "skills/**"
   schedule:
     - cron: "20 7 * * *"
 
