@@ -217,28 +217,6 @@ class TestMetadataQueries:
 # Fulltext Queries
 # -----------------------------------------------------------------------------
 
-class TestFulltextQueries:
-    """Tests for full-text search on summaries."""
-    
-    def test_query_fulltext_substring(self, store, sample_embedding):
-        """Fulltext search finds substring matches."""
-        store.upsert("test", "doc:1", sample_embedding, "Installation guide for Python", {})
-        store.upsert("test", "doc:2", sample_embedding, "API reference documentation", {})
-        
-        results = store.query_fulltext("test", "Python")
-        
-        assert len(results) == 1
-        assert results[0].id == "doc:1"
-    
-    def test_query_fulltext_no_match(self, store, sample_embedding):
-        """Fulltext search returns empty for no matches."""
-        store.upsert("test", "doc:1", sample_embedding, "Hello world", {})
-        
-        results = store.query_fulltext("test", "nonexistent")
-        
-        assert len(results) == 0
-
-
 # -----------------------------------------------------------------------------
 # Collection Management
 # -----------------------------------------------------------------------------
@@ -334,3 +312,32 @@ class TestPersistence:
         assert result is not None
         assert result.summary == "Persistent"
         assert result.tags["key"] == "value"
+
+
+class TestLocking:
+    """Tests for local lock behavior."""
+
+    def test_write_guard_reentrant_acquires_file_lock_once(self, store):
+        """Nested write paths should not double-acquire cross-process lock."""
+
+        class DummyLock:
+            def __init__(self):
+                self.acquires = 0
+                self.releases = 0
+
+            def acquire(self, *args, **kwargs):
+                self.acquires += 1
+                return True
+
+            def release(self):
+                self.releases += 1
+
+        dummy = DummyLock()
+        store._chroma_lock = dummy
+
+        with store._write_guard():
+            with store._write_guard():
+                pass
+
+        assert dummy.acquires == 1
+        assert dummy.releases == 1

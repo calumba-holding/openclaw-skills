@@ -3,11 +3,32 @@ Tests for the document store module.
 """
 
 import json
+import sqlite3
 import pytest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from keep.document_store import DocumentStore, DocumentRecord
+
+
+class TestSchemaCompatibility:
+    """Schema compatibility guards."""
+
+    def test_rejects_store_from_future(self) -> None:
+        """Opening a DB with newer user_version fails fast."""
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "documents.db"
+            with DocumentStore(db_path):
+                pass
+            conn = sqlite3.connect(db_path)
+            try:
+                conn.execute("PRAGMA user_version = 999")
+                conn.commit()
+            finally:
+                conn.close()
+
+            with pytest.raises(sqlite3.DatabaseError, match="newer than supported"):
+                DocumentStore(db_path)
 
 
 class TestDocumentStoreBasics:
@@ -255,6 +276,113 @@ class TestUpdateOperations:
         assert updated is False
 
 
+class TestTagDedupOnWritePaths:
+    """Tag values are deduplicated on all document-level write paths."""
+
+    @pytest.fixture
+    def store(self):
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "documents.db"
+            with DocumentStore(db_path) as store:
+                yield store
+
+    def test_upsert_deduplicates_tag_values(self, store: DocumentStore) -> None:
+        """upsert() stores scalar-or-list tags without duplicate values."""
+        store.upsert(
+            "default",
+            "doc:1",
+            "Summary",
+            {"k": ["v1", "v1", "v2"], "single": ["x", "x"]},
+        )
+
+        doc = store.get("default", "doc:1")
+        assert doc is not None
+        assert doc.tags == {"k": ["v1", "v2"], "single": "x"}
+
+    def test_update_tags_deduplicates_tag_values(self, store: DocumentStore) -> None:
+        """update_tags() also deduplicates values before persisting."""
+        store.upsert("default", "doc:1", "Summary", {"k": "v1"})
+
+        updated = store.update_tags(
+            "default",
+            "doc:1",
+            {"k": ["v1", "v1", "v2"], "single": ["x", "x"]},
+        )
+        assert updated is True
+
+        doc = store.get("default", "doc:1")
+        assert doc is not None
+        assert doc.tags == {"k": ["v1", "v2"], "single": "x"}
+
+    def test_restore_latest_version_deduplicates_tags(self, store: DocumentStore) -> None:
+        """restore_latest_version() normalizes tags from version rows."""
+        store.upsert("default", "doc:1", "Current", {"status": "current"})
+        store._execute(
+            """
+            INSERT INTO document_versions
+                (id, collection, version, summary, tags_json, content_hash, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "doc:1",
+                "default",
+                1,
+                "Archived",
+                json.dumps({"k": ["v1", "v1", "v2"], "single": ["x", "x"]}),
+                None,
+                "2026-01-01T00:00:00",
+            ),
+        )
+        store._conn.commit()
+
+        restored = store.restore_latest_version("default", "doc:1")
+        assert restored is not None
+        assert restored.tags == {"k": ["v1", "v2"], "single": "x"}
+
+        doc = store.get("default", "doc:1")
+        assert doc is not None
+        assert doc.tags == {"k": ["v1", "v2"], "single": "x"}
+
+    def test_import_batch_deduplicates_tags_everywhere(self, store: DocumentStore) -> None:
+        """import_batch() deduplicates document/version/part tag values."""
+        stats = store.import_batch(
+            "default",
+            [{
+                "id": "doc:1",
+                "summary": "Summary",
+                "tags": {"k": ["v1", "v1", "v2"]},
+                "created_at": "2026-01-01T00:00:00",
+                "updated_at": "2026-01-02T00:00:00",
+                "versions": [{
+                    "version": 1,
+                    "summary": "V1",
+                    "tags": {"k": ["a", "a", "b"]},
+                    "content_hash": None,
+                    "created_at": "2026-01-01T00:00:00",
+                }],
+                "parts": [{
+                    "part_num": 1,
+                    "summary": "P1",
+                    "tags": {"k": ["p", "p", "q"]},
+                    "content": "Body",
+                    "created_at": "2026-01-02T00:00:00",
+                }],
+            }],
+        )
+        assert stats == {"documents": 1, "versions": 1, "parts": 1}
+
+        doc = store.get("default", "doc:1")
+        assert doc is not None
+        assert doc.tags == {"k": ["v1", "v2"]}
+
+        versions = store.list_versions("default", "doc:1")
+        assert len(versions) == 1
+        assert versions[0].tags == {"k": ["a", "b"]}
+
+        parts = store.list_parts("default", "doc:1")
+        assert len(parts) == 1
+        assert parts[0].tags == {"k": ["p", "q"]}
+
 class TestCollectionIsolation:
     """Documents in different collections are isolated."""
     
@@ -309,7 +437,8 @@ class TestVersioning:
         versions = store.list_versions("default", "doc:1")
         assert len(versions) == 1
         assert versions[0].summary == "Version 1"
-        assert versions[0].tags == {"tag": "a"}
+        # Version tags include injected _created/_updated for frontmatter display
+        assert versions[0].tags["tag"] == "a"
 
         # Current should be updated
         current = store.get("default", "doc:1")
@@ -462,6 +591,177 @@ class TestVersioning:
         assert len(versions) == 0
 
 
+class TestSystemDocVersioning:
+    """System doc versioning: upgrade, reset, and delete behavior."""
+
+    @pytest.fixture
+    def store(self):
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "documents.db"
+            with DocumentStore(db_path) as store:
+                yield store
+
+    def test_upsert_archive_false_no_version_created(self, store: DocumentStore) -> None:
+        """upsert(archive=False) updates head without creating a version."""
+        store.upsert("default", "doc:1", "V1", {"t": "a"}, content_hash="h1")
+        store.upsert("default", "doc:1", "V2", {"t": "b"}, content_hash="h2", archive=False)
+
+        # No version archived
+        assert store.version_count("default", "doc:1") == 0
+        # Head updated
+        current = store.get("default", "doc:1")
+        assert current.summary == "V2"
+        assert current.tags["t"] == "b"
+
+    def test_find_version_by_content_hash(self, store: DocumentStore) -> None:
+        """find_version_by_content_hash returns oldest matching version."""
+        store.upsert("default", "doc:1", "V1", {}, content_hash="base_hash")
+        store.upsert("default", "doc:1", "V2", {}, content_hash="user_hash")
+
+        ver = store.find_version_by_content_hash("default", "doc:1", "base_hash")
+        assert ver == 1
+
+        # Not found
+        ver = store.find_version_by_content_hash("default", "doc:1", "nonexistent")
+        assert ver is None
+
+    def test_replace_version_content(self, store: DocumentStore) -> None:
+        """replace_version_content updates an archived version in-place."""
+        store.upsert("default", "doc:1", "bundled-v1", {"bundled_hash": "bh1"}, content_hash="bh1")
+        store.upsert("default", "doc:1", "user-edit", {"bundled_hash": "bh1"}, content_hash="uh1")
+
+        # V1 in archive = bundled-v1
+        v1 = store.get_version("default", "doc:1", offset=1)
+        assert v1.summary == "bundled-v1"
+        assert v1.content_hash == "bh1"
+
+        # Replace V1 with new bundled content
+        ok = store.replace_version_content(
+            "default", "doc:1", v1.version,
+            summary="bundled-v2", tags={"bundled_hash": "bh2"},
+            content_hash="bh2",
+        )
+        assert ok is True
+
+        # Verify replaced
+        v1_updated = store.get_version("default", "doc:1", offset=1)
+        assert v1_updated.summary == "bundled-v2"
+        assert v1_updated.content_hash == "bh2"
+
+        # Head unchanged
+        current = store.get("default", "doc:1")
+        assert current.summary == "user-edit"
+
+    def test_delete_all_versions(self, store: DocumentStore) -> None:
+        """delete_all_versions removes all archived versions."""
+        store.upsert("default", "doc:1", "V1", {}, content_hash="h1")
+        store.upsert("default", "doc:1", "V2", {}, content_hash="h2")
+        store.upsert("default", "doc:1", "V3", {}, content_hash="h3")
+        assert store.version_count("default", "doc:1") == 2
+
+        n = store.delete_all_versions("default", "doc:1")
+        assert n == 2
+        assert store.version_count("default", "doc:1") == 0
+
+        # Head still exists
+        current = store.get("default", "doc:1")
+        assert current.summary == "V3"
+
+    def test_patch_head_tags(self, store: DocumentStore) -> None:
+        """patch_head_tags merges tags without creating a version."""
+        store.upsert("default", "doc:1", "content", {"a": "1", "bundled_hash": "old"})
+
+        ok = store.patch_head_tags("default", "doc:1", {"bundled_hash": "new"})
+        assert ok is True
+
+        current = store.get("default", "doc:1")
+        assert current.tags["bundled_hash"] == "new"
+        assert current.tags["a"] == "1"  # preserved
+        assert current.summary == "content"  # unchanged
+        assert store.version_count("default", "doc:1") == 0  # no version created
+
+    def test_upgrade_no_user_edit_updates_head_in_place(self, store: DocumentStore) -> None:
+        """Simulates upgrade when user hasn't edited: head updated, no version."""
+        # Initial system doc
+        store.upsert("default", ".state/foo", "bundled-v1",
+                      {"category": "system", "bundled_hash": "bh1"},
+                      content_hash="bh1")
+
+        # Upgrade: no user edit (content_hash == bundled_hash), use archive=False
+        store.upsert("default", ".state/foo", "bundled-v2",
+                      {"category": "system", "bundled_hash": "bh2"},
+                      content_hash="bh2", archive=False)
+
+        current = store.get("default", ".state/foo")
+        assert current.summary == "bundled-v2"
+        assert store.version_count("default", ".state/foo") == 0
+
+    def test_upgrade_with_user_edit_updates_base_version(self, store: DocumentStore) -> None:
+        """Simulates upgrade when user has customized: base version updated."""
+        # Initial system doc
+        store.upsert("default", ".state/foo", "bundled-v1",
+                      {"category": "system", "bundled_hash": "bh1"},
+                      content_hash="bh1")
+
+        # User edits → archives bundled-v1 as V1, head = user content
+        store.upsert("default", ".state/foo", "my-custom-rules",
+                      {"category": "system", "bundled_hash": "bh1"},
+                      content_hash="user1")
+
+        # Upgrade: find base version and replace it
+        base_ver = store.find_version_by_content_hash("default", ".state/foo", "bh1")
+        assert base_ver is not None
+        store.replace_version_content(
+            "default", ".state/foo", base_ver,
+            summary="bundled-v2",
+            tags={"category": "system", "bundled_hash": "bh2"},
+            content_hash="bh2",
+        )
+        store.patch_head_tags("default", ".state/foo", {"bundled_hash": "bh2"})
+
+        # Head unchanged (user's content)
+        current = store.get("default", ".state/foo")
+        assert current.summary == "my-custom-rules"
+        assert current.tags["bundled_hash"] == "bh2"  # updated to track new base
+
+        # Base version updated
+        v1 = store.get_version("default", ".state/foo", offset=1)
+        assert v1.summary == "bundled-v2"
+        assert v1.content_hash == "bh2"
+
+    def test_revert_after_upgrade_restores_current_bundled(self, store: DocumentStore) -> None:
+        """After upgrade updates base, reverting user edit restores current bundled."""
+        # Setup: system doc → user edit → upgrade base
+        store.upsert("default", ".state/foo", "bundled-v1", {}, content_hash="bh1")
+        store.upsert("default", ".state/foo", "user-edit", {}, content_hash="uh1")
+        base_ver = store.find_version_by_content_hash("default", ".state/foo", "bh1")
+        store.replace_version_content(
+            "default", ".state/foo", base_ver,
+            summary="bundled-v2", tags={}, content_hash="bh2",
+        )
+
+        # Revert user edit → should restore bundled-v2 (not stale bundled-v1)
+        restored = store.restore_latest_version("default", ".state/foo")
+        assert restored.summary == "bundled-v2"
+
+    def test_reset_clears_versions_and_restores_head(self, store: DocumentStore) -> None:
+        """Simulates reset: all versions cleared, head = fresh bundled."""
+        store.upsert("default", ".state/foo", "bundled-v1", {}, content_hash="bh1")
+        store.upsert("default", ".state/foo", "user-edit-1", {}, content_hash="uh1")
+        store.upsert("default", ".state/foo", "user-edit-2", {}, content_hash="uh2")
+        assert store.version_count("default", ".state/foo") == 2
+
+        # Reset
+        store.delete_all_versions("default", ".state/foo")
+        store.upsert("default", ".state/foo", "bundled-v2",
+                      {"category": "system", "bundled_hash": "bh2"},
+                      content_hash="bh2", archive=False)
+
+        assert store.version_count("default", ".state/foo") == 0
+        current = store.get("default", ".state/foo")
+        assert current.summary == "bundled-v2"
+
+
 class TestAccessedAt:
     """Last-accessed timestamp tracking."""
 
@@ -534,3 +834,85 @@ class TestAccessedAt:
     def test_touch_many_empty_ids(self, store: DocumentStore) -> None:
         """touch_many() with empty list is a no-op."""
         store.touch_many("default", [])  # Should not raise
+
+
+class TestStopwordOverrides:
+    """Stopwords should come from the `.stop` store note."""
+
+    @pytest.fixture
+    def store(self):
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "documents.db"
+            with DocumentStore(db_path) as store:
+                yield store
+
+    def test_dot_stop_overrides_default_list(self, store: DocumentStore) -> None:
+        store.upsert("default", ".stop", "how\nmany\nhikes", {})
+        query = store._build_fts_query("how many hikes today")
+        assert query == '"today"'
+
+    def test_dot_stopwords_legacy_note_is_ignored(self, store: DocumentStore) -> None:
+        store.upsert("default", ".stopwords", "today\nhiking", {})
+        query = store._build_fts_query("today hiking")
+        assert query is not None
+        assert '"today"' in query
+        assert '"hiking"' in query
+
+    def test_stopword_cache_invalidates_when_dot_stop_changes(self, store: DocumentStore) -> None:
+        store.upsert("default", ".stop", "foo", {})
+        first = store._build_fts_query("foo bar")
+        assert first == '"bar"'
+
+        store.upsert("default", ".stop", "bar", {})
+        second = store._build_fts_query("foo bar")
+        assert second == '"foo"'
+
+
+class TestFindByName:
+    """Vault-wide name-based lookup."""
+
+    @pytest.fixture
+    def store(self):
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "documents.db"
+            with DocumentStore(db_path) as store:
+                yield store
+
+    def test_find_by_stem_with_md(self, store: DocumentStore) -> None:
+        store.upsert("default", "file:///vault/notes/Foo.md", "Foo note", {})
+        store.upsert("default", "file:///vault/other/Bar.md", "Bar note", {})
+        results = store.find_by_name("default", "Foo")
+        assert len(results) == 1
+        assert results[0].id == "file:///vault/notes/Foo.md"
+
+    def test_find_by_stem_without_md(self, store: DocumentStore) -> None:
+        store.upsert("default", "file:///vault/notes/Foo", "Foo note", {})
+        results = store.find_by_name("default", "Foo")
+        assert len(results) == 1
+        assert results[0].id == "file:///vault/notes/Foo"
+
+    def test_scoped_by_prefix(self, store: DocumentStore) -> None:
+        store.upsert("default", "file:///vault1/Foo.md", "Foo v1", {})
+        store.upsert("default", "file:///vault2/Foo.md", "Foo v2", {})
+        results = store.find_by_name(
+            "default", "Foo", id_prefix="file:///vault1",
+        )
+        assert len(results) == 1
+        assert results[0].id == "file:///vault1/Foo.md"
+
+    def test_shortest_path_first(self, store: DocumentStore) -> None:
+        store.upsert("default", "file:///vault/deep/nested/Foo.md", "deep", {})
+        store.upsert("default", "file:///vault/Foo.md", "shallow", {})
+        results = store.find_by_name("default", "Foo")
+        assert results[0].id == "file:///vault/Foo.md"
+
+    def test_no_match(self, store: DocumentStore) -> None:
+        store.upsert("default", "file:///vault/Bar.md", "Bar", {})
+        results = store.find_by_name("default", "Foo")
+        assert results == []
+
+    def test_no_partial_match(self, store: DocumentStore) -> None:
+        """'Foo' should not match 'MyFoo.md'."""
+        store.upsert("default", "file:///vault/MyFoo.md", "MyFoo", {})
+        results = store.find_by_name("default", "Foo")
+        assert results == []

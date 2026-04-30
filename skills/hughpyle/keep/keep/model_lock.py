@@ -1,5 +1,4 @@
-"""
-Cross-process model lock using fcntl.flock.
+"""Cross-process model lock using fcntl.flock.
 
 Prevents multiple keep processes from loading MLX models simultaneously,
 which would exhaust GPU memory on Apple Silicon.
@@ -12,6 +11,8 @@ import gc
 import logging
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -24,8 +25,7 @@ if _has_fcntl:
 
 
 class ModelLock:
-    """
-    Advisory file lock for serializing model access across processes.
+    """Advisory file lock for serializing model access across processes.
 
     Uses fcntl.flock which is:
     - Automatically released on process exit/crash
@@ -39,16 +39,21 @@ class ModelLock:
         self._lock_path = lock_path
         self._fd: Optional[int] = None
 
-    def acquire(self, blocking: bool = True) -> bool:
-        """
-        Acquire the lock.
+    def acquire(self, blocking: bool = True, timeout: float = 30) -> bool:
+        """Acquire the lock.
 
         Args:
-            blocking: If True, wait until lock is available.
+            blocking: If True, wait until lock is available (up to timeout).
                       If False, return False immediately if lock is held.
+            timeout: Maximum seconds to wait when blocking (default 30).
+                     Prevents deadlock when another process is stuck holding
+                     the lock.
 
         Returns:
             True if lock was acquired, False if non-blocking and lock is held.
+
+        Raises:
+            TimeoutError: If blocking and lock not acquired within timeout.
         """
         if not _has_fcntl:
             return True
@@ -56,18 +61,36 @@ class ModelLock:
         self._lock_path.parent.mkdir(parents=True, exist_ok=True)
         self._fd = os.open(str(self._lock_path), os.O_CREAT | os.O_RDWR)
 
-        flags = fcntl.LOCK_EX
         if not blocking:
-            flags |= fcntl.LOCK_NB
+            try:
+                fcntl.flock(self._fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                logger.debug("Acquired model lock: %s", self._lock_path.name)
+                return True
+            except (OSError, BlockingIOError):
+                os.close(self._fd)
+                self._fd = None
+                return False
 
-        try:
-            fcntl.flock(self._fd, flags)
-            logger.debug("Acquired model lock: %s", self._lock_path.name)
-            return True
-        except (OSError, BlockingIOError):
-            os.close(self._fd)
-            self._fd = None
-            return False
+        # Blocking with timeout: poll with non-blocking flock
+        deadline = time.monotonic() + timeout
+        interval = 0.1
+        while True:
+            try:
+                fcntl.flock(self._fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                logger.debug("Acquired model lock: %s", self._lock_path.name)
+                return True
+            except (OSError, BlockingIOError):
+                if time.monotonic() >= deadline:
+                    os.close(self._fd)
+                    self._fd = None
+                    raise TimeoutError(
+                        f"Timed out waiting for model lock ({self._lock_path.name}). "
+                        f"Another keep process may be stuck — check with: "
+                        f"lsof {self._lock_path}"
+                    )
+                time.sleep(interval)
+                # Back off: 0.1, 0.2, 0.4, 0.5, 0.5, ...
+                interval = min(interval * 2, 0.5)
 
     def release(self) -> None:
         """Release the lock."""
@@ -83,8 +106,7 @@ class ModelLock:
         logger.debug("Released model lock: %s", self._lock_path.name)
 
     def is_locked(self) -> bool:
-        """
-        Probe whether the lock is currently held by another process.
+        """Probe whether the lock is currently held by another process.
 
         Does not acquire the lock. Returns True if held, False if available.
         """
@@ -118,8 +140,7 @@ class ModelLock:
 
 
 class LockedEmbeddingProvider:
-    """
-    Per-call locked wrapper for an embedding provider.
+    """Per-call locked wrapper for an embedding provider.
 
     Acquires a file lock only during embed() calls to serialize GPU
     access across processes. The lock is released after each call so
@@ -133,6 +154,7 @@ class LockedEmbeddingProvider:
     def __init__(self, provider, lock_path: Path):
         self._provider = provider
         self._lock = ModelLock(lock_path)
+        self._thread_lock = threading.RLock()
 
     @property
     def model_name(self) -> str:
@@ -140,31 +162,34 @@ class LockedEmbeddingProvider:
 
     @property
     def dimension(self) -> int:
-        with self._lock:
-            return self._provider.dimension
+        with self._thread_lock:
+            with self._lock:
+                return self._provider.dimension
 
     def embed(self, text: str) -> list[float]:
-        with self._lock:
-            return self._provider.embed(text)
+        with self._thread_lock:
+            with self._lock:
+                return self._provider.embed(text)
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        with self._lock:
-            return self._provider.embed_batch(texts)
+        with self._thread_lock:
+            with self._lock:
+                return self._provider.embed_batch(texts)
 
     def release(self) -> None:
         """Free the model."""
-        try:
-            del self._provider
-        except AttributeError:
-            pass
-        self._provider = None
-        gc.collect()
-        logger.debug("Released embedding provider")
+        with self._thread_lock:
+            try:
+                del self._provider
+            except AttributeError:
+                pass
+            self._provider = None
+            gc.collect()
+            logger.debug("Released embedding provider")
 
 
 class LockedSummarizationProvider:
-    """
-    Per-call locked wrapper for a summarization provider.
+    """Per-call locked wrapper for a summarization provider.
 
     Same pattern as LockedEmbeddingProvider — acquires the lock only
     during summarize() calls.
@@ -173,6 +198,7 @@ class LockedSummarizationProvider:
     def __init__(self, provider, lock_path: Path):
         self._provider = provider
         self._lock = ModelLock(lock_path)
+        self._thread_lock = threading.RLock()
 
     @property
     def model_name(self) -> str:
@@ -185,25 +211,26 @@ class LockedSummarizationProvider:
         max_length: int = 500,
         context: str | None = None,
     ) -> str:
-        with self._lock:
-            return self._provider.summarize(
-                content, max_length=max_length, context=context
-            )
+        with self._thread_lock:
+            with self._lock:
+                return self._provider.summarize(
+                    content, max_length=max_length, context=context
+                )
 
     def release(self) -> None:
         """Free the model."""
-        try:
-            del self._provider
-        except AttributeError:
-            pass
-        self._provider = None
-        gc.collect()
-        logger.debug("Released summarization provider")
+        with self._thread_lock:
+            try:
+                del self._provider
+            except AttributeError:
+                pass
+            self._provider = None
+            gc.collect()
+            logger.debug("Released summarization provider")
 
 
 class LockedMediaDescriber:
-    """
-    Per-call locked wrapper for a media describer.
+    """Per-call locked wrapper for a media describer.
 
     Same pattern as LockedSummarizationProvider — acquires the lock only
     during describe() calls.
@@ -212,21 +239,57 @@ class LockedMediaDescriber:
     def __init__(self, provider, lock_path: Path):
         self._provider = provider
         self._lock = ModelLock(lock_path)
+        self._thread_lock = threading.RLock()
 
     @property
     def model_name(self) -> str:
         return getattr(self._provider, "model_name", "unknown")
 
     def describe(self, path: str, content_type: str) -> str | None:
-        with self._lock:
-            return self._provider.describe(path, content_type)
+        with self._thread_lock:
+            with self._lock:
+                return self._provider.describe(path, content_type)
 
     def release(self) -> None:
         """Free the model."""
-        try:
-            del self._provider
-        except AttributeError:
-            pass
-        self._provider = None
-        gc.collect()
-        logger.debug("Released media describer")
+        with self._thread_lock:
+            try:
+                del self._provider
+            except AttributeError:
+                pass
+            self._provider = None
+            gc.collect()
+            logger.debug("Released media describer")
+
+
+class LockedContentExtractor:
+    """Per-call locked wrapper for a content extractor.
+
+    Same pattern as LockedMediaDescriber — acquires the lock only
+    during extract() calls.
+    """
+
+    def __init__(self, provider, lock_path: Path):
+        self._provider = provider
+        self._lock = ModelLock(lock_path)
+        self._thread_lock = threading.RLock()
+
+    @property
+    def model_name(self) -> str:
+        return getattr(self._provider, "model_name", "unknown")
+
+    def extract(self, path: str, content_type: str) -> str | None:
+        with self._thread_lock:
+            with self._lock:
+                return self._provider.extract(path, content_type)
+
+    def release(self) -> None:
+        """Free the model."""
+        with self._thread_lock:
+            try:
+                del self._provider
+            except AttributeError:
+                pass
+            self._provider = None
+            gc.collect()
+            logger.debug("Released content extractor")

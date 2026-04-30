@@ -1,5 +1,4 @@
-"""
-Embedding cache using SQLite.
+"""Embedding cache using SQLite.
 
 Wraps any EmbeddingProvider to cache embeddings by content hash,
 avoiding redundant embedding calls for unchanged content.
@@ -21,18 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingCache:
-    """
-    SQLite-based embedding cache.
+    """SQLite-based embedding cache.
     
     Cache key is SHA256(model_name + content), so different models
     don't share cached embeddings.
     """
     
     def __init__(self, cache_path: Path, max_entries: int = 50000):
-        """
+        """Initialize.
+
         Args:
-            cache_path: Path to SQLite database file
-            max_entries: Maximum cache entries (LRU eviction when exceeded)
+        cache_path: Path to SQLite database file
+        max_entries: Maximum cache entries (LRU eviction when exceeded).
         """
         self._cache_path = cache_path
         self._max_entries = max_entries
@@ -86,14 +85,15 @@ class EmbeddingCache:
         return json.loads(data)
 
     def get(self, model_name: str, content: str) -> Optional[list[float]]:
-        """
-        Get cached embedding if it exists.
+        """Get cached embedding if it exists.
 
         Updates last_accessed timestamp on hit.
         """
         content_hash = self._hash_key(model_name, content)
 
         with self._lock:
+            if self._conn is None:
+                return None
             cursor = self._conn.execute(
                 "SELECT embedding FROM embedding_cache WHERE content_hash = ?",
                 (content_hash,)
@@ -119,8 +119,7 @@ class EmbeddingCache:
         content: str,
         embedding: list[float]
     ) -> None:
-        """
-        Cache an embedding.
+        """Cache an embedding.
 
         Evicts oldest entries if cache exceeds max_entries.
         """
@@ -129,6 +128,8 @@ class EmbeddingCache:
         embedding_blob = self._serialize_embedding(embedding)
 
         with self._lock:
+            if self._conn is None:
+                return
             self._conn.execute("""
                 INSERT OR REPLACE INTO embedding_cache
                 (content_hash, model_name, embedding, dimension, created_at, last_accessed)
@@ -142,6 +143,8 @@ class EmbeddingCache:
     def _maybe_evict(self) -> None:
         """Evict oldest entries if cache exceeds max size."""
         with self._lock:
+            if self._conn is None:
+                return
             cursor = self._conn.execute("SELECT COUNT(*) FROM embedding_cache")
             count = cursor.fetchone()[0]
 
@@ -160,28 +163,38 @@ class EmbeddingCache:
     
     def stats(self) -> dict:
         """Get cache statistics."""
-        cursor = self._conn.execute("""
-            SELECT COUNT(*), COUNT(DISTINCT model_name)
-            FROM embedding_cache
-        """)
-        count, models = cursor.fetchone()
-        result = {
-            "entries": count,
-            "models": models,
-            "max_entries": self._max_entries,
-            "cache_path": str(self._cache_path),
-        }
-        cursor = self._conn.execute(
-            "SELECT COUNT(*) FROM embedding_cache WHERE typeof(embedding) = 'text'"
-        )
-        legacy_count = cursor.fetchone()[0]
-        if legacy_count > 0:
-            result["legacy_json_entries"] = legacy_count
-        return result
+        with self._lock:
+            if self._conn is None:
+                return {
+                    "entries": 0,
+                    "models": 0,
+                    "max_entries": self._max_entries,
+                    "cache_path": str(self._cache_path),
+                }
+            cursor = self._conn.execute("""
+                SELECT COUNT(*), COUNT(DISTINCT model_name)
+                FROM embedding_cache
+            """)
+            count, models = cursor.fetchone()
+            result = {
+                "entries": count,
+                "models": models,
+                "max_entries": self._max_entries,
+                "cache_path": str(self._cache_path),
+            }
+            cursor = self._conn.execute(
+                "SELECT COUNT(*) FROM embedding_cache WHERE typeof(embedding) = 'text'"
+            )
+            legacy_count = cursor.fetchone()[0]
+            if legacy_count > 0:
+                result["legacy_json_entries"] = legacy_count
+            return result
     
     def clear(self) -> None:
         """Clear all cached embeddings."""
         with self._lock:
+            if self._conn is None:
+                return
             self._conn.execute("DELETE FROM embedding_cache")
             self._conn.commit()
 
@@ -192,6 +205,8 @@ class EmbeddingCache:
         """
         migrated = 0
         with self._lock:
+            if self._conn is None:
+                return 0
             cursor = self._conn.execute(
                 "SELECT content_hash, embedding FROM embedding_cache"
             )
@@ -210,9 +225,10 @@ class EmbeddingCache:
 
     def close(self) -> None:
         """Close the database connection."""
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
+        with self._lock:
+            if self._conn is not None:
+                self._conn.close()
+                self._conn = None
 
     def __del__(self) -> None:
         """Ensure connection is closed on cleanup."""
@@ -229,8 +245,7 @@ class EmbeddingCache:
 
 
 class CachingEmbeddingProvider:
-    """
-    Wrapper that adds caching to any EmbeddingProvider.
+    """Wrapper that adds caching to any EmbeddingProvider.
     
     Usage:
         base_provider = SentenceTransformerEmbedding()
@@ -247,6 +262,7 @@ class CachingEmbeddingProvider:
         self._cache = EmbeddingCache(cache_path, max_entries)
         self._hits = 0
         self._misses = 0
+        self._stats_lock = threading.Lock()
     
     @property
     def model_name(self) -> str:
@@ -259,8 +275,7 @@ class CachingEmbeddingProvider:
         return self._provider.dimension
     
     def embed(self, text: str) -> list[float]:
-        """
-        Get embedding, using cache when available.
+        """Get embedding, using cache when available.
 
         Cache failures are non-fatal — falls through to the real provider.
         """
@@ -268,13 +283,15 @@ class CachingEmbeddingProvider:
         try:
             cached = self._cache.get(self.model_name, text)
             if cached is not None:
-                self._hits += 1
+                with self._stats_lock:
+                    self._hits += 1
                 return cached
         except Exception as e:
             logger.debug("Embedding cache read failed: %s", e)
 
         # Cache miss - compute embedding
-        self._misses += 1
+        with self._stats_lock:
+            self._misses += 1
         embedding = self._provider.embed(text)
 
         # Store in cache (fail-safe)
@@ -286,8 +303,7 @@ class CachingEmbeddingProvider:
         return embedding
     
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """
-        Get embeddings for batch, using cache where available.
+        """Get embeddings for batch, using cache where available.
 
         Only computes embeddings for cache misses. Cache failures
         are non-fatal — falls through to the real provider.
@@ -300,12 +316,14 @@ class CachingEmbeddingProvider:
             try:
                 cached = self._cache.get(self.model_name, text)
                 if cached is not None:
-                    self._hits += 1
+                    with self._stats_lock:
+                        self._hits += 1
                     results[i] = cached
                     continue
             except Exception as e:
                 logger.debug("Embedding cache read failed: %s", e)
-            self._misses += 1
+            with self._stats_lock:
+                self._misses += 1
             to_embed.append((i, text))
 
         # Batch embed cache misses
@@ -325,11 +343,14 @@ class CachingEmbeddingProvider:
     def stats(self) -> dict:
         """Get cache and hit/miss statistics."""
         cache_stats = self._cache.stats()
-        total = self._hits + self._misses
-        hit_rate = self._hits / total if total > 0 else 0.0
+        with self._stats_lock:
+            hits = self._hits
+            misses = self._misses
+        total = hits + misses
+        hit_rate = hits / total if total > 0 else 0.0
         return {
             **cache_stats,
-            "hits": self._hits,
-            "misses": self._misses,
+            "hits": hits,
+            "misses": misses,
             "hit_rate": f"{hit_rate:.1%}",
         }

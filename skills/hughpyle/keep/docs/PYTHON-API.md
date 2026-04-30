@@ -8,6 +8,11 @@ The CLI (`keep put`, `keep find`, etc.) is the primary interface. The Python API
 pip install keep-skill
 ```
 
+For LangChain/LangGraph integration:
+```bash
+pip install keep-skill[langchain]
+```
+
 See [QUICKSTART.md](QUICKSTART.md) for provider configuration (API keys or local models).
 
 ## Quick Start
@@ -39,7 +44,7 @@ print(item.tags)
 
 ```python
 from keep import Keeper, Item
-from keep.document_store import VersionInfo  # for version history
+from keep.document_store import VersionInfo, PartInfo  # for version/part history
 ```
 
 ### Initialization
@@ -64,11 +69,18 @@ kp.put(uri=uri, tags={}, summary=None) → Item
 # Index inline content
 kp.put(content, tags={}, summary=None) → Item
 
+# Full signature:
+# kp.put(content=None, *, uri=None, id=None, summary=None,
+#        tags=None, created_at=None, force=False) → Item
+
 # Notes:
 # - Exactly one of content or uri must be provided
 # - If summary provided, skips auto-summarization
 # - Inline content used verbatim if short (≤max_summary_length)
 # - User tags (domain, topic, etc.) provide context for summarization
+# - id: override auto-generated ID (for managed imports)
+# - created_at: ISO timestamp override (for historical imports)
+# - force: re-process even if content unchanged
 ```
 
 #### Search
@@ -77,20 +89,39 @@ kp.put(content, tags={}, summary=None) → Item
 # Semantic search (default)
 kp.find("auth", limit=10) → list[Item]
 
-# Full-text search
-kp.find("auth", fulltext=True) → list[Item]
+# With tag pre-filtering
+kp.find("auth", tags={"user": "alice"}, limit=10) → list[Item]
+
+# Scoped to specific IDs (glob pattern)
+kp.find("auth", scope="file:///path/to/notes/*") → list[Item]
+
+# Deep search — follow edges to discover related items
+kp.find("auth", deep=True) → list[Item]
 
 # Find similar to an existing note
 kp.find(similar_to="note-id", limit=10) → list[Item]
 
-# Tag-based query
-kp.query_tag(key, value=None, since=None) → list[Item]
+# Time filtering
+kp.find("auth", since="P7D")             # Last 7 days
+kp.find("auth", since="P7D", until="P1D")  # Between 7 and 1 days ago
+kp.find("auth", since="2026-01-15")      # Since date
 
-# Time filtering (all search methods support since)
-kp.find("auth", since="P7D")      # Last 7 days
-kp.find("auth", since="P1W")      # Last week
-kp.find("auth", since="PT1H")     # Last hour
-kp.find("auth", since="2026-01-15")  # Since date
+# Full signature:
+# kp.find(query=None, *, tags=None, similar_to=None, limit=10,
+#         since=None, until=None, include_self=False,
+#         include_hidden=False, deep=False, scope=None) → list[Item]
+```
+
+#### Listing and Filtering
+
+```python
+# Unified listing with composable filters (all optional, AND'd together)
+kp.list_items(limit=10) → list[Item]
+kp.list_items(tags={"project": "myapp"}, since="P7D")
+kp.list_items(tag_keys=["act"], since="P3D")      # Key-only: any value
+kp.list_items(prefix=".tag/act")                   # ID prefix
+kp.list_items(order_by="accessed", limit=20)       # Sort by access time
+
 ```
 
 #### Item Access
@@ -101,10 +132,6 @@ kp.get(id) → Item | None
 
 # Check existence
 kp.exists(id) → bool
-
-# List recent items
-kp.list_recent(limit=10, sort="updated") → list[Item]
-# sort options: "updated" (default), "created", "accessed"
 ```
 
 #### Tags
@@ -115,6 +142,16 @@ kp.tag(id, tags={}) → Item | None
 
 # Delete tag by setting empty value
 kp.tag("doc:1", {"obsolete": ""})  # Removes 'obsolete' tag
+
+# Remove tag keys entirely
+kp.tag("doc:1", remove=["obsolete"])
+
+# Remove specific values from a multi-value tag
+kp.tag("doc:1", remove_values={"topic": "old-topic"})
+
+# Edit tags on a part (parts are otherwise immutable)
+kp.tag_part("doc:1", 1, tags={"topic": "oauth2"}) → PartInfo | None
+kp.tag_part("doc:1", 1, tags={"topic": ""})  # Remove tag
 
 # List tag keys or values
 kp.list_tags(key=None) → list[str]
@@ -127,14 +164,14 @@ kp.list_tags("project") # All values for 'project' key
 ```python
 # Get previous version
 kp.get_version(id, offset=1) → Item | None
-# offset: 0=current, 1=previous, 2=two versions ago
+# selector: 0=current, 1=previous, 2=two versions ago, -1=oldest archived
 
 # List all versions
 kp.list_versions(id, limit=10) → list[VersionInfo]
 
 # Get navigation metadata
-kp.get_version_nav(id) → dict
-# Returns: {"prev": [...], "next": [...]}
+kp.get_version_nav(id, current_version=None, limit=3) → dict
+# Returns: {"prev": [VersionInfo, ...], "next": [VersionInfo, ...]}
 ```
 
 #### Current Intentions (Now)
@@ -143,18 +180,109 @@ kp.get_version_nav(id) → dict
 # Get current intentions (auto-creates if missing)
 kp.get_now() → Item
 
+# Per-user scoped intentions
+kp.get_now(scope="alice") → Item
+
 # Set current intentions
 kp.set_now(content, tags={}) → Item
+
+# Per-user scoped update (auto-tags user=alice)
+kp.set_now(content, scope="alice") → Item
+```
+
+#### Analysis and Parts
+
+```python
+# Analyze a document into structural parts
+kp.analyze(id) → dict  # Returns {"parts": [...], "status": "applied"}
+
+# List parts of an analyzed document
+kp.list_parts(id) → list[PartInfo]
+
+# Get a specific part
+kp.get_part(id, part_num) → PartInfo | None
+```
+
+#### Flows and Prompts
+
+```python
+# Run a state-doc flow (same as keep_flow MCP tool)
+result = kp.run_flow_command("query-resolve", params={"query": "auth"})
+# result.status, result.data, result.bindings, result.cursor
+
+# Render an agent prompt with context injection
+result = kp.render_prompt("reflect", "auth flow")
+# result.prompt, result.context, result.search_results, result.flow_bindings
+
+# Render with scoped search
+result = kp.render_prompt("query", "auth", scope="file:///notes/*")
+
+# Render with token budget (truncates context to fit)
+result = kp.render_prompt("reflect", "auth", token_budget=4000)
+```
+
+#### Move
+
+```python
+# Move versions from one note to another
+kp.move("target-id", source_id="source-id") → Item
+
+# Move with new tags
+kp.move("target-id", source_id="source-id", tags={"project": "new"})
+
+# Move only the current version (not full history)
+kp.move("target-id", source_id="source-id", only_current=True)
+```
+
+#### Context
+
+```python
+# Get complete display context for a note (similar, meta, parts, versions)
+kp.get_context(id) → dict
+
+# Customize what's included
+kp.get_context(id,
+    include_similar=True, similar_limit=5,
+    include_meta=True, meta_limit=5,
+    include_parts=True, parts_limit=10,
+    include_versions=True, versions_limit=5,
+)
 ```
 
 #### Deletion
 
 ```python
-# Delete item (reverts to previous version if history exists)
-kp.delete(id) → Item | None
+# Delete item and its versions
+kp.delete(id) → bool
+kp.delete(id, delete_versions=False) → bool  # Keep version history
 
-# Complete removal (if no history)
-# If history exists, archives current version and restores previous
+# Delete a specific version
+kp.delete_version(id, offset=1) → bool  # offset: 1=previous, 2=two ago, etc.
+
+# Revert to previous version (if history exists)
+kp.revert(id) → Item | None
+```
+
+### Utility Methods
+
+```python
+# Count notes in store
+kp.count() → int
+
+# List collections
+kp.list_collections() → list[str]
+
+# List available prompt templates
+kp.list_prompts() → list[str]
+
+# Export all data (for backup/migration)
+data = kp.export_data(include_system=False) → dict
+
+# Import data
+kp.import_data(data, mode="merge") → dict  # mode: "merge" or "replace"
+
+# Close resources (embedding providers, etc.)
+kp.close()
 ```
 
 ## Data Types
@@ -164,7 +292,7 @@ kp.delete(id) → Item | None
 Fields:
 - `id` (str) — Document identifier
 - `summary` (str) — Human-readable summary
-- `tags` (dict[str, str]) — Key-value tags
+- `tags` (dict[str, str | list[str]]) — Key-value tags (single or multi-value per key)
 - `score` (float | None) — Similarity score (search results only)
 
 Properties (from tags):
@@ -177,7 +305,18 @@ Properties (from tags):
 Fields for version history listings:
 - `version` (int) — Version offset (0=current, 1=previous, etc.)
 - `summary` (str) — Summary of this version
-- `updated` (datetime | None) — When this version was created
+- `tags` (dict[str, str | list[str]]) — Tags at this version
+- `created_at` (str) — ISO timestamp when this version was created
+- `content_hash` (str | None) — Content hash for deduplication
+
+### PartInfo
+
+Fields for structural parts (from `analyze()`):
+- `part_num` (int) — Part number (1-indexed)
+- `summary` (str) — Summary of this part
+- `tags` (dict[str, str | list[str]]) — Tags on this part
+- `content` (str) — Full text of this part
+- `created_at` (str) — ISO timestamp when this part was created
 
 ## Tags
 
@@ -191,9 +330,9 @@ When indexing, tags merge in priority order (later wins):
 
 ### Tag Rules
 
-- **One value per key**: Setting a tag overwrites existing value
+- **Multi-value keys**: Adding a value for an existing key keeps prior distinct values
 - **System tags** (prefixed `_`) cannot be set by users
-- **Empty string deletes**: `kp.tag(id, {"key": ""})` removes the tag
+- **Empty string deletes key**: `kp.tag(id, {"key": ""})` removes all values for that key
 
 ### Environment Tags
 
@@ -212,7 +351,12 @@ Add to `keep.toml`:
 [tags]
 project = "my-project"
 owner = "alice"
+required = ["user"]                    # Enforce required tags on put()
+namespace_keys = ["category", "user"]  # LangGraph namespace mapping
 ```
+
+- **`required`** — List of tag keys that must be present on every `put()`. System docs (dot-prefix IDs) are exempt. Scoped `set_now(scope=...)` auto-tags `user`, satisfying a `user` requirement.
+- **`namespace_keys`** — Positional mapping from LangGraph namespace tuples to Keep tag names. See [LANGCHAIN-INTEGRATION.md](LANGCHAIN-INTEGRATION.md).
 
 ### Recommended Tags
 
@@ -235,8 +379,8 @@ Protected tags (prefix `_`) managed automatically:
 
 Query system tags:
 ```python
-kp.query_tag("_updated_date", "2026-01-30")
-kp.query_tag("_source", "inline")
+kp.list_items(tags={"_updated_date": "2026-01-30"})
+kp.list_items(tags={"_source": "inline"})
 ```
 
 See [SYSTEM-TAGS.md](SYSTEM-TAGS.md) for complete reference.
@@ -247,31 +391,12 @@ Append `@V{N}` to specify version by offset:
 - `ID@V{0}` — Current version
 - `ID@V{1}` — Previous version
 - `ID@V{2}` — Two versions ago
+- `ID@V{-1}` — Oldest archived version
 
 ```python
 item = kp.get("doc:1@V{1}")  # Get previous version
 versions = kp.list_versions("doc:1")
 ```
-
-## Collections
-
-Separate stores for different contexts:
-
-```python
-import os
-
-# Work context
-os.environ["KEEP_COLLECTION"] = "work"
-kp_work = Keeper()
-kp_work.set_now("Working on auth")
-
-# Personal context
-os.environ["KEEP_COLLECTION"] = "personal"
-kp_personal = Keeper()
-kp_personal.set_now("Personal notes")
-```
-
-Collections are completely separate. For overlays within a single store, use tags instead.
 
 ## Error Handling
 
@@ -290,11 +415,16 @@ except Exception as e:
 Common errors:
 - Missing provider configuration (no API key or local models)
 - Invalid URI format
-- Embedding provider changes (auto-migrated, use `kp.reindex()` if needed)
+- Embedding provider changes (auto-enqueued, use `keep pending --reindex` or `kp.enqueue_reindex()`)
+
+## LangChain / LangGraph
+
+For LangChain and LangGraph integration (BaseStore, retriever, tools, middleware), see [LANGCHAIN-INTEGRATION.md](LANGCHAIN-INTEGRATION.md).
 
 ## See Also
 
 - [QUICKSTART.md](QUICKSTART.md) — Installation and setup
 - [REFERENCE.md](REFERENCE.md) — CLI reference
+- [LANGCHAIN-INTEGRATION.md](LANGCHAIN-INTEGRATION.md) — LangChain/LangGraph integration
 - [AGENT-GUIDE.md](AGENT-GUIDE.md) — Working session patterns
 - [ARCHITECTURE.md](ARCHITECTURE.md) — System internals

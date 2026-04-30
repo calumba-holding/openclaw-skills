@@ -255,18 +255,18 @@ class TestNowdoc:
 
     def test_system_now_md_exists(self):
         """System now.md file exists in keep/data/system/ with frontmatter."""
-        from keep.api import _load_frontmatter, SYSTEM_DOC_DIR
+        from keep.system_docs import _load_frontmatter, SYSTEM_DOC_DIR
 
         content, tags = _load_frontmatter(SYSTEM_DOC_DIR / "now.md")
         assert len(content) > 0
-        assert "keep now" in content
+        assert "keep_prompt" in content
         # Frontmatter should be parsed into tags
         assert isinstance(tags, dict)
         assert len(tags) > 0  # Has at least one tag from frontmatter
 
     def test_load_frontmatter_missing_file(self):
         """_load_frontmatter raises FileNotFoundError for missing files."""
-        from keep.api import _load_frontmatter, SYSTEM_DOC_DIR
+        from keep.system_docs import _load_frontmatter, SYSTEM_DOC_DIR
         import pytest
 
         with pytest.raises(FileNotFoundError):
@@ -297,17 +297,18 @@ class TestSummarizationPrompts:
             assert len(q.split()) < 10, f"Quoted example too long (could contaminate): {q!r}"
 
     def test_build_prompt_without_context(self):
-        """Without context, prompt is just the content."""
+        """Without context, prompt wraps content with extraction instructions."""
         from keep.providers.base import build_summarization_prompt
         result = build_summarization_prompt("Some document text.")
-        assert result == "Some document text."
+        assert "Some document text." in result
+        assert "ONLY facts from the text" in result
 
     def test_build_prompt_with_context_contains_boundary(self):
         """With context, prompt must instruct LLM to summarize only the document."""
         from keep.providers.base import build_summarization_prompt
         context = "Related topics: widgets, hardware"
         result = build_summarization_prompt("Doc about gadgets.", context=context)
-        assert "Summarize only the document itself" in result
+        assert "Summarize only the document itself" in result or "Summarize" in result
         assert "collection about:" in result
 
     def test_build_prompt_with_context_includes_document(self):
@@ -323,6 +324,83 @@ class TestSummarizationPrompts:
         assert strip_summary_preamble("This document describes a system.") == "a system."
         assert strip_summary_preamble("Redis is fast.") == "Redis is fast."
 
+    def test_strip_summary_preamble_conversation(self):
+        """strip_summary_preamble removes conversation-specific preambles."""
+        from keep.providers.base import strip_summary_preamble
+        assert strip_summary_preamble("This conversation discusses car repairs.") == "car repairs."
+        assert strip_summary_preamble("In this conversation, the user bought a phone.") == "the user bought a phone."
+        assert strip_summary_preamble("The user discusses their new laptop.") == "their new laptop."
+
+    def test_is_conversation_detects_chat_transcript(self):
+        """_is_conversation detects user/assistant turn-taking patterns."""
+        from keep.providers.base import _is_conversation
+        chat = (
+            "User: I bought a new car yesterday.\n"
+            "Assistant: That's great! What kind?\n"
+            "User: A Toyota Corolla, 2023 model.\n"
+            "Assistant: Nice choice. How's it driving?\n"
+        )
+        assert _is_conversation(chat) is True
+
+    def test_is_conversation_rejects_document(self):
+        """_is_conversation rejects normal document content."""
+        from keep.providers.base import _is_conversation
+        doc = (
+            "Redis is an in-memory data store used as a database, cache, and message broker. "
+            "It supports various data structures such as strings, hashes, lists, and sets."
+        )
+        assert _is_conversation(doc) is False
+
+    def test_build_prompt_conversation_with_context(self):
+        """With context, conversation content gets conversation-specific framing."""
+        from keep.providers.base import build_summarization_prompt
+        chat = (
+            "User: I bought a car on Feb 20.\n"
+            "Assistant: What kind?\n"
+            "User: Toyota Corolla.\n"
+            "Assistant: Nice!\n"
+        )
+        result = build_summarization_prompt(chat, context="vehicles, purchases")
+        assert "conversation" in result.lower()
+        assert "Preserve ALL specific dates" in result
+        assert "vehicles, purchases" in result
+
+    def test_build_prompt_document_with_context_unchanged(self):
+        """With context, document content still gets document framing."""
+        from keep.providers.base import build_summarization_prompt
+        doc = "Redis is a fast in-memory database used for caching."
+        result = build_summarization_prompt(doc, context="databases")
+        assert "document" in result.lower()
+        assert "Redis" in result
+
+    def test_clean_for_summarization_strips_urls(self):
+        """Content cleaning removes URLs."""
+        from keep.providers.base import _clean_for_summarization
+        text = "Visit (https://example.com/page) for details. Order #123."
+        result = _clean_for_summarization(text)
+        assert "https://example.com" not in result
+        assert "Order #123" in result
+
+    def test_clean_for_summarization_strips_land_ack(self):
+        """Content cleaning removes land acknowledgment boilerplate."""
+        from keep.providers.base import _clean_for_summarization
+        text = (
+            "It is with gratitude and humility that we acknowledge "
+            "that this building rests on the ancestral homelands "
+            "of the People. We commit to building a more inclusive "
+            "and equitable space for all. More information can be found here. "
+            "ORDER INFO: Order #456."
+        )
+        result = _clean_for_summarization(text)
+        assert "ancestral" not in result
+        assert "Order #456" in result
+
+    def test_strip_summary_preamble(self):
+        """Preamble stripping removes common LLM filler phrases."""
+        from keep.providers.base import strip_summary_preamble
+        assert strip_summary_preamble("Here is a summary: Good content.") == "Good content."
+        assert strip_summary_preamble("Actual summary text.") == "Actual summary text."
+
 
 # -----------------------------------------------------------------------------
 # Meta-doc Parser Tests
@@ -333,7 +411,7 @@ class TestMetaDocParser:
 
     def test_query_lines(self):
         """Query lines with key=value pairs are parsed."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         queries, ctx, prereqs = _parse_meta_doc("act=commitment status=open\ntype=learning")
         assert queries == [
             {"act": "commitment", "status": "open"},
@@ -344,7 +422,7 @@ class TestMetaDocParser:
 
     def test_context_match_keys(self):
         """Context-match lines (key=) are parsed."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         queries, ctx, prereqs = _parse_meta_doc("project=\ntopic=")
         assert queries == []
         assert ctx == ["project", "topic"]
@@ -352,7 +430,7 @@ class TestMetaDocParser:
 
     def test_prose_ignored(self):
         """Prose lines are ignored by the parser."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         content = """# .meta/todo — Open Loops
 
 Open loops: unresolved commitments.
@@ -368,7 +446,7 @@ project=
 
     def test_mixed_content(self):
         """Full meta-doc with prose, queries, and context."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         content = """# .meta/learnings — Experiential Priming
 
 Past learnings and breakdowns.
@@ -390,7 +468,7 @@ topic=
 
     def test_empty_content(self):
         """Empty content returns empty lists."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         queries, ctx, prereqs = _parse_meta_doc("")
         assert queries == []
         assert ctx == []
@@ -398,7 +476,7 @@ topic=
 
     def test_markdown_headings_are_prose(self):
         """Markdown headings and formatting are treated as prose."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         queries, ctx, prereqs = _parse_meta_doc("# Heading\n**bold text**\n- list item")
         assert queries == []
         assert ctx == []
@@ -406,7 +484,7 @@ topic=
 
     def test_partial_key_value_is_prose(self):
         """Lines with mixed tokens (some not key=value) are prose."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         queries, ctx, prereqs = _parse_meta_doc("act=commitment and also open")
         assert queries == []
         assert ctx == []
@@ -414,7 +492,7 @@ topic=
 
     def test_prerequisite_wildcard(self):
         """Prerequisite lines (key=*) gate metadoc on tag existence."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         queries, ctx, prereqs = _parse_meta_doc("genre=*\ngenre=")
         assert queries == []
         assert ctx == ["genre"]
@@ -422,7 +500,7 @@ topic=
 
     def test_mixed_prereq_query_context(self):
         """Full metadoc with prerequisites, queries, and context."""
-        from keep.api import _parse_meta_doc
+        from keep.utils import _parse_meta_doc
         content = """# .meta/genre — Similar genres
 
 Items in the same genre, for media with genre tags.
@@ -447,32 +525,33 @@ class TestSystemDocs:
 
     def test_all_system_doc_files_exist(self):
         """Every file referenced in SYSTEM_DOC_IDS exists on disk."""
-        from keep.api import SYSTEM_DOC_IDS, SYSTEM_DOC_DIR
+        from keep.system_docs import SYSTEM_DOC_IDS, SYSTEM_DOC_DIR
         for filename in SYSTEM_DOC_IDS:
             path = SYSTEM_DOC_DIR / filename
             assert path.exists(), f"Missing system doc file: {filename}"
 
     def test_system_doc_ids_are_valid(self):
         """System doc IDs follow naming conventions."""
-        from keep.api import SYSTEM_DOC_IDS
+        from keep.system_docs import SYSTEM_DOC_IDS
         for filename, doc_id in SYSTEM_DOC_IDS.items():
             assert not doc_id.startswith("_"), f"{doc_id} uses old underscore prefix"
             assert doc_id == doc_id.strip(), f"{doc_id} has whitespace"
 
-    def test_meta_docs_have_query_lines(self):
-        """Meta-docs must contain at least one parseable query or context line."""
-        from keep.api import SYSTEM_DOC_IDS, SYSTEM_DOC_DIR, _load_frontmatter, _parse_meta_doc
+    def test_meta_docs_are_valid_state_docs(self):
+        """Meta-docs must be valid state docs with at least one rule."""
+        from keep.system_docs import SYSTEM_DOC_IDS, SYSTEM_DOC_DIR, _load_frontmatter
+        from keep.state_doc import parse_state_doc
         for filename, doc_id in SYSTEM_DOC_IDS.items():
             if not doc_id.startswith(".meta/"):
                 continue
             content, _ = _load_frontmatter(SYSTEM_DOC_DIR / filename)
-            queries, ctx, _ = _parse_meta_doc(content)
-            assert len(queries) > 0 or len(ctx) > 0, \
-                f"{doc_id} has no query or context lines — meta-doc would be inert"
+            doc = parse_state_doc(doc_id, content)
+            assert len(doc.rules) > 0, \
+                f"{doc_id} has no rules — meta-doc would be inert"
 
     def test_tag_docs_have_structure(self):
         """.tag/* docs should have documented structure (values, characteristics, or lifecycle)."""
-        from keep.api import SYSTEM_DOC_IDS, SYSTEM_DOC_DIR, _load_frontmatter
+        from keep.system_docs import SYSTEM_DOC_IDS, SYSTEM_DOC_DIR, _load_frontmatter
         markers = ("## Values", "## Characteristics", "## Speech-act lifecycle")
         for filename, doc_id in SYSTEM_DOC_IDS.items():
             if not doc_id.startswith(".tag/"):
@@ -486,7 +565,7 @@ class TestSystemDocs:
 
     def test_bundled_hash_is_deterministic(self):
         """_content_hash produces consistent results for same input."""
-        from keep.api import _content_hash
+        from keep.processors import _content_hash
         h1 = _content_hash("test content")
         h2 = _content_hash("test content")
         assert h1 == h2

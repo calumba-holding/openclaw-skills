@@ -20,11 +20,12 @@ We use [semantic versioning](https://semver.org/):
 
 **Current status:** Pre-1.0 (0.x.y), so minor versions may include breaking changes, but we try to avoid them.
 
-Version is defined in four places (keep in sync):
-- `pyproject.toml` → `version = "x.y.z"`
-- `keep/__init__.py` → `__version__ = "x.y.z"`
-- `SKILL.md` frontmatter → `version: x.y.z`
-- `.claude-plugin/plugin.json` → `"version": "x.y.z"`
+Version is defined in `pyproject.toml` (single source of truth). Run the bump script to update all locations:
+```bash
+python scripts/bump_version.py x.y.z
+```
+
+The `langchain-keep` shim package (`langchain-keep/pyproject.toml`) has its own version and pins `keep-skill[langchain]>=` to the minimum compatible release.
 
 ## Public API
 
@@ -34,6 +35,7 @@ The following are considered public API — changes require version bumps and de
 - `Keeper` class and its public methods
 - `Item` type and its fields
 - Anything exported in `keep/__init__.py`
+- `keep.langchain` module: `KeepStore`, `KeepNotesToolkit`, `KeepNotesRetriever`, `KeepNotesMiddleware`
 
 **CLI:**
 - All commands (`keep find`, `keep put`, `keep get`, etc.)
@@ -63,10 +65,8 @@ If you must break compatibility:
 Releases are managed by the maintainer. To prepare a release:
 
 ```bash
-# 1. Update version in all three places
-# pyproject.toml: version = "x.y.z"
-# keep/__init__.py: __version__ = "x.y.z"
-# SKILL.md frontmatter: version: x.y.z
+# 1. Bump version
+python scripts/bump_version.py x.y.z
 
 # 2. Commit
 git add -A && git commit -m "Release x.y.z"

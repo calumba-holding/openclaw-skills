@@ -18,10 +18,11 @@ echo "piped content" | keep now       # Set from stdin
 | Option | Description |
 |--------|-------------|
 | `--reset` | Reset to default from system |
-| `-V`, `--version N` | Get specific version (0=current, 1=previous) |
-| `-H`, `--history` | List all versions |
+| `-V`, `--version N` | Version selector (`N>=0` from current, `N<0` from oldest; `-1` oldest) |
+| `-H`, `--history` | Expand version history in frontmatter |
 | `-t`, `--tag KEY=VALUE` | Set tag (with content) or filter (without content) |
 | `-n`, `--limit N` | Max similar/meta items to show (default 3) |
+| `--scope SCOPE` | Scope for multi-user isolation (e.g. user ID) |
 | `-s`, `--store PATH` | Override store directory |
 
 ## Tag behavior
@@ -55,7 +56,9 @@ When updating (`keep now "..."`), the output surfaces similar items and meta sec
 ```yaml
 ---
 id: now
-tags: {project: myapp, topic: auth}
+tags:
+  project: "myapp"
+  topic: "auth"
 similar:
   - %a1b2c3d4 OAuth2 token refresh pattern...
 meta/todo:
@@ -77,18 +80,23 @@ keep move "quick-note" --only              # Move just the current version
 
 Moving to an existing name appends incrementally. Use `--from` to reorganize between items. See [KEEP-MOVE.md](KEEP-MOVE.md) for details.
 
-## keep reflect
+## keep prompt reflect
 
 Deep structured reflection practice. Guides you through gathering context, examining actions, and updating intentions.
 
 ```bash
-keep reflect
+keep prompt reflect                       # Reflect on current work
+keep prompt reflect "auth flow"           # Reflect with search context
+keep prompt reflect --since P7D           # With time filter
 ```
+
+See [KEEP-PROMPT.md](KEEP-PROMPT.md) for full prompt options including `--id`, `--tag`, `--since`, `--until`.
 
 ## See Also
 
+- [KEEP-PROMPT.md](KEEP-PROMPT.md) — Agent prompts with context injection
 - [KEEP-MOVE.md](KEEP-MOVE.md) — Move now history into named items
 - [TAGGING.md](TAGGING.md) — Tag system and speech-act tracking
 - [VERSIONING.md](VERSIONING.md) — Version history and navigation
-- [META-DOCS.md](META-DOCS.md) — How meta sections surface contextual items
+- [META-TAGS.md](META-TAGS.md) — Contextual queries (`.meta/*`)
 - [REFERENCE.md](REFERENCE.md) — Quick reference index

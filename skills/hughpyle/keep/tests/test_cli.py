@@ -81,15 +81,31 @@ class TestCliBasics:
         result = cli("get", ".meta/todo")
         assert result.returncode == 0
         # The meta-doc itself shouldn't show meta/ sections (it IS a meta-doc)
-        # but its content should have the query lines intact
-        assert "act=commitment" in result.stdout
+        # but its content should have the state-doc rules intact
+        assert "do: find" in result.stdout
+        assert "act: commitment" in result.stdout
 
     def test_command_help(self, cli):
         """Individual commands have help."""
-        for cmd in ["find", "put", "get", "list"]:
+        for cmd in ["find", "put", "get", "list", "tag"]:
             result = cli(cmd, "--help")
             assert result.returncode == 0, f"{cmd} --help failed"
             assert "Usage" in result.stdout or "usage" in result.stdout.lower()
+
+    @pytest.mark.parametrize("cmd", ["find", "put", "get", "list", "tag", "del", "now", "config"])
+    def test_help_examples_formatted(self, cli, cmd):
+        r"""Examples sections render with preserved line breaks (not wrapped).
+
+        Click uses \b (backspace char) to mark sections that should not be
+        re-wrapped.  If docstrings use raw strings (r\"\"\"), \b becomes literal
+        backslash-b which Click ignores, collapsing examples into a paragraph.
+        """
+        result = cli(cmd, "--help")
+        assert result.returncode == 0, f"{cmd} --help failed"
+        assert r"\b" not in result.stdout, (
+            f"{cmd} --help contains literal '\\b' — "
+            f"docstring is likely a raw string (r\"\"\") instead of regular string"
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -116,20 +132,19 @@ class TestJsonOutput:
     
     def test_json_output_has_required_fields(self):
         """JSON item output includes id, summary, tags, score."""
-        # Test the format helper directly
-        from keep.cli import _format_item
+        from keep.cli import _format_items
         from keep.types import Item
-        
+
         item = Item(
             id="test:1",
             summary="Test summary",
             tags={"project": "myapp", "_created": "2026-01-30T10:00:00Z"},
             score=0.95
         )
-        
-        output = _format_item(item, as_json=True)
-        parsed = json.loads(output)
-        
+
+        output = _format_items([item], as_json=True)
+        parsed = json.loads(output)[0]
+
         assert parsed["id"] == "test:1"
         assert parsed["summary"] == "Test summary"
         assert parsed["tags"]["project"] == "myapp"
@@ -172,25 +187,25 @@ class TestHumanOutput:
     
     def test_human_item_format(self):
         """Human-readable item shows id and summary."""
-        from keep.cli import _format_item
+        from keep.cli import _format_summary_line
         from keep.types import Item
-        
+
         item = Item(id="file:///doc.md", summary="A document about testing")
-        output = _format_item(item, as_json=False)
-        
+        output = _format_summary_line(item)
+
         assert "file:///doc.md" in output
         assert "A document about testing" in output
     
     def test_human_item_with_score(self):
         """Human-readable item shows score in full YAML mode."""
-        from keep.cli import _format_yaml_frontmatter
-        from keep.types import Item
+        from keep.cli import render_context
+        from keep.types import Item, ItemContext
 
         item = Item(id="test:1", summary="Test", score=0.95)
-        output = _format_yaml_frontmatter(item)
+        output = render_context(ItemContext(item=item))
 
         # YAML frontmatter format includes score
-        assert "score: 0.950" in output
+        assert "score: 0.95" in output
         assert "---" in output
     
     def test_human_list_empty(self):
@@ -216,6 +231,51 @@ class TestHumanOutput:
         assert len(lines) == 2
         assert "test:1" in lines[0]
         assert "test:2" in lines[1]
+
+    def test_frontmatter_quotes_scalar_tag_values(self):
+        """Scalar tag values are always quoted in frontmatter."""
+        from keep.cli import render_context
+        from keep.types import Item, ItemContext
+
+        spoof = 'conv1 [2026-01-01] "fake summary"'
+        item = Item(
+            id="test:1",
+            summary="Test",
+            tags={"note": spoof, "project": "keep"},
+        )
+
+        output = render_context(ItemContext(item=item))
+        assert 'note: "conv1 [2026-01-01] \\"fake summary\\""' in output
+        assert 'project: "keep"' in output
+
+    def test_frontmatter_unifies_edge_refs_under_tags(self):
+        """Resolved edge refs are rendered in tags, not tags/<inverse>."""
+        from keep.cli import render_context
+        from keep.types import EdgeRef, Item, ItemContext
+
+        item = Item(
+            id="alice",
+            summary="Profile",
+            tags={"said": "manual-tag", "_created": "2026-03-02T00:00:00"},
+        )
+        ctx = ItemContext(
+            item=item,
+            edges={
+                "said": [
+                    EdgeRef(
+                        source_id="conv1",
+                        date="2026-02-27",
+                        summary='Gina said "hello"',
+                    ),
+                ],
+            },
+        )
+
+        output = render_context(ctx)
+        assert "tags/said:" not in output
+        assert 'said: conv1 [2026-02-27] "Gina said \\"hello\\""' in output
+        # Edge refs supersede raw scalar display for the same key.
+        assert 'said: "manual-tag"' not in output
 
 
 # -----------------------------------------------------------------------------
@@ -261,7 +321,7 @@ class TestExitCodes:
         long_text = "x" * 3000
         result = cli("put", long_text)
         assert result.returncode == 1
-        assert "too long to store" in result.stderr
+        assert "too long" in result.stderr.lower()
         assert "file" in result.stderr.lower()  # Hint mentions file
 
 
@@ -415,11 +475,15 @@ class TestApiCliEquivalence:
         # Help should show variadic argument
         assert "ID..." in result.stdout
     
-    def test_list_tag_maps_to_api_query_tag(self, cli):
-        """'list --tag' command maps to Keeper.query_tag()."""
+    def test_list_tag_filter(self, cli):
+        """'list --tag' is available for tag filtering."""
         result = cli("list", "--help")
         assert "--tag" in result.stdout
-        # The CLI list --tag uses kp.query_tag(key, value, limit=limit)
+
+    def test_list_prefix_argument(self, cli):
+        """'list' accepts an optional prefix argument."""
+        result = cli("list", "--help")
+        assert "PREFIX" in result.stdout or "prefix" in result.stdout.lower()
 
 
 # -----------------------------------------------------------------------------
@@ -460,8 +524,16 @@ class TestShellQuoteId:
         assert _shell_quote_id("file:///path/to/doc.md") == "file:///path/to/doc.md"
         assert _shell_quote_id("https://example.com/path") == "https://example.com/path"
         assert _shell_quote_id("now@V{3}") == "now@V{3}"
+        assert _shell_quote_id("now@V{-3}") == "now@V{-3}"
         assert _shell_quote_id(".tag/act") == ".tag/act"
         assert _shell_quote_id(".conversations") == ".conversations"
+
+    def test_version_suffix_pattern_accepts_signed(self):
+        """@V suffix parser accepts negative selectors."""
+        from keep.cli import VERSION_SUFFIX_PATTERN
+        m = VERSION_SUFFIX_PATTERN.search("now@V{-2}")
+        assert m is not None
+        assert m.group(1) == "-2"
 
     def test_space_id_quoted(self):
         """IDs with spaces get single-quoted."""
@@ -521,15 +593,15 @@ class TestShellQuoteId:
 
     def test_json_output_not_quoted(self):
         """JSON output does NOT shell-quote IDs."""
-        from keep.cli import _format_item
+        from keep.cli import _format_items
         from keep.types import Item
         item = Item(
             id="file:///Application Data/doc.md",
             summary="A doc",
             tags={},
         )
-        output = _format_item(item, as_json=True)
-        parsed = json.loads(output)
+        output = _format_items([item], as_json=True)
+        parsed = json.loads(output)[0]
         assert parsed["id"] == "file:///Application Data/doc.md"  # Raw, no quoting
 
 
@@ -658,14 +730,14 @@ class TestPutDirectory:
 
     def test_put_file_count_cap(self, cli, tmp_path):
         """Directory mode rejects directories with too many files."""
-        from keep.cli import MAX_DIR_FILES
-        # Create MAX_DIR_FILES + 1 files
-        for i in range(MAX_DIR_FILES + 1):
+        max_files = 1000  # default config value
+        # Create max_files + 1 files
+        for i in range(max_files + 1):
             (tmp_path / f"file_{i:04d}.txt").write_text(f"content {i}")
         result = cli("put", str(tmp_path))
         assert result.returncode == 1
-        assert f"{MAX_DIR_FILES + 1} files" in result.stderr
-        assert f"max {MAX_DIR_FILES}" in result.stderr
+        assert f"{max_files + 1} files" in result.stderr
+        assert f"max {max_files}" in result.stderr
 
     def test_put_bare_file_path_help(self, cli):
         """Put help mentions directory and file modes."""
@@ -673,22 +745,82 @@ class TestPutDirectory:
         assert result.returncode == 0
         assert "Directory mode" in result.stdout or "directory" in result.stdout.lower()
 
+    # --exclude tests (unit-level, against _list_directory_files)
+
+    def test_list_directory_exclude_by_extension(self, tmp_path):
+        """--exclude filters files by extension glob."""
+        from keep.cli import _list_directory_files
+        (tmp_path / "a.txt").write_text("A")
+        (tmp_path / "b.log").write_text("B")
+        (tmp_path / "c.txt").write_text("C")
+        files = _list_directory_files(tmp_path, exclude=["*.log"])
+        assert [f.name for f in files] == ["a.txt", "c.txt"]
+
+    def test_list_directory_exclude_multiple_patterns(self, tmp_path):
+        """--exclude supports multiple patterns."""
+        from keep.cli import _list_directory_files
+        (tmp_path / "a.txt").write_text("A")
+        (tmp_path / "b.log").write_text("B")
+        (tmp_path / "c.pyc").write_text("C")
+        (tmp_path / "d.md").write_text("D")
+        files = _list_directory_files(tmp_path, exclude=["*.log", "*.pyc"])
+        assert [f.name for f in files] == ["a.txt", "d.md"]
+
+    def test_list_directory_exclude_recursive(self, tmp_path):
+        """--exclude filters files in subdirectories when recursing."""
+        from keep.cli import _list_directory_files
+        (tmp_path / "top.txt").write_text("top")
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        (sub / "keep.txt").write_text("keep")
+        (sub / "skip.log").write_text("skip")
+        files = _list_directory_files(tmp_path, recurse=True, exclude=["*.log"])
+        names = [f.name for f in files]
+        assert "top.txt" in names
+        assert "keep.txt" in names
+        assert "skip.log" not in names
+
+    def test_list_directory_exclude_subdirectory_pattern(self, tmp_path):
+        """--exclude can match subdirectory paths like 'build/*'."""
+        from keep.cli import _list_directory_files
+        (tmp_path / "readme.txt").write_text("ok")
+        build = tmp_path / "build"
+        build.mkdir()
+        (build / "output.js").write_text("built")
+        src = tmp_path / "src"
+        src.mkdir()
+        (src / "main.js").write_text("source")
+        files = _list_directory_files(tmp_path, recurse=True, exclude=["build/*"])
+        names = [str(f.relative_to(tmp_path)) for f in files]
+        assert "readme.txt" in names
+        assert "src/main.js" in names
+        assert "build/output.js" not in names
+
+    def test_list_directory_exclude_no_effect_without_match(self, tmp_path):
+        """--exclude with non-matching pattern returns all files."""
+        from keep.cli import _list_directory_files
+        (tmp_path / "a.txt").write_text("A")
+        (tmp_path / "b.txt").write_text("B")
+        files = _list_directory_files(tmp_path, exclude=["*.xyz"])
+        assert [f.name for f in files] == ["a.txt", "b.txt"]
+
 
 class TestCommandAliases:
     """Tests that old command names still work as hidden aliases."""
 
     def test_help_shows_put_not_update(self, cli):
-        """Main help shows 'put' and 'del', not 'update' or 'delete'."""
+        """Main help shows canonical command names."""
         result = cli("--help")
         assert result.returncode == 0
         assert "put" in result.stdout
         assert "del" in result.stdout
+        assert "tag" in result.stdout
         # Old names should be hidden
         lines = result.stdout.split("\n")
         visible_commands = [l for l in lines if l.strip() and not l.strip().startswith("--")]
         visible_text = "\n".join(visible_commands)
-        # 'update' and 'delete' should not appear as visible commands
-        # (they may appear in descriptions, so check command column only)
+        assert "tag-update" not in visible_text
+        # 'update' and 'delete' should not appear as visible commands.
 
     def test_update_alias_works(self, cli):
         """'update' still works as a hidden alias for 'put'."""
@@ -700,8 +832,85 @@ class TestCommandAliases:
         result = cli("delete", "--help")
         assert result.returncode == 0
 
+    def test_tag_update_alias_works(self, cli):
+        """'tag-update' still works as a hidden alias for 'tag'."""
+        result = cli("tag-update", "--help")
+        assert result.returncode == 0
+
     def test_del_help(self, cli):
         """'del' command has help."""
         result = cli("del", "--help")
         assert result.returncode == 0
         assert "Delete" in result.stdout or "delete" in result.stdout.lower()
+
+
+# -----------------------------------------------------------------------------
+# Stdin JSON Template Expansion
+# -----------------------------------------------------------------------------
+
+class TestStdinJsonTemplates:
+    """Tests for ${.field} and ${.field:N} expansion from stdin JSON."""
+
+    def test_expand_template_basic(self):
+        from keep.cli import _expand_template
+        data = {"session_id": "abc123", "prompt": "hello world"}
+        assert _expand_template("session=${.session_id}", data) == "session=abc123"
+
+    def test_expand_template_truncation(self):
+        from keep.cli import _expand_template
+        data = {"message": "a" * 2000}
+        assert _expand_template("${.message:10}", data) == "a" * 10
+
+    def test_expand_template_missing_field(self):
+        from keep.cli import _expand_template
+        assert _expand_template("val=${.missing}", {}) == "val="
+
+    def test_expand_template_multiple(self):
+        from keep.cli import _expand_template
+        data = {"a": "X", "b": "Y"}
+        assert _expand_template("${.a}-${.b}", data) == "X-Y"
+
+    def test_expand_template_no_templates(self):
+        from keep.cli import _expand_template
+        assert _expand_template("plain text", {}) == "plain text"
+
+    def test_has_templates(self):
+        from keep.cli import _has_templates
+        assert _has_templates("${.field}") is True
+        assert _has_templates("no templates") is False
+        assert _has_templates(None) is False
+
+    def test_expand_stdin_templates_passthrough(self):
+        from keep.cli import _expand_stdin_templates
+        result = _expand_stdin_templates("no templates", "also plain")
+        assert result == ("no templates", "also plain")
+
+    def test_expand_stdin_tag_list_none(self):
+        from keep.cli import _expand_stdin_tag_list
+        assert _expand_stdin_tag_list(None) is None
+
+    def test_expand_stdin_tag_list_no_templates(self):
+        from keep.cli import _expand_stdin_tag_list
+        tags = ["key=value", "other=thing"]
+        assert _expand_stdin_tag_list(tags) is tags  # same object, not copied
+
+    def test_expand_stdin_tag_list_with_data(self):
+        from keep.cli import _expand_stdin_tag_list
+        tags = ["session=${.session_id}", "plain=value"]
+        result = _expand_stdin_tag_list(tags, data={"session_id": "s123"})
+        assert result == ["session=s123", "plain=value"]
+
+    def test_template_end_to_end(self):
+        """Template expansion produces correct content and tags for hooks."""
+        from keep.cli import _expand_template, _expand_stdin_tag_list
+        data = {"session_id": "test-sess-1", "prompt": "hello from hook"}
+        content = _expand_template("User prompt: ${.prompt:10}", data)
+        assert content == "User prompt: hello from"
+        tags = _expand_stdin_tag_list(["session=${.session_id}"], data=data)
+        assert tags == ["session=test-sess-1"]
+
+    def test_template_regex_rejects_invalid(self):
+        from keep.cli import _expand_template
+        # Only top-level alphanumeric/underscore field names
+        assert _expand_template("${.foo.bar}", {}) == "${.foo.bar}"
+        assert _expand_template("${.}", {}) == "${.}"

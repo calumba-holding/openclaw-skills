@@ -1,5 +1,4 @@
-"""
-Default summarization providers.
+"""Default summarization providers.
 
 Simple, zero-dependency summarizers for getting started.
 """
@@ -8,18 +7,18 @@ from .base import get_registry
 
 
 class TruncationSummarizer:
-    """
-    Simple summarizer that truncates content to a max length.
+    """Simple summarizer that truncates content to a max length.
     
     Zero dependencies. Good enough to get started; replace with
     LLM-based summarization when quality matters.
     """
     
     def __init__(self, max_length: int = 500, suffix: str = "..."):
-        """
+        """Initialize.
+
         Args:
-            max_length: Maximum summary length in characters
-            suffix: Suffix to add when truncated
+        max_length: Maximum summary length in characters
+        suffix: Suffix to add when truncated.
         """
         self.max_length = max_length
         self.suffix = suffix
@@ -30,11 +29,11 @@ class TruncationSummarizer:
         *,
         max_length: int | None = None,
         context: str | None = None,
+        system_prompt: str | None = None,
     ) -> str:
-        """
-        Summarize by taking first N characters.
+        """Summarize by taking first N characters.
 
-        Tries to break at word boundaries. Context is ignored (non-LLM provider).
+        Tries to break at word boundaries. Context and system_prompt are ignored (non-LLM provider).
         """
         limit = max_length or self.max_length
 
@@ -50,10 +49,13 @@ class TruncationSummarizer:
 
         return truncated.strip() + self.suffix
 
+    def generate(self, system: str, user: str, *, max_tokens: int = 4096) -> str | None:
+        """Non-LLM provider — return None."""
+        return None
+
 
 class FirstParagraphSummarizer:
-    """
-    Summarizer that extracts the first paragraph or meaningful chunk.
+    """Summarizer that extracts the first paragraph or meaningful chunk.
     
     Better than pure truncation for documents with structure.
     """
@@ -68,8 +70,9 @@ class FirstParagraphSummarizer:
         *,
         max_length: int | None = None,
         context: str | None = None,
+        system_prompt: str | None = None,
     ) -> str:
-        """Extract first paragraph, falling back to truncation. Context is ignored."""
+        """Extract first paragraph, falling back to truncation. Context/system_prompt ignored."""
         limit = max_length or self.max_length
 
         # Strip leading whitespace and find first paragraph
@@ -93,33 +96,13 @@ class FirstParagraphSummarizer:
 
         return truncated.strip() + self.suffix
 
-
-class PassthroughSummarizer:
-    """
-    No-op summarizer that returns content as-is (or truncated).
-    
-    Useful when you want to store the full content as the summary.
-    """
-    
-    def __init__(self, max_length: int = 10000):
-        self.max_length = max_length
-    
-    def summarize(
-        self,
-        content: str,
-        *,
-        max_length: int | None = None,
-        context: str | None = None,
-    ) -> str:
-        """Return content, possibly truncated to max length. Context is ignored."""
-        limit = max_length or self.max_length
-        if len(content) <= limit:
-            return content
-        return content[:limit]
+    def generate(self, system: str, user: str, *, max_tokens: int = 4096) -> str | None:
+        """Non-LLM provider — return None."""
+        return None
 
 
 # Register providers
+# Note: "passthrough" is registered in providers/llm.py (PassthroughSummarization)
 _registry = get_registry()
 _registry.register_summarization("truncate", TruncationSummarizer)
 _registry.register_summarization("first_paragraph", FirstParagraphSummarizer)
-_registry.register_summarization("passthrough", PassthroughSummarizer)

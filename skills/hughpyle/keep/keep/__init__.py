@@ -1,5 +1,4 @@
-"""
-Keep - Reflective Memory
+"""Keep - Reflective Memory.
 
 A persistent reflective memory with similarity search, full-text search,
 and tag-based retrieval. Remember everything, find by meaning.
@@ -35,9 +34,14 @@ from .protocol import (
     PendingQueueProtocol,
     VectorStoreProtocol,
 )
+from .processors import ProcessorResult, DELEGATABLE_TASK_TYPES
 from .types import Item, filter_non_system_tags, SYSTEM_TAG_PREFIX, INTERNAL_TAGS
 
-__version__ = "0.43.5"
+try:
+    from importlib.metadata import version as _pkg_version
+    __version__ = _pkg_version("keep-skill")
+except Exception:
+    __version__ = "0.0.0"  # fallback for editable installs without metadata
 __all__ = [
     "Keeper",
     "Item",
@@ -52,4 +56,7 @@ __all__ = [
     "VectorStoreProtocol",
     "PendingQueueProtocol",
     "KeeperProtocol",
+    # Processing pipeline
+    "ProcessorResult",
+    "DELEGATABLE_TASK_TYPES",
 ]

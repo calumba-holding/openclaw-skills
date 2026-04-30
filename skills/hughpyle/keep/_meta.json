@@ -1,13 +1,18 @@
 {
   "owner": "hughpyle",
   "slug": "keep",
-  "displayName": "Keep",
+  "displayName": "Reflective Memory",
   "latest": {
-    "version": "0.43.5",
-    "publishedAt": 1771246153290,
-    "commit": "https://github.com/openclaw/skills/commit/56b56bc910afe7b6b026b7aaae1323d61c889720"
+    "version": "0.109.0",
+    "publishedAt": 1774351163501,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.43.5",
+      "publishedAt": 1771246153290,
+      "commit": "https://github.com/openclaw/skills/commit/56b56bc910afe7b6b026b7aaae1323d61c889720"
+    },
     {
       "version": "0.38.4",
       "publishedAt": 1771002962104,

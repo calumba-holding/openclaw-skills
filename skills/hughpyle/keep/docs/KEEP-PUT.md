@@ -15,8 +15,7 @@ keep put -                            # Stdin mode (explicit)
 echo "piped content" | keep put       # Stdin mode (detected)
 ```
 
-Directory mode indexes all regular files in the folder (non-recursive).
-Skips hidden files, symlinks, and subdirectories.
+Directory mode indexes all regular files in the folder (non-recursive by default).
 
 ## Options
 
@@ -25,9 +24,47 @@ Skips hidden files, symlinks, and subdirectories.
 | `-t`, `--tag KEY=VALUE` | Tag as key=value (repeatable) |
 | `-i`, `--id ID` | Custom document ID (auto-generated for text/stdin) |
 | `--summary TEXT` | User-provided summary (skips auto-summarization) |
+| `-r`, `--recursive` | Recurse into subdirectories (directory mode) |
+| `-x`, `--exclude PATTERN` | Glob pattern to exclude (repeatable, directory mode) |
+| `--watch` | Set up a daemon watch — re-index automatically on file changes |
 | `--suggest-tags` | Show tag suggestions from similar items |
 | `--analyze` | Queue background analysis after put (skips if parts are already current) |
 | `-s`, `--store PATH` | Override store directory |
+
+## Directory mode
+
+Index a folder of files. By default non-recursive; use `-r` to include subdirectories:
+
+```bash
+keep put ./docs/                           # All files in docs/ (flat)
+keep put ./docs/ -r                        # All files in docs/ (recursive)
+keep put ./src/ -r -x "*.pyc" -x "__pycache__"  # Recursive with excludes
+```
+
+Excludes use glob patterns matched against the relative path from the directory root. Hidden files and symlinks are always skipped.
+
+## Watching for changes
+
+The `--watch` flag sets up a daemon-driven watch that re-indexes files automatically when they change:
+
+```bash
+keep put ./notes/ -r --watch               # Index + watch for changes
+keep put ./notes/ -r --watch -x "*.log"    # With exclude patterns
+keep put https://example.com/doc --watch   # Watch a URL for changes
+```
+
+Watches persist across sessions — the daemon polls for changes in the background. Use `keep pending` to see active watches. Excludes are captured at watch-creation time.
+
+## Global ignore patterns
+
+The `.ignore` system doc contains glob patterns that are automatically excluded from all directory walks and watches — in addition to `.gitignore` and per-watch `--exclude` patterns.
+
+```bash
+keep get .ignore                           # View current patterns
+keep edit .ignore                          # Edit in $EDITOR
+```
+
+Updating `.ignore` retroactively purges matching `file://` items from the store and cancels their pending work. Ships with sensible defaults for build artifacts, lock files, bytecode, and binaries.
 
 ## Text mode and content-addressed IDs
 
@@ -44,8 +81,10 @@ Same content = same ID = enables versioning through tag changes.
 ## Smart summary behavior
 
 - **Short content** (under `max_summary_length`, default 1000 chars): stored verbatim as its own summary
-- **Long content**: truncated placeholder stored immediately, real summary generated in background by `process-pending`
+- **Long content**: truncated placeholder stored immediately, real summary generated in background by `keep pending`
 - **`--summary` provided**: used as-is, skips auto-summarization
+
+The LLM prompt used for summarization is configurable. Create a `.prompt/summarize/*` document whose match rules target specific tags, and its `## Prompt` section replaces the default summarization prompt for matching documents. See [PROMPTS.md](PROMPTS.md) for details.
 
 ## Tag suggestions
 
@@ -78,19 +117,45 @@ keep put doc.pdf                       # Generic summary
 keep put doc.pdf -t topic=auth         # Re-queued for contextual summary
 ```
 
+## Git changelog
+
+When a directory is a git repository, `put -r` queues the commit history for background indexing:
+
+```bash
+keep put ./myproject/ -r
+# 42 indexed, 0 errors from myproject/
+# git: changelog ingest queued
+```
+
+Each commit becomes a searchable item (ID: git://repo#sha) with the commit message as its summary. Files get a git\_commit edge tag linking to their last commit. Git tags and releases are indexed as separate items (ID: git://repo@tag).
+
+**Incremental:** On re-scan (or via a watch), only new commits since the last ingest are processed. A `git_watermark` tag on the directory tracks the last ingested SHA.
+
+**Querying git history:**
+
+```bash
+keep find "why was the auth flow changed"     # Finds commit messages by meaning
+keep find "auth" --deep                       # File results + linked commit context
+keep list 'git://myproject#*'                 # All indexed commits
+keep list 'git://myproject@*'                 # All indexed tags/releases
+keep get 'git://myproject@v1.0'               # A specific release
+```
+
 ## Supported formats
 
 | Format | Extensions | Content extracted | Auto-tags |
 |--------|-----------|-------------------|-----------|
 | **Text** | .md, .txt, .py, .js, .json, .yaml, ... | Full text | — |
-| **PDF** | .pdf | Text from all pages | — |
+| **PDF** | .pdf | Text from all pages; scanned pages OCR'd in background† | — |
 | **HTML** | .html, .htm | Text (scripts/styles removed) | — |
 | **DOCX** | .docx | Paragraphs + tables | `author`, `title` |
 | **PPTX** | .pptx | Slides + notes | `author`, `title` |
 | **Audio** | .mp3, .flac, .ogg, .wav, .aiff, .m4a, .wma | Structured metadata (+ transcription\*) | `artist`, `album`, `genre`, `year`, `title` |
-| **Images** | .jpg, .png, .tiff, .webp | EXIF metadata (+ description\*) | `dimensions`, `camera`, `date` |
+| **Images** | .jpg, .png, .tiff, .webp | EXIF metadata + OCR text† (+ description\*) | `dimensions`, `camera`, `date` |
 
 \* When a media description provider is configured (`[media]` in `keep.toml`), images get vision-model descriptions and audio files get speech-to-text transcription, appended to the extracted metadata. See [QUICKSTART.md](QUICKSTART.md#media-description-optional) for setup.
+
+† **OCR (optical character recognition):** Scanned PDF pages (pages with no extractable text) and all image files are automatically queued for background OCR when an OCR provider is available. Keep auto-detects Ollama (using `glm-ocr`, pulled automatically on first use) or MLX (`mlx-vlm` on Apple Silicon). A placeholder is stored immediately so the item is indexed right away; the full OCR text replaces it once background processing completes via `keep pending`. No configuration needed — if Ollama is running, OCR just works.
 
 Auto-extracted tags merge with user-provided tags. User tags win on collision:
 
@@ -114,4 +179,6 @@ keep put "file:///path/to/design.pdf" -t type=reference -t topic=architecture
 - [TAGGING.md](TAGGING.md) — Tag system, merge order, speech acts
 - [VERSIONING.md](VERSIONING.md) — How versioning works
 - [KEEP-GET.md](KEEP-GET.md) — Retrieve indexed documents
+- [META-TAGS.md](META-TAGS.md) — Contextual queries (`.meta/*`)
+- [PROMPTS.md](PROMPTS.md) — Prompts for summarization, analysis, and agent workflows
 - [REFERENCE.md](REFERENCE.md) — Quick reference index

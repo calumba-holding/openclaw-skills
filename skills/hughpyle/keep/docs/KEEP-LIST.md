@@ -8,22 +8,36 @@ List recent items, filter by tags, or list tag keys and values.
 keep list                             # Recent items (by update time)
 keep list -n 20                       # Show 20 most recent
 keep list --sort accessed             # Sort by last access time
+keep list .tag                        # Items with ID prefix ".tag/"
+keep list .tag/act                    # Items under ".tag/act/"
 ```
 
 ## Options
 
-| Option | Description |
+| Argument / Option | Description |
 |--------|-------------|
+| `PREFIX` | Optional positional — filter items by ID prefix |
 | `-n`, `--limit N` | Maximum results (default 10) |
 | `-t`, `--tag KEY=VALUE` | Filter by tag (repeatable, AND logic) |
 | `-T`, `--tags=` | List all tag keys |
 | `-T`, `--tags=KEY` | List values for a specific tag key |
 | `--sort ORDER` | Sort by `updated` (default) or `accessed` |
 | `--since DURATION` | Only items updated since (ISO duration or date) |
+| `--until DURATION` | Only items updated before (ISO duration or date) |
 | `-H`, `--history` | Include archived versions |
 | `-P`, `--parts` | Include structural parts (from `analyze`) |
 | `-a`, `--all` | Include hidden system notes (IDs starting with `.`) |
 | `-s`, `--store PATH` | Override store directory |
+
+## Prefix filtering
+
+```bash
+keep list .tag                        # All items under ".tag/"
+keep list .tag/act                    # All items under ".tag/act/"
+keep list .meta                       # All contextual query definitions
+```
+
+Prefix queries always include hidden (dot-prefix) items.
 
 ## Tag filtering
 
@@ -50,6 +64,8 @@ keep list --since P3D                 # Last 3 days
 keep list --since P1W                 # Last week
 keep list --since PT1H               # Last hour
 keep list --since 2026-01-15         # Since specific date
+keep list --until 2026-02-01         # Before specific date
+keep list --since P30D --until P7D   # Between 30 and 7 days ago
 ```
 
 ## Including versions and parts

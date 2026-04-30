@@ -1,5 +1,4 @@
-"""
-MLX providers for Apple Silicon.
+"""MLX providers for Apple Silicon.
 
 MLX is Apple's ML framework optimized for Apple Silicon. These providers
 run entirely locally with no API keys required.
@@ -7,17 +6,20 @@ run entirely locally with no API keys required.
 Requires: pip install mlx-lm mlx
 """
 
+import platform
+
 from .base import (
     get_registry,
-    SUMMARIZATION_SYSTEM_PROMPT,
     build_summarization_prompt,
     strip_summary_preamble,
+    SUMMARIZATION_SYSTEM_PROMPT,
+    TAGGING_SYSTEM_PROMPT,
+    parse_tag_json,
 )
 
 
 class MLXEmbedding:
-    """
-    Embedding provider using MPS (Metal) acceleration on Apple Silicon.
+    """Embedding provider using MPS (Metal) acceleration on Apple Silicon.
 
     Uses sentence-transformer models with GPU acceleration via Metal Performance Shaders.
 
@@ -25,10 +27,11 @@ class MLXEmbedding:
     """
 
     def __init__(self, model: str = "all-MiniLM-L6-v2"):
-        """
+        """Initialize.
+
         Args:
-            model: Model name from sentence-transformers hub.
-                   Default: all-MiniLM-L6-v2 (384 dims, fast, no auth required)
+        model: Model name from sentence-transformers hub.
+               Default: all-MiniLM-L6-v2 (384 dims, fast, no auth required).
         """
         try:
             import mlx.core as mx
@@ -50,6 +53,12 @@ class MLXEmbedding:
             local_only = cached is not None
         except ImportError:
             pass
+
+        if not local_only:
+            import logging
+            import sys
+            logging.getLogger(__name__).info("Downloading embedding model '%s' (first use)...", model)
+            print(f"Downloading embedding model '{model}' (first use)...", file=sys.stderr)
 
         # Use MPS (Metal) for GPU acceleration on Apple Silicon
         self._model = SentenceTransformer(model, device="mps", local_files_only=local_only)
@@ -75,8 +84,7 @@ class MLXEmbedding:
 
 
 class MLXSummarization:
-    """
-    Summarization provider using MLX-LM on Apple Silicon.
+    """Summarization provider using MLX-LM on Apple Silicon.
 
     Runs local LLMs optimized for Apple Silicon. No API key required.
 
@@ -88,15 +96,16 @@ class MLXSummarization:
         model: str = "mlx-community/Llama-3.2-3B-Instruct-4bit",
         max_tokens: int = 300,
     ):
-        """
+        """Initialize.
+
         Args:
-            model: Model name from mlx-community hub or local path.
-                   Good options for summarization:
-                   - mlx-community/Llama-3.2-3B-Instruct-4bit (fast, small)
-                   - mlx-community/Llama-3.2-8B-Instruct-4bit (better quality)
-                   - mlx-community/Mistral-7B-Instruct-v0.3-4bit (good balance)
-                   - mlx-community/Phi-3.5-mini-instruct-4bit (very fast)
-            max_tokens: Maximum tokens in generated summary
+        model: Model name from mlx-community hub or local path.
+               Good options for summarization:
+               - mlx-community/Llama-3.2-3B-Instruct-4bit (fast, small)
+               - mlx-community/Llama-3.2-8B-Instruct-4bit (better quality)
+               - mlx-community/Mistral-7B-Instruct-v0.3-4bit (good balance)
+               - mlx-community/Phi-3.5-mini-instruct-4bit (very fast)
+        max_tokens: Maximum tokens in generated summary.
         """
         try:
             from mlx_lm import load
@@ -108,59 +117,40 @@ class MLXSummarization:
         
         self.model_name = model
         self.max_tokens = max_tokens
-        
-        # Load model and tokenizer (downloads on first use)
+
+        # Check if model is already cached
+        _downloading = False
+        try:
+            from huggingface_hub import try_to_load_from_cache
+            cached = try_to_load_from_cache(model, "config.json")
+            _downloading = cached is None
+        except ImportError:
+            pass
+
+        if _downloading:
+            import logging
+            import sys
+            logging.getLogger(__name__).info("Downloading MLX model '%s' (first use)...", model)
+            print(f"Downloading MLX model '{model}' (first use)...", file=sys.stderr)
+
         self._model, self._tokenizer = load(model)
-    
+
     def summarize(
         self,
         content: str,
         *,
         max_length: int = 500,
         context: str | None = None,
+        system_prompt: str | None = None,
     ) -> str:
         """Generate a summary using MLX-LM."""
-        from mlx_lm import generate
-
-        # Truncate very long content to fit context window
-        # Most models have 4k-8k context, leave room for prompt and response
-        max_content_chars = 12000
-        truncated = content[:max_content_chars] if len(content) > max_content_chars else content
-
-        # Build prompt with optional context
-        user_content = build_summarization_prompt(truncated, context)
-
-        # Use base system prompt when context is included in user message
-        system = SUMMARIZATION_SYSTEM_PROMPT if not context else (
-            "You are a helpful assistant that summarizes documents. "
-            "Follow the instructions in the user message."
-        )
-
-        # Format as chat (works with instruction-tuned models)
-        if hasattr(self._tokenizer, "apply_chat_template"):
-            messages = [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user_content},
-            ]
-            prompt = self._tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True
-            )
-        else:
-            # Fallback for models without chat template
-            prompt = f"{system}\n\n{user_content}\n\nSummary:"
-
-        # Generate
-        response = generate(
-            self._model,
-            self._tokenizer,
-            prompt=prompt,
-            max_tokens=self.max_tokens,
-            verbose=False,
-        )
-
-        return strip_summary_preamble(response.strip())
+        # MLX models have smaller context windows (4k-8k)
+        truncated = content[:12000] if len(content) > 12000 else content
+        prompt = build_summarization_prompt(truncated, context)
+        result = self.generate(system_prompt or SUMMARIZATION_SYSTEM_PROMPT, prompt)
+        if not result:
+            return truncated[:max_length]
+        return strip_summary_preamble(result)
 
     def generate(
         self,
@@ -194,34 +184,23 @@ class MLXSummarization:
 
 
 class MLXTagging:
-    """
-    Tagging provider using MLX-LM on Apple Silicon.
+    """Tagging provider using MLX-LM on Apple Silicon.
     
     Uses local LLMs to generate structured tags. No API key required.
     
     Requires: pip install mlx-lm
     """
     
-    SYSTEM_PROMPT = """Analyze the document and generate relevant tags as a JSON object.
-
-Generate tags for these categories when applicable:
-- content_type: The type of content (e.g., "documentation", "code", "article", "config")
-- language: Programming language if code (e.g., "python", "javascript")
-- domain: Subject domain (e.g., "authentication", "database", "api", "testing")
-- framework: Framework or library if relevant (e.g., "react", "django", "fastapi")
-
-Only include tags that clearly apply. Values should be lowercase.
-Respond with ONLY a JSON object, no explanation or other text."""
-    
     def __init__(
         self,
         model: str = "mlx-community/Llama-3.2-3B-Instruct-4bit",
         max_tokens: int = 150,
     ):
-        """
+        """Initialize.
+
         Args:
-            model: Model name from mlx-community hub
-            max_tokens: Maximum tokens in generated response
+        model: Model name from mlx-community hub
+        max_tokens: Maximum tokens in generated response.
         """
         try:
             from mlx_lm import load
@@ -233,58 +212,50 @@ Respond with ONLY a JSON object, no explanation or other text."""
         
         self.model_name = model
         self.max_tokens = max_tokens
+
+        # Check if model is already cached
+        _downloading = False
+        try:
+            from huggingface_hub import try_to_load_from_cache
+            cached = try_to_load_from_cache(model, "config.json")
+            _downloading = cached is None
+        except ImportError:
+            pass
+
+        if _downloading:
+            import logging
+            import sys
+            logging.getLogger(__name__).info("Downloading MLX model '%s' (first use)...", model)
+            print(f"Downloading MLX model '{model}' (first use)...", file=sys.stderr)
+
         self._model, self._tokenizer = load(model)
-    
+
     def tag(self, content: str) -> dict[str, str]:
         """Generate tags using MLX-LM."""
-        import json
         from mlx_lm import generate
-        
-        # Truncate content
-        max_content_chars = 8000
-        truncated = content[:max_content_chars] if len(content) > max_content_chars else content
-        
-        # Format prompt
+
+        truncated = content[:8000] if len(content) > 8000 else content
+
         if hasattr(self._tokenizer, "apply_chat_template"):
             messages = [
-                {"role": "system", "content": self.SYSTEM_PROMPT},
+                {"role": "system", "content": TAGGING_SYSTEM_PROMPT},
                 {"role": "user", "content": truncated},
             ]
             prompt = self._tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True
+                messages, tokenize=False, add_generation_prompt=True,
             )
         else:
-            prompt = f"{self.SYSTEM_PROMPT}\n\nDocument:\n{truncated}\n\nJSON:"
-        
+            prompt = f"{TAGGING_SYSTEM_PROMPT}\n\nDocument:\n{truncated}\n\nJSON:"
+
         response = generate(
-            self._model,
-            self._tokenizer,
-            prompt=prompt,
-            max_tokens=self.max_tokens,
-            verbose=False,
+            self._model, self._tokenizer,
+            prompt=prompt, max_tokens=self.max_tokens, verbose=False,
         )
-        
-        # Parse JSON from response
-        try:
-            # Try to extract JSON from response
-            response = response.strip()
-            # Handle case where model includes markdown code fence
-            if response.startswith("```"):
-                response = response.split("```")[1]
-                if response.startswith("json"):
-                    response = response[4:]
-            
-            tags = json.loads(response)
-            return {str(k): str(v) for k, v in tags.items()}
-        except (json.JSONDecodeError, IndexError):
-            return {}
+        return parse_tag_json(response)
 
 
 class MLXVisionDescriber:
-    """
-    Image description using MLX-VLM on Apple Silicon.
+    """Image description using MLX-VLM on Apple Silicon.
 
     Uses local vision-language models to generate text descriptions of images.
     No API key required.
@@ -313,6 +284,21 @@ class MLXVisionDescriber:
 
         self.model_name = model
         self.max_tokens = max_tokens
+
+        _downloading = False
+        try:
+            from huggingface_hub import try_to_load_from_cache
+            cached = try_to_load_from_cache(model, "config.json")
+            _downloading = cached is None
+        except ImportError:
+            pass
+
+        if _downloading:
+            import logging
+            import sys
+            logging.getLogger(__name__).info("Downloading MLX vision model '%s' (first use)...", model)
+            print(f"Downloading MLX vision model '{model}' (first use)...", file=sys.stderr)
+
         self._model, self._processor = vlm_load(model)
 
     def describe(self, path: str, content_type: str) -> str | None:
@@ -335,8 +321,7 @@ class MLXVisionDescriber:
 
 
 class MLXWhisperDescriber:
-    """
-    Audio transcription using MLX-Whisper on Apple Silicon.
+    """Audio transcription using MLX-Whisper on Apple Silicon.
 
     Uses local Whisper models to transcribe speech to text.
     No API key required.
@@ -374,9 +359,71 @@ class MLXWhisperDescriber:
         return text if text else None
 
 
-class MLXMediaDescriber:
+class MLXContentExtractor:
+    """OCR content extraction using MLX-VLM on Apple Silicon.
+
+    Uses GLM-OCR to extract text from document images. Unlike MLXVisionDescriber
+    which generates semantic descriptions, this recovers the actual text content.
+
+    Requires: pip install mlx-vlm
     """
-    Combined media describer for Apple Silicon.
+
+    OCR_PROMPT = "Extract all text from this document image exactly as written."
+
+    def __init__(
+        self,
+        model: str = "mlx-community/GLM-OCR-bf16",
+        max_tokens: int = 2000,
+    ):
+        try:
+            from mlx_vlm import load as vlm_load
+        except ImportError:
+            raise RuntimeError(
+                "MLXContentExtractor requires 'mlx-vlm'. "
+                "Install with: pip install mlx-vlm"
+            )
+
+        self.model_name = model
+        self.max_tokens = max_tokens
+
+        _downloading = False
+        try:
+            from huggingface_hub import try_to_load_from_cache
+            cached = try_to_load_from_cache(model, "config.json")
+            _downloading = cached is None
+        except ImportError:
+            pass
+
+        if _downloading:
+            import logging
+            import sys
+            logging.getLogger(__name__).info("Downloading MLX OCR model '%s' (first use)...", model)
+            print(f"Downloading MLX OCR model '{model}' (first use)...", file=sys.stderr)
+
+        self._model, self._processor = vlm_load(model)
+
+    def extract(self, path: str, content_type: str) -> str | None:
+        """Extract text from an image using OCR."""
+        if not content_type.startswith("image/"):
+            return None
+
+        from mlx_vlm import generate as vlm_generate
+
+        response = vlm_generate(
+            self._model,
+            self._processor,
+            prompt=self.OCR_PROMPT,
+            image=path,
+            max_tokens=self.max_tokens,
+            verbose=False,
+        )
+
+        text = response.strip() if response else ""
+        return text if len(text) > 10 else None
+
+
+class MLXMediaDescriber:
+    """Combined media describer for Apple Silicon.
 
     Handles both image description (via mlx-vlm) and audio transcription
     (via mlx-whisper). Sub-providers are created lazily — only loaded when
@@ -437,7 +484,6 @@ class MLXMediaDescriber:
 
 def is_apple_silicon() -> bool:
     """Check if running on Apple Silicon."""
-    import platform
     return platform.system() == "Darwin" and platform.machine() == "arm64"
 
 
@@ -448,3 +494,4 @@ if is_apple_silicon():
     _registry.register_summarization("mlx", MLXSummarization)
     _registry.register_tagging("mlx", MLXTagging)
     _registry.register_media("mlx", MLXMediaDescriber)
+    _registry.register_content_extractor("mlx", MLXContentExtractor)

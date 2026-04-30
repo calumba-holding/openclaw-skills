@@ -1,5 +1,4 @@
-"""
-Pluggable storage backend factory.
+"""Pluggable storage backend factory.
 
 Creates storage backends (DocumentStore, VectorStore, PendingQueue) based on
 configuration. External backends register via the ``keep.backends`` entry
@@ -16,10 +15,14 @@ and register it in their pyproject.toml::
     my-backend = "my_package.backend:create_stores"
 """
 
+from importlib.metadata import entry_points
 from typing import NamedTuple, Optional
 
 from .config import StoreConfig
-from .protocol import DocumentStoreProtocol, PendingQueueProtocol, VectorStoreProtocol
+from .protocol import (
+    DocumentStoreProtocol, PendingQueueProtocol, VectorStoreProtocol,
+    WorkQueueProtocol,
+)
 
 
 class StoreBundle(NamedTuple):
@@ -28,25 +31,54 @@ class StoreBundle(NamedTuple):
     vector_store: VectorStoreProtocol
     pending_queue: PendingQueueProtocol
     is_local: bool  # True for filesystem-backed stores
+    work_queue: Optional[WorkQueueProtocol] = None
 
 
 class NullPendingQueue:
     """No-op pending queue for backends that handle summarization server-side."""
 
-    def enqueue(self, id: str, collection: str, content: str) -> None:
+    def enqueue(
+        self, id: str, collection: str, content: str,
+        *, task_type: str = "summarize", metadata: dict | None = None,
+    ) -> None:
         pass
 
     def dequeue(self, limit: int = 10) -> list:
         return []
 
-    def complete(self, id: str, collection: str) -> None:
+    def complete(self, id: str, collection: str, task_type: str = "summarize") -> None:
+        pass
+
+    def fail(
+        self, id: str, collection: str, task_type: str = "summarize",
+        error: str | None = None,
+    ) -> None:
+        pass
+
+    def abandon(
+        self, id: str, collection: str, task_type: str = "summarize",
+        error: str | None = None,
+    ) -> None:
         pass
 
     def count(self) -> int:
         return 0
 
     def stats(self) -> dict:
-        return {"pending": 0, "collections": 0, "max_attempts": 0, "oldest": None}
+        return {"pending": 0, "processing": 0, "delegated": 0, "failed": 0,
+                "total": 0, "collections": 0, "max_attempts": 0, "oldest": None}
+
+    def stats_by_type(self) -> dict[str, int]:
+        return {}
+
+    def list_pending(self, limit: int = 50) -> list[dict]:
+        return []
+
+    def list_failed(self) -> list[dict]:
+        return []
+
+    def retry_failed(self) -> int:
+        return 0
 
     def clear(self) -> int:
         return 0
@@ -54,13 +86,28 @@ class NullPendingQueue:
     def get_status(self, id: str) -> dict | None:
         return None
 
+    def peek(
+        self, id: str, collection: str, task_type: str = "summarize",
+    ):
+        return None
+
+    def mark_delegated(
+        self, id: str, collection: str, task_type: str, remote_task_id: str,
+    ) -> None:
+        pass
+
+    def list_delegated(self) -> list:
+        return []
+
+    def count_delegated(self) -> int:
+        return 0
+
     def close(self) -> None:
         pass
 
 
 def create_stores(config: StoreConfig) -> StoreBundle:
-    """
-    Create storage backends from configuration.
+    """Create storage backends from configuration.
 
     For ``backend = "local"`` (default), creates local storage backends.
     For other values, loads the backend via the ``keep.backends`` entry
@@ -106,8 +153,6 @@ def _create_local_stores(config: StoreConfig) -> StoreBundle:
 
 def _load_backend(name: str, config: StoreConfig) -> StoreBundle:
     """Load a backend by entry point name."""
-    from importlib.metadata import entry_points
-
     eps = entry_points(group="keep.backends")
     for ep in eps:
         if ep.name == name:

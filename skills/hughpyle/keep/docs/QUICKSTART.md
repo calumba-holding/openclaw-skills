@@ -1,311 +1,262 @@
 # Quick Start
 
-## Installation
+This guide gets you from zero to semantic search in five minutes.
 
-Use [uv](https://docs.astral.sh/uv/) (recommended) or pip.
+## Install
 
-To use local MLX models on macOS Apple Silicon (no API keys needed):
 ```bash
-uv tool install 'keep-skill[local]'
+uv tool install keep-skill --upgrade
 ```
 
-For all others:
+Then run `keep` — it walks you through first-time setup: choosing embedding and summarization providers, and installing hooks for your coding tools.
+
 ```bash
-uv tool install keep-skill
+keep
 ```
 
-That's it! API providers for Voyage, OpenAI, Anthropic, and Gemini are included.
-
-
-## Provider Configuration
-
-### Hosted Service
-
-Sign up at [keepnotes.ai](https://keepnotes.ai) to get an API key — no local models, no database setup:
+If [Ollama](https://ollama.com/) is running, it's offered as the default — no API keys needed. Otherwise choose from any detected provider (OpenAI, Voyage, Gemini, etc.) or use the [hosted service](https://keepnotes.ai):
 
 ```bash
 export KEEPNOTES_API_KEY=kn_...
-keep put "test"                    # That's it — storage, search, and summarization handled
 ```
 
-Works across all your tools (Claude Code, Kiro, Codex) with the same API key. Project isolation, media pipelines, and backups are managed for you.
+Re-run setup anytime with `keep config --setup`. See [Configuration](KEEP-CONFIG.md) for all provider options and advanced setup.
 
-### API Providers
+## Store a note
 
-Set environment variables for your preferred providers:
+Let's remember something about Kate.
 
-| Provider | Env Variable | Get API Key | Embeddings | Summarization |
-|----------|--------------|-------------|------------|---------------|
-| **Voyage AI** | `VOYAGE_API_KEY` | [dash.voyageai.com](https://dash.voyageai.com/) | ✓ | - |
-| **Anthropic** | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`* | [console.anthropic.com](https://console.anthropic.com/) | - | ✓ |
-| **OpenAI** | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/) | ✓ | ✓ |
-| **Google Gemini** | `GEMINI_API_KEY` | [aistudio.google.com](https://aistudio.google.com/) | ✓ | ✓ |
-| **Vertex AI** | `GOOGLE_CLOUD_PROJECT` | GCP Workload Identity / ADC | ✓ | ✓ |
-
-\* **Anthropic Authentication Methods:**
-- **API Key** (`ANTHROPIC_API_KEY`): Recommended. Get from [console.anthropic.com](https://console.anthropic.com/). Format: `sk-ant-api03-...`
-- **OAuth Token** (`CLAUDE_CODE_OAUTH_TOKEN`): For Claude Pro/Team subscribers. Generate via `claude setup-token`. Format: `sk-ant-oat01-...`
-  - Note: OAuth tokens from `claude setup-token` are primarily designed for Claude Code CLI authentication
-  - Direct API access with OAuth tokens may have limitations or require additional configuration
-  - For production use with `keep`, prefer using a standard API key from the Anthropic console
-
-**Simplest setup** (single API key):
 ```bash
-export OPENAI_API_KEY=...      # Does both embeddings + summarization
-# Or: GEMINI_API_KEY=...       # Also does both
-keep put "test"             # Store auto-initializes on first use
+keep put "Kate prefers aisle seats"
 ```
 
-**Best quality** (two API keys for optimal embeddings):
-```bash
-export VOYAGE_API_KEY=...      # Embeddings (Anthropic's partner)
-export ANTHROPIC_API_KEY=...   # Summarization (cost-effective: claude-3-haiku)
-# Or: CLAUDE_CODE_OAUTH_TOKEN  # OAuth token alternative
-keep put "test"
+```
+%2a792222e4b9 2026-02-22 Kate prefers aisle seats
 ```
 
-### Ollama (Local LLM Server)
+That's it. The note is stored, embedded, and searchable. No schema, no configuration. The `%`-prefixed ID is content-addressed — same text always gets the same ID.
 
-If [Ollama](https://ollama.com/) is running locally with models pulled, keep auto-detects it — no configuration needed:
+Now add a few more things you know about Kate:
+
 ```bash
-ollama pull llama3.2:3b             # Any model works
-keep put "test"                     # Auto-detected on first run
+keep put "Kate is allergic to shellfish — carries an EpiPen"
+keep put "Kate mentioned she is training for the Boston Marathon in April"
+keep put "Q3 budget review moved to Thursday 2pm"
+keep put "Kate loves the window table at Osteria Francescana but hates waiting for reservations"
 ```
 
-Keep picks the best available model: dedicated embedding models (e.g. `nomic-embed-text`) for embeddings, generative models (e.g. `llama3.2`) for summarization. Respects `OLLAMA_HOST` if set.
+Five notes. Five facts. No relationships defined, no graph edges, no manual categorization. Just things you know.
 
-### Local Providers (Apple Silicon)
+## Search by meaning
 
-For offline operation on macOS Apple Silicon without Ollama:
+Here's where it gets interesting. You stored "Kate prefers aisle seats." Now ask:
+
 ```bash
-uv tool install 'keep-skill[local]'
-keep put "test"             # No API key needed
+keep find "booking flights for Kate"
 ```
 
-### Claude Desktop Setup
+```
+%2a792222e4b9 2026-02-22 Kate prefers aisle seats
+%5b7756afdf72 2026-02-22 Kate mentioned she is training for the Boston Marathon in April
+```
 
-For use in Claude Desktop, API-based providers can be used.
-For OpenAI (handles both embeddings and summarization):
+You never said "aisle seats" in your query. You said "booking flights." The system understood that seat preferences are relevant to flight bookings.
 
-1. **Get an OpenAI API key** at [platform.openai.com](https://platform.openai.com/)
-2. **Add to network allowlist**: `api.openai.com`
-3. **Set `OPENAI_API_KEY`** and use normally
+And it pulled in the marathon too — because if Kate's flying somewhere in April, you might want to know about Boston.
 
-Alternatively, for best quality embeddings with Anthropic summarization:
-
-1. **Get API keys** at [dash.voyageai.com](https://dash.voyageai.com/) and [console.anthropic.com](https://console.anthropic.com/)
-2. **Add to network allowlist**: `api.voyageai.com`, `api.anthropic.com`
-3. **Set both `VOYAGE_API_KEY` and `ANTHROPIC_API_KEY`**
-
-## Basic Usage
+Try another:
 
 ```bash
-# Index content (files, URLs, or inline text)
-keep put "file://$(keep config tool)/docs/library/ancrenewisse.pdf"
-keep put https://inguz.substack.com/p/keep -t topic=practice
-keep put "Meeting notes from today" -t type=meeting
-keep put "some content" --suggest-tags  # Show tag suggestions from similar items
+keep find "planning a dinner for the team, Kate will be there"
+```
 
-# Search (returns: id date summary)
-keep find "authentication" --limit 5
-keep find "auth" --since P7D           # Last 7 days
+```
+%da0362b8bc19 2026-02-22 Kate loves the window table at Osteria Francescana but hates waiting for reservations
+%118ffd9a16c9 2026-02-22 Kate is allergic to shellfish -- carries an EpiPen
+```
 
-# Retrieve (shows similar items by default)
-keep get "file://$(keep config tool)/docs/library/ancrenewisse.pdf"
-keep get https://inguz.substack.com/p/keep
-keep get ID --meta                   # List meta items only
-keep get ID --similar                # List similar items only
+The restaurant preference. The shellfish allergy. Neither contains the word "dinner" or "team" — but both are exactly what you need to not bore Kate or kill her.
 
-# Tags
-keep list --tag project=myapp          # Find by tag
+The budget meeting? Not returned. Because it's not relevant. Semantic search doesn't match keywords — it matches *meaning*.
+
+## Index a document
+
+Notes are great for quick facts. But you also have documents — policies, specs, PDFs, web pages.
+
+```bash
+keep put https://docs.keepnotes.ai/samples/travel-policy.pdf
+```
+
+```
+https://docs.keepnotes.ai/samples/travel-policy.pdf 2026-02-22 Corporate travel policy covering flight booking procedures, hotel guidelines, meal per-diems, and expense reporting requirements.
+```
+
+The URL becomes the note ID. The PDF is fetched, text-extracted, summarized, and embedded. Re-indexing the same URL creates a new version automatically.
+
+Now search again:
+
+```bash
+keep find "booking flights for Kate"
+```
+
+```
+%2a792222e4b9 2026-02-22 Kate prefers aisle seats
+%5b7756afdf72 2026-02-22 Kate mentioned she is training for the Boston Marathon in April
+https://...travel-policy.pdf@P{1} 2026-02-22 Flight booking: economy for domestic under 4hrs, business for international. Must book 14+ days in advance.
+```
+
+One search. Three results from completely different sources: Kate's personal preference, the relevant *section* of a 30-page PDF, and context about her April plans. Your agent now has everything it needs to book a flight.
+
+## Index a directory
+
+Index an entire folder — recursively, with excludes, and set up a watch so changes are re-indexed automatically:
+
+```bash
+keep put ./docs/ -r                        # Index all files recursively
+keep put ./docs/ -r -x "*.log" -x "*.tmp"  # With excludes
+keep put ./docs/ -r --watch                # Index + watch for changes
+```
+
+The daemon polls watched directories in the background. No per-turn cost — files are re-indexed only when they change.
+
+## Scoped search
+
+When you have a large store, scope searches to a subset of items:
+
+```bash
+keep find "auth" --scope 'file:///Users/me/docs/*'
+```
+
+The search runs semantically across everything, but only returns items whose ID matches the glob. Useful for searching within a project, a folder of notes, or a specific collection.
+
+## Tags
+
+Tags add structure without breaking search. Add them at creation time:
+
+```bash
+keep put "Kate approved the vendor contract — signed copy in DocuSign" \
+  -t project=acme-deal -t person=kate
+```
+
+Or update them later:
+
+```bash
+keep tag %a7c3e1f4b902 -t status=done
+```
+
+Query by tag:
+
+```bash
+keep list --tag project=acme-deal
+keep list --tag person=kate
 keep list --tags=                      # List all tag keys
-keep tag-update ID --tag status=done   # Update tags
 ```
 
-## Reading the Output
+Tags are exact-match filters. Search is fuzzy. Use both: tag for structure, search for discovery.
 
-Commands produce output in a distinctive format. Here's what to expect.
+## Current intentions
+
+Track what you're working on right now:
+
+```bash
+keep now                               # Show current intentions
+keep now "Working on the auth bug"     # Update intentions
+```
+
+`now` is a living document — it versions automatically every time you update it. Your AI tools can read it at session start to pick up where you left off.
+
+```bash
+keep now -V 1                          # What were you doing before?
+keep now --history                     # All versions
+```
+
+## Version history
+
+Every note retains history on update:
+
+```bash
+keep get ID                            # Current version (shows prev nav)
+keep get ID -V 1                       # Previous version
+keep get ID --history                  # List all versions
+```
+
+Text updates use content-addressed IDs — same text, same ID:
+
+```bash
+keep put "my note"                     # Creates ID from content hash
+keep put "my note" -t done             # Same ID, new version (tag change)
+keep put "different note"              # Different ID (new document)
+```
+
+## Reading the output
 
 **Search results** (`keep find`) show one line per result — `id date summary`:
 
 ```
-now 2026-02-07 Finished reading MN61. The mirror teaching: ...
-file:///.../library/mn61.html 2026-02-07 The Exhortation to Rāhula...
-https://inguz.substack.com/p/keep 2026-02-07 Keep: A Reflective Memory...
-file:///.../library/han_verse.txt 2026-02-07 Han Verse: Great is the matter...
+%2a792222e4b9 2026-02-22 Kate prefers aisle seats
+%5b7756afdf72 2026-02-22 Kate mentioned she is training for the Boston Marathon in April
 ```
 
 **Full output** (`keep get`, `keep now`) uses YAML frontmatter with the document body below:
 
 ```
 ---
-id: file:///.../library/mn61.html
-tags: {_source: uri, _updated: 2026-02-07T15:14:28+00:00, topic: reflection, type: teaching}
+id: %2a792222e4b9
+tags:
+  _created: "2026-02-22T16:00:00"
+  _updated: "2026-02-22T16:00:00"
 similar:
-  - https://inguz.substack.com/p/keep (0.47) 2026-02-07 Keep: A Reflective Memory...
-  - now (0.45) 2026-02-07 Finished reading MN61. The mirror teachi...
-  - file:///.../library/han_verse.txt (0.44) 2026-02-07 Han Verse: Great is the matter...
+  - %5b7756afdf72 (0.51) 2026-02-22 Kate mentioned she is training for the Boston Marathon in April
+  - %da0362b8bc19 (0.48) 2026-02-22 Kate loves the window table at Osteria Francescana...
 meta/todo:
-  - %a1b2c3d4 Update auth docs for new flow
-meta/learnings:
-  - %e5f6g7h8 JSON validation before deploy
+  - %f819a3c0e472 Send Kate the revised SOW by Wednesday
 prev:
-  - @V{1} 2026-02-07 Previous version summary...
+  - @V{1} 2026-02-22 Previous version summary...
 ---
-The Exhortation to Rāhula at Mango Stone is a Buddhist sutra that teaches...
+Kate prefers aisle seats
 ```
 
 Key fields:
-- **`similar:`** — related items with similarity scores (0–1). Each ID can be passed to `keep get`
-- **`meta/*:`** — contextual items from tag queries (open commitments, learnings, decisions)
+- **`similar:`** — related items with similarity scores (0-1). Each ID can be passed to `keep get`
+- **`meta/*:`** — contextual items surfaced by tag rules (open commitments, learnings, decisions)
 - **`prev:`** / **`next:`** — version navigation. `@V{1}` means "one version back", usable with `-V 1`
 - **`tags:`** — user tags and system tags (`_created`, `_updated`, `_source`, etc.)
 
 Other output formats: `--json` for machine-readable JSON, `--ids` for bare IDs only.
 
-## Current Intentions
+## What just happened?
 
-Track what you're working on:
+You stored five sentences about Kate and indexed a 30-page PDF. No schema, no relationships, no entity extraction.
 
-```bash
-keep now                               # Show current intentions
-keep now "Working on auth bug"         # Update intentions
-keep now -V 1                          # Previous intentions
-keep now --history                     # All versions
-keep reflect                           # Deep structured reflection
-```
+Then you searched with a question you'd never planned for — "booking flights for Kate" — and got back Kate's seat preference, the flight booking section of the travel policy, and a heads-up about the Boston Marathon. Three different sources, one query, zero configuration.
 
-## Version History
+That's semantic memory. Your agent accumulates knowledge — notes, documents, conversations — and retrieves it by *intent* rather than by lookup key. The more you store, the more connections it finds.
 
-All documents retain history on update:
+## Tool integrations
 
-```bash
-keep get ID                  # Current version (shows prev nav)
-keep get ID -V 1             # Previous version
-keep get ID --history        # List all versions
-```
+On first use, `keep` detects coding tools and installs hooks into their configuration:
 
-Text updates use content-addressed IDs:
-```bash
-keep put "my note"              # Creates ID from content hash
-keep put "my note" -t done      # Same ID, new version (tag change)
-keep put "different note"       # Different ID (new document)
-```
+| Tool | What happens |
+|------|-------------|
+| **Claude Code** | Plugin: `/plugin marketplace add https://github.com/keepnotes-ai/keep.git` then `/plugin install keep@keepnotes-ai` |
+| **VS Code Copilot** | MCP: `code --add-mcp '{"name":"keep","command":"keep","args":["mcp"]}'` |
+| **Kiro** | Practice prompt + agent hooks. MCP: `kiro-cli mcp add --name keep --scope global -- keep mcp` |
+| **OpenAI Codex** | Practice prompt in `AGENTS.md`. MCP: `codex mcp add keep -- keep mcp` |
+| **OpenClaw** | Practice prompt + [plugin](OPENCLAW-INTEGRATION.md) |
 
-## Python API
-
-For embedding keep into applications, see [PYTHON-API.md](PYTHON-API.md).
-
-## Model Configuration
-
-Customize models in `~/.keep/keep.toml`:
-
-```toml
-[embedding]
-name = "voyage"
-model = "voyage-3.5-lite"
-
-[summarization]
-name = "anthropic"
-model = "claude-3-haiku-20240307"
-```
-
-### Media Description (optional)
-
-When configured, images and audio files get model-generated descriptions alongside their extracted metadata, making them semantically searchable. Without this, media files are indexed with metadata only (EXIF, ID3 tags).
-
-```toml
-[media]
-name = "mlx"
-vision_model = "mlx-community/Qwen2-VL-2B-Instruct-4bit"
-whisper_model = "mlx-community/whisper-large-v3-turbo"
-```
-
-Install media dependencies (Apple Silicon): `pip install keep-skill[media]`
-
-Auto-detected if `mlx-vlm` or `mlx-whisper` is installed, or if Ollama has a vision model (e.g. `llava`).
-
-### Available Models
-
-| Provider | Type | Models |
-|----------|------|--------|
-| **Voyage** | Embeddings | `voyage-3.5-lite` (default), `voyage-3-large`, `voyage-code-3` |
-| **Anthropic** | Summarization | `claude-3-haiku-20240307` (default, $0.25/MTok), `claude-3-5-haiku-20241022` |
-| **OpenAI** | Embeddings | `text-embedding-3-small` (default), `text-embedding-3-large` |
-| **OpenAI** | Summarization | `gpt-4o-mini` (default), `gpt-4o` |
-| **Gemini** | Embeddings | `text-embedding-004` (default) |
-| **Gemini** | Summarization | `gemini-2.5-flash` (default), `gemini-2.5-pro` |
-| **Ollama** | Embeddings | Any model; prefer `nomic-embed-text`, `mxbai-embed-large` |
-| **Ollama** | Summarization | Any generative model (e.g. `llama3.2`, `mistral`, `phi3`) |
-| **Ollama** | Media | Vision models: `llava`, `moondream`, `bakllava` (images only) |
-| **Local** | Embeddings | `all-MiniLM-L6-v2` (sentence-transformers) |
-| **Local** | Summarization | MLX models (Apple Silicon only) |
-| **Local** | Media | `mlx-vlm` for images, `mlx-whisper` for audio (Apple Silicon only) |
-
-## Tool Integrations
-
-On first use, `keep` detects coding tools and installs a protocol block and hooks into their global configuration. This happens once and is tracked in `keep.toml`.
-
-| Tool | Protocol Block | Hooks |
-|------|---------------|-------|
-| Claude Code (`~/.claude/`) | `CLAUDE.md` — reflective practice prompt | `settings.json` — session start, prompt submit, subagent, session end |
-| Kiro (`~/.kiro/`) | `steering/keep.md` — reflective practice prompt | `hooks/*.kiro.hook` — agent spawn, prompt submit, agent stop |
-| OpenAI Codex (`~/.codex/`) | `AGENTS.md` — reflective practice prompt | — |
-| OpenClaw (cwd) | `AGENTS.md` — reflective practice prompt (if found in cwd) | [Plugin](OPENCLAW-INTEGRATION.md) — agent start, agent stop |
-
-Hooks inject `keep now` context at key moments (session start, prompt submit) so the agent always has current intentions and relevant context. The protocol block teaches the reflective practice itself.
+Hooks inject `keep now` context at key moments (session start, prompt submit) so the agent always has current intentions and relevant context.
 
 Run `keep config` to see integration status. Set `KEEP_NO_SETUP=1` to skip auto-install.
 
-## Environment Variables
+## Next steps
 
-```bash
-KEEP_STORE_PATH=/path/to/store       # Override store location
-KEEP_TAG_PROJECT=myapp               # Auto-apply tags
-KEEP_NO_SETUP=1                      # Skip auto-install of tool integrations
-OLLAMA_HOST=http://localhost:11434   # Ollama server URL (auto-detected)
-OPENAI_API_KEY=sk-...                # For OpenAI (embeddings + summarization)
-GEMINI_API_KEY=...                   # For Gemini (embeddings + summarization)
-GOOGLE_CLOUD_PROJECT=my-project      # Vertex AI via Workload Identity / ADC
-GOOGLE_CLOUD_LOCATION=us-east1       # Vertex AI region (default: us-east1)
-VOYAGE_API_KEY=pa-...                # For Voyage embeddings only
-ANTHROPIC_API_KEY=sk-ant-...         # For Anthropic summarization only
-CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...  # OAuth token alternative
-```
-
-## Data Security
-
-### Encryption at Rest
-
-Keep stores data in SQLite databases and ChromaDB files on disk. These are **not encrypted** by default.
-
-If you store sensitive content (plans, credentials, reasoning traces), enable disk encryption:
-
-| OS | Solution | How |
-|----|----------|-----|
-| **macOS** | FileVault | System Settings > Privacy & Security > FileVault |
-| **Linux** | LUKS | Encrypt home directory or the partition containing `~/.keep/` |
-| **Windows** | BitLocker | Settings > Privacy & security > Device encryption |
-
-This is the recommended approach because it transparently covers both SQLite and ChromaDB's internal storage without application-level changes.
-
-## Troubleshooting
-
-**No embedding provider configured:** Set an API key (e.g., `VOYAGE_API_KEY`) or install `keep-skill[local]`.
-
-**Model download hangs:** First use of local models downloads weights (~minutes). Cached in `~/.cache/`.
-
-**ChromaDB errors:** Delete `~/.keep/chroma/` to reset.
-
-**Slow local summarization:** Large content is summarized in the background automatically.
-
-**Claude Code hooks need `jq`:** The prompt-submit hook uses `jq` to extract context. Install with your package manager (e.g., `brew install jq`). Hooks are fail-safe without it, but prompt context won't be captured.
-
-## Next Steps
-
+- [Configuration](KEEP-CONFIG.md) — Providers, models, environment variables, and advanced setup
 - [REFERENCE.md](REFERENCE.md) — Complete CLI reference
+- [AGENT-GUIDE.md](AGENT-GUIDE.md) — Working session patterns for AI agents
+- [TAGGING.md](TAGGING.md) — Structured tags, speech acts, and constrained vocabularies
+- [VERSIONING.md](VERSIONING.md) — Version history and content-addressed IDs
 - [PYTHON-API.md](PYTHON-API.md) — Python API for embedding keep in applications
-- [AGENT-GUIDE.md](AGENT-GUIDE.md) — Working session patterns
 - [ARCHITECTURE.md](ARCHITECTURE.md) — System internals
-- [OPENCLAW-INTEGRATION.md](OPENCLAW-INTEGRATION.md) — OpenClaw plugin setup
 - [SKILL.md](../SKILL.md) — The reflective practice
+
+Everything here also works via [MCP](KEEP-MCP.md) and the [Python API](PYTHON-API.md) — same engine, same semantic search, accessible from any language or tool.

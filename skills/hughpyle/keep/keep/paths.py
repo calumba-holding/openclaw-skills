@@ -1,5 +1,4 @@
-"""
-Utility functions for locating paths.
+"""Utility functions for locating paths.
 
 Config and store discovery follows this priority:
 
@@ -25,36 +24,10 @@ if TYPE_CHECKING:
     from .config import StoreConfig
 
 
-def find_git_root(start_path: Optional[Path] = None) -> Optional[Path]:
-    """
-    Find the root of the git repository containing the given path.
-    
-    Args:
-        start_path: Path to start searching from. Defaults to cwd.
-    
-    Returns:
-        Path to git root, or None if not in a git repository.
-    """
-    if start_path is None:
-        start_path = Path.cwd()
-    
-    current = start_path.resolve()
-    
-    while current != current.parent:
-        if (current / ".git").exists():
-            return current
-        current = current.parent
-    
-    # Check root as well
-    if (current / ".git").exists():
-        return current
-    
-    return None
 
 
 def find_config_dir(start_path: Optional[Path] = None) -> Path:
-    """
-    Find config directory by tree-walking from start_path up to home.
+    """Find config directory by tree-walking from start_path up to home.
 
     Looks for .keep/keep.toml at each directory level, stopping at home.
     Returns the .keep/ directory containing the config, or ~/.keep/ if none found.
@@ -86,8 +59,7 @@ def find_config_dir(start_path: Optional[Path] = None) -> Path:
 
 
 def get_config_dir() -> Path:
-    """
-    Get the config directory.
+    """Get the config directory.
 
     Priority:
     1. KEEP_CONFIG environment variable
@@ -103,8 +75,7 @@ def get_config_dir() -> Path:
 
 
 def get_default_store_path(config: Optional[StoreConfig] = None) -> Path:
-    """
-    Get the default store path.
+    """Get the default store path.
 
     Priority:
     1. KEEP_STORE_PATH environment variable
@@ -128,3 +99,22 @@ def get_default_store_path(config: Optional[StoreConfig] = None) -> Path:
 
     # Default: config directory is also the store
     return get_config_dir()
+
+
+def validate_path_within_home(path: Path) -> Path:
+    """Resolve a path and verify it falls within the user's home directory.
+
+    Args:
+        path: Path to validate (will be resolved to absolute).
+
+    Returns:
+        The resolved absolute path.
+
+    Raises:
+        ValueError: If the resolved path is outside the home directory.
+    """
+    resolved = path.expanduser().resolve()
+    home = Path.home().resolve()
+    if not resolved.is_relative_to(home):
+        raise ValueError(f"Path outside home directory: {resolved}")
+    return resolved

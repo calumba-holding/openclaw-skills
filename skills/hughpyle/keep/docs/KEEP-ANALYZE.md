@@ -45,7 +45,7 @@ keep analyze doc:1                    # Returns immediately, runs in background
 keep analyze doc:1 --fg               # Waits for completion
 ```
 
-Background tasks are processed by the same queue as `process-pending` summaries.
+Background tasks are processed by the same queue as `keep pending` summaries.
 
 ## Part addressing
 
@@ -60,7 +60,8 @@ Parts include prev/next navigation:
 ```yaml
 ---
 id: doc:1@P{2}
-tags: {topic: analysis}
+tags:
+  topic: "analysis"
 prev:
   - @P{1}
 next:
@@ -123,6 +124,29 @@ Use `--force` to override the skip:
 keep analyze doc:1 --force            # Re-analyze regardless
 ```
 
+## Part immutability
+
+Parts are machine-generated analysis results, not human observations.
+They are treated as derived data — immutable except for tag corrections.
+
+**Allowed:**
+- Read, search, list — parts appear in `get`, `find`, `list` normally
+- Tag editing — correct or override analyzer tagging decisions:
+  ```bash
+  keep tag "doc:1@P{2}" -t topic=oauth2    # Fix a tag
+  keep tag "doc:1@P{2}" -r topic            # Remove a tag
+  ```
+- Re-analyze — `analyze` replaces all parts atomically
+- Delete parent — removing the parent document removes its parts
+
+**Blocked:**
+- `put` with a part ID — parts cannot be created or overwritten directly
+- `del` on individual parts — use re-analyze or delete the parent
+- `move` to a part ID — parts belong to their parent
+
+If a part's summary or content is wrong, re-analyze (with `--force` or better
+guidance tags). The right fix is a better prompt, not manual editing.
+
 ## Re-analysis
 
 Running `analyze` on changed content (or with `--force`) replaces all
@@ -161,11 +185,21 @@ enqueued = kp.enqueue_analyze("doc:1", force=True)
 # Access parts
 part = kp.get_part("doc:1", 1)        # Returns Item
 parts = kp.list_parts("doc:1")        # Returns list[PartInfo]
+
+# Edit tags on a part (the only allowed mutation)
+kp.tag_part("doc:1", 1, tags={"topic": "oauth2"})  # Update tag
+kp.tag_part("doc:1", 1, tags={"topic": ""})         # Remove tag
 ```
+
+## Custom analysis prompts
+
+The LLM prompt used for analysis is configurable. Create a `.prompt/analyze/*` document whose match rules target specific tags, and its `## Prompt` section replaces the default system prompt for matching documents. See [PROMPTS.md](PROMPTS.md) for details.
 
 ## See Also
 
 - [VERSIONING.md](VERSIONING.md) — Versions (temporal) vs parts (structural)
 - [KEEP-GET.md](KEEP-GET.md) — Retrieving items and parts
 - [KEEP-FIND.md](KEEP-FIND.md) — Search results include parts
+- [META-TAGS.md](META-TAGS.md) — Contextual queries (`.meta/*`)
+- [PROMPTS.md](PROMPTS.md) — Prompts for summarization, analysis, and agent workflows
 - [REFERENCE.md](REFERENCE.md) — Quick reference index

@@ -1,11 +1,13 @@
-"""
-Base provider protocols.
+"""Base provider protocols.
 
 These define the interfaces that concrete providers must implement.
 Using Protocol for structural subtyping - no explicit inheritance required.
 """
 
+import json
+import re
 from dataclasses import dataclass
+from collections.abc import Iterable
 from typing import Any, Protocol, runtime_checkable
 
 
@@ -15,8 +17,7 @@ from typing import Any, Protocol, runtime_checkable
 
 @dataclass
 class Document:
-    """
-    A fetched document ready for processing.
+    """A fetched document ready for processing.
     
     Attributes:
         uri: Original URI that was fetched
@@ -34,8 +35,7 @@ class Document:
 
 @runtime_checkable
 class DocumentProvider(Protocol):
-    """
-    Fetches document content from a URI.
+    """Fetches document content from a URI.
     
     Implementations handle specific URI schemes (file://, https://, s3://, etc.)
     and convert the content to text.
@@ -52,8 +52,7 @@ class DocumentProvider(Protocol):
     """
     
     def supports(self, uri: str) -> bool:
-        """
-        Check if this provider can handle the given URI.
+        """Check if this provider can handle the given URI.
         
         Args:
             uri: The URI to check
@@ -64,8 +63,7 @@ class DocumentProvider(Protocol):
         ...
     
     def fetch(self, uri: str) -> Document:
-        """
-        Fetch and return the document content.
+        """Fetch and return the document content.
         
         Args:
             uri: The URI to fetch
@@ -86,8 +84,7 @@ class DocumentProvider(Protocol):
 
 @runtime_checkable
 class EmbeddingProvider(Protocol):
-    """
-    Generates vector embeddings from text.
+    """Generates vector embeddings from text.
     
     Embeddings enable semantic similarity search. The same provider instance
     must be used for both indexing and querying to ensure consistent vectors.
@@ -111,8 +108,7 @@ class EmbeddingProvider(Protocol):
     
     @property
     def dimension(self) -> int:
-        """
-        The dimensionality of the embedding vectors.
+        """The dimensionality of the embedding vectors.
         
         This must be consistent across all calls. ChromaDb and other vector
         stores need this to configure the index.
@@ -120,8 +116,7 @@ class EmbeddingProvider(Protocol):
         ...
     
     def embed(self, text: str) -> list[float]:
-        """
-        Generate an embedding vector for the given text.
+        """Generate an embedding vector for the given text.
         
         Args:
             text: The text to embed
@@ -132,8 +127,7 @@ class EmbeddingProvider(Protocol):
         ...
     
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """
-        Generate embeddings for multiple texts.
+        """Generate embeddings for multiple texts.
         
         Batch processing is often more efficient than individual calls.
         
@@ -151,22 +145,56 @@ class EmbeddingProvider(Protocol):
 # -----------------------------------------------------------------------------
 
 # Shared system prompt for all LLM-based summarization providers
-SUMMARIZATION_SYSTEM_PROMPT = """Summarize this document in under 200 words.
+SUMMARIZATION_SYSTEM_PROMPT = """You summarize documents. Only use facts from the provided text. Never add outside knowledge. Under 200 words."""
 
-Begin with the subject or topic directly - do not start with meta-phrases like "This document describes..." or "The main purpose is...".
+_SPEAKER_RE = re.compile(
+    r"^(?:User|Assistant|Human|AI|System)\s*:",
+    re.MULTILINE | re.IGNORECASE,
+)
 
-Good: Start with the name of the subject, then say what it is.
-Bad: "This document describes..." or "The main purpose is..."
 
-Include what it does, key features, and why someone might find it useful."""
+def _is_conversation(content: str) -> bool:
+    """Detect if content looks like a conversation transcript."""
+    return len(_SPEAKER_RE.findall(content[:5000])) >= 4
+
+
+_URL_RE = re.compile(
+    r"\(?\s*https?://[^\s\)]{5,}\s*\)?",
+    re.IGNORECASE,
+)
+_NAV_LINE_RE = re.compile(
+    r"^(?:LOGIN|ABOUT|TAKE PART|EDUCATION|HOST EVENTS|PERFORMING ARTS|"
+    r"EXHIBITIONS|©|Copyright)\b.*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+_LAND_ACK_RE = re.compile(
+    r"(?:It is with gratitude and humility|We (?:respectfully )?acknowledge)"
+    r"(?:(?!ORDER |THANK YOU|BILLING).)*"
+    r"(?:found here|land acknowledgment|equitable)[^.]*\.\s*",
+    re.IGNORECASE | re.DOTALL,
+)
+_BLANK_RUNS_RE = re.compile(r"\n{3,}")
+_MAILTO_RE = re.compile(r"\(mailto:[^\)]+\)")
+
+
+def _clean_for_summarization(content: str) -> str:
+    """Strip URLs, navigation, boilerplate, and excess whitespace for summarization."""
+    text = _URL_RE.sub("", content)
+    text = _MAILTO_RE.sub("", text)
+    text = _NAV_LINE_RE.sub("", text)
+    text = _LAND_ACK_RE.sub("", text)
+    text = _BLANK_RUNS_RE.sub("\n\n", text)
+    # Collapse runs of whitespace-only lines
+    lines = [line for line in text.split("\n") if line.strip()]
+    return "\n".join(lines)
 
 
 def build_summarization_prompt(content: str, context: str | None = None) -> str:
-    """
-    Build the summarization prompt, optionally including context.
+    """Build the summarization prompt, optionally including context.
 
     When context is provided (as topic keywords), it gives the LLM
     thematic context without leaking specific phrases from other summaries.
+    Auto-detects conversation content and adjusts instructions accordingly.
 
     Args:
         content: The document content to summarize
@@ -175,31 +203,41 @@ def build_summarization_prompt(content: str, context: str | None = None) -> str:
     Returns:
         The complete prompt string for the LLM
     """
+    cleaned = _clean_for_summarization(content)
     if context:
-        return f"""Summarize this document in under 200 words.
+        if _is_conversation(content):
+            return f"""Summarize this conversation in under 300 words.
+
+This conversation is part of a collection about: {context}
+
+Summarize only this conversation.
+
+Preserve ALL specific dates, times, names, locations, and factual claims stated by the user. Preserve the chronological order of events.
+
+Conversation:
+{cleaned}"""
+        else:
+            return f"""Summarize in under 200 words.
 
 This document is part of a collection about: {context}
 
-Summarize only the document itself.
-
-Begin with the subject or topic directly - do not start with meta-phrases like "This document describes..." or "The main purpose is...".
-
-Include what it does, key features, and why someone might find it useful.
+Summarize only the document itself. Start with the document type or subject. Include all specific facts (dates, names, amounts, locations). Ignore boilerplate and navigation.
 
 Document:
-{content}"""
+{cleaned}"""
     else:
-        return content
+        return f"""Read the text below. What type of document is it? What are the specific facts (names, dates, numbers, amounts, places)? Write a short summary using ONLY facts from the text.
+
+Text:
+{cleaned}"""
 
 
 def strip_summary_preamble(text: str) -> str:
-    """
-    Remove common LLM preambles from summaries.
+    """Remove common LLM preambles from summaries.
 
     Many models add introductory phrases despite instructions not to.
     This post-processes the output to strip them.
     """
-    import re
     preambles = [
         r"^here is a summary[^:]*[:.]\s*",
         r"^here is a concise summary[^:]*:\s*",
@@ -214,6 +252,10 @@ def strip_summary_preamble(text: str) -> str:
         r"^the main purpose of this document is\s+",
         r"^the purpose of this document is\s+",
         r"^this is a document (about|describing|that)\s+",
+        r"^this conversation (is about|covers|discusses)\s+",
+        r"^the conversation (is about|covers|discusses)\s+",
+        r"^in this conversation,?\s+",
+        r"^the user (discusses|talks about|mentions)\s+",
     ]
     result = text
     for pattern in preambles:
@@ -223,8 +265,7 @@ def strip_summary_preamble(text: str) -> str:
 
 @runtime_checkable
 class SummarizationProvider(Protocol):
-    """
-    Generates concise summaries of document content.
+    """Generates concise summaries of document content.
     
     Summaries are stored alongside items and enable quick recall without
     fetching the original document. They're also used for full-text search.
@@ -254,8 +295,7 @@ class SummarizationProvider(Protocol):
         max_length: int = 500,
         context: str | None = None,
     ) -> str:
-        """
-        Generate a summary of the content.
+        """Generate a summary of the content.
 
         Args:
             content: The full document content
@@ -274,8 +314,7 @@ class SummarizationProvider(Protocol):
         *,
         max_tokens: int = 4096,
     ) -> str | None:
-        """
-        Send a raw system+user prompt to the underlying LLM and return text.
+        """Send a raw system+user prompt to the underlying LLM and return text.
 
         This enables callers (e.g. decomposition) to use the configured LLM
         without introspecting provider internals. Providers that don't wrap
@@ -298,8 +337,7 @@ class SummarizationProvider(Protocol):
 
 @runtime_checkable
 class MediaDescriber(Protocol):
-    """
-    Generates text descriptions of media files.
+    """Generates text descriptions of media files.
 
     Image describers produce visual descriptions of what's in an image.
     Audio describers produce transcriptions of speech content.
@@ -309,8 +347,7 @@ class MediaDescriber(Protocol):
     """
 
     def describe(self, path: str, content_type: str) -> str | None:
-        """
-        Generate a text description of a media file.
+        """Generate a text description of a media file.
 
         Args:
             path: Absolute filesystem path to the media file
@@ -324,13 +361,124 @@ class MediaDescriber(Protocol):
 
 
 # -----------------------------------------------------------------------------
-# Tagging
+# Content Extraction (OCR, STT)
 # -----------------------------------------------------------------------------
 
 @runtime_checkable
-class TaggingProvider(Protocol):
+class ContentExtractor(Protocol):
+    """Recovers actual text content from media files (OCR, speech-to-text).
+
+    Unlike MediaDescriber which generates *descriptions* (semantic),
+    ContentExtractor recovers the *original text* present in the media.
+    For example: OCR extracts text from a scanned document image,
+    STT recovers spoken words from audio.
+
+    Returns None for unsupported content types.
     """
-    Generates structured tags from document content.
+
+    def extract(self, path: str, content_type: str) -> str | None:
+        """Extract text content from a media file.
+
+        Args:
+            path: Absolute filesystem path to the media file
+            content_type: MIME type (e.g., "image/png", "audio/wav")
+
+        Returns:
+            Extracted text, or None if this extractor does not
+            support the given content_type.
+        """
+        ...
+
+
+# -----------------------------------------------------------------------------
+# Analysis (Document Decomposition)
+# -----------------------------------------------------------------------------
+
+@dataclass
+class AnalysisChunk:
+    """A chunk of content for analysis.
+
+    Analyzers receive a sequence of chunks — for version-strings these are
+    the individual versions, for monolithic documents a single chunk.
+    The analyzer decides its own windowing strategy internally.
+    """
+    content: str
+    tags: dict[str, str]
+    index: int  # position in sequence
+
+
+@runtime_checkable
+class AnalyzerProvider(Protocol):
+    """Decomposes content into meaningful parts with summaries and tags.
+
+    The default implementation uses token-budgeted sliding windows with
+    XML-style target marking, suited to small local models. Alternative
+    implementations include single-pass JSON decomposition for large-context
+    models, or domain-specific strategies like speech-act recognition.
+
+    Receives chunks (versions of a string, or a single document chunk)
+    and returns raw part dicts. Keeper.analyze() handles wrapping these
+    into PartInfo, storage, and embedding.
+    """
+
+    def analyze(
+        self,
+        chunks: Iterable[AnalysisChunk],
+        guide_context: str = "",
+    ) -> list[dict]:
+        """Decompose content chunks into parts.
+
+        Args:
+            chunks: Content chunks to analyze (versions, sections, or
+                    a single chunk for monolithic documents).
+                    Iterable to support streaming over large datasets.
+            guide_context: Optional tag descriptions for guided decomposition
+
+        Returns:
+            List of dicts with "summary", "content", and optionally "tags" keys.
+            Empty list on failure.
+        """
+        ...
+
+
+# -----------------------------------------------------------------------------
+# Tagging
+# -----------------------------------------------------------------------------
+
+# Shared system prompt for all LLM-based tagging providers
+TAGGING_SYSTEM_PROMPT = """Analyze the document and generate relevant tags as a JSON object.
+
+Generate tags for these categories when applicable:
+- content_type: The type of content (e.g., "documentation", "code", "article", "config")
+- language: Programming language if code (e.g., "python", "javascript")
+- domain: Subject domain (e.g., "authentication", "database", "api", "testing")
+- framework: Framework or library if relevant (e.g., "react", "django", "fastapi")
+
+Only include tags that clearly apply. Values should be lowercase.
+
+Respond with a JSON object only, no explanation."""
+
+
+def parse_tag_json(text: str | None) -> dict[str, str]:
+    """Parse JSON tags from LLM response, handling common quirks."""
+    if not text:
+        return {}
+    text = text.strip()
+    # Strip markdown code fences
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+        if text.endswith("```"):
+            text = text[:-3].strip()
+    try:
+        tags = json.loads(text)
+        return {str(k): str(v) for k, v in tags.items()}
+    except (json.JSONDecodeError, AttributeError):
+        return {}
+
+
+@runtime_checkable
+class TaggingProvider(Protocol):
+    """Generates structured tags from document content.
     
     Tags enable traditional navigation and filtering. The provider analyzes
     content and returns relevant key-value pairs.
@@ -351,8 +499,7 @@ class TaggingProvider(Protocol):
     """
     
     def tag(self, content: str) -> dict[str, str]:
-        """
-        Generate tags for the content.
+        """Generate tags for the content.
         
         Args:
             content: The full document content
@@ -373,8 +520,7 @@ class TaggingProvider(Protocol):
 # -----------------------------------------------------------------------------
 
 class ProviderRegistry:
-    """
-    Registry for discovering and instantiating providers.
+    """Registry for discovering and instantiating providers.
 
     Providers are registered by name and can be instantiated from configuration.
     This allows the store configuration (TOML) to specify providers by name
@@ -395,6 +541,8 @@ class ProviderRegistry:
         self._tagging_providers: dict[str, type] = {}
         self._document_providers: dict[str, type] = {}
         self._media_providers: dict[str, type] = {}
+        self._analyzer_providers: dict[str, type] = {}
+        self._content_extractor_providers: dict[str, type] = {}
         self._lazy_loaded = False
     
     def _ensure_providers_loaded(self) -> None:
@@ -431,6 +579,11 @@ class ProviderRegistry:
         except ImportError:
             pass  # MLX providers might not be available
 
+        try:
+            from .. import analyzers
+        except ImportError:
+            pass  # Analyzer module might not be available
+
     # Registration methods
 
     def register_embedding(self, name: str, provider_class: type) -> None:
@@ -452,98 +605,73 @@ class ProviderRegistry:
     def register_media(self, name: str, provider_class: type) -> None:
         """Register a media describer class."""
         self._media_providers[name] = provider_class
+
+    def register_analyzer(self, name: str, provider_class: type) -> None:
+        """Register an analyzer provider class."""
+        self._analyzer_providers[name] = provider_class
+
+    def register_content_extractor(self, name: str, provider_class: type) -> None:
+        """Register a content extractor provider class."""
+        self._content_extractor_providers[name] = provider_class
     
     # Factory methods
+
+    @staticmethod
+    def _create_provider(kind: str, name: str, providers: dict, params: dict | None):
+        """Shared factory logic for all provider types."""
+        if name not in providers:
+            available = ", ".join(providers.keys()) or "none"
+            raise ValueError(
+                f"Unknown {kind} provider: '{name}'. "
+                f"Available providers: {available}. "
+                f"Install missing dependencies or check provider name."
+            )
+        try:
+            return providers[name](**(params or {}))
+        except ImportError as e:
+            raise RuntimeError(
+                f"Failed to create {kind} provider '{name}': {e}\n"
+                f"Install required dependencies."
+            ) from e
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to create {kind} provider '{name}': {e}"
+            ) from e
 
     def create_embedding(self, name: str, params: dict | None = None) -> EmbeddingProvider:
         """Create an embedding provider instance."""
         self._ensure_providers_loaded()
-        if name not in self._embedding_providers:
-            available = ", ".join(self._embedding_providers.keys()) or "none"
-            raise ValueError(
-                f"Unknown embedding provider: '{name}'. "
-                f"Available providers: {available}. "
-                f"Install missing dependencies or check provider name."
-            )
-        try:
-            return self._embedding_providers[name](**(params or {}))
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to create embedding provider '{name}': {e}\n"
-                f"Make sure required dependencies are installed."
-            ) from e
-    
+        return self._create_provider("embedding", name, self._embedding_providers, params)
+
     def create_summarization(self, name: str, params: dict | None = None) -> SummarizationProvider:
         """Create a summarization provider instance."""
         self._ensure_providers_loaded()
-        if name not in self._summarization_providers:
-            available = ", ".join(self._summarization_providers.keys()) or "none"
-            raise ValueError(
-                f"Unknown summarization provider: '{name}'. "
-                f"Available providers: {available}. "
-                f"Install missing dependencies or check provider name."
-            )
-        try:
-            return self._summarization_providers[name](**(params or {}))
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to create summarization provider '{name}': {e}\n"
-                f"Make sure required dependencies are installed."
-            ) from e
-    
+        return self._create_provider("summarization", name, self._summarization_providers, params)
+
     def create_tagging(self, name: str, params: dict | None = None) -> TaggingProvider:
         """Create a tagging provider instance."""
         self._ensure_providers_loaded()
-        if name not in self._tagging_providers:
-            available = ", ".join(self._tagging_providers.keys()) or "none"
-            raise ValueError(
-                f"Unknown tagging provider: '{name}'. "
-                f"Available providers: {available}. "
-                f"Install missing dependencies or check provider name."
-            )
-        try:
-            return self._tagging_providers[name](**(params or {}))
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to create tagging provider '{name}': {e}\n"
-                f"Make sure required dependencies are installed."
-            ) from e
-    
+        return self._create_provider("tagging", name, self._tagging_providers, params)
+
     def create_media(self, name: str, params: dict | None = None) -> MediaDescriber:
         """Create a media describer instance."""
         self._ensure_providers_loaded()
-        if name not in self._media_providers:
-            available = ", ".join(self._media_providers.keys()) or "none"
-            raise ValueError(
-                f"Unknown media describer: '{name}'. "
-                f"Available providers: {available}. "
-                f"Install missing dependencies or check provider name."
-            )
-        try:
-            return self._media_providers[name](**(params or {}))
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to create media describer '{name}': {e}\n"
-                f"Make sure required dependencies are installed."
-            ) from e
+        return self._create_provider("media", name, self._media_providers, params)
+
+    def create_analyzer(self, name: str, params: dict | None = None) -> AnalyzerProvider:
+        """Create an analyzer provider instance."""
+        self._ensure_providers_loaded()
+        return self._create_provider("analyzer", name, self._analyzer_providers, params)
+
+    def create_content_extractor(self, name: str, params: dict | None = None) -> ContentExtractor:
+        """Create a content extractor provider instance."""
+        self._ensure_providers_loaded()
+        return self._create_provider("content_extractor", name, self._content_extractor_providers, params)
 
     def create_document(self, name: str, params: dict | None = None) -> DocumentProvider:
         """Create a document provider instance."""
         self._ensure_providers_loaded()
-        if name not in self._document_providers:
-            available = ", ".join(self._document_providers.keys()) or "none"
-            raise ValueError(
-                f"Unknown document provider: '{name}'. "
-                f"Available providers: {available}. "
-                f"Install missing dependencies or check provider name."
-            )
-        try:
-            return self._document_providers[name](**(params or {}))
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to create document provider '{name}': {e}\n"
-                f"Make sure required dependencies are installed."
-            ) from e
+        return self._create_provider("document", name, self._document_providers, params)
     
     # Introspection
     
@@ -566,6 +694,10 @@ class ProviderRegistry:
     def list_media_providers(self) -> list[str]:
         """List registered media describer names."""
         return list(self._media_providers.keys())
+
+    def list_content_extractor_providers(self) -> list[str]:
+        """List registered content extractor names."""
+        return list(self._content_extractor_providers.keys())
 
 
 # Global registry instance

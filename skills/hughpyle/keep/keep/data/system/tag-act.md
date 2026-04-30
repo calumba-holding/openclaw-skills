@@ -3,6 +3,7 @@ tags:
   category: system
   context: tag-description
   _constrained: "true"
+  _singular: "true"
 ---
 # Tag: `act` — Speech-Act Category
 
@@ -30,6 +31,28 @@ The other three — `assertion`, `assessment`, `declaration` — are typically c
 ## Relationship to `type`
 
 The `act` tag is orthogonal to `type`. An item can be both `type=learning` and `act=assessment` — the learning is *about* an assessment. Or `type=breakdown` and `act=commitment` — the breakdown occurred in a commitment.
+
+## Prompt
+
+Classify the speech act being performed — what the speaker is *doing* with their words. When a summary describes what someone said or did ("The user requested...", "The assistant recommended..."), classify the described speech act, not the act of summarizing.
+
+Key distinctions:
+- assertion vs assessment: assertion states facts ("tests pass"); assessment judges quality ("this approach is risky")
+- assertion vs request: stating information is assertion; asking someone to act is request
+- commitment vs offer: commitment binds the speaker ("I will do X"); offer proposes without binding ("I could do X")
+- commitment vs declaration: commitment is about future action; declaration changes state now ("released v2.0")
+- request vs assertion: "You should use X" giving advice is assertion; "Please do X" asking for action is request
+
+Only assign status when act is commitment, request, or offer. Assertions, assessments, and declarations do not have lifecycle status.
+
+## Injection
+
+This document feeds into analysis in two ways:
+
+1. **Guide context** — when `analyze --tags act` is used, the full text of this doc is prepended to the analysis prompt as context for decomposition.
+2. **Classification** — because `_constrained: true`, the `## Prompt` sections (here and in value sub-docs like `.tag/act/commitment`) are assembled by `TagClassifier` into a classification system prompt. Each analyzed part is classified against this taxonomy and tagged if confidence exceeds the threshold.
+
+To customize classification behavior, edit the `## Prompt` section. The classifier only sees `## Prompt` content, not the full doc.
 
 ## Examples
 
