@@ -1,76 +1,73 @@
 ---
 name: xhs-download
-description: 小红书笔记批量下载。通过已登录 Chrome 的 DevTools Protocol 自动化下载小红书笔记（图片+文字）到本地文件夹。
+description: 小红书笔记批量下载。通过已登录 Chrome 的 DevTools Protocol 自动化下载小红书笔记（图片+文字）到本地。
 ---
 
 # 小红书笔记批量下载
 
-通过已登录 Chrome 的 DevTools Protocol (CDP) 批量下载小红书笔记。
+通过 Chrome DevTools Protocol (CDP) 批量下载小红书笔记到本地文件夹。
 
 ## 前置条件
 
-- Chrome 已启动并登录小红书
-- Python3 + `websocket-client` + `requests` 库已安装
-- 安装：`pip3 install websocket-client requests`
+1. **Chrome 已登录小红书**（任何方式启动均可）
+2. **Chrome 开启远程调试**：启动时加 `--remote-debugging-port=9222`
+3. **Python3 环境**：`pip3 install websocket-client requests`
 
-## 快速开始（3步）
+> 如果 Chrome 已启动但没开调试端口，关闭后重启即可。
 
-### 步骤1：获取目标账号 profile_id
+## 使用方法（4步）
 
-在小红书网页版打开目标账号主页，URL 最后一段即为 profile_id：
+### 第1步：找到目标账号的 profile_id
+
+打开小红书网页版，进入目标账号主页，复制 URL 最后一段：
+
 ```
 https://www.xiaohongshu.com/user/profile/64902d2d000000001c0294eb
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                 ↑ 这个就是 profile_id
 ```
 
-### 步骤2：启动 Chrome 并获取 tab_id
+### 第2步：获取 Chrome tab_id
 
-确保 Chrome 已开启远程调试端口：
+在终端运行：
 ```bash
-# 检查 Chrome 是否在运行
-curl -s http://127.0.0.1:9222/json | python3 -c "
-import json, sys
-tabs = json.load(sys.stdin)
-for t in tabs:
-    if 'xiaohongshu' in t.get('url', ''):
-        print(f\"tab_id: {t['id']}\")
-        print(f\"url: {t['url'][:80]}\")
-"
+curl -s http://127.0.0.1:9222/json | python3 -m json.tool | grep -E '"id"|"url"'
 ```
 
-如果未开启，用以下命令启动 Chrome：
+找到包含 `xiaohongshu.com` 的那条记录，复制其 `id` 值。
+
+### 第3步：修改脚本配置
+
+将下方脚本开头的三个变量改成你的值：
+
+| 变量 | 填什么 | 示例 |
+|------|--------|------|
+| `PROFILE_ID` | 第1步获取的账号ID | `"64902d2d000000001c0294eb"` |
+| `TAB_ID` | 第2步获取的tab ID | `"4C23291E2F8B1524..."` |
+| `SAVE_DIR` | 你想保存到的文件夹 | `"~/Downloads/我的笔记/"` |
+
+### 第4步：运行脚本
+
+把脚本保存为 `download.py`，然后运行：
 ```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/chrome-xhs/
+python3 download.py
 ```
 
-### 步骤3：运行下载脚本
+## 完整脚本
 
 ```python
-import json, time, requests, os, subprocess, websocket
+import json, time, requests, os, subprocess, websocket, re
 
-# ===== 配置区（修改这里）=====
-PROFILE_ID = "你的目标账号ID"          # 从小红书主页URL获取
-TAB_ID = ""                            # 留空自动获取，或填入上一步获取的tab_id
-SAVE_DIR = "~/Downloads/你的文件夹/"    # 下载保存路径
-# ================================
+# ===== 改这里 =====
+PROFILE_ID = "你的目标账号ID"
+TAB_ID = "你的Chrome tab_id"
+SAVE_DIR = "~/Downloads/你的文件夹/"
+# =================
 
 SAVE_DIR = os.path.expanduser(SAVE_DIR)
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-def get_tab_id():
-    if TAB_ID: return TAB_ID
-    r = subprocess.run(['curl', '-s', 'http://127.0.0.1:9222/json'],
-                       capture_output=True, text=True, timeout=5)
-    tabs = json.loads(r.stdout)
-    for t in tabs:
-        if 'xiaohongshu' in t.get('url', ''):
-            return t['id']
-    return tabs[0]['id']
-
 def send(ws, method, params={}):
-    """CDP 命令发送（3个参数：ws, method, params）"""
+    """CDP 命令发送。3个参数：ws连接对象, 方法名, 参数字典"""
     msg_id = int(time.time()*1000) % 100000
     msg = {"id": msg_id, "method": method, "params": params}
     ws.send(json.dumps(msg))
@@ -80,32 +77,38 @@ def send(ws, method, params={}):
             return resp
 
 def download_image(url, path):
+    """下载图片，必须带 Referer"""
     r = requests.get(url, headers={"Referer": "https://www.xiaohongshu.com/"}, timeout=30)
     if len(r.content) > 100:
-        with open(path, 'wb') as f: f.write(r.content)
+        with open(path, 'wb') as f:
+            f.write(r.content)
         return True
     return False
 
-# 连接 Chrome
-tab_id = get_tab_id()
-print(f"使用 tab_id: {tab_id}")
-ws = websocket.create_connection(f"ws://127.0.0.1:9222/devtools/page/{tab_id}", timeout=30)
+# 1. 连接 Chrome
+ws = websocket.create_connection(
+    f"ws://127.0.0.1:9222/devtools/page/{TAB_ID}", timeout=30)
+print(f"已连接 Chrome tab: {TAB_ID}")
 
-# 导航到主页
+# 2. 导航到目标主页
 url = f"https://www.xiaohongshu.com/user/profile/{PROFILE_ID}"
 send(ws, "Page.navigate", {"url": url})
 time.sleep(6)
+print(f"已导航到: {url}")
 
-# 滚动加载所有笔记
+# 3. 滚动加载所有笔记（30次，覆盖绝大多数账号）
 print("滚动加载中...")
 for i in range(30):
     send(ws, "Input.synthesizeScrollGesture", {
-        "x": 500, "y": 600, "xDistance": 0, "yDistance": -800, "speed": 2000
+        "x": 500, "y": 600,
+        "xDistance": 0, "yDistance": -800,
+        "speed": 2000
     })
     time.sleep(2)
-    print(f"  滚动 {i+1}/30")
+    if (i + 1) % 10 == 0:
+        print(f"  已滚动 {i+1}/30 次")
 
-# 提取笔记列表
+# 4. 从 DOM 提取笔记列表
 result = send(ws, "Runtime.evaluate", {"expression": """
 (() => {
     const cards = document.querySelectorAll(".feeds-container .note-item");
@@ -119,11 +122,29 @@ result = send(ws, "Runtime.evaluate", {"expression": """
 })()
 """})
 notes = json.loads(result["result"]["result"]["value"])
-print(f"找到 {len(notes)} 篇笔记")
+print(f"\n找到 {len(notes)} 篇笔记\n")
 
-# 下载每篇笔记
+# 5. 从 __INITIAL_STATE__ 获取所有笔记的 xsecToken
+state_result = send(ws, "Runtime.evaluate", {"expression": """
+(() => {
+    const state = window.__INITIAL_STATE__ || {};
+    const user = state.user || {};
+    const notes = user.notes || {};
+    const items = (notes._value && notes._value.items) ? notes._value.items : [];
+    return JSON.stringify(items.map(n => ({
+        id: (n.note && n.note.id) || '',
+        xsecToken: (n.note && n.note.xsecToken) || ''
+    })));
+})()
+"""})
+token_map = {}
+for item in json.loads(state_result["result"]["result"]["value"]):
+    if item["id"]:
+        token_map[item["id"]] = item["xsecToken"]
+
+# 6. 逐篇下载
 downloaded = 0
-errors = 0
+skipped = 0
 for note in notes:
     href = note.get("href", "")
     title = note.get("title", "").strip()
@@ -132,35 +153,19 @@ for note in notes:
 
     note_dir = os.path.join(SAVE_DIR, title)
     if os.path.exists(note_dir):
-        print(f"跳过（已存在）: {title}")
+        print(f"⏭ 跳过（已存在）: {title[:30]}")
+        skipped += 1
         continue
 
     os.makedirs(note_dir, exist_ok=True)
 
-    # 提取 note_id 和 xsec_token
-    import re
-    note_id = re.search(r'/explore/([a-f0-9]+)', href)
-    note_id = note_id.group(1) if note_id else ""
+    # 提取 note_id
+    m = re.search(r'/explore/([a-f0-9]+)', href)
+    note_id = m.group(1) if m else ""
+    if not note_id:
+        continue
 
-    # 从 __INITIAL_STATE__ 获取 xsec_token
-    state_result = send(ws, "Runtime.evaluate", {"expression": """
-    (() => {
-        const state = window.__INITIAL_STATE__ || {};
-        const user = state.user || {};
-        const notes = user.notes || {};
-        const items = notes._value && notes._value.items ? notes._value.items : [];
-        return JSON.stringify(items.map(n => ({
-            id: n.note && n.note.id || '',
-            xsecToken: n.note && n.note.xsecToken || ''
-        })));
-    })()
-    """})
-    items = json.loads(state_result["result"]["result"]["value"])
-    xsec_token = ""
-    for item in items:
-        if item.get("id") == note_id:
-            xsec_token = item.get("xsecToken", "")
-            break
+    xsec_token = token_map.get(note_id, "")
 
     # 导航到详情页
     if xsec_token:
@@ -170,7 +175,7 @@ for note in notes:
     send(ws, "Page.navigate", {"url": detail_url})
     time.sleep(4)
 
-    # 提取图片
+    # 提取图片列表
     img_result = send(ws, "Runtime.evaluate", {"expression": """
     (() => {
         const swiper = document.querySelector('.swiper-wrapper');
@@ -191,7 +196,7 @@ for note in notes:
             if download_image(src, path):
                 img_count += 1
 
-    # 提取文字
+    # 提取正文
     text_result = send(ws, "Runtime.evaluate", {"expression": """
     (() => {
         const desc = document.querySelector('.note-content .desc');
@@ -203,21 +208,24 @@ for note in notes:
         f.write(text)
 
     downloaded += 1
-    print(f"✅ {title} ({img_count}张图片)")
+    print(f"✅ {title[:30]}... ({img_count}张图)")
 
 ws.close()
-print(f"\n完成: 下载 {downloaded} 篇")
+print(f"\n{'='*40}")
+print(f"完成！下载 {downloaded} 篇，跳过 {skipped} 篇")
+print(f"保存位置: {SAVE_DIR}")
 ```
 
-## 下载结果
+## 输出格式
 
-每篇笔记保存在独立文件夹：
+每篇笔记一个文件夹：
 ```
 ~/Downloads/你的文件夹/
 ├── 笔记标题1/
 │   ├── 内容.txt
 │   ├── 1.jpg
-│   └── 2.jpg
+│   ├── 2.jpg
+│   └── 3.jpg
 └── 笔记标题2/
     ├── 内容.txt
     └── 1.jpg
@@ -225,16 +233,17 @@ print(f"\n完成: 下载 {downloaded} 篇")
 
 ## 常见问题
 
-| 问题 | 解决 |
-|------|------|
-| `Connection refused` | Chrome 未启动或端口不是9222 |
-| 图片 403 | 必须加 `Referer: https://www.xiaohongshu.com/` |
-| 笔记数量少 | 增加滚动次数（30→50） |
-| `send()` 报错 | 确认是3个参数：`send(ws, method, params={})` |
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| `Connection refused` | Chrome 没开调试端口 | 加 `--remote-debugging-port=9222` 重启 |
+| 图片下载失败/403 | 缺少 Referer | 脚本已自带，别删 headers |
+| 笔记数量比预期少 | 滚动次数不够 | 把 30 改成 50 |
+| `send()` 不返回 | 参数不对 | 必须是 3 个参数：`send(ws, method, params={})` |
+| `websocket` 模块找不到 | 没装依赖 | `pip3 install websocket-client` |
 
-## 铁律
+## 注意事项
 
-1. **不杀 Chrome** — 先 `curl http://127.0.0.1:9222/json`
-2. **不开新浏览器** — 用已登录实例
-3. **图片必带 Referer** — 否则防盗链 403
-4. **下载前检查已下载目录** — 避免重复
+- 脚本会自动跳过已下载的笔记（文件夹已存在）
+- 每次导航详情页需要 4 秒等待加载
+- 图片下载必须带 `Referer` 头，否则 403
+- 大批量下载建议分段运行（避免被限流）
