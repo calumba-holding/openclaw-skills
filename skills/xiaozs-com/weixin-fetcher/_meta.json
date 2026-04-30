@@ -1,0 +1,11 @@
+{
+  "owner": "xiaozs-com",
+  "slug": "weixin-fetcher",
+  "displayName": "WeChat Article Fetcher",
+  "latest": {
+    "version": "1.1.0",
+    "publishedAt": 1777315891540,
+    "commit": null
+  },
+  "history": []
+}
