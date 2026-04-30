@@ -1,0 +1,11 @@
+{
+  "owner": "eardori",
+  "slug": "hana-image-gen-macos",
+  "displayName": "Hana Image Gen MacOS",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777194188694,
+    "commit": null
+  },
+  "history": []
+}
