@@ -1,0 +1,23 @@
+{
+  "name": "Product Title & Selling-Point Booster",
+  "description": "Platform-aware product title optimization for Taobao, JD, PDD, Amazon, and Shopify. Extracts keywords, respects per-platform character limits and conventions, and generates A/B title variants to boost search visibility.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "E-Commerce / Listing Optimization",
+  "keywords": [
+    "product title", "商品标题优化", "SEO title", "listing optimization",
+    "Taobao title", "Amazon title", "title A/B test",
+    "keyword optimization", "selling point", "搜索优化"
+  ],
+  "platforms": ["Taobao", "JD", "Pinduoduo", "Amazon", "Shopify"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No keyword stuffing that violates platform rules. No unauthorized trademark usage. No competitor brand names in title. No misleading product attributes or specifications. Verify against platform-specific restricted terms."
+  }
+}
