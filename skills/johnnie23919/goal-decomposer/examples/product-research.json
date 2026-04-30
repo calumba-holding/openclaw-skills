@@ -1,0 +1,76 @@
+{
+  "input": {
+    "goal": "我想做个竞品调研，关注AI助手领域",
+    "context": "公司正在开发AI助手产品",
+    "constraints": ["时间限制：本周完成", "预算限制：零成本"]
+  },
+  "output": {
+    "root_goal": "做个竞品调研",
+    "goal_type": "research",
+    "tasks": [
+      {
+        "id": "T1",
+        "title": "确定调研范围",
+        "priority": "P0",
+        "children": [
+          {
+            "id": "T1.1",
+            "title": "锁定AI助手赛道",
+            "priority": "P0",
+            "description": "明确调研的产品类型和范围边界"
+          },
+          {
+            "id": "T1.2",
+            "title": "筛选竞品名单",
+            "priority": "P0",
+            "description": "基于市场占有率、创新性、代表性筛选3-5个竞品"
+          }
+        ],
+        "spawn_hint": "web-search搜索'AI助手竞品分析报告'"
+      },
+      {
+        "id": "T2",
+        "title": "收集竞品数据",
+        "priority": "P1",
+        "children": [
+          {
+            "id": "T2.1",
+            "title": "爬取官网信息",
+            "priority": "P1",
+            "spawn_hint": "web-access访问竞品官网提取核心功能"
+          },
+          {
+            "id": "T2.2",
+            "title": "整理功能对比表",
+            "priority": "P1",
+            "description": "按功能维度横向对比，输出表格"
+          }
+        ]
+      },
+      {
+        "id": "T3",
+        "title": "生成分析报告",
+        "priority": "P1",
+        "children": [
+          {
+            "id": "T3.1",
+            "title": "提炼差异化优势",
+            "priority": "P1",
+            "description": "分析各竞品独特卖点"
+          },
+          {
+            "id": "T3.2",
+            "title": "输出结论建议",
+            "priority": "P1",
+            "description": "基于分析给出产品定位建议"
+          }
+        ]
+      }
+    ],
+    "execution_order": ["T1", "T2", "T3"],
+    "mece_validation": {
+      "mutually_exclusive": true,
+      "collectively_exhaustive": true
+    }
+  }
+}

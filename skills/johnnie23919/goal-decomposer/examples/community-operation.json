@@ -1,0 +1,88 @@
+{
+  "input": {
+    "goal": "运营一个技术社区",
+    "context": "目标用户：AI开发者",
+    "constraints": ["初期预算有限", "团队3人"]
+  },
+  "output": {
+    "root_goal": "运营AI开发者社区",
+    "goal_type": "manage",
+    "tasks": [
+      {
+        "id": "T1",
+        "title": "现状分析",
+        "priority": "P0",
+        "children": [
+          {
+            "id": "T1.1",
+            "title": "明确目标用户画像",
+            "priority": "P0",
+            "description": "AI开发者细分：算法工程师、应用开发者、研究者"
+          },
+          {
+            "id": "T1.2",
+            "title": "调研同类社区",
+            "priority": "P0",
+            "spawn_hint": "web-search分析'AI开发者社区'现状"
+          }
+        ]
+      },
+      {
+        "id": "T2",
+        "title": "制定运营计划",
+        "priority": "P1",
+        "children": [
+          {
+            "id": "T2.1",
+            "title": "内容生产策略",
+            "priority": "P1",
+            "description": "技术文章、项目分享、问答互助"
+          },
+          {
+            "id": "T2.2",
+            "title": "用户增长路径",
+            "priority": "P1",
+            "description": "SEO、社交媒体、线下活动"
+          },
+          {
+            "id": "T2.3",
+            "title": "激励机制设计",
+            "priority": "P1",
+            "description": "积分体系、等级徽章、物质奖励"
+          }
+        ]
+      },
+      {
+        "id": "T3",
+        "title": "执行与监控",
+        "priority": "P1",
+        "children": [
+          {
+            "id": "T3.1",
+            "title": "内容发布节奏",
+            "priority": "P1",
+            "description": "每周3篇原创+5篇精选"
+          },
+          {
+            "id": "T3.2",
+            "title": "用户活跃度跟踪",
+            "priority": "P1",
+            "description": "日活、留存、内容互动率"
+          },
+          {
+            "id": "T3.3",
+            "title": "迭代优化",
+            "priority": "P2",
+            "description": "基于数据调整策略"
+          }
+        ]
+      }
+    ],
+    "execution_order": ["T1", "T2", "T3"],
+    "kpis": [
+      "月活用户数 ≥ 1000",
+      "用户留存率 ≥ 30%",
+      "内容生产量 ≥ 50篇/月"
+    ]
+  }
+}

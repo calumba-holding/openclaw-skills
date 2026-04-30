@@ -1,0 +1,81 @@
+{
+  "input": {
+    "goal": "开发一个用户登录页面",
+    "context": "移动端Web应用",
+    "constraints": ["兼容iOS Safari", "支持微信环境"]
+  },
+  "output": {
+    "root_goal": "开发用户登录页面",
+    "goal_type": "create",
+    "tasks": [
+      {
+        "id": "T1",
+        "title": "明确需求",
+        "priority": "P0",
+        "children": [
+          {
+            "id": "T1.1",
+            "title": "定义登录方式",
+            "priority": "P0",
+            "description": "账号密码、手机验证码、微信授权"
+          },
+          {
+            "id": "T1.2",
+            "title": "确认安全要求",
+            "priority": "P0",
+            "description": "密码加密、防刷机制、Session管理"
+          }
+        ]
+      },
+      {
+        "id": "T2",
+        "title": "设计方案",
+        "priority": "P1",
+        "children": [
+          {
+            "id": "T2.1",
+            "title": "绘制UI原型",
+            "priority": "P1",
+            "spawn_hint": "excalidraw-diagram-generator绘制登录流程图"
+          },
+          {
+            "id": "T2.2",
+            "title": "评审交互流程",
+            "priority": "P1",
+            "description": "与产品和设计团队确认流程"
+          }
+        ]
+      },
+      {
+        "id": "T3",
+        "title": "编码实现",
+        "priority": "P1",
+        "children": [
+          {
+            "id": "T3.1",
+            "title": "前端页面开发",
+            "priority": "P1",
+            "description": "响应式布局、表单验证、错误提示"
+          },
+          {
+            "id": "T3.2",
+            "title": "后端接口联调",
+            "priority": "P1",
+            "description": "登录验证、Token生成、状态同步"
+          },
+          {
+            "id": "T3.3",
+            "title": "测试验证",
+            "priority": "P2",
+            "spawn_hint": "browser自动化测试多端兼容性"
+          }
+        ]
+      }
+    ],
+    "execution_order": ["T1", "T2", "T3"],
+    "depends_on": {
+      "T2": ["T1"],
+      "T3": ["T2"]
+    }
+  }
+}
