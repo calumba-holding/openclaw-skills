@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-title-base-query",
+  "displayName": "IMDb Base Info API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777327901529,
+    "commit": null
+  },
+  "history": []
+}
