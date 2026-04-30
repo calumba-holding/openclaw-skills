@@ -1,13 +1,18 @@
 {
   "owner": "therohitdas",
   "slug": "youtube-channels",
-  "displayName": "Youtube Channels",
+  "displayName": "youtube-channels",
   "latest": {
-    "version": "1.4.1",
-    "publishedAt": 1770817056786,
-    "commit": "https://github.com/openclaw/skills/commit/d75c588090e90f550b3aaec51b6ebe6c607eb867"
+    "version": "1.5.0",
+    "publishedAt": 1777475133479,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.4.1",
+      "publishedAt": 1770817056786,
+      "commit": "https://github.com/openclaw/skills/commit/d75c588090e90f550b3aaec51b6ebe6c607eb867"
+    },
     {
       "version": "1.3.2",
       "publishedAt": 1769930223210,
