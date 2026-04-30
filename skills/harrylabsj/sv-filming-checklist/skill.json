@@ -1,0 +1,27 @@
+{
+  "slug": "sv-filming-checklist",
+  "name": "Short Video Filming Preparation Checklist",
+  "description": "A comprehensive pre-shoot checklist covering equipment, location, talent, wardrobe, props, permissions, and contingency planning.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "checklist",
+    "preparation",
+    "filming",
+    "production",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "filming checklist",
+    "shoot prep",
+    "video preparation",
+    "shoot day",
+    "equipment checklist",
+    "pre-shoot"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
