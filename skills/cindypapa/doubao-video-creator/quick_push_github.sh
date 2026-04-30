@@ -27,7 +27,7 @@ echo ""
 echo "📤 推送代码到 GitHub..."
 echo "💡 提示：首次推送需要输入 GitHub 凭证"
 echo "   用户名：465367@qq.com"
-echo "   密码/令牌：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"
+# OpenClaw security redaction: secret removed from archive.
 echo ""
 
 # 使用 GIT_ASKPASS 自动提供凭证

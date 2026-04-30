@@ -359,7 +359,7 @@ EOF
 {
   "limit": 25,
   "next_cursor": null,
-  "items": [
+<!-- OpenClaw security redaction: secret removed from archive. -->
     {
       "name": "Bob Lee",
       "email": "bob.lee@acme.com",

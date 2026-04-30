@@ -6,7 +6,7 @@ from feishu_docx_client import FeishuDocx
 
 def main():
     app_id = "cli_a92c5076b7789cd2"
-    app_secret = "9jPdCn49G54RFoEoDPUCVcptnWZnTZqp"
+# OpenClaw security redaction: secret removed from archive.
     folder_token = "CicIfQH2VlKqV0dBK4mceVMRnqf"
     
     file_path = "/Users/cpjhy0535/.openclaw/workspace-master/cases/空气炸锅鸡蛋饼 - 爆款拆解报告.md"

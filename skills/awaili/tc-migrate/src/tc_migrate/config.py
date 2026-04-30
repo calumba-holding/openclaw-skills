@@ -176,12 +176,12 @@ def generate_example_account(output_path: str | Path) -> Path:
         yaml.dump(
             {
                 "account_a": {
-                    "secret_id": "AKIDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+# OpenClaw security redaction: secret removed from archive.
                     "secret_key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
                     "region": "ap-beijing",
                 },
                 "account_b": {
-                    "secret_id": "AKIDyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+# OpenClaw security redaction: secret removed from archive.
                     "secret_key": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
                     "region": "ap-guangzhou",
                 },

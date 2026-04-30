@@ -49,7 +49,7 @@ Or create manually:
 
 ```json
 {
-  "apiKey": "tskey-api-your-key-here",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "tailnet": "-"
 }
 ```

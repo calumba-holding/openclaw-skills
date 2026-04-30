@@ -46,7 +46,7 @@
 ```python
 # 飞书应用凭证（必填）
 FEISHU_APP_ID = "cli_a924d921ce7a9cbd"
-FEISHU_APP_SECRET = "5QG92Lp8kvhAkgpPJTd57fIxshnCebEt"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 群聊ID（在example_openclaw_skill.py中配置）
 FEISHU_CHAT_ID = "oc_29fbba0871ab7371a4c1a1ebe0350dac"

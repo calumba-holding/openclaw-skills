@@ -4,7 +4,7 @@ const https = require('https');
 // 配置
 const FUND_DOC_TOKEN = 'J9BndSQkHoguODx96PtcNslnnsc';
 const FEISHU_APP_ID = 'cli_a9f34580c5badbd9';
-const FEISHU_APP_SECRET = 'DDxM8UV6Dn5OO0Il8MxNGbGmX1PEiLuJ';
+// OpenClaw security redaction: secret removed from archive.
 
 // 获取access_token
 function getAccessToken() {

@@ -6,7 +6,7 @@
 
 | 环境变量 | 说明 | 示例 |
 |---------|------|------|
-| `ALIYUN_OSS_ACCESS_KEY_ID` | 阿里云 AccessKey ID | `LTAI5t8Z3y8Y7Z7Z7Z7Z7Z7Z` |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | `ALIYUN_OSS_ACCESS_KEY_SECRET` | 阿里云 AccessKey Secret | `your-secret-key` |
 | `ALIYUN_OSS_ENDPOINT` | OSS 地域 Endpoint | `https://oss-cn-hangzhou.aliyuncs.com` |
 | `ALIYUN_OSS_BUCKET` | 存储空间名称 | `my-bucket-name` |

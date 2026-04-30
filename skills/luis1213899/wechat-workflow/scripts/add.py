@@ -35,7 +35,7 @@ def printFields(obj, indent=2):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("用法: python add.py <key> <name> <field=value>...")
-        print("例:  python add.py wechat '微信公众号' appid=wxd9f577d56948e564 appsecret=xxx")
+# OpenClaw security redaction: secret removed from archive.
         sys.exit(1)
 
     key = sys.argv[1]

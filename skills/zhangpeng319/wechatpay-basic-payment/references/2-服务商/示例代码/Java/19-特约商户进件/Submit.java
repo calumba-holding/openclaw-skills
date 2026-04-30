@@ -133,7 +133,7 @@ public class Submit {
     {
       request.businessInfo.salesInfo.bizStoreInfo.indoorPic.add("0P3ng6KTIW4-Q_l2FjKLZuhHjBWoMAjmVtCz7ScmhEIThCaV-4BBgVwtNkCHO_XXqK5dE5YdOmFJBZR9FwczhJehHhAZN6BKXQPcs-VvdSo");
     };
-    request.businessInfo.salesInfo.bizStoreInfo.bizSubAppid = "wx1234567890123456";
+// OpenClaw security redaction: secret removed from archive.
     request.businessInfo.salesInfo.mpInfo = new MpInfo();
     request.businessInfo.salesInfo.mpInfo.mpAppid = "wx1234567890123456";
     request.businessInfo.salesInfo.mpInfo.mpSubAppid = "wx1234567890123456";

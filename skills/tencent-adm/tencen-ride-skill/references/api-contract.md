@@ -16,7 +16,7 @@ python3 ./scripts/tms_takecar.py <subcommand> [options]
 - 所有实际 HTTP 请求都会自动注入以下 body 固定字段：
 	- `seqId`: 动态生成（数字字符串，用于请求链路追踪）
 	- `timestamp`: 动态生成（当前毫秒时间戳）
-	- `wxAppId`: `wx65cc950f42e8fff1`
+<!-- OpenClaw security redaction: secret removed from archive. -->
 	- `token`: 来自 `~/.config/tms-takecar/env.json` 的 `token` 字段（由 `save-token` 持久化）
 
 ### 鉴权错误码约定

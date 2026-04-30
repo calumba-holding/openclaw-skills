@@ -100,7 +100,7 @@ def main():
     # 从命令行参数获取 AppID 和 AppSecret
     if len(sys.argv) < 3:
         print("用法: python get_draft.py <appid> <secret> [title]")
-        print("示例: python get_draft.py wxa4f073c32600c19b 47e75b44cbe81261896649aa24a5e222 \"文章标题\"")
+# OpenClaw security redaction: secret removed from archive.
         sys.exit(1)
 
     appid = sys.argv[1]

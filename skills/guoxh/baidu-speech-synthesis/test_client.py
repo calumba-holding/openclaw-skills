@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # 设置环境变量（如果未设置）
     if not os.getenv("BAIDU_API_KEY"):
         # 从 openclaw.json 读取？简单起见，直接使用已知值
-        os.environ["BAIDU_API_KEY"] = "bce-v3/ALTAK-xhakLZ9EzPn8ItVfKsorz/d6cb949f8c48cd120c0392389b978a90aa29490b"
+# OpenClaw security redaction: secret removed from archive.
     
     success = test_token_mode()
     if success:

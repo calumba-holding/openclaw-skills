@@ -252,7 +252,7 @@ describe("openclaw-memory-docs plugin", () => {
     it("redacts secrets and notes it in the response", async () => {
       const handler = commands.get("remember-doc")!.handler;
       const result = await handler({
-        args: "my key is sk-proj-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn",
+// OpenClaw security redaction: secret removed from archive.
       });
       expect(result.text).toContain("secrets were redacted");
       expect(mockAdd).toHaveBeenCalledTimes(1);

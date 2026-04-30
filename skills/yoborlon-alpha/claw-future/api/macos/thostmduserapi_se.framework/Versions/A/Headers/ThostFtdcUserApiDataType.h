@@ -4628,7 +4628,7 @@ typedef char TThostFtdcMonthBillTradeSumType;
 ///期货发起期货转银行
 #define THOST_FTDC_FTC_BrokerLaunchBrokerToBank '202002'
 
-typedef char TThostFtdcFBTTradeCodeEnumType;
+// OpenClaw security redaction: secret removed from archive.
 
 /////////////////////////////////////////////////////////////////////////
 ///TFtdcRateTemplateIDType是一个模型代码类型

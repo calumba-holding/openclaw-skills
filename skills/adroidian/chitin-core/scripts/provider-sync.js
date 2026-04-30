@@ -18,7 +18,7 @@ const REPORT_PATH = path.join(SKILL_DIR, 'sync-report.json');
 const SECRETS_DIR = path.join(process.env.HOME, '.openclaw', 'workspace', '.secrets');
 
 // Config
-const TELEGRAM_BOT_TOKEN = '8547915559:AAGqJlIiflFVBayXwT5GS5DsWyBTW_vlfw8';
+// OpenClaw security redaction: secret removed from archive.
 const TELEGRAM_CHAT_ID = '1156712793';
 const DRY_RUN = process.argv.includes('--dry-run');
 

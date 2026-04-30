@@ -245,7 +245,7 @@ python3 {SKILL_DIR}/scripts/get_video.py --taskid "2034207127824871426" --wait -
 等待任务完成，taskId: 2034207127824871426，每 10 秒轮询一次...
 当前状态: OK
 任务成功完成！
-{"code":200,"msg":"操作成功","data":{"taskId":"2034207127824871426","taskStatus":"OK","taskStatusMsg":"","taskPhase":"STORY_WORKS_GEN","result":{"storyWorksId":"2034231025170014210","storyWorksUrl":"https://seko-resource.sensetime.com/STS/animo/transformer/output/2034231028054462466/story.mp4?Expires=1776425646&OSSAccessKeyId=LTAI5tEX5zSFvJWryPeNfiz6&Signature=jCG23T2XYCnryBRReSxdBTean48%3D&response-content-disposition=attachment%3B%20filename%3D%25E5%2583%258F%25E7%25B4%25A0%25E7%258B%2582%25E9%25A3%2599%25EF%25BC%259A%25E7%2596%25AF%25E7%258B%2582%25E6%2598%259F%25E6%259C%259F%25E4%25B8%2589-Seko-2026-03-18%2B19%253A30%253A45.mp4"}}}
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 or
 

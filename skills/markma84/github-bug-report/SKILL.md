@@ -91,7 +91,7 @@ curl -s "https://api.github.com/search/issues?q=checkpoint+orphan+repo:openclaw/
 
 ## GitHub Token
 
-当前 token：`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`
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 Header 格式：
 ```

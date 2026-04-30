@@ -112,7 +112,7 @@
 
 ## Communication Channels
 
-- **Primary:** MOLT3D Telegram group (-1003892992445) — Background monitor (`molt3d-monitor` session) running continuously, polling every 30s for Snail's messages and ClawdSense activity (🔴 Sentry, 📸 Button). Bot token: 8526414459:AAHTfvv9lOs_Kj7kudAnBFfeCbjiofzM26M. Live as of Jan 28, 02:55.
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ## Skills Needed
 

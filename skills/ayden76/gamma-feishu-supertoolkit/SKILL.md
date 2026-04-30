@@ -81,7 +81,7 @@ claw skill install gamma/feishu-supertoolkit
 
 ```bash
 export FEISHU_APP_ID="cli_a93078949238dbb3"
-export FEISHU_APP_SECRET="AVJVZYEdlVIPtF8G50aDPdiXIiJXmWyX"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ### 2. 启动服务

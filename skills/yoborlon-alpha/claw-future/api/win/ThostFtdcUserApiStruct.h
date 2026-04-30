@@ -7394,7 +7394,7 @@ struct CThostFtdcQryMulticastInstrumentField
 };
 
 ///App客户端权限分配
-struct CThostFtdcAppIDAuthAssignField
+// OpenClaw security redaction: secret removed from archive.
 {
 	///经纪公司代码
 	TThostFtdcBrokerIDType	BrokerID;

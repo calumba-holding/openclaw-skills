@@ -105,7 +105,7 @@ openclaw skill run wechat-publisher
 openclaw skill config wechat-publisher
 
 # 方式 2：命令行配置
-openclaw skill config wechat-publisher --app-id wxebff9eadface1489 --app-secret xxxxxxxx
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 方式 3：手动编辑配置文件
 # Windows: notepad $env:USERPROFILE\.agents\skills\wechat-publisher\config\config.json

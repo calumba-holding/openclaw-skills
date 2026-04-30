@@ -207,7 +207,7 @@ echo "INFO:   → ${#oc_dates[@]} files indexed from OwnCloud"
 #   Typical output may look like (tab-separated or fixed-width):
 #
 #     Id                                Name                       MimeType          ModifiedTime                 Size
-#     1BxiMVs0XRA5nFMdKvBdBZjgmUUqpt   facture Q1.pdf             application/pdf   2025-06-15T10:30:00.000Z     123456
+# OpenClaw security redaction: secret removed from archive.
 #
 #   Strategy:
 #     A) If tabs are present → split by tab, locate the date column by regex.

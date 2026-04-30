@@ -36,7 +36,7 @@ describe('FileChat RAG Skill', () => {
     // The environment variables configure GWS CLI to use our provided credentials.
     const env = {
       ...process.env,
-      GEMINI_API_KEY: 'AIzaSyAOx5NDLxsyRjd0qWT33LXZ_KKwMtyzOe4'
+// OpenClaw security redaction: secret removed from archive.
     };
 
     try {

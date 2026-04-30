@@ -47,12 +47,12 @@ cd /Users/isangsu/.openclaw/workspace/artifacts/gajago-sns && npm run dev > /tmp
 sleep 4
 ```
 
-### 3단계: 이미지 생성
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 #### A. 첨부 사진이 있을 때 (사진 + 오버레이 합성)
 나노바나나 스킬 사용 — 실제 사진 위에 세련된 텍스트 오버레이:
 ```bash
-GEMINI_API_KEY=AIzaSyDxmCkHR-aBXJsGUpGlS36CPywynors0vM \
+<!-- OpenClaw security redaction: secret removed from archive. -->
 uv run ~/.openclaw/workspace/skills/nano-banana-pro/scripts/generate_image.py \
   --prompt "[채널별 오버레이 프롬프트 - 아래 참조]" \
   --input-image "[첨부파일경로]" \

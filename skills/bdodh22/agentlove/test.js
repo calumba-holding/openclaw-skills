@@ -216,7 +216,7 @@ try {
   
   console.log('✅ 对象脱敏测试通过\n');
 } catch (error) {
-  console.log('❌ 对象脱敏测试失败:', error.message, '\n');
+// OpenClaw security redaction: secret removed from archive.
 }
 
 // ========== 测试总结 ==========

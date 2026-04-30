@@ -149,7 +149,7 @@ providers:
     tier: daily
     model: "gemini-1.5-pro"
     api_keys:
-      - "AIzaSyxxxxxxxxxxxxxxxxxxxxxxxx"
+<!-- OpenClaw security redaction: secret removed from archive. -->
     base_url: "https://generativelanguage.googleapis.com/v1beta"
 
   # 兜底层：硅基流动

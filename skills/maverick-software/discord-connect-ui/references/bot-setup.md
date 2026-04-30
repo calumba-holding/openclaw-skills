@@ -69,7 +69,7 @@ Go to **OAuth2** → **URL Generator**:
 
 Discord bot tokens have three parts separated by periods:
 ```
-MTEyMzQ1Njc4OTAxMjM0NTY3OA.GH1234.AbCdEfGhIjKlMnOpQrStUvWxYz1234567890
+<!-- OpenClaw security redaction: secret removed from archive. -->
 └─────── User ID ───────┘.──────.──────── Random Secret ────────────
 ```
 

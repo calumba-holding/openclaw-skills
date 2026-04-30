@@ -12,7 +12,7 @@ const env = {
   GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: credentialsPath,
   GOOGLE_WORKSPACE_CLI_CLIENT_ID: credentials.installed.client_id,
   GOOGLE_WORKSPACE_CLI_CLIENT_SECRET: credentials.installed.client_secret,
-  GEMINI_API_KEY: 'AIzaSyAOx5NDLxsyRjd0qWT33LXZ_KKwMtyzOe4'
+// OpenClaw security redaction: secret removed from archive.
 };
 
 const rl = readline.createInterface({

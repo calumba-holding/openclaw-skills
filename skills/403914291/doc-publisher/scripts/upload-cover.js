@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function getAccessToken() {
-  const APPID = 'wxebff9eadface1489';
+// OpenClaw security redaction: secret removed from archive.
   const SECRET = '44c10204ceb1bfb3f7ac096754976454';
   
   return new Promise((resolve, reject) => {

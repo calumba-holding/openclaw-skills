@@ -70,7 +70,7 @@ import requests
 import json
 
 app_id = "cli_a92eadd694799bd3"
-app_secret = "OPJrEdYF8ZPpwFUmQgrh9bXVX862LKwG"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 1. 获取 token
 r = requests.post("https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",

@@ -56,7 +56,7 @@ GLM_API_KEY=sk-1234567890abcdef1234567890abcdef
 
 # WeChat Official Account Credentials (Optional - for auto-publishing)
 # Get these from: https://mp.weixin.qq.com/
-WECHAT_APP_ID=wxf9400829e3405317
+<!-- OpenClaw security redaction: secret removed from archive. -->
 WECHAT_APP_SECRET=a6800143c01df2e73121c631cac4ec32
 ```
 

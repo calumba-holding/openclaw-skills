@@ -11,7 +11,7 @@ const path = require('path');
 const https = require('https');
 
 const mediaDir = path.join(process.env.HOME, '.clawdbot/media/inbound');
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+// OpenClaw security redaction: secret removed from archive.
 
 // Track analyzed files to avoid duplicates
 const analyzedFiles = new Set();

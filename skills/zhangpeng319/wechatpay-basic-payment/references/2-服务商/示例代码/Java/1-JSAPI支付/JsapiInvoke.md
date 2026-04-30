@@ -7,7 +7,7 @@
 ```javascript
 function onBridgeReady() {
     WeixinJSBridge.invoke('getBrandWCPayRequest', {
-        "appId": "wx2421b1c4370ec43b",     //公众号ID，由商户传入     
+<!-- OpenClaw security redaction: secret removed from archive. -->
         "timeStamp": "1395712654",     //时间戳，自1970年以来的秒数     
         "nonceStr": "e61463f8efa94090b1f366cccfbbb444",      //随机串     
         "package": "prepay_id=wx21201855730335ac86f8c43d1889123400",

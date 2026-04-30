@@ -53,7 +53,7 @@
 ```bash
 # 飞书凭证（必填）
 FEISHU_APP_ID=cli_a9313c23ceb89cc9
-FEISHU_APP_SECRET=QqFPtgoisISbwzZYZnguoXfdrZTcK6D2
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 连接模式
 FEISHU_CONNECTION_MODE=websocket  # 或 webhook

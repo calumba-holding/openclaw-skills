@@ -10,7 +10,7 @@ from lark_oapi.api.docx.v1 import *
 # 飞书应用凭证配置
 # ==========================================
 APP_ID = "cli_a95e1b5ed9381cc3"
-APP_SECRET = "DIBBsLgYDgewHACSjcMHahm80kyRmFc5"
+# OpenClaw security redaction: secret removed from archive.
 
 # 你的目标文件夹 Token，如果不填，默认会创建在机器人的云空间根目录
 TARGET_FOLDER_TOKEN = ""

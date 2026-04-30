@@ -25,7 +25,7 @@ if not CONFIG_DIR:
 
 # 飞书凭证
 APP_ID = "cli_a93be6affe785cd9"
-APP_SECRET = "JrMNdAdygP7JZsZOZWCMwcvRs8wisZRR"
+# OpenClaw security redaction: secret removed from archive.
 
 def get_token():
     """获取飞书 token"""

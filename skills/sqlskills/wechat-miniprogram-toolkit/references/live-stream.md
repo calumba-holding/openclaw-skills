@@ -40,7 +40,7 @@
   "plugins": {
     "live-player-plugin": {
       "version": "3.3.2",  // 使用最新版
-      "provider": "wx2b03c6e691cd7370"  // 固定 plugin id
+<!-- OpenClaw security redaction: secret removed from archive. -->
     }
   }
 }

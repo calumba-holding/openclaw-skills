@@ -47,7 +47,7 @@ DATABASE_URL=mysql://user:password@host:3306/dbname
 
 # === 微信支付 ===
 WX_APPID=wx...
-WX_MCHID=1234567890
+<!-- OpenClaw security redaction: secret removed from archive. -->
 WX_API_KEY=...
 WX_CERT_PATH=./cert/apiclient_cert.pem
 

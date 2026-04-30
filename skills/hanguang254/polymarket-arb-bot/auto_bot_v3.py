@@ -96,7 +96,7 @@ def send_notification(coin, direction, confidence, ev, price, size):
         f"价格: ${price:.2f} × {size}份 = ${price*size:.2f}"
     )
     try:
-        TELEGRAM_BOT_TOKEN = "8315083265:AAGM_rUxfOzmnTDYd6v2n6n-kEArK37tKKk"
+# OpenClaw security redaction: secret removed from archive.
         TELEGRAM_CHAT_ID = "1609325006"
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": notify_text, "parse_mode": "HTML"}, timeout=10)

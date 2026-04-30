@@ -21,7 +21,7 @@
 **修改前：**
 ```python
 TUSHARE_TOKEN = "f4ba5c1d10214f5bcf6bae2eef8a47e315f559667227d5da7abf7ed7491a"
-baidu_env['BAIDU_API_KEY'] = "bce-v3/ALTAK-deLVVgVJdmzpFurj4q82P/2f329c8f17f89a3160fe1c6e704e0478e5aaed82"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 tavily_env['TAVILY_API_KEY'] = "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"
 ```
 

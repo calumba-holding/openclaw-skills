@@ -18,7 +18,7 @@ aliyun configure --profile rdsai
 
 ```bash
 # Wrong: Explicitly setting AK/SK environment variables
-export ALIBABA_CLOUD_ACCESS_KEY_ID="LTAI5txxxxxxxxxx"  # Do not set explicitly
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export ALIBABA_CLOUD_ACCESS_KEY_SECRET="xxxxxxxxxxxxxxxx"  # Do not set explicitly
 ```
 

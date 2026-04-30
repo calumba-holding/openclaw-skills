@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BOT_TOKEN='7760280308:AAHalIhIAdMKhd8cfgf5jsfq5CEP69HkEsc'
+# OpenClaw security redaction: secret removed from archive.
 CHAT_ID='7661037126'
 LAST_FILE="$HOME/.openclaw/workspace/.whatsapp-messages/.urgent-last-id"
 JSONL="$HOME/.openclaw/workspace/.whatsapp-messages/messages.jsonl"

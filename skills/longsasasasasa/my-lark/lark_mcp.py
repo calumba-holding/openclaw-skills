@@ -8,7 +8,7 @@ import subprocess, json, sys, os, pathlib, urllib.request, urllib.parse
 
 # ============ 凭证配置 ============
 APP_ID = "cli_a9c97317ef78dbc6"
-APP_SECRET = "bHTIdpglmPdAOu8gyFltadE4whZb3VTZ"
+# OpenClaw security redaction: secret removed from archive.
 BASE_URL = "https://open.feishu.cn/open-apis"
 TOKEN_FILE = "/workspace/.lark_tokens.json"
 

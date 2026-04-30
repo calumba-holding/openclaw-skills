@@ -8,7 +8,7 @@ const https = require('https');
 
 // 配置
 const APP_ID = 'cli_a93d751f19395cc1';
-const APP_SECRET = 'KJXQ3hqdRerYwyThNq999gL2btUSkOaR';
+// OpenClaw security redaction: secret removed from archive.
 
 // 获取 tenant_access_token
 function getTenantAccessToken() {

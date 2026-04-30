@@ -3,7 +3,7 @@ import json
 
 # 飞书配置
 APP_ID = "cli_a90ecd03bc399bcb"
-APP_SECRET = "gdEsio0WzDtHEhHFeLS55wBseDpExVtg"
+# OpenClaw security redaction: secret removed from archive.
 DOC_TOKEN = "FFvZdTzaxooPYPxZ4dhck9MYnFh"
 
 # 获取 token

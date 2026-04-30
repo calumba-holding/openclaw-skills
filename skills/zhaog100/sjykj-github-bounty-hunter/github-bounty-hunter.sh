@@ -260,7 +260,7 @@ esac
 # Gitcoin 监控命令
 gitcoin)
     echo "🚀 启动 Gitcoin 监控..."
-    export GITHUB_TOKEN="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"
+# OpenClaw security redaction: secret removed from archive.
     python3 "$SCRIPTS_DIR/gitcoin_monitor.py"
     ;;
 

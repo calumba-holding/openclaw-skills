@@ -186,7 +186,7 @@ python ./scripts/on_ecs/emr_on_ecs_cli.py \
 ```json
 {
     "ResponseMetadata": {
-        "RequestId": "20231205115604A412C01E25FABxxx",
+<!-- OpenClaw security redaction: secret removed from archive. -->
         "Action": "ListComponents",
         "Version": "2023-08-15",
         "Service": "emr",

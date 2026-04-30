@@ -228,7 +228,7 @@ def setup_feishu_app():
 
     app_secret = input("App Secret (已输入): ").strip()
     if not app_secret:
-        app_secret = "sXYUTkNRSSBFxYTTS8UNfe7koyZwS8PB"
+# OpenClaw security redaction: secret removed from archive.
 
     user_id = input("你的User ID (open_id或user_id): ").strip()
 

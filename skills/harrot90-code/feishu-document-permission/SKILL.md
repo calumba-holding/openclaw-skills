@@ -47,7 +47,7 @@ verify_only: false
 ### 步骤 1：获取 tenant_access_token
 ```bash
 APP_ID="cli_a9217db4a3f59cb6"
-APP_SECRET="G34RRAc41XOY7vb2a7NmMgwl5chruBmo"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 TENANT_TOKEN=$(curl -s -X POST "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal" \
   -H "Content-Type: application/json" \

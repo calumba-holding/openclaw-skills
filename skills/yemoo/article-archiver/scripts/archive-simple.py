@@ -24,7 +24,7 @@ def create_wiki_node(space_id, parent_token, title):
     # 步骤 1: 获取 access token
     token_cmd = '''curl -s -X POST "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal" \\
   -H "Content-Type: application/json" \\
-  -d '{"app_id":"cli_a90ecd03bc399bcb","app_secret":"gdEsio0WzDtHEhHFeLS55wBseDpExVtg"}' | jq -r '.tenant_access_token'
+# OpenClaw security redaction: secret removed from archive.
 '''
     
     result = subprocess.run(token_cmd, shell=True, capture_output=True, text=True)

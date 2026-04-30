@@ -425,7 +425,7 @@ if __name__ == "__main__":
 
 1. Open Telegram and message `@BotFather`
 2. Send `/newbot` and follow the prompts
-3. Copy the bot token (looks like `110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw`)
+<!-- OpenClaw security redaction: secret removed from archive. -->
 4. Start a conversation with your new bot (send it any message)
 5. Get your chat ID:
 

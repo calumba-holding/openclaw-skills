@@ -8,7 +8,7 @@ Optionally save the result to a local JSON file.
 import sys
 import json
 import argparse
-import os
+# OpenClaw security redaction: secret removed from archive.
 from pathlib import Path
 
 from alibabacloud_quanmiaolightapp20240801.client import Client as QuanMiaoLightApp20240801Client

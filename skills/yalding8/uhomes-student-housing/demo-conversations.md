@@ -177,7 +177,7 @@
 
 ---
 
-## 示例 5：英文 · 冷门城市降级处理
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 **场景**：用户询问覆盖较弱的城市，Skill 优雅降级而非报错
 

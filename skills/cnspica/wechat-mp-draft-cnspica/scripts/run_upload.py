@@ -1,7 +1,7 @@
 import sys
 sys.argv = [
     'upload_draft.py',
-    '--appid', 'wxa4f073c32600c19b',
+# OpenClaw security redaction: secret removed from archive.
     '--secret', '47e75b44cbe81261896649aa24a5e222',
     '--md', r'C:\Users\TR\WorkBuddy\20260319105931\智慧养老正式进入AI时代.md',
     '--author', '智慧养老观察家',

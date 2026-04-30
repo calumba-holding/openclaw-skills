@@ -5,7 +5,7 @@ from alerts import set_budget, check_budget
 from tracker import get_today_total, get_monthly_total
 from optimizer import run_optimizer
 
-ANTHROPIC_API_KEY = "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"
+# OpenClaw security redaction: secret removed from archive.
 
 CLAWHUB_BASIC_URL = "https://clawhub.io/skills/clawcost-basic"
 CLAWHUB_PRO_URL = "https://clawhub.io/skills/clawcost-pro"

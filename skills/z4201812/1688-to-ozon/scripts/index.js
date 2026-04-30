@@ -76,7 +76,7 @@ function parseArgs(args) {
       process.env.ENABLE_FEISHU = 'true'; // 启用飞书通知
       // 设置飞书凭证（从 OpenClaw 配置读取）
       process.env.FEISHU_APP_ID = 'cli_a90b1d9903385ceb';
-      process.env.FEISHU_APP_SECRET = 'G9TdEypJQ9SDOBdExTJVrdn2LtxbdFcV';
+// OpenClaw security redaction: secret removed from archive.
       // 尝试从环境变量获取群聊 ID
       params.feishuChatId = process.env.FEISHU_CHAT_ID || process.env.OC_CHAT_ID;
     } else if (arg === '--chat-id') {

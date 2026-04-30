@@ -6,7 +6,7 @@ from datetime import datetime
 SCRIPT_DIR = os.path.expanduser("~/.openclaw/workspaces/dawang/scripts/podcasts")
 REPORT_PATH = os.path.expanduser("~/.openclaw/workspaces/dawang/scripts/podcasts/latest_report.md")
 APP_ID = "cli_a92d7a49c9399bca"
-APP_SECRET = "45KmSon6mcZ1hPsSEdXtnLkDEqII5QAw"
+# OpenClaw security redaction: secret removed from archive.
 USER_ID = "ou_2ef0900a3185db3f04cb7796f12e6ca1"
 
 def get_access_token():

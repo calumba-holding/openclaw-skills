@@ -8,7 +8,7 @@ import requests
 import json
 
 # 配置
-TOKEN = "8408048074:AAHRX5vogDUKZjdf-mL4ByJ8ukihRosqFpI"
+# OpenClaw security redaction: secret removed from archive.
 
 def send_report(round_num, success, failed, total, elapsed, failed_details=None):
     """发送报告到Telegram"""

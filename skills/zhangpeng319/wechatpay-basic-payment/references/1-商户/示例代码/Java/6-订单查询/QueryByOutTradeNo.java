@@ -39,7 +39,7 @@ public class QueryByOutTradeNo {
 
     QueryByOutTradeNoRequest request = new QueryByOutTradeNoRequest();
     request.outTradeNo = "1217752501201407033233368018";
-    request.mchid = "1230000109";
+// OpenClaw security redaction: secret removed from archive.
     try {
       DirectAPIv3QueryResponse response = client.run(request);
         // TODO: 请求成功，继续业务逻辑

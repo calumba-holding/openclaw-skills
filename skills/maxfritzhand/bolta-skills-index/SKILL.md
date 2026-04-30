@@ -233,7 +233,7 @@ Before installing this skill, you MUST:
    - Grant ONLY required permissions (e.g., `posts:write`, `voice:read`)
    - Avoid `workspace:admin` unless absolutely necessary
    - Review permissions quarterly
-
+<!-- OpenClaw security redaction: secret removed from archive. -->
 4. **Monitoring**
    - Review audit logs weekly via `bolta.audit.export_activity`
    - Monitor quota usage via `bolta.quota.status`

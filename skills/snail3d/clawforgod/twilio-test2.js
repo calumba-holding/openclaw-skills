@@ -2,8 +2,8 @@
 
 const twilio = require('twilio');
 
-const accountSid = 'AC35fce9f5069e4a19358da26286380ca9';
-const apiSid = 'SK70650ad316ca54799b1223e528127197';
+// OpenClaw security redaction: secret removed from archive.
+// OpenClaw security redaction: secret removed from archive.
 const apiKey = '2Tu5wuVeNWCulhAy8G2Y4Ai1g58tNsRp';
 const twilioNumber = '+19152237302';  // E.164 format
 const toNumber = '+19157308926';      // E.164 format

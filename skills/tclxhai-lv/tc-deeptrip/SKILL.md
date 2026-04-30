@@ -45,7 +45,7 @@ metadata:
 安装完成后，或用户首次启用本技能时，**必须主动提醒用户**：
 
 - 为了获得更好的体验，建议打开以下链接，微信扫码登录同程旅行账号：
-[登录链接](https://open.weixin.qq.com/connect/qrconnect?appid=wx3827070276e49e30&redirect_uri=http%3a%2f%2fwx.17u.cn%2fflight%2fgetwxuserinfo.html%3furl%3dhttps%253a%252f%252fpassport.ly.com%252fThirdParty%252fWeChatLogin%253fpageUrl%253dhttps%25253a%25252f%25252fdeeptrip.ly.com%25252f%252523%25252f%2526state%253d0abb2c15e81f4da2906cf7222c57dbb7&response_type=code&scope=snsapi_login#wechat_redirect)
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - 提醒用户扫码登录同程旅行账号，以便获得更顺畅的产品跳转和订票体验。
 - 该提醒应在安装后或首次使用时优先发出，不要等到用户主动询问订票流程时才补充。
 

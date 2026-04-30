@@ -11,7 +11,7 @@
 1. **不要硬编码敏感信息**
    ```python
    # ❌ 错误示例
-   APPID = 'wx50ccea6fe909ee09'
+<!-- OpenClaw security redaction: secret removed from archive. -->
    SECRET = 'd948e42096116e4d2d78ba262b881a90'
    
    # ✅ 正确示例

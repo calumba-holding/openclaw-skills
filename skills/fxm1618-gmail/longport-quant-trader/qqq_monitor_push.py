@@ -22,7 +22,7 @@ LONGPORT_ACCESS_TOKEN = os.getenv('LONGPORT_ACCESS_TOKEN')
 
 # 飞书 API
 FEISHU_APP_ID = "cli_a92c2ade9ff99bd2"
-FEISHU_APP_SECRET = "1SNIOfQTlKN2pCD2bWOlLhmIzF58C6gG"
+# OpenClaw security redaction: secret removed from archive.
 FEISHU_USER_OPEN_ID = "ou_c3f01a621b3fef9a2b59368233bf7647"  # 房总的 open_id
 
 # QQQ 关键价位

@@ -49,7 +49,7 @@
 
 2. **令牌格式示例**
    ```
-   MTAxODIzOTAyNjExNDE4MjQ4Mg.G1L6cC.abcdefghijklmnopqrstuvwxyz123456
+<!-- OpenClaw security redaction: secret removed from archive. -->
    ```
 
 ### 第3步：生成邀请链接并添加机器人到服务器

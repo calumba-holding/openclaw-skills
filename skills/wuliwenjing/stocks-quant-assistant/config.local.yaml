@@ -28,7 +28,7 @@ push:
   channel: "feishu"
   feishu:
     app_id: "cli_a93390e0c5791cee"
-    app_secret: "9eIJpksZ6oxkP8YMtdqg0dsxPoHpUeak"
+# OpenClaw security redaction: secret removed from archive.
     chat_id: "oc_4933f4e5a8412c6c66571613e5908860"
   times:
     - "09:15"

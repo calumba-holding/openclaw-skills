@@ -72,8 +72,8 @@ ali-pay:
 
 # 微信支付配置
 wx-pay:
-  app-id: wx1234567890abcdef                         # 微信应用AppID
-  mch-id: 1234567890                                 # 商户号
+<!-- OpenClaw security redaction: secret removed from archive. -->
+<!-- OpenClaw security redaction: secret removed from archive. -->
   api-key: xxxxxxxx                                  # APIv2 密钥（32位）
   cert-path: /path/to/apiclient_cert.p12             # 证书路径（退款/红包用）
   callback-url: https://your-domain.com/api/pay/wx-callback  # 回调地址

@@ -53,7 +53,7 @@ openclaw skill config wechat-publisher
 
 **需要配置：**
 ```
-? Enter your 公众号 AppID: wxebff9eadface1489
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ? Enter your 公众号 AppSecret: 44c10204ceb1bfb3f7ac096754976454
 ? Enter publish schedule (default: 06:00): 06:00
 ? Enter timezone (default: Asia/Shanghai): Asia/Shanghai

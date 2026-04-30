@@ -106,7 +106,7 @@ overwatch-pro log      # View live log
 
 ### Notes
 
-- Token configured from MOLT3D bot: 8526414459:AAHTfvv9lOs_Kj7kudAnBFfeCbjiofzM26M
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - Stream server runs on port 8080
 - Captures saved to ~/.clawdbot/overwatch/
 - Cooldown: 30 seconds between alerts (prevents spam)

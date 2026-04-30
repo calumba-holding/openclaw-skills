@@ -10,7 +10,7 @@
 
 ```objectivec
 PayReq *request = [[[PayReq alloc] init] autorelease];
-request.appId = "wxd930ea5d5a258f4f";
+<!-- OpenClaw security redaction: secret removed from archive. -->
 request.partnerId = "1900000109";
 request.prepayId= "1101000000140415649af9fc314aa427",;
 request.package = "Sign=WXPay";

@@ -10,7 +10,7 @@ autocapture.py — 对话式凭证检测模块（默认不自动保存）
   from autocapture import detect_creds, confirm_and_save
 
   # 仅检测，不保存
-  results = detect_creds("AppID: wxd9f577d56948e564", context="微信公众号")
+# OpenClaw security redaction: secret removed from archive.
   if results:
       # 询问用户确认后再保存
       confirm_and_save(results)

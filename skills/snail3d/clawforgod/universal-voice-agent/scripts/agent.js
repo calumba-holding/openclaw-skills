@@ -18,10 +18,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Credentials from environment or TOOLS.md
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || 'AC35fce9f5069e4a19358da26286380ca9';
+// OpenClaw security redaction: secret removed from archive.
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || 'a7700999dcff89b738f62c78bd1e33c1';
 const TWILIO_PHONE = process.env.TWILIO_PHONE || '+19152237302';
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+// OpenClaw security redaction: secret removed from archive.
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || 'sk_98316c1321b6263ab8d3fc46b8439c23b9fc076691d85c1a';
 
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);

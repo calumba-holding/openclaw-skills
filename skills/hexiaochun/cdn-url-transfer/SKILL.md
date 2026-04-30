@@ -66,7 +66,7 @@ curl -sL -o /tmp/文件名.mp3 "原始外部URL"
 import tos
 
 TOS_CONFIG = {
-    'access_key': 'AKLTZTBhMDdlYTdlODdlNGFlNGFjNTliOGEwOWFkNzk0Mjk',
+<!-- OpenClaw security redaction: secret removed from archive. -->
     'secret_key': 'TnpVMk9EUmtNREkzWmpjNU5EazVNVGxsTkRnMk9XUXlZMk15WldRNVpqUQ==',
     'endpoint': 'tos-cn-guangzhou.volces.com',
     'region': 'cn-guangzhou',

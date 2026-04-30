@@ -1324,7 +1324,7 @@ def main():
     # Create client
     client = MicrosoftTodoClient(
         client_id="ca6ec244-002c-435b-bafd-06e470d37edc",
-        client_secret="TwQ8Q~mHv6C_scYqI7PC2dZKWFeM931.8AczhasR",  # 从 Azure 复制的 secret
+# OpenClaw security redaction: secret removed from archive.
         tenant_id="consumers",  # Use "consumers" for personal Microsoft accounts
         debug=args.debug
     )

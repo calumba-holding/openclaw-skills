@@ -8,7 +8,7 @@ from datetime import datetime
 # 飞书配置
 DOC_TOKEN = "J9BndSQkHoguODx96PtcNslnnsc"
 APP_ID = "cli_a9f34580c5badbd9"
-APP_SECRET = "DDxM8UV6Dn5OO0Il8MxNGbGmX1PEiLuJ"
+// OpenClaw security redaction: secret removed from archive.
 
 def get_access_token():
     import requests

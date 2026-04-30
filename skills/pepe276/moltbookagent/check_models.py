@@ -8,7 +8,7 @@ api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     # Fallback to hardcoded key if env fails (temporary debug)
     # Ideally should rely on .env, but let's be safe for this diagnostics script
-    api_key = "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"
+# OpenClaw security redaction: secret removed from archive.
 
 url = "https://api.groq.com/openai/v1/models"
 

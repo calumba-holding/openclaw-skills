@@ -153,7 +153,7 @@ tcm.show_promotions(service='lighthouse')
   ]
 }
 ```
-
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ### 步骤 3: 配置凭证到.env 文件
 
 ```bash

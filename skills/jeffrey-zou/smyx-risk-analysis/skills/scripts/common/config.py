@@ -151,7 +151,7 @@ class ConstantEnum(BaseEnum):
     # FEISHU_APP__ID = "cli_a93b91388ef81bcd"
     FEISHU_APP__ID = ""
 
-    # FEISHU_APP__SECRET = "mhbrCwTKA2f1cVKBzMStYgM2yGOaqmWW"
+# OpenClaw security redaction: secret removed from archive.
     FEISHU_APP__SECRET = ""
 
     # FEISHU_APP__RECEIVE_ID = "ou_86fdd8e0d5f116c18a9dd550abefe6d2"

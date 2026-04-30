@@ -68,7 +68,7 @@ mtop.trip.tfrcs.rentcar.queryItems
   "utcOffset": -480,
   "pageNo": 1,
   "pageSize": 10,
-  "contextId": "QGW3egY7f739fqOT2J0XDLBDWkirWE",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "fpt": "ftuid(pv4i6iDe064813.2)hsts(1775216097018)",
   "searFilterTags": "[\"category_all\",\"fuelGroup_1\",\"seat_4\",\"brand_蔚来\"]",
   "isCredit": false,

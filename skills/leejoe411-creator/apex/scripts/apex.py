@@ -7,9 +7,9 @@ from cryptography.hazmat.backends import default_backend
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 KEY_ID      = "bf937112-eb74-4bdc-bcc4-fcb725ae2d41"
 KEY_PATH    = "/Users/kao/.openclaw/workspace/skills/kalshi-trading/keys/private_key.pem"
-TG_TOKEN    = "7956217548:AAEV9hmTe2HpK5unLKtgm6CCNwA0nAPBNz8"
+# OpenClaw security redaction: secret removed from archive.
 TG_CHAT     = "6850287860"
-OPENAI_KEY  = "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"
+# OpenClaw security redaction: secret removed from archive.
 CB_BASE     = "https://api.coinbase.com"
 STATE_FILE  = "/Users/kao/apex/state.json"
 LOG_FILE    = "/Users/kao/apex/apex.log"

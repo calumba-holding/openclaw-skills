@@ -3,7 +3,7 @@ import os
 from tracker import get_today_total, get_top_spenders, get_monthly_total
 
 # Paste your Telegram bot token and chat ID here
-TELEGRAM_TOKEN = "8180846166:AAGH8CAva9qA-HTO4ziAWRnGbBDdbdyE0_8"
+# OpenClaw security redaction: secret removed from archive.
 TELEGRAM_CHAT_ID = "6243624505"
 
 def send_message(text):

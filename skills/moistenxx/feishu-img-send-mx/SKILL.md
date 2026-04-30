@@ -65,7 +65,7 @@ curl -s -X POST "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type
 IMAGE_PATH="$1"
 OPEN_ID="$2"
 APP_ID="cli_a924632610b8dbd9"
-APP_SECRET="c3TXscIJPF1f8jcQ4mJJegNVk72ktbwK"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 1. 获取 token
 TOKEN=$(curl -s -X POST "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal" \

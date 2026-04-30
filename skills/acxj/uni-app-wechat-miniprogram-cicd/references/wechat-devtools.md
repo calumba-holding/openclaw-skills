@@ -44,7 +44,7 @@ cli.bat preview --project "C:\project\dist\build\mp-weixin" --compile-type minip
   "miniprogramRoot": "./dist/build/mp-weixin/",
   "projectname": "my-uniapp-project",
   "compileType": "miniprogram",
-  "appid": "wx0123456789abcdef",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "setting": {
     "urlCheck": false,
     "es6": true,

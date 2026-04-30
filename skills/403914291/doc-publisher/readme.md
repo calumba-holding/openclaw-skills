@@ -36,7 +36,7 @@ copy .env.example .env
 
 用记事本打开 .env 文件，填入你的信息：
 `env
-WECHAT_APPID=wxebff9eadface1489
+<!-- OpenClaw security redaction: secret removed from archive. -->
 WECHAT_SECRET=44c10204ceb1bfb3f7ac09675497654
 WECHAT_THUMB_MEDIA_ID=bEleejFU9wv67FJfDm4w_xxx
 WECHAT_QRCODE_URL=https://mmbiz.qpic.cn/xxx

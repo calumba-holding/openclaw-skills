@@ -16,8 +16,8 @@ from pathlib import Path
 from datetime import datetime
 
 # Config - reads from credentials file only
-YOUTUBE_API_KEY = None
-APIFY_TOKEN = None
+# OpenClaw security redaction: secret removed from archive.
+# OpenClaw security redaction: secret removed from archive.
 APIFY_ACTOR = "scrape-creators~best-youtube-transcripts-scraper"
 
 def get_credentials():

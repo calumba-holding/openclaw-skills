@@ -10,7 +10,7 @@ MASTER_DOC_FILE="$HOME/.openclaw/workspaces/dawang/scripts/podcasts/master_doc_i
 
 # 飞书应用凭据
 APP_ID="cli_a92d7a49c9399bca"
-APP_SECRET="45KmSon6mcZ1hPsSEdXtnLkDEqII5QAw"
+# OpenClaw security redaction: secret removed from archive.
 USER_ID="ou_2ef0900a3185db3f04cb7796f12e6ca1"
 
 echo "$(date): 开始抓取播客更新" >> "$LOG_FILE"

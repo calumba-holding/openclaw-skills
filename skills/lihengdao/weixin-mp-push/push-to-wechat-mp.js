@@ -7,7 +7,7 @@
  *   node push-to-wechat-mp.js <targetAppId> img '<JSON数组>' <title> <content> [sendMode]
  * 示例：
  *   node push-to-wechat-mp.js targetAppId html 你的文件.html draft
- *   node push-to-wechat-mp.js wxabcdef0123456789 img '["https://example.com/a.png"]' "标题" "正文" draft
+// OpenClaw security redaction: secret removed from archive.
  */
 
 const https = require('https');

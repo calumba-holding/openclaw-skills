@@ -72,7 +72,7 @@ or for public: "https://your-ngrok-url"
 
 Stored in environment:
 ```bash
-export GROQ_API_KEY="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"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ## Troubleshooting

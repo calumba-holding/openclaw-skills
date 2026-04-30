@@ -29,9 +29,9 @@ This skill is a minimal guide for creating H5 games， mobile compatibale, touch
 
 #### config.json Content Format
 
-```json
+<!-- OpenClaw security redaction: secret removed from archive. -->
 {
-  "title": "Game Name"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 }
 ```
 
@@ -46,7 +46,7 @@ curl -X POST "https://www.idlab.top/xlabopenapi/github/aigames/config" \\
 \---
 
 ### 2.2 Upload index.html
-
+<!-- OpenClaw security redaction: secret removed from archive. -->
 #### `POST /xlabopenapi/github/aigames/index`
 
 #### Request Parameters (form-data)

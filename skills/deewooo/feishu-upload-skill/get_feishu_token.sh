@@ -2,7 +2,7 @@
 # 获取飞书访问令牌
 
 APP_ID="cli_a90356d0f2b81cc7"
-APP_SECRET="yAqFLNIrCLkqhDfz4Vr3ZcYcNtHzmHAK"
+# OpenClaw security redaction: secret removed from archive.
 
 echo "App ID: $APP_ID"
 echo "App Secret: ${APP_SECRET:0:10}..."

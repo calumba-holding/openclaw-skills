@@ -59,7 +59,7 @@ openclaw message send --channel telegram --target "-1003856211981" \
 
 ### 4. Альбом (через API, до 10 фото)
 ```bash
-curl -X POST "https://api.telegram.org/bot8415787322:AAGK4aQCCGei35g9t2ybKhexlR4BdCZs-3M/sendMediaGroup" \
+<!-- OpenClaw security redaction: secret removed from archive. -->
   -F "chat_id=-1003856211981" \
   -F 'media=[{"type":"photo","media":"attach://f1","caption":"Текст"},{"type":"photo","media":"attach://f2"}]' \
   -F "f1=@/home/larthe/.openclaw/media/inbound/file1.jpg" \

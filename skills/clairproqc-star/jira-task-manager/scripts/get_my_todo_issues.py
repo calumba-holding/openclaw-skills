@@ -8,7 +8,7 @@ from jira import JIRA
 # --- Config (from Skill's references/jira.md) ---
 JIRA_URL = os.environ.get("JIRA_BASE_URL", "https://attrix-team.atlassian.net/")
 JIRA_EMAIL = os.environ.get("JIRA_EMAIL", "xwang@attrix.ca")
-JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN", "ATATT3xFfGF0gANHYusgbB1HN1O0zjq28HsoA6n9Ic_DAbR55eNqC22RJ6UYrhN5gMtIBWigyGtOnClmkigWkIsS33H6F3pr8cLSZY62o6MSpk3k0_lVqVDQ4bsj4h-VPk1_pxAbVrQUqFlH-FTJmGW2jfnM9dAvGzduxUucHQUjmOVTH1Kaa1w=B3626842")
+# OpenClaw security redaction: secret removed from archive.
 PRIMARY_PROJECT_KEY = "DS"
 
 async def get_my_todo_issues() -> dict:

@@ -11,7 +11,7 @@ TWILIO_AUTH_TOKEN=a7700999dcff89b738f62c78bd1e33c1
 TWILIO_PHONE=+19152237302
 
 # Groq Whisper (speech-to-text)
-GROQ_API_KEY=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
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # ElevenLabs (text-to-speech in your voice)
 ELEVENLABS_API_KEY=sk_98316c1321b6263ab8d3fc46b8439c23b9fc076691d85c1a

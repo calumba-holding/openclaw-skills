@@ -24,7 +24,7 @@
 ## GitHub 仓库
 
 - imo14reifey: https://github.com/imo14reifey/openclaw-skills
-- PAT: `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`（存于宿主机 `~/.config/github/pat_imo14reifey`）
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ## 当前线上 Skill 清单（2026-03-23）
 

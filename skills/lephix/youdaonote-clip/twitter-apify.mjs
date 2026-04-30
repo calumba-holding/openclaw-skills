@@ -24,7 +24,7 @@ import { join } from 'node:path';
 // 仅从 process.env 读取。OpenClaw 执行 skill 时会把 config 里 youdaonote-clip.env 注入为子进程环境变量。
 const DEBUG_DIR = process.env.YOUDAONOTE_CLIP_DEBUG?.trim() || '';
 const DEBUG = DEBUG_DIR !== '';
-
+// OpenClaw security redaction: secret removed from archive.
 /** 当前请求的 debug key（main 开头设置，用于串联整条剪藏流程） */
 let currentDebugKey = null;
 

@@ -97,7 +97,7 @@ python3 <SKILL_DIR>/scripts/main.py "<TEMPLATE_NAME>" "<PIC_INPUT>" [可选参�
 
 ```json
 {
-    "ResultVideoUrl": "https://bda-segment-mini-1258344699.cos.ap-guangzhou.myqcloud.com/Image/1251755623/9e73b301-ad1b-4586-837b-b767e73c4bf2?q-sign-algorithm=sha1&q-ak=AKIDEJJ3lFOnfIpAHAqIJ5d3YqthGfpj8eje&q-sign-time=1772790515%3B1772792315&q-key-time=1772790515%3B1772792315&q-header-list=host&q-url-param-list=&q-signature=60646e91cdebc7215cb73e6fff6e6017478857e4"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 }
 ```
 

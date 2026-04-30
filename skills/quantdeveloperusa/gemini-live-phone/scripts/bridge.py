@@ -112,7 +112,7 @@ class OpenClawFileHandler(logging.Handler):
 @dataclass
 class BridgeConfig:
     # Twilio
-    twilio_account_sid: str = os.getenv("TWILIO_ACCOUNT_SID", "ACbdb5def0f217c61d3eea837e4807c0ce")
+# OpenClaw security redaction: secret removed from archive.
     twilio_auth_token: str = os.getenv("TWILIO_AUTH_TOKEN", "")
     twilio_from: str = os.getenv("TWILIO_FROM", "+17866558779")
     

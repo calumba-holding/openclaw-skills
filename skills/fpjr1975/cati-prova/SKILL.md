@@ -131,7 +131,7 @@ Enviar na ordem: podcast primeiro (mais imediato), depois vídeo, depois os visu
 
 ```python
 import requests
-TOKEN = "8208364716:AAEwO1tURypqAuEKCRUejF8d-6_QF_F0LGs"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 CATI_CHAT_ID = 8393879368
 
 # Enviar arquivo

@@ -60,7 +60,7 @@ App Secret: xxx
 配置飞书机器人：来合火 1 号第二大脑笔记虾
 飞书应用凭证：
 App ID: cli_a93cff63cc789cee
-App Secret: DN8oxaxAV2h0pKqykSGWIenRSvIXkzl1
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 **自动匹配**:

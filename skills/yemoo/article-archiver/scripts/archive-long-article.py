@@ -15,7 +15,7 @@ FEISHU_CONFIG = {
     'space_id': '7527734827164909572',
     'parent_node_token': 'NqZvwBqMTiTEtkkMsRoc76rznce',
     'app_id': 'cli_a90ecd03bc399bcb',
-    'app_secret': 'gdEsio0WzDtHEhHFeLS55wBseDpExVtg'
+# OpenClaw security redaction: secret removed from archive.
 }
 
 def run_cmd(cmd):

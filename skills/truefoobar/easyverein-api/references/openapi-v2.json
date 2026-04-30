@@ -33426,7 +33426,7 @@
                   },
                   "invoicePaymentInformationDunning": {
                     "type": "string",
-                    "summary": "Zahlungsrechnungsinformationen Für Mahnungen",
+"__openclaw_security_redaction__": "secret removed from archive"
                     "description": "Zeichenwert; Zahlungsinformationen Für Den Mahnungen Welche Voreingestellt Werden Können; Maximal 2000 Zeichen; Standardwer: 'Bitte Überweisen Sie Den Betrag Innerhalb Von 14 Tagen.'"
                   },
                   "memberAreaMemberListLimitByGroup": {
@@ -33476,7 +33476,7 @@
                   },
                   "storageSharedOrganizationFiles": {
                     "type": "integer",
-                    "summary": "Storagesharedorganizationfiles",
+"__openclaw_security_redaction__": "secret removed from archive"
                     "description": ""
                   },
                   "storageEmailAttachments": {

@@ -25,7 +25,7 @@ except ImportError:
     sys.exit(1)
 
 # WeChat Official Account Credentials
-APPID = "wxf9400829e3405317"
+# OpenClaw security redaction: secret removed from archive.
 APPSECRET = "a6800143c01df2e73121c631cac4ec32"
 
 # API Endpoints

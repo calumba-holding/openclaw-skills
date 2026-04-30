@@ -245,25 +245,25 @@ AIRLINE_OFFICIAL_SITES = {
     "南方航空": "https://www.csair.com",
     "海南航空": "https://www.hnair.com",
     "春秋航空": "https://www.ch.com",
-    "吉祥航空": "https://www.juneyaoair.com",
+# OpenClaw security redaction: secret removed from archive.
     "深圳航空": "https://www.shenzhenair.com",
     "厦门航空": "https://www.xiamenair.com",
     "四川航空": "https://www.sichuanair.com",
     "山东航空": "https://www.shandongair.com.cn",
     "新加坡航空": "https://www.singaporeair.com",
-    "国泰航空": "https://www.cathaypacific.com",
+# OpenClaw security redaction: secret removed from archive.
     "大韩航空": "https://www.koreanair.com",
     "全日空ANA": "https://www.ana.co.jp",
     "日本航空JAL": "https://www.jal.com",
     "阿联酋航空": "https://www.emirates.com",
     "卡塔尔航空": "https://www.qatarairways.com",
-    "土耳其航空": "https://www.turkishairlines.com",
+# OpenClaw security redaction: secret removed from archive.
     "汉莎航空": "https://www.lufthansa.com",
     "英国航空": "https://www.britishairways.com",
     "达美航空": "https://www.delta.com",
     "美联航": "https://www.united.com",
     "美国航空": "https://www.aa.com",
-}
+# OpenClaw security redaction: secret removed from archive.
 
 # ============================================================
 # WeChat Mini Program Quick Links (微信小程序快捷入口)
@@ -283,7 +283,7 @@ WECHAT_MINI_PROGRAMS = {
         "note": "微信搜索「飞猪旅行」小程序 → 机票",
         "h5_url": "https://www.fliggy.com/flight/domestic-search?depCity={dep}&arrCity={arr}&depDate={date}",
     },
-    "同程旅行机票": {
+# OpenClaw security redaction: secret removed from archive.
         "app_id": "wxe5f52902cf4de874",
         "page": "pages/flight/search/search",
         "note": "微信搜索「同程旅行」小程序 → 机票，支持微信支付",

@@ -245,7 +245,7 @@ def upload_image(file_path: str, mars_cid: str, access_token: str) -> Dict[str, 
         headers = {
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.70(0x18004638) NetType/WIFI Language/zh_CN',
             'Content-Type': f'multipart/form-data; boundary={boundary}',
-            'Referer': 'https://servicewechat.com/wxe9714e742209d35f/1356/page-frame.html'
+# OpenClaw security redaction: secret removed from archive.
         }
         
         req = urllib.request.Request(upload_url, data=body, headers=headers, method='POST')

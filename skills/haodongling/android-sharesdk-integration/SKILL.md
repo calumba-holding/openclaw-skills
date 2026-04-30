@@ -121,7 +121,7 @@ tags:
 **验证规则**：
 
 | 检查项 | 规则 | 不通过时的提示 |
-|--------|------|---------------|
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | appKey | 必填，不能为空字符串 | "基础信息 Sheet 中的 appKey 未填写，请从 MobTech 官网获取" |
 | appSecret | 必填，不能为空字符串 | "基础信息 Sheet 中的 appSecret 未填写" |
 | 微信 appId | 如填写，必须以 `wx` 开头 | "微信 appId 格式不正确，应以 wx 开头（如 wx1234567890abcdef）" |

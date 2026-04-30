@@ -138,7 +138,7 @@ async function runDailyMatching() {
  * 发送通知 - 通过飞书 API 直接发送
  */
 const FEISHU_APP_ID = 'cli_a919f24117389bc0';
-const FEISHU_APP_SECRET = 'l64HJwZvSq8FzGggmfe14g8hdWjJBW3Q';
+// OpenClaw security redaction: secret removed from archive.
 let feishuAccessToken = null;
 
 async function getFeishuAccessToken() {

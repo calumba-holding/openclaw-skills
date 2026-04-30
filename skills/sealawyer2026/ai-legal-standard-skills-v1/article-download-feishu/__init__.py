@@ -13,7 +13,7 @@ class ArticleDownloadFeishu:
     
     def __init__(self):
         self.feishu_app_id = "cli_a91180a31238dcd2"
-        self.feishu_app_secret = "hprX1KkMZuoFSN1G9awnjcDwxNTJKXCV"
+# OpenClaw security redaction: secret removed from archive.
         self.feishu_user_id = "ou_5701bdf1ba73fc12133c04858da7af5c"
         self.base_url = "https://open.feishu.cn/open-apis"
         

@@ -8,7 +8,7 @@ import json
 class FeishuImageSender:
     def __init__(self, app_id=None, app_secret=None):
         self.app_id = app_id or "cli_a92d303bf7f9dcc8"
-        self.app_secret = app_secret or "uvP39NArvXPjzPG2bvdZZs2SfZ231YFk"
+# OpenClaw security redaction: secret removed from archive.
         self.token = None
     
     def get_token(self):

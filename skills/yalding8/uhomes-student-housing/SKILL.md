@@ -124,7 +124,7 @@ From **Fetch B**, extract:
 
 Before scoring, remove properties that should never be recommended:
 - Rating < 3.5 (serious quality concerns)
-- Distance > 60 min walk (impractical)
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - Price > user's budget × 150% (too far above budget to be useful)
 - Room type mismatch (if user specified a type)
 

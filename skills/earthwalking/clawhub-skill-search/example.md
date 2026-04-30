@@ -451,7 +451,7 @@ wenyan publish article.md
 ### 前置配置
 需要设置环境变量：
 ```bash
-export WECHAT_APP_ID=wxd3d9d45b1b9defcd
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export WECHAT_APP_SECRET=52bae57620f3432865fbc8d502f5a6da
 ```
 

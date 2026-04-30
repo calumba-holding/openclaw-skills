@@ -47,7 +47,7 @@ cd /path/to/.openclaw/workspace/skills/feishu-doc-reviewer
       "args": ["/path/to/.openclaw/workspace/skills/feishu-doc-reviewer/src/mcp_server.py"],
       "env": {
         "FEISHU_APP_ID": "cli_xxxxxxxx",
-        "FEISHU_APP_SECRET": "xxxxxxxx"
+<!-- OpenClaw security redaction: secret removed from archive. -->
       }
     }
   }

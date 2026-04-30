@@ -9,14 +9,14 @@ Extended reference of secret patterns detected by the scanner, organized by prov
 |----------|---------|---------|
 | AWS Access Key | `AKIA[0-9A-Z]{16}` | AKIAIOSFODNN7EXAMPLE |
 | AWS Secret Key | 40-char base64 after `aws_secret_access_key=` | wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY |
-| GCP API Key | `AIza[0-9A-Za-z_-]{35}` | AIzaSyA1234567890abcdefghijklmnopqrstuv |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | GCP Service Account | JSON with `"type": "service_account"` | — |
 | Azure Storage Key | 88-char base64 after `AccountKey=` | — |
 
 ### Payment Processors
 | Provider | Pattern | Example |
 |----------|---------|---------|
-| Stripe Secret | `sk_live_[0-9a-zA-Z]{24,}` | sk_live_4eC39HqLyjWDarjtT1zdp7dc |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | Stripe Publishable | `pk_live_[0-9a-zA-Z]{24,}` | pk_live_... |
 
 ### Communication

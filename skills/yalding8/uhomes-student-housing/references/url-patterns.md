@@ -142,7 +142,7 @@ For Chinese-speaking users who prefer WeChat:
 
 | Field | Value |
 |-------|-------|
-| AppID | `wx787e7828382ba76a` |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | Original ID | `gh_ac67b37aa05a` |
 | Path | `pages/index/index?xcode=000a95434637bdf71105` |
 

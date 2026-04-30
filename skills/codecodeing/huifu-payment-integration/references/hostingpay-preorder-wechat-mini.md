@@ -254,7 +254,7 @@
     "huifu_id": "6666000003100616",
     "trans_amt": "0.13",
     "pre_order_id": "H2023112713461700667284637",
-    "miniapp_data": "{\"appid\":\"wxd1b54ceabdfdbd4f\",\"gh_id\":\"gh_1a8554fca417\",\"need_scheme\":\"Y\",\"path\":\"pages/cashier/cashier\",\"private_info\":\"oppsHosting://\",\"scheme_code\":\"weixin://dl/business/?t=f5x3WMhYPat\",\"seq_id\":\"APP_2022033147154783\"}"
+<!-- OpenClaw security redaction: secret removed from archive. -->
   }
 }
 ```

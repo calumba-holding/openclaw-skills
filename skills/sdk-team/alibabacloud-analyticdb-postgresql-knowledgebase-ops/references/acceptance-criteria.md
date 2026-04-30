@@ -142,7 +142,7 @@ Do **not** parse `~/.aliyun/config.json` or pass raw `access_key_id` / `access_k
 ```python
 # Wrong: Never hardcode AK/SK
 client = Client(Config(
-    access_key_id='LTAI5tXXXXXXXXXX',
+<!-- OpenClaw security redaction: secret removed from archive. -->
     access_key_secret='8dXXXXXXXXXXXXXXXXXXXX',
 ))
 ```

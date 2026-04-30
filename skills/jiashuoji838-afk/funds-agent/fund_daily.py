@@ -74,7 +74,7 @@ FUND_NAMES = {
 }
 
 # Telegram 配置
-TELEGRAM_BOT_TOKEN = "8599058765:AAH_4PW048zLJxGQ2BosnG2uh3bRwAeu8XA"
+# OpenClaw security redaction: secret removed from archive.
 TELEGRAM_CHAT_ID = "7333732220"  # Joshua 的 Chat ID
 # =================================
 

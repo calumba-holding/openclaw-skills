@@ -9,7 +9,7 @@ from supabase import create_client, Client
 import tweepy
 import requests
 
-OPENROUTER_KEY = "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"
+# OpenClaw security redaction: secret removed from archive.
 CONSUMER_KEY = "q7TcOVSQIXq5bm98wNi11OdcT"
 CONSUMER_SECRET = "3CsRwRZQPDXFnd4VoNWb6edQSyrmYu1SLiLHgXIL4k5aOC4CfL"
 ACCESS_TOKEN = "194037530-ZMhcZGVpbRo6GXSBxKWwI1BqHq80CDbBD3xtcqng"
@@ -19,7 +19,7 @@ V2_KEY = "YRGik29vipXiQTzPDQmIi0r93IrXQ7FTyIzVdo0kwKG7_BHETW"
 
 # Supabase Credentials
 SUPABASE_URL = "https://icuzwfhulvmouoeeswrb.supabase.co"
-SUPABASE_KEY = "sb_secret_ZuekTVNM-5dKbJdMQ5g76A_Is8RbikO"
+# OpenClaw security redaction: secret removed from archive.
 SUPABASE_TABLE = "paid_signatures"  # Table where we store paid signatures
 
 

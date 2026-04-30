@@ -2,7 +2,7 @@
 # 飞书发送图片脚本
 
 APP_ID="cli_a92d303bf7f9dcc8"
-APP_SECRET="uvP39NArvXPjzPG2bvdZZs2SfZ231YFk"
+# OpenClaw security redaction: secret removed from archive.
 IMAGE_PATH="$1"
 TARGET_USER="$2"
 

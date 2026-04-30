@@ -6,7 +6,7 @@
 
 ```bash
 # 设置环境变量
-export WECHAT_APP_ID=YOU_WECHAT_APP_ID
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export WECHAT_APP_SECRET=YOU_WECHAT_APP_SECRET
 
 # 发布文章

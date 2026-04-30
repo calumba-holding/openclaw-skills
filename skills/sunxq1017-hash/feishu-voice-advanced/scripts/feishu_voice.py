@@ -24,7 +24,7 @@ TTS_ACCESS_KEY = "your-tts-access-key"
 TTS_RESOURCE_ID = "seed-tts-2.0"
 TTS_URL = "https://openspeech.bytedance.com/api/v3/tts/unidirectional"
 
-# 从飞书开放平台获取: https://open.feishu.cn/
+# OpenClaw security redaction: secret removed from archive.
 FEISHU_APP_ID = "your-feishu-app-id"
 FEISHU_APP_SECRET = "your-feishu-app-secret"
 

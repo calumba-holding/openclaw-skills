@@ -70,7 +70,7 @@ Once authenticated, your machine is on the Tailscale network.
 1. Go to https://login.tailscale.com/settings/keys
 2. Click **Generate auth key**
 3. Check **Reusable** (so your friend can use it multiple times if needed, or uncheck for one-time use)
-4. Copy the key — it looks like: `tskey-auth-kixxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx`
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ### Step 4: Share the auth key securely
 
@@ -85,7 +85,7 @@ Send the auth key to your friend via a secure channel:
 
 On Machine B:
 ```bash
-tailscale up --accept-routes --authkey=tskey-auth-kixxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 They'll authenticate in their browser the first time.

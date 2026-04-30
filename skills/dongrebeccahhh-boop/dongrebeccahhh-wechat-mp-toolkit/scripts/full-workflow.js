@@ -11,7 +11,7 @@ const { execSync } = require('child_process');
 
 // 配置
 const config = {
-  appID: 'wx128409576294cb9d',
+// OpenClaw security redaction: secret removed from archive.
   appSecret: '3139a3d2a930678209d8ffae5e103005',
   apiBase: 'https://api.weixin.qq.com',
   outputDir: '/root/.openclaw/wechat-publish',

@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Ensure environment variables are set
 process.env.FEISHU_APP_ID = 'cli_a90a588432f8dcc0';
-process.env.FEISHU_APP_SECRET = '0BSggpNeEx2Vg0yb9TH2wh1QOk5BkS4u';
+// OpenClaw security redaction: secret removed from archive.
 process.env.TEST_CHAT_ID = 'oc_b1dffffb4b809464b4202003552e6aca';
 process.env.TEST_USER_ID = 'ou_9b45afbf39313bc0884bfff776556370';
 process.env.TEST_DOC_TOKEN = 'Yo8PdVT18oe083xquhmcWOqvnOe';

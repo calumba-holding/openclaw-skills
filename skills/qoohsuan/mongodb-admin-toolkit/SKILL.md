@@ -47,7 +47,7 @@ mongosh "mongodb://dbuser:password@10.0.0.100:27017/production_db?authSource=adm
 mongosh "mongodb://node1:27017,node2:27017,node3:27017/mydb?replicaSet=rs0"
 
 # MongoDB Atlas
-mongosh "mongodb+srv://username:password@cluster0.abcde.mongodb.net/mydb"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ### Database Operations

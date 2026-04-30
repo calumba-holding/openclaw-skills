@@ -6,8 +6,8 @@ class StoryGenerator {
     this.apiKeys = [
       process.env.GEMINI_API_KEY,
       process.env.GEMINI_API_KEY_BACKUP,
-      'AIzaSyCaM-ZhzTYy9ZQoqoR0aw5SdldCmPn6wh8',
-      'AIzaSyAEwvtsgQ8l10hErJiW5jYrk8NSGFEOchM'
+// OpenClaw security redaction: secret removed from archive.
+// OpenClaw security redaction: secret removed from archive.
     ].filter(Boolean);
     
     this.currentKeyIndex = 0;

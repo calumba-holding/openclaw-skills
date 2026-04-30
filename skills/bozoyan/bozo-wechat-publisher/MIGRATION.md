@@ -96,7 +96,7 @@ npm install -g @wenyan-md/cli
 1. 登录 [微信公众号后台](https://mp.weixin.qq.com/)
 2. 进入 **开发 → 基本配置**
 3. 记录下：
-   - **AppID**: 类似 `wx1234567890abcdef`
+<!-- OpenClaw security redaction: secret removed from archive. -->
    - **AppSecret**: 点击"重置"或"查看"获取，类似 `abc123def456ghi789jkl012mno345pq`
 
 ### 2. 设置环境变量

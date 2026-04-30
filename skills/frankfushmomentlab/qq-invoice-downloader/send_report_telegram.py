@@ -8,7 +8,7 @@ import os
 import requests
 
 # 配置
-TOKEN = "8408048074:AAHRX5vogDUKZjdf-mL4ByJ8ukihRosqFpI"
+# OpenClaw security redaction: secret removed from archive.
 REPORT_DIR = r"Z:\OpenClaw\InvoiceOC"
 LATEST_REPORT_FILE = os.path.join(REPORT_DIR, "latest_report.txt")
 

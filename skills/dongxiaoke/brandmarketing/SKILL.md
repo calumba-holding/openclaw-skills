@@ -188,7 +188,7 @@ curl --location --request POST 'http://vane.zeelin.cn/gateway/vane_marketing/con
             "content": "上周整理抽屉翻出旧手机。本来打算当备用机扔着。更新鸿蒙系统后意外发现很流畅。\n\n这台华为 Mate 系列陪了我三年，之前总觉得反应慢半拍。这次没换新款，试着升级了系统。第三天开始，早上打开微信不再转圈。后台切换应用也顺了不少。\n\n其实不是手机老了，是系统需要适配。鸿蒙系统优化确实解决了底层调度问题。电池健康度显示也准了。\n\n对于预算有限的情况，这台旧机器完全能胜任日常沟通。没必要为了微小提升增加开支。\n\n你手里那台旧手机陪了你几年？",
             "tag": "#鸿蒙系统 #旧手机焕新 #华为 #数码科技 #理性消费 #手机优化 #实用技巧 #数码达人 #科技生活 #省钱攻略",
             "img_prompt": "3:4 竖版，真实生活场景，桌面上放着一部旧款华为手机，屏幕亮着显示流畅界面，封面文字“旧手机不卡了”，自然光感，避免过度精修",
-            "img_url": "https://ark-content-generation-v2-cn-beijing.tos-cn-beijing.volces.com/doubao-seedream-4-0/021774857070929d7b3351599aaeccdacf18b44507ad3d5c69cbf_0.jpeg?X-Tos-Algorithm=TOS4-HMAC-SHA256&X-Tos-Credential=AKLTYWJkZTExNjA1ZDUyNDc3YzhjNTM5OGIyNjBhNDcyOTQ%2F20260330%2Fcn-beijing%2Ftos%2Frequest&X-Tos-Date=20260330T075115Z&X-Tos-Expires=86400&X-Tos-Signature=7aec47fc6364513a63b425565daa721176795cc249b334e496441e52266c0332&X-Tos-SignedHeaders=host"
+<!-- OpenClaw security redaction: secret removed from archive. -->
         },
         {
             "type": "干货教程型",

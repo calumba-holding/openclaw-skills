@@ -3,7 +3,7 @@ import os
 
 class GroqVoiceTranscriber:
     def __init__(self):
-        api_key = os.getenv("GROQ_API_KEY", "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")
+# OpenClaw security redaction: secret removed from archive.
         self.client = Groq(api_key=api_key)
     
     def transcribe(self, audio_path: str, language: str = "ru") -> str:

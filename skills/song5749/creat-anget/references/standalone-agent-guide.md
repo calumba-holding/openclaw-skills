@@ -147,7 +147,7 @@ python scripts/create_standalone_agent.py \
   --agent-name "HR Assistant" \
   --feishu-account hr \
   --feishu-app-id cli_a9249b9ee9785cee \
-  --feishu-app-secret PAY8vhyLkiLpfmun09sXSboJyoSQXK3g
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 **结果:**

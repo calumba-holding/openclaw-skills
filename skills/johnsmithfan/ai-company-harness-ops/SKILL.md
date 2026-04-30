@@ -32,7 +32,7 @@ interface:
       - code: OPS_002 message: 案例映射失败 action: 回退到通用模板
       - code: OPS_003 message: layerDefinition模糊 action: 使用默认layerDefinition
   plan-implementation:
-    description: developHarnessimplementroadmap
+<!-- OpenClaw security redaction: secret removed from archive. -->
     inputs:
       industry:
         type: string

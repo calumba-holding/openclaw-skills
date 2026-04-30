@@ -59,7 +59,7 @@ def create_wiki_node(space_id, parent_token, title):
     cmd = f'''
 TOKEN=$(curl -s -X POST "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal" \\
   -H "Content-Type: application/json" \\
-  -d '{{"app_id":"cli_a90ecd03bc399bcb","app_secret":"gdEsio0WzDtHEhHFeLS55wBseDpExVtg"}}' | jq -r '.tenant_access_token')
+# OpenClaw security redaction: secret removed from archive.
 
 curl -s -X POST "https://open.feishu.cn/open-apis/wiki/v2/spaces/{space_id}/nodes" \\
   -H "Authorization: Bearer $TOKEN" \\

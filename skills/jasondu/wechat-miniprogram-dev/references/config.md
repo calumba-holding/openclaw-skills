@@ -2,7 +2,7 @@
 
 ## 当前项目配置
 
-- **AppID**: wx637a3fa923864f90
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - **云开发环境**: cloudbase-5g2zxj6y510bc574
 - **私钥路径**: ./key/private.key
 - **小程序根目录**: miniprogram/

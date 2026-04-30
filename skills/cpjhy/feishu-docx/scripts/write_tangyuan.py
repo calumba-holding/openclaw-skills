@@ -4,7 +4,7 @@ from feishu_docx_client import FeishuDocx
 
 def main():
     app_id = "cli_a92c5076b7789cd2"
-    app_secret = "9jPdCn49G54RFoEoDPUCVcptnWZnTZqp"
+# OpenClaw security redaction: secret removed from archive.
     
     title = "# 📋 拍摄清单：剩汤圆拯救计划"
     content = """# 📋 拍摄清单：剩汤圆拯救计划

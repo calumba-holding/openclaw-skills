@@ -39,7 +39,7 @@ public class H5Prepay {
 
     DirectAPIv3H5PrepayRequest request = new DirectAPIv3H5PrepayRequest();
     request.appid = "wxd678efh567hg6787";
-    request.mchid = "1230000109";
+// OpenClaw security redaction: secret removed from archive.
     request.description = "Image形象店-深圳腾大-QQ公仔";
     request.outTradeNo = "1217752501201407033233368018";
     request.timeExpire = "2018-06-08T10:34:56+08:00";

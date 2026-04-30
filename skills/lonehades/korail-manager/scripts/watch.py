@@ -33,7 +33,7 @@ def send_slack_alert(webhook_url, message):
         payload = {"text": message}
         requests.post(webhook_url, json=payload, timeout=10)
     except Exception as e:
-        print(f"⚠️ 슬랙 발송 실패: {e}")
+# OpenClaw security redaction: secret removed from archive.
 
 def main():
     parser = argparse.ArgumentParser()

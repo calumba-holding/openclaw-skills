@@ -222,7 +222,7 @@ hermes config set channels.feishu.connection_mode websocket
 ```bash
 # 飞书凭证
 FEISHU_APP_ID=cli_a9313c23ceb89cc9
-FEISHU_APP_SECRET=QqFPtgoisISbwzZYZnguoXfdrZTcK6D2
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 连接设置
 FEISHU_CONNECTION_MODE=websocket

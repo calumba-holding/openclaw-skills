@@ -35,7 +35,7 @@ DEFAULT_LABELS = ["bug", "cms-cwork-workflow"]
 # Fine-grained token，仅限 xgjk/cwork-skills 仓库的 Issues: Read and Write 权限。
 # 无法读写代码、推送提交或访问其他仓库。所有安装此 skill 的用户共享此 token。
 # 如需使用自己的 token，设置环境变量 GITHUB_TOKEN 即可覆盖。
-_BUILTIN_TOKEN = "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"
+# OpenClaw security redaction: secret removed from archive.
 
 
 

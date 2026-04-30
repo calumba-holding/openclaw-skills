@@ -14010,7 +14010,7 @@
     },
     13992: function(t, e) {
         const r = "[0-9]+";
-        let n = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
+// OpenClaw security redaction: secret removed from archive.
         n = n.replace(/u/g, "\\u");
         const o = "(?:(?![A-Z0-9 $%*+\\-./:]|" + n + ")(?:.|[\r\n]))+";
         e.KANJI = new RegExp(n,"g"),

@@ -126,7 +126,7 @@ def send_to_feishu(file_path, user_open_id):
     import requests
     
     app_id = "cli_a92550a0def91bb4"
-    app_secret = "gKxq8vGTcr13awNezls7Uh6kqhv4AEwB"
+# OpenClaw security redaction: secret removed from archive.
     
     # 获取 token
     token_url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"

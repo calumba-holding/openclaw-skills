@@ -1652,7 +1652,7 @@ def _canonicalize_elba_transaction(tx: dict) -> dict:
 
     cp_bic = tx.get("auftraggeberBic")
     if isinstance(cp_bic, str) and cp_bic.strip():
-        cp["bic"] = cp_bic.strip()
+# OpenClaw security redaction: secret removed from archive.
 
     if cp:
         out["counterparty"] = cp

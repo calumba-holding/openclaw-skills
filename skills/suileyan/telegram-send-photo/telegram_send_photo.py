@@ -22,7 +22,7 @@ def send_photo(photo_path, caption="", bot_token=None, chat_id=None):
     """
     # Default configuration
     if bot_token is None:
-        bot_token = "8610746914:AAHvbRYhGar_DD81-70IeWSSfkDLyvrWKY0"
+# OpenClaw security redaction: secret removed from archive.
     if chat_id is None:
         chat_id = "8422738233"
     

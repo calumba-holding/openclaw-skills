@@ -9,7 +9,7 @@ import requests
 
 # 从环境变量或配置文件读取
 APP_ID = os.environ.get('FEISHU_APP_ID', '')
-APP_SECRET = os.environ.get('FEISHU_APP_SECRET', '')
+# OpenClaw security redaction: secret removed from archive.
 
 
 def get_tenant_access_token(app_id: str, app_secret: str) -> str:

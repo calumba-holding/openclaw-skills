@@ -523,7 +523,7 @@ def _extract_read_count(raw_html: str, article_url: str) -> str:
     api_url = (
         f"https://mp.weixin.qq.com/mp/vdapgetdatacount"
         f"?__biz={biz}&mid={mid}&idx={idx}&sn={sn}"
-        f"&count_type=1&scene=0&is_ok=1&appid=wx8b0013715a442d37"
+# OpenClaw security redaction: secret removed from archive.
         f"&devicetype=Windows&version=17010000&clientversion=17010000"
         f"&lang=zh_CN&pass_ticket=&wx_header=1"
     )

@@ -1522,7 +1522,7 @@ def build_query_driver_location_payload(order_id: str, state_file: Optional[str]
 	return {
 		"seqId": generate_seq_id(timestamp_ms),
 		"timestamp": timestamp_ms,
-		"wxAppId": "wx65cc950f42e8fff1",
+# OpenClaw security redaction: secret removed from archive.
 		"orderId": order_id,
 		"routeId": route_id,
 		"trafficId": traffic_id,

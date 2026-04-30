@@ -81,7 +81,7 @@ Content-Type: application/json
 ```json
 {
   "code": 0,
-  "message": "success",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "data": {
     "accessId": "LTAI5tF1QzxoHGvEcziVACyc",
     "policy": "eyJ0...",

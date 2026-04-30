@@ -14,7 +14,7 @@ POSITIONS_FILE = "/root/.openclaw/workspace/polymarket-arb-bot/logs/positions.js
 PROFIT_THRESHOLD = 0.15  # 15% 止盈
 
 # Telegram 通知配置
-TELEGRAM_BOT_TOKEN = "8315083265:AAGM_rUxfOzmnTDYd6v2n6n-kEArK37tKKk"
+# OpenClaw security redaction: secret removed from archive.
 TELEGRAM_CHAT_ID = "1609325006"
 
 def send_telegram(text):

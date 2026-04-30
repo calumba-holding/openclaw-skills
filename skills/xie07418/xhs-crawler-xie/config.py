@@ -89,7 +89,7 @@ ANTI_DETECT = {
 
 # 飞书企业自建应用凭证
 FEISHU_APP_ID = "cli_a924d921ce7a9cbd"
-FEISHU_APP_SECRET = "5QG92Lp8kvhAkgpPJTd57fIxshnCebEt"
+# OpenClaw security redaction: secret removed from archive.
 
 # ==================== 日志配置 ====================
 

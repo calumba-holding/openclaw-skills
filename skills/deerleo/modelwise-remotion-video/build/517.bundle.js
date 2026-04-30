@@ -20526,7 +20526,7 @@ var CheckboardToggle = () => {
       style: { width: 16, height: 16 },
       children: /* @__PURE__ */ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("path", {
         fill: checkerboard ? BLUE : "white",
-        d: "M480 0H32A32 32 0 0 0 0 32v448a32 32 0 0 0 32 32h448a32 32 0 0 0 32-32V32a32 32 0 0 0-32-32zm-32 256H256v192H64V256h192V64h192z"
+// OpenClaw security redaction: secret removed from archive.
       })
     })
   });

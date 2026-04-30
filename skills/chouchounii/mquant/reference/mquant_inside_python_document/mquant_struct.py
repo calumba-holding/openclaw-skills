@@ -322,7 +322,7 @@ class SecuritySubType(object):
 
     Securitiescompanysubordinateddebt = "04008"  # 证券公司次级债
 
-    Securitiescompanyshorttermdebt = "04009"  # 证券公司短期债
+# OpenClaw security redaction: secret removed from archive.
 
     Exchangeablecorporatedebt = "04010"  # 可交换公司债
 

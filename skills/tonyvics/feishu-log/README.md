@@ -134,7 +134,7 @@ export FEISHU_LOG_ROOT_TOKEN="xxx"
 
 ```javascript
 const APP_ID = "cli_a93b936aa9391cc7";
-const APP_SECRET = "aMRJMyi3KSXbSJhRgyx7ycvyT5D3rsrs";
+<!-- OpenClaw security redaction: secret removed from archive. -->
 const ROOT_FOLDER_TOKEN = "RdVIffbJxl8HDCdJiULcIpdgnzf"; // 根目录
 ```
 

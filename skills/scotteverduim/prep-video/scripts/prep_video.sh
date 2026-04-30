@@ -6,7 +6,7 @@
 SCRIPT_ID="${1:-}"
 RCLONE="/usr/local/bin/rclone"
 JQ="/usr/local/bin/jq"
-BOT_TOKEN="8501038356:AAHhhywqpA97okbyEsxXmdQYuJXi848Tm3g"
+# OpenClaw security redaction: secret removed from archive.
 CHAT_ID="1835871910"
 GDRIVE="manus_google_drive"
 BASE="$GDRIVE:Aura Creatine/Content Pipeline"

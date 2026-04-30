@@ -140,7 +140,7 @@ DB_PORT=27017
 DB_NAME=production
 
 # 微信支付
-WEIXIN_MCH_ID=1234567890
+<!-- OpenClaw security redaction: secret removed from archive. -->
 WEIXIN_NOTIFY_URL=https://your-service.cloudbaseapp.com/api/pay/notify
 
 # 日志级别

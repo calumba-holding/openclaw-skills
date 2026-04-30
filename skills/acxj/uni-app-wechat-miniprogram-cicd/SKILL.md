@@ -40,7 +40,7 @@ uni-app-wechat-cicd/
 ```json
 {
   "mp-weixin": {
-    "appid": "wx0123456789abcdef",
+<!-- OpenClaw security redaction: secret removed from archive. -->
     "setting": {
       "urlCheck": false,
       "es6": true,

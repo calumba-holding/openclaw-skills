@@ -169,7 +169,7 @@ openclaw skill info wechat-publisher
 ```
 1. 点击左侧菜单：开发 → 基本配置
 2. 找到"公众号开发信息"
-3. 复制 AppID（示例：wxebff9eadface1489）
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 **步骤 3：获取 AppSecret**

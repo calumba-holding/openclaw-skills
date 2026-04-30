@@ -36,7 +36,7 @@ When uploading skills to ClawHub, use OpenClaw Git to backup all workspace chang
 # Step 1: Upload skill to ClawHub (manual or scripted)
 cd ~/.openclaw/workspace/skills/<skill-name>
 clawhub publish . --version <version> --changelog "description"
-
+<!-- OpenClaw security redaction: secret removed from archive. -->
 # Step 2: Commit and push all workspace changes using OpenClaw Git
 ~/.openclaw/workspace/skills/openclaw-git/scripts/git-push.sh "Upload <skill-name> v<version> and sync workspace"
 
@@ -68,7 +68,7 @@ This script is automatically called at the end of the "skill upload" workflow to
 
 GitHub:
 - Username: Roger0808
-- Token: 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
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ## Script Reference
 

@@ -61,7 +61,7 @@ WECHAT_APP_SECRET=your-app-secret
 ### 4. wechat_config.py（已弃用）
 ```python
 # 旧方式，不推荐使用
-APPID = "wxf9400829e3405317"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 APPSECRET = "a6800143c01df2e73121c631cac4ec32"
 ```
 

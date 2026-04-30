@@ -208,7 +208,7 @@ describe("DefaultRedactor", () => {
 
   it("redacts MongoDB+srv connection strings", () => {
     const r = new DefaultRedactor();
-    const out = r.redact("MONGO_URI=mongodb+srv://user:pass123@cluster0.abc.mongodb.net/db");
+// OpenClaw security redaction: secret removed from archive.
     expect(out.hadSecrets).toBe(true);
     expect(out.redactedText).toContain("[REDACTED:DB_CONN_STRING]");
   });

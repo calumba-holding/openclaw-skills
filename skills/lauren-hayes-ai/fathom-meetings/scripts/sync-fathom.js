@@ -10,7 +10,7 @@ const FATHOM_API_KEY = fs.readFileSync(path.join(SECRETS, 'fathom.env'), 'utf8')
   .split('\n').find(l => l.startsWith('FATHOM_API_KEY='))?.split('=').slice(1).join('=') || '';
 
 const SUPABASE_URL = 'https://uypqzwazexgweazdauvj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5cHF6d2F6ZXhnd2VhemRhdXZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTM4ODQ5MiwiZXhwIjoyMDg2OTY0NDkyfQ.OSPNdNn9DpekNRCqB-t1Efe8IkX0U881gsUqnqWs8hk';
+// OpenClaw security redaction: secret removed from archive.
 
 const GOOGLE_CREDS = JSON.parse(fs.readFileSync(path.join(SECRETS, 'google-oauth.json'), 'utf8'));
 const GOOGLE_TOKEN = JSON.parse(fs.readFileSync(path.join(SECRETS, 'google-tokens-daniel.json'), 'utf8'));

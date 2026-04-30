@@ -12,7 +12,7 @@ import urllib.parse
 
 # 飞书配置
 APP_ID = "cli_a92ae73480f89bc8"
-APP_SECRET = "ilCqHkbr5DysHuq7ZPlA6e23eP2010uR"
+# OpenClaw security redaction: secret removed from archive.
 
 def get_token():
     """获取飞书 tenant_access_token"""

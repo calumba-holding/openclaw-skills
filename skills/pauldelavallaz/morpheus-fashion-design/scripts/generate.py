@@ -27,7 +27,7 @@ sys.stderr.reconfigure(line_buffering=True)
 
 # Usage tracking
 TRACKER_PATH = os.path.expanduser("~/clawd/scripts/track-usage.sh")
-
+# OpenClaw security redaction: secret removed from archive.
 
 def track_usage(prompt: str, result_path: str, status: str = "success"):
     """Log usage to Supabase tracker."""

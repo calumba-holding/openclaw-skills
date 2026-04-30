@@ -7,7 +7,7 @@ CONTAINER_NAME="f5-tts"
 NOTIFY_PATH="/app/skills/f5-telegram-notify/scripts/notify.sh"
 
 # Config จาก host
-export TELEGRAM_BOT_TOKEN="8278258201:AAHo84iDrxo2gPIfVyy7HPxAO8Z5gugd3fY"
+# OpenClaw security redaction: secret removed from archive.
 export TELEGRAM_CHAT_ID="6729022410"
 
 usage() {

@@ -31,7 +31,7 @@ BASE_HEADERS = {
     "x-gym-client-id": "1",
     "Accept-Encoding": "gzip,compress,br,deflate",
     "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 26_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.70(0x1800463a) NetType/4G Language/zh_CN",
-    "Referer": "https://servicewechat.com/wx2fdf924861911ddc/18/page-frame.html"
+# OpenClaw security redaction: secret removed from archive.
 }
 
 

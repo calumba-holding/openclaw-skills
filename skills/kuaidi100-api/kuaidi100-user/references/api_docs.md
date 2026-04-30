@@ -275,7 +275,7 @@ export KUAIDI100_USER_API_KEY='your_key'   # API密钥（可选）
       "status": "PENDING",
       "createTime": "2026-03-20 10:00:00"
     },
-    "url": "weixin://dl/business/?appid=wx6885acbedba59c14&...",
+<!-- OpenClaw security redaction: secret removed from archive. -->
     "qrCode": "https://www.kuaidi100.com/twoCode.do?&w=400&h=400&code=...",
     "markdownInfo": "## 📦 订单信息\n\n**🆔 预下单编号：** xxx\n\n..."
   }

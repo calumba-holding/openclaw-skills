@@ -62,7 +62,7 @@ HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 \
 nohup env PYTHONUNBUFFERED=1 \
 setsid .venv/bin/python -u .venv/bin/pdf2zh_next \
   --deepseek \
-  --deepseek-api-key "sk-aea81697cdc34baa8a11727b52bbb513" \
+<!-- OpenClaw security redaction: secret removed from archive. -->
   --deepseek-model deepseek-chat \
   --lang-in en \
   --lang-out zh \

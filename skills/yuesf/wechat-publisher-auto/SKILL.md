@@ -45,7 +45,7 @@ accounts:
   # 账号1（设为默认）
   default:
     name: 技术公众号
-    app_id: wx89c409208d11dc5b
+<!-- OpenClaw security redaction: secret removed from archive. -->
     app_secret: your_app_secret_here
   # 账号2
   health:

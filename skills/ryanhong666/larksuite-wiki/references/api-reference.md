@@ -4,7 +4,7 @@
 
 ```bash
 export LARK_APP_ID="cli_a90f6c8bf8f8ded4"
-export LARK_APP_SECRET="xtSodRRMmiU1R4oikynlFbBoEu3T2Wgo"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ## Usage Examples

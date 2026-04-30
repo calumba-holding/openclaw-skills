@@ -30,7 +30,7 @@ metadata:
 
 确保环境变量已设置:
 ```bash
-export WECHAT_APP_ID= YOU_WECHAT_APP_ID
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export WECHAT_APP_SECRET= YOU_WECHAT_APP_SECRET
 ```
 

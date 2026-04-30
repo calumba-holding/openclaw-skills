@@ -145,7 +145,7 @@ tccli cam AttachUserPolicy --AttachUin <UIN> --PolicyId <POLICY_ID>
 
 ```bash
 tccli cam CreateAccessKey --TargetUin <UIN>
-```
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 **⚠️ 重要**: 立即保存 SecretId 和 SecretKey，只显示一次！
 

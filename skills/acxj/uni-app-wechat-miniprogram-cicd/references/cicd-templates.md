@@ -162,7 +162,7 @@ deploy:experience:
 
 | 变量名 | 值 | 选项 |
 |---|---|---|
-| `WEAPP_APPID` | `wx0123456789abcdef` | Protected + Masked |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | `WEAPP_PRIVATE_KEY` | `.key` 文件全文内容 | Protected + Masked |
 
 ---

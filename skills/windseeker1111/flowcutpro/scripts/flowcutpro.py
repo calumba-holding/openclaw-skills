@@ -15,7 +15,7 @@ from datetime import datetime
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 
-API_KEY  = os.environ.get("VEO_API_KEY", "AIzaSyDmN9-L3Y6q9fFIZY5OiH4E0_1t0wIbVjI")
+# OpenClaw security redaction: secret removed from archive.
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 MODEL    = "veo-3.1-generate-preview"
 

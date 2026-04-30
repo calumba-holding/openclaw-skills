@@ -34,7 +34,7 @@ Get your credentials from [WeChat MP Backend](https://mp.weixin.qq.com) → 开�
 
 Or use environment variables:
 ```bash
-export WX_APPID="wx1234567890abcdef"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export WX_APPSECRET="your_appsecret_here"
 ```
 

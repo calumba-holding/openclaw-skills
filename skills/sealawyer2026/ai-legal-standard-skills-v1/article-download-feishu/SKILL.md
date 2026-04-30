@@ -240,7 +240,7 @@ article-download-feishu/
 ```yaml
 feishu:
   app_id: cli_a91180a31238dcd2
-  app_secret: hprX1KkMZuoFSN1G9awnjcDwxNTJKXCV
+<!-- OpenClaw security redaction: secret removed from archive. -->
   bot_name: 法律文章下载
   enabled: true
 ```

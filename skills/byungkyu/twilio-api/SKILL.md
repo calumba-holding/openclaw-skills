@@ -154,7 +154,7 @@ If omitted, the gateway uses the default (oldest) active connection.
 GET /twilio/2010-04-01/Accounts.json
 ```
 
-**Response:**
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```json
 {
   "accounts": [

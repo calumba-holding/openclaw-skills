@@ -14,7 +14,7 @@
 
 ```bash
 curl -s "https://api.github.com/search/issues?q=关键词+repo:openclaw/openclaw&per_page=5" \
-  -H "Authorization: token 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"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ### 查看 issue 详情

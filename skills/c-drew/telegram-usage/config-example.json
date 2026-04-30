@@ -3,7 +3,7 @@
   "channels": {
     "telegram": {
       "enabled": true,
-      "botToken": "YOUR_BOT_TOKEN_HERE",
+"__openclaw_security_redaction__": "secret removed from archive"
       "customCommands": [
         {
           "command": "usage",

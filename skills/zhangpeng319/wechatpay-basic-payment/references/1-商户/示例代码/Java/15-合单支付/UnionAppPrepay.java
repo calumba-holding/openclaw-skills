@@ -47,7 +47,7 @@ public class UnionAppPrepay {
     request.subOrders = new ArrayList<>();
     {
       UnionSubOrder subOrdersItem0 = new UnionSubOrder();
-      subOrdersItem0.mchid = "1230000109";
+// OpenClaw security redaction: secret removed from archive.
       subOrdersItem0.outTradeNo = "20150806125346";
       subOrdersItem0.amount = new UnionAmountInfo();
       subOrdersItem0.amount.totalAmount = 10L;
@@ -60,7 +60,7 @@ public class UnionAppPrepay {
       subOrdersItem0.settleInfo.profitSharing = false;
       request.subOrders.add(subOrdersItem0);
       UnionSubOrder subOrdersItem1 = new UnionSubOrder();
-      subOrdersItem1.mchid = "1230000119";
+// OpenClaw security redaction: secret removed from archive.
       subOrdersItem1.outTradeNo = "20150806125347";
       subOrdersItem1.amount = new UnionAmountInfo();
       subOrdersItem1.amount.totalAmount = 10L;

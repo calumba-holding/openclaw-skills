@@ -48,7 +48,7 @@ MIN_TRADE_SIZE    = 2.0
 KELLY_FRACTION    = 0.25
 TOP_N_MARKETS     = 100
 SQS_QUEUE_URL     = "https://sqs.us-east-1.amazonaws.com/291215835256/polymarket-arb"
-TELEGRAM_BOT_TOKEN = "8763627754:AAHGhDCcsuQytONr_i5VG335VS7q4zMAtQk"
+# OpenClaw security redaction: secret removed from archive.
 TELEGRAM_CHAT_ID   = "5545460543"
 POLL_INTERVAL      = 1800       # 30 minutes
 

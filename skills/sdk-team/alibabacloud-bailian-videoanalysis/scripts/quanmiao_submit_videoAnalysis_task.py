@@ -8,7 +8,7 @@ import sys
 import json
 import argparse
 
-from alibabacloud_quanmiaolightapp20240801.client import Client as QuanMiaoLightApp20240801Client
+# OpenClaw security redaction: secret removed from archive.
 from alibabacloud_credentials.client import Client as CredentialClient
 from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_quanmiaolightapp20240801 import models as quan_miao_light_app_20240801_models

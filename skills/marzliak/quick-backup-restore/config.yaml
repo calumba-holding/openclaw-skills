@@ -46,7 +46,7 @@ integrity:
 
 safety:
   # Espaço mínimo em disco (MB) no volume do repositório para prosseguir com o backup.
-  # Se menor, o backup é abortado e um alerta Telegram é enviado.
+# OpenClaw security redaction: secret removed from archive.
   min_disk_mb: 500
 
 notifications:

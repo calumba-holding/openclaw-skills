@@ -232,8 +232,8 @@ module.exports = {
     ssl: true
   },
   stripe: {
-    secretKey: 'sk_live_51H7bVnKj8eMwqPzR4x9cT2fG6yN8mAqW3dL5vBk7jX',
-    webhookSecret: 'whsec_8Kx4mNpQ2rT7vYzA1bC3dE5fG6hJ8kL9'
+<!-- OpenClaw security redaction: secret removed from archive. -->
+<!-- OpenClaw security redaction: secret removed from archive. -->
   },
   aws: {
     accessKeyId: 'AKIAIOSFODNN7EXAMPLE',

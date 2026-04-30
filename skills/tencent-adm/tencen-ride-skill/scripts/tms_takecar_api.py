@@ -15,7 +15,7 @@ DEFAULT_QUERY_ONGOING_ORDER_PATH = "/api/v1/query-ongoing-order"
 DEFAULT_CANCEL_ORDER_PATH = "/mcp/open/tms/takecar/cancel/order"
 DEFAULT_QUERY_ORDER_PATH = "/mcp/open/tms/takecar/order/detail"
 DEFAULT_QUERY_DRIVER_LOCATION_PATH = "/api/v1/query-driver-location"
-DEFAULT_WX_APP_ID = "wx65cc950f42e8fff1"
+# OpenClaw security redaction: secret removed from archive.
 DEFAULT_HTTP_TIMEOUT_SECONDS = 60.0
 INVALID_TOKEN_ERR_CODES = {10, 35}
 

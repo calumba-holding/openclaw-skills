@@ -43,7 +43,7 @@ def test_invalid_inputs():
     print("\n🧪 测试2: 无效输入参数")
     
     # 设置正确的环境变量（测试用）
-    os.environ['BAIDU_API_STRING'] = '${BAIDU_API_STRING}'
+# OpenClaw security redaction: secret removed from archive.
     os.environ['BAIDU_SECRET_KEY'] = '${BAIDU_SECRET_KEY}'
     
     # 使用临时数据库文件

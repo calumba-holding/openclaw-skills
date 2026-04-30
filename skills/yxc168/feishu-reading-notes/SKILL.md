@@ -82,7 +82,7 @@ description: |
 
 ```python
 app_id = "cli_a929129e4278dced"
-app_secret = "usgK70hkHYBTQTtqMUFUMeXPPQDp35CE"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 文件夹 token
 root_folder = "U4p7fPrW1lmQzedgT9rcenKQnbh"

@@ -28,7 +28,7 @@ if (!code || code === '--write') {
     DOUYIN_CLIENT_SECRET=你的应用client_secret
 
 示例:
-  node scripts/get-douyin-token.js ffab5ec26cd958fditn2GNr8Wx5m0i
+// OpenClaw security redaction: secret removed from archive.
   node scripts/get-douyin-token.js ffab5ec26cd958fditn2GNr8Wx5m0i --write
 `);
   process.exit(1);

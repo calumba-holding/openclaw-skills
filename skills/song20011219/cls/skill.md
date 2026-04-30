@@ -30,7 +30,7 @@ rm ./setup
 
 | 参数 | 必需 | 说明 | 示例 |
 |------|------|------|------|
-| `--AKID` | 是 | 腾讯云访问密钥 ID | `AKIDX4d4GEyYyA9xYyCbrw0taBYhcMvsfEbt` |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | `--secret-key` | 是 | 腾讯云访问密钥 | `d3dz70f5PZVJvMiqtjLjvulOExUq20kG` |
 | `--region` | 是 | CLS 服务区域 | `ap-guangzhou`, `ap-beijing` 等 |
 

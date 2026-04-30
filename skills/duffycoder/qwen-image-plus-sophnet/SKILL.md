@@ -69,7 +69,7 @@ Output:
 ```text
 TASK_ID=7BWFICt0zgLvuaTKg8ZoDg
 STATUS=succeeded
-IMAGE_URL=https://dashscope-result-wlcb-acdr-1.oss-cn-wulanchabu-acdr-1.aliyuncs.com/7d/d5/20260203/cfc32567/f0e3ac18-31f6-4a1a-b680-a71d3e6bcbe03032414431.png?Expires=1770714400&OSSAccessKeyId=LTAI5tKPD3TMqf2Lna1fASuh&Signature=fF12GZ7RgGsC7OpEkGCapkBUXws%3D
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ## Common Errors

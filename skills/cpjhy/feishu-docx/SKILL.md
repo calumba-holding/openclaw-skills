@@ -26,7 +26,7 @@ description: 飞书云文档（docx）的创建与编辑技能。支持通过 AP
 ```python
 from scripts.feishu_docx_client import FeishuDocx
 
-client = FeishuDocx(app_id="cli_a92c5076b7789cd2", app_secret="9jPdCn49G54RFoEoDPUCVcptnWZnTZqp")
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 # 1. 创建文档
 doc_id = client.create_document("测试文档")

@@ -192,7 +192,7 @@ main().catch((err) => {
 
 | 变量名 | 说明 | 示例 |
 |---|---|---|
-| `WEAPP_APPID` | 小程序 AppID | `wx0123456789abcdef` |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | `WEAPP_PRIVATE_KEY_PATH` | 私钥文件路径 | `keys/private.wx012345.key` |
 | `WEAPP_PRIVATE_KEY` | 私钥内容（直接传入）| `-----BEGIN RSA PRIVATE KEY-----\n...` |
 | `VERSION` | 发布版本号 | `1.2.3` |

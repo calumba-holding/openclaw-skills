@@ -13,7 +13,7 @@ import os
 
 # 飞书配置
 APP_ID = "cli_a9151fbdb7b81cd4"
-APP_SECRET = "V40tXt3QwXuDBJKlGPN9pdwFqxgBhwYh"
+# OpenClaw security redaction: secret removed from archive.
 
 def get_access_token():
     """获取飞书 access token"""

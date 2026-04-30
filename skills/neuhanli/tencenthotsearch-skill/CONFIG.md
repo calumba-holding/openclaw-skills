@@ -81,7 +81,7 @@ Open `config.json` with a text editor and fill in your API credentials:
 
 ```json
 {
-  "secret_id": "AKIDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "secret_key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "output_dir": "./output"
 }

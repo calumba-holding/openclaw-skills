@@ -19,8 +19,8 @@
   "accounts": [],
 
   "//_comment_5": "【高级配置】Google OAuth 凭证。通常无需修改，除非你有自己的项目。",
-  "clientId": "1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com",
-  "clientSecret": "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",
+"__openclaw_security_redaction__": "secret removed from archive"
+"__openclaw_security_redaction__": "secret removed from archive"
   "defaultProjectId": "bamboo-precept-lgxtn",
 
   "//_comment_6": "【阈值设置】当模型配额低于此百分比时触发轮换。",

@@ -22,7 +22,7 @@ def send_telegram(message):
     """发送 Telegram 消息"""
     try:
         import requests
-        token = "8630160870:AAFFF8xPS0muOqg8LGgMI3HalEA7ubVRIF8"
+# OpenClaw security redaction: secret removed from archive.
         
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         data = {

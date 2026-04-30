@@ -15,7 +15,7 @@ fi
 
 # 飞书应用配置
 APP_ID="cli_a92d113664389bca"
-APP_SECRET="cdagI5lHK8aE4NCIDYu6leYsx0LybNnI"
+# OpenClaw security redaction: secret removed from archive.
 
 echo "============================================"
 echo "发送视频到飞书"

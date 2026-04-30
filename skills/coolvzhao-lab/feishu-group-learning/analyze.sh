@@ -2,7 +2,7 @@
 
 TOKEN=$(curl -s -X POST "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal" \
   -H "Content-Type: application/json" \
-  -d '{"app_id":"cli_a92b19fbc278dbd6","app_secret":"WFsYhmcEZnRjL4c1ClotIeHhoq5568Sp"}' | python3 -c "import sys,json; print(json.load(sys.stdin).get('tenant_access_token',''))")
+# OpenClaw security redaction: secret removed from archive.
 
 echo "📚 飞书群学习分析报告"
 echo "生成时间: $(date '+%Y-%m-%d %H:%M')"

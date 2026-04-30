@@ -917,12 +917,12 @@ GET https://apigw.trendyol.com/integration/finance/sellers/{sellerId}/cargo-invo
 
 **Trendyol API Collection:**
 ```
-https://api.postman.com/collections/36945960-f299f4ac-3cc4-4046-9265-3ca292b35deb?access_key=PMAT-01JP73Q6C4P7EJV2P4WF4MVN3E
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 **Trendyol Webhook Collection:**
 ```
-https://api.postman.com/collections/36945960-f8cac0c6-61f5-4cae-acdd-8c8bf5d2a7f2?access_key=PMAT-01JP73ZAWG57SVKBW7VKYCAYBS
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 Import via: Postman > Import > Link
 

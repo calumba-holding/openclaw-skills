@@ -4,7 +4,7 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 
 ## API Keys & Services
 
-- **Groq API:** `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` (Whisper audio transcription)
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - **ElevenLabs API:** Configured (sk_98316c1321b6263ab8d3fc46b8439c23b9fc076691d85c1a) for TTS
 
 ## TTS / Voice
@@ -18,7 +18,7 @@ Skills define *how* tools work. This file is for *your* specifics — the stuff 
 - **Account SID:** AC35fce9f5069e4a19358da26286380ca9
 - **Auth Token:** a7700999dcff89b738f62c78bd1e33c1
 - **API Key:** 2Tu5wuVeNWCulhAy8G2Y4Ai1g58tNsRp
-- **API SID:** SK70650ad316ca54799b1223e528127197
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - **Twilio Phone Number:** (915) 223-7302
 - **Test Number:** 915-730-8926 (your phone)
 - **Tyler:** +19152134309

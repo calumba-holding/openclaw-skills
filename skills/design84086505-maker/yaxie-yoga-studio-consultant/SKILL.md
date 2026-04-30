@@ -55,7 +55,7 @@ node scripts/wiki_list.js
 
 飞书应用凭证（在TOOLS.md中查找）：
 - App ID: cli_a93b38f075b89cc4
-- App Secret: CRSq1ZHlMM0QE488w9ph1fX0gG2eDXox
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ## 注意事项
 

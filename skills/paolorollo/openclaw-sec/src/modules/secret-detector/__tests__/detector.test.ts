@@ -157,7 +157,7 @@ describe('SecretDetector', () => {
     describe('Slack tokens', () => {
       it('should detect Slack bot token (xoxb)', async () => {
         const detector = new SecretDetector(defaultConfig);
-        const text = 'xoxb-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456';
+// OpenClaw security redaction: secret removed from archive.
 
         const findings = await detector.scan(text);
 

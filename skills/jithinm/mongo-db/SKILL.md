@@ -41,7 +41,7 @@ Connection is resolved in this order (first match wins):
 
 ### Option 1 — Environment variable (recommended)
 ```
-MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/mydb
+<!-- OpenClaw security redaction: secret removed from archive. -->
 MONGO_DB=mydb   # optional if the db is in the URI
 ```
 

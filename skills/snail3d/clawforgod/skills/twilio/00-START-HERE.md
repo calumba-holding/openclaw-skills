@@ -68,7 +68,7 @@ pip install -r requirements.txt
 
 ### Step 2: Set Your Credentials
 ```bash
-export TWILIO_ACCOUNT_SID="AC35fce9f5069e4a19358da26286380ca9"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export TWILIO_AUTH_TOKEN="a7700999dcff89b738f62c78bd1e33c1"
 export TWILIO_PHONE_NUMBER="+19152237302"
 ```

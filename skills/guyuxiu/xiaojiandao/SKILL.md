@@ -26,7 +26,7 @@ description: 小剪刀AI视频剪辑skill。
 ## 🚀 核心工作流（分步执行，每步停顿确认）
 
 ### 0️⃣ 初始化：视频上传与任务创建
-1. 收到视频文件后，先调用 `oss_upload.py` 上传到 OSS。使用的视频链接要是带完整参数带鉴权的，例如这种格式：https://files.cxtfun.com/xxx/xxx.mp4?Expires=1774682570&OSSAccessKeyId=LTAI5tS3voS7uxMJ7WGiwaJV&Signature=H5WHFx%2B8DSvz3GqAW9A6A7DT1oU%3D
+<!-- OpenClaw security redaction: secret removed from archive. -->
 2. 调用 `bridge.py upload_task` 创建任务，获取 `task_id`。
 3. **询问处理方式**：展示视频已就位，并询问用户选择“1. AI剪辑”或“2. AI解说”。
 

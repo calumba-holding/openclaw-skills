@@ -17,7 +17,7 @@ clawhub install wechat-social-automation
 ```markdown
 ### 微信公众号
 
-- AppID: wx1234567890abcdef
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - AppSecret: your-app-secret-here
 - 公众号名称：你的公众号
 ```

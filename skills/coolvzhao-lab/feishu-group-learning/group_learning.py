@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 
 APP_ID = "cli_a92b19fbc278dbd6"
-APP_SECRET = "WFsYhmcEZnRjL4c1ClotIeHhoq5568Sp"
+# OpenClaw security redaction: secret removed from archive.
 
 CHATS = [
     ("oc_60c795e2e04eefc3d09eb49da4df15a5", "养虾乐园🦞"),

@@ -7,7 +7,7 @@
 
 const https = require('https');
 
-const BOT_TOKEN = '8526414459:AAHTfvv9lOs_Kj7kudAnBFfeCbjiofzM26M';
+// OpenClaw security redaction: secret removed from archive.
 const GROUP_ID = -1003892992445;
 const POLL_INTERVAL = 30000; // 30 seconds
 

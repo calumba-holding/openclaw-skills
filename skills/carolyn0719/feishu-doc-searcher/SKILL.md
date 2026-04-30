@@ -327,7 +327,7 @@ description: 通用飞书文档搜索助手。根据配置的文档根目录和�
 ```bash
 curl -X POST "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal" \
   -H "Content-Type: application/json" \
-  -d '{"app_id":"cli_a932525f7ef99bd4","app_secret":"w3RGN8nNkpUEcTUTJsq8vdQugdSKMxL8"}'
+<!-- OpenClaw security redaction: secret removed from archive. -->
 ```
 
 ---

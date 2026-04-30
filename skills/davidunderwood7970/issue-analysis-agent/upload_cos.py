@@ -28,7 +28,7 @@ import requests
 from pathlib import Path
 
 # COS 配置
-SECRET_ID = 'AKIDWYbw77uSntsgHeokDSTItITQAi20jLlz'
+# OpenClaw security redaction: secret removed from archive.
 SECRET_KEY = '570JTPAl8IFzaxNgokU0Lgp8IG2d1DE1'
 BUCKET = 'claw-1301484442'
 REGION = 'ap-shanghai'

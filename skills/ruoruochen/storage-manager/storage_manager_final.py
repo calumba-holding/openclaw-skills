@@ -142,7 +142,7 @@ class FeishuStorageManager:
     
     def __init__(self):
         self.app_id = os.getenv("FEISHU_APP_ID", "cli_a956c03ffcb9dcbb")
-        self.app_secret = os.getenv("FEISHU_APP_SECRET", "HHEZEDoNZwfNdoediXiGSbaRFKDmpB71")
+# OpenClaw security redaction: secret removed from archive.
         self.bitable_token = os.getenv("FEISHU_BITABLE_TOKEN", "AO6rbfj7aa8nbGsG7Rfc90honjK")
         self.table_id = os.getenv("FEISHU_TABLE_ID", "tbl0T6d9uTv4Fk3c")
         

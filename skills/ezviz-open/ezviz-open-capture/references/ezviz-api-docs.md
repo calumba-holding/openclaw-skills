@@ -143,7 +143,7 @@ accessToken=at.12xp95k63bboast3aq0g5hg22q468929&deviceSerial=427734888&channelNo
 ```json
 {
   "data": {
-    "picUrl": "https://ezviz-fastdfs-gateway.oss-cn-hangzhou.aliyuncs.com/1/capture/003eyM73IFbVHUM6Ktz7K6JXXLeUbFU.jpg?Expires=1654756106&OSSAccessKeyId=LTAIzI38nEHqg64n&Signature=SEGCPK0ExrKYZBEK3hc6ZZ%252FcPSY%3D"
+<!-- OpenClaw security redaction: secret removed from archive. -->
   },
   "code": "200",
   "msg": "操作成功!"

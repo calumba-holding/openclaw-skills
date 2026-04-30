@@ -45,7 +45,7 @@ metadata:
 channels:
   wecom:
     enabled: true
-    corpId: "wx1234567890abcdef"      # 企业 ID
+<!-- OpenClaw security redaction: secret removed from archive. -->
     agentId: 1000001                   # 应用 AgentId
     secret: "xxxxxxxxxxxxxxxxxxxxxxxx"  # 应用 Secret
 ```

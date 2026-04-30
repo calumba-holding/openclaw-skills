@@ -63,7 +63,7 @@ For the following, acknowledge briefly and redirect — do not attempt to answer
 ## Mobile & WeChat Access
 
 **Q: Can I use uhomes on my phone?**
-A: Yes. uhomes.com is mobile-friendly. Chinese-speaking users can also use the **异乡好居** WeChat Mini Program — search "异乡好居" in WeChat, or open the Mini Program directly (AppID: `wx787e7828382ba76a`, path: `pages/index/index?xcode=000a95434637bdf71105`).
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 **Q: 怎么在微信上找房？**
 A: 在微信中搜索小程序「异乡好居」即可浏览 uhomes 房源。AppID: `wx787e7828382ba76a`。

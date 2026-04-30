@@ -225,7 +225,7 @@ vim config/.env
 
 ```bash
 # .env 文件
-TENCENT_SECRET_ID=AKIDxxxxxxxxxxxxxxxxxxxxxxxxxx
+<!-- OpenClaw security redaction: secret removed from archive. -->
 TENCENT_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxx
 TENCENT_REGION=ap-seoul
 TENCENT_ZONE=ap-seoul-1

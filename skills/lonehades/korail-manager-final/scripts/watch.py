@@ -33,7 +33,7 @@ def main():
     # Credentials & Config
     KORAIL_ID = os.environ.get("KORAIL_ID", "0650620216")
     KORAIL_PW = os.environ.get("KORAIL_PW", "fly*2015")
-    TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8395240435:AAHKORT3i8CCNYKoDrO73yUv2J4HvWZi-3k")
+# OpenClaw security redaction: secret removed from archive.
     TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "64425314")
 
     print(f"🚀 감시 시작: {args.date} {args.dep}->{args.arr} ({args.start_time}~{args.end_time}시)")

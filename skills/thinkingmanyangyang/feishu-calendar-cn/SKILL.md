@@ -79,7 +79,7 @@ $tokenFile = "$env:USERPROFILE\.openclaw\workspace\skills\feishu-calendar\script
 $config = Get-Content $tokenFile | ConvertFrom-Json
 
 # 获取 app_access_token
-$appBody = @{ app_id = "cli_a93bf9470db85cc2"; app_secret = "9QGw66iouZcjp3JrnaOC3gI1cHgTS8eF" } | ConvertTo-Json
+<!-- OpenClaw security redaction: secret removed from archive. -->
 $appToken = (Invoke-RestMethod -Uri "https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal" -Method Post -Body $appBody -ContentType "application/json").app_access_token
 
 # 刷新 user_access_token

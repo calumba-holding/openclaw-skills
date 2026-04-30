@@ -43,7 +43,7 @@ public class CloseOrder {
 
     CloseOrderRequest request = new CloseOrderRequest();
     request.outTradeNo = "1217752501201407033233368018";
-    request.mchid = "1230000109";
+// OpenClaw security redaction: secret removed from archive.
     try {
       client.run(request);
     } catch (WXPayUtility.ApiException e) {

@@ -14,7 +14,7 @@ import sys
 from typing import Optional, List, Dict
 
 APP_ID = os.environ.get("FEISHU_APP_ID", "cli_a9f13ef641f8dcd9")
-APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "z7Aq63KvIUJNVRA5UbtOkd48on8rmA26")
+# OpenClaw security redaction: secret removed from archive.
 
 
 class FeishuCardSender:

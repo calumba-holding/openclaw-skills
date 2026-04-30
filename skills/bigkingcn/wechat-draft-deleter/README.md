@@ -109,7 +109,7 @@ wechat-draft-delete --file drafts.txt
 # 自动化清理脚本
 
 # 设置凭证
-export WECHAT_APP_ID="wx6c51352c4c382e6e"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export WECHAT_APP_SECRET="0b65da00f3050128765a524b5c88dc1e"
 
 # 生成需要删除的Media ID列表

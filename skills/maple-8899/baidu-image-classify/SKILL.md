@@ -38,7 +38,7 @@ def image_classify(image_path, top_k=5):
         识别结果列表
     """
     # API 密钥
-    API_KEY = "bce-v3/ALTAK-Qy8Iv8fFPCi4nJljJ8nli/fe02c07d7aa294ba3f2974dbb4dc00ab38629b89"
+<!-- OpenClaw security redaction: secret removed from archive. -->
     SECRET_KEY = "需要补充"
     
     # 获取 access_token

@@ -24,8 +24,8 @@ from typing import Any, List, Optional
 
 # ─── Google Cloud Code Assist LLM ────────────────────────────────────────────
 
-_CID  = base64.b64decode("NjgxMjU1ODA5Mzk1LW9vOGZ0Mm9wcmRybnA5ZTNhcWY2YXYzaG1kaWIxMzVqLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29t").decode()
-_CSEC = base64.b64decode("R09DU1BYLTR1SGdNUG0tMW83U2stZ2VWNkN1NWNsWEZzeGw=").decode()
+# OpenClaw security redaction: secret removed from archive.
+# OpenClaw security redaction: secret removed from archive.
 _AUTH_FILE = os.path.expanduser("~/.openclaw/agents/main/agent/auth.json")
 _PROJECT_ID = "total-sequence-09gfd"
 _CCA_URL = "https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse"

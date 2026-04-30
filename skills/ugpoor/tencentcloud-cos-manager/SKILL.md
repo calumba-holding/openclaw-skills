@@ -175,7 +175,7 @@ pip3 install --break-system-packages \
 
 ```bash
 # 腾讯云 API 凭证 (子用户)
-TENCENT_SECRET_ID=AKIDxxxxxxxxxxxxxxxxxxxxxxxxxx
+<!-- OpenClaw security redaction: secret removed from archive. -->
 TENCENT_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # 区域配置

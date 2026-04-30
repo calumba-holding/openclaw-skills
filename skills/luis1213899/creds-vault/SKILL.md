@@ -39,7 +39,7 @@ metadata:
       "name": "微信公众号",
       "category": "social",
       "fields": {
-        "appid": "wxd9f577d56948e564",
+<!-- OpenClaw security redaction: secret removed from archive. -->
         "appsecret": "44b92c25b849a51226c224c4188ffd77"
       },
       "expire_at": null,

@@ -49,7 +49,7 @@ Open your terminal and set the environment variables:
 
 ```bash
 # Replace with your actual API credentials
-export BAIDU_API_STRING='${BAIDU_API_STRING}'
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export BAIDU_SECRET_KEY='${BAIDU_SECRET_KEY}'
 
 # To make these permanent, add to your ~/.bashrc or ~/.zshrc:

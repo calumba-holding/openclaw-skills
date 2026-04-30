@@ -219,7 +219,7 @@ Results are printed as JSON to stdout.
 >
 > Example of a complete signed URL (use the full URL including all query parameters):
 > ```
-> https://xxxxx-1302252611.cos.ap-xxxxx.myqcloud.com/aura-space/xxxxx-generations/1773219641183_qa879k.jpeg?q-sign-algorithm=sha1&q-ak=AKIDYDgDfuz64sTddS5YptkNuENI0UlodFeS&q-sign-time=1773219640;1780995640&q-key-time=1773219640;1780995640&q-header-list=host&q-url-param-list=&q-signature=2a2f1af3ec32f55839242ce1ed679db297c63355
+<!-- OpenClaw security redaction: secret removed from archive. -->
 > ```
 
 On success, extract the URL from the JSON output and download with `curl`:

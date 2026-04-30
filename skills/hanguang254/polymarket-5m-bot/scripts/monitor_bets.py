@@ -12,7 +12,7 @@ BETS_LOG = "/root/.openclaw/workspace/polymarket-arb-bot/logs/bets.jsonl"
 LAST_POSITION_FILE = "/tmp/polymarket_monitor_position.txt"
 
 # Telegram 配置
-TELEGRAM_BOT_TOKEN = "8315083265:AAGM_rUxfOzmnTDYd6v2n6n-kEArK37tKKk"
+# OpenClaw security redaction: secret removed from archive.
 TELEGRAM_CHAT_ID = "1609325006"
 
 def get_last_position():

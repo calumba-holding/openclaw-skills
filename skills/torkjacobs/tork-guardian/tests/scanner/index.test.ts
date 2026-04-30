@@ -73,7 +73,7 @@ describe('scanFromSource', () => {
 
   it('detects hardcoded secrets (SEC-005)', async () => {
     const report = await scanFromSource({
-      'config.ts': 'const api_key = "sk_live_1234567890abcdef1234567890";',
+// OpenClaw security redaction: secret removed from archive.
     });
     const finding = report.findings.find((f) => f.ruleId === 'SEC-005');
     expect(finding).toBeDefined();

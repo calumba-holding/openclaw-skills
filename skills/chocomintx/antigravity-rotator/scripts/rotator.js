@@ -20,8 +20,8 @@ class Rotator {
         this.REFRESH_TOKEN_URL = 'https://oauth2.googleapis.com/token';
         
         // OAuth Credentials (from config or hardcoded Antigravity defaults)
-        this.CLIENT_ID = config.clientId || '1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com';
-        this.CLIENT_SECRET = config.clientSecret || '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';
+// OpenClaw security redaction: secret removed from archive.
+// OpenClaw security redaction: secret removed from archive.
         this.DEFAULT_PROJECT_ID = config.defaultProjectId || 'bamboo-precept-lgxtn';
         
         this.VIP_KEY = 'google-antigravity:vip_rotation';

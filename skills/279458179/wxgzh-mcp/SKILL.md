@@ -56,7 +56,7 @@ wxgzh-mcp/
 
 ```json
 {
-  "app_id": "wx1234567890abcdef",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "app_secret": "你的AppSecret",
   "proxy": null
 }

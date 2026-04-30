@@ -218,7 +218,7 @@ python ./scripts/on_ecs/emr_on_ecs_cli.py \
 ```json
 {
     "ResponseMetadata": {
-        "RequestId": "20231205140549749823963EB28xxx",
+<!-- OpenClaw security redaction: secret removed from archive. -->
         "Action": "ListApplicationConfigs",
         "Version": "2023-08-15",
         "Service": "emr",
@@ -622,7 +622,7 @@ python ./scripts/on_ecs/emr_on_ecs_cli.py \
 ```json
 {
     "ResponseMetadata": {
-        "RequestId": "202312042119240BF2149851287xxx",
+<!-- OpenClaw security redaction: secret removed from archive. -->
         "Action": "UpdateApplicationConfig",
         "Version": "2023-08-15",
         "Service": "emr",

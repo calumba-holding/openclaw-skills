@@ -6,7 +6,7 @@ import tempfile
 from os import getcwd
 
 # Your Storj credentials
-OPENROUTER_KEY = "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"
+# OpenClaw security redaction: secret removed from archive.
 STORJ_ACCESS_KEY = "jv66pc2vf7gqduf3e35wc3lpduoa"
 STORJ_SECRET_KEY = "jz66ggo7yi2xpgwflpjdq2uhg42hq3yogqd4snp5pq6ldzdmybrzs"
 STORJ_ENDPOINT = "https://eu1.gateway.storjshare.io"

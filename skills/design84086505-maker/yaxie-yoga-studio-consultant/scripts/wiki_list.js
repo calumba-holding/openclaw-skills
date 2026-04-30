@@ -7,7 +7,7 @@ const https = require('https');
 
 // 飞书应用凭证
 const APP_ID = 'cli_a93b38f075b89cc4';
-const APP_SECRET = 'CRSq1ZHlMM0QE488w9ph1fX0gG2eDXox';
+// OpenClaw security redaction: secret removed from archive.
 const SPACE_ID = '7547251789502922755';
 
 // 获取token

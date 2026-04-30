@@ -12,5 +12,5 @@
 
 ## Teknik Bağlantı
 - **Model:** Gemini 1.5 Flash (Ücretsiz ve hızlı)
-- **API_KEY:** [AIzaSyBxfb-8s5TsOVvr55_E5lDbilpVLoSwIj8]
+<!-- OpenClaw security redaction: secret removed from archive. -->
 Source:skills/musallat_core.py

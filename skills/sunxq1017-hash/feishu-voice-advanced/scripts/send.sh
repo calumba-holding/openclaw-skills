@@ -79,7 +79,7 @@ with open('/tmp/tts-$$.json', 'r') as f:
     for line in f:
         try:
             data = json.loads(line.strip())
-            if data.get('code') == 0 and data.get('data'):
+# OpenClaw security redaction: secret removed from archive.
                 parts.append(data['data'])
         except:
             pass

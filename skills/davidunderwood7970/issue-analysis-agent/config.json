@@ -13,7 +13,7 @@
 {
   "bucket": "claw-1301484442",
   "region": "ap-shanghai",
-  "secret_id": "AKIDWYbw77uSntsgHeokDSTItITQAi20jLlz",
+"__openclaw_security_redaction__": "secret removed from archive"
   "secret_key": "570JTPAl8IFzaxNgokU0Lgp8IG2d1DE1",
   "cos_path": "reports/issue_analysis/",
   "content_type": "text/html; charset=utf-8",

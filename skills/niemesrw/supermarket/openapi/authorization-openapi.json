@@ -336,7 +336,7 @@
           "refresh_token": {
             "type": "string",
             "description": "A token that can be used to request a new token on behalf of the end user. Refresh tokens have a longer expiration, typically 24 hours.",
-            "example": "FN20LbaF2EWC6MPMWdemBwwnP4ZmX8"
+"__openclaw_security_redaction__": "secret removed from archive"
           }
         }
       },

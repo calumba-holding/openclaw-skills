@@ -15,7 +15,7 @@ Example response:
 ```
 Done! Congratulations on your new bot...
 Use this token to access the HTTP API:
-7123456789:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 Keep your token secure...
 ```

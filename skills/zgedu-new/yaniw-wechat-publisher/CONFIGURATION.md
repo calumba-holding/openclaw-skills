@@ -125,7 +125,7 @@ A:
 | 字段 | 说明 | 示例 |
 |------|------|------|
 | `name` | 公众号名称 | "我与AI那些事" |
-| `app_id` | 微信 AppID | "wx94029d52b0b25543" |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | `app_secret` | 微信 AppSecret | "583856bd1c7075ffdd2e9f9bd415a0c2" |
 | `author` | 作者名称 | "我与AI那些事" |
 | `base_dir` | 工作目录名称 | "公众号-我与AI那些事" |

@@ -50,7 +50,7 @@ curl --location 'https://api.vwu.ai/v1/images/generations/' \
   "created": 1773386658,
   "data": [
     {
-      "url": "https://ark-content-generation-v2-cn-beijing.tos-cn-beijing.volces.com/doubao-seedream-4-5/021773386641671e645a7ebc8dd03740e8d979685c0f6a0d07cb2_0.jpeg?X-Tos-Algorithm=TOS4-HMAC-SHA256&X-Tos-Credential=AKLTYWJkZTExNjA1ZDUyNDc3YzhjNTM5OGIyNjBhNDcyOTQ%2F20260313%2Fcn-beijing%2Ftos%2Frequest&X-Tos-Date=20260313T072418Z&X-Tos-Expires=86400&X-Tos-Signature=d3d0c33965f7d2eecc3c1f5bdbb83c590c35eca4c73f383d7135f4b8411dd2a2&X-Tos-SignedHeaders=host",
+<!-- OpenClaw security redaction: secret removed from archive. -->
       "size": "2048x2048"
     }
   ],

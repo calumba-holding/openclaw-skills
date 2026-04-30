@@ -14,8 +14,8 @@
 
 ```yaml
 wx-pay:
-  app-id: wx1234567890abcdef
-  mch-id: 1234567890
+<!-- OpenClaw security redaction: secret removed from archive. -->
+<!-- OpenClaw security redaction: secret removed from archive. -->
   serial-no: XXXXXXXXXXXXXXXXXX     # 证书序列号
   api-v3-key: xxxxxxxx               # APIv3密钥（32位）
   # Api-v2 密钥（也称 APIKEY）

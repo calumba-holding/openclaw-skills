@@ -55,7 +55,7 @@ A complete two-way SMS system for the Twilio skill that:
 ### Step 1: Start Webhook Server
 ```bash
 cd ~/clawd/skills/twilio
-export TWILIO_ACCOUNT_SID="AC35fce9f5069e4a19358da26286380ca9"
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export TWILIO_AUTH_TOKEN="a7700999dcff89b738f62c78bd1e33c1"
 export TWILIO_PHONE_NUMBER="+19152237302"
 python webhook_server.py

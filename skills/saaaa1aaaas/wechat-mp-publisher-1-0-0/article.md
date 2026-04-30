@@ -34,7 +34,7 @@
 
 扫码登录后，点击左侧菜单的 **开发 → 基本配置**
 
-在这个页面你能看到 AppID（类似 wx1ec4bd8707cd30c4）和 AppSecret。
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 **注意：**
 - AppSecret 需要点击"重置"才能看到（重置后旧的会失效）

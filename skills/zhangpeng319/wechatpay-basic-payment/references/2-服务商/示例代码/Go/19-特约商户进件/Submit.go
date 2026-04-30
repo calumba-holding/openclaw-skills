@@ -112,7 +112,7 @@ func main() {
 					BizStoreAddress:  wxpay_utility.String("南山区xx大厦x层xxxx室"),
 					StoreEntrancePic: []string{"0P3ng6KTIW4-Q_l2FjKLZuhHjBWoMAjmVtCz7ScmhEIThCaV-4BBgVwtNkCHO_XXqK5dE5YdOmFJBZR9FwczhJehHhAZN6BKXQPcs-VvdSo"},
 					IndoorPic:        []string{"0P3ng6KTIW4-Q_l2FjKLZuhHjBWoMAjmVtCz7ScmhEIThCaV-4BBgVwtNkCHO_XXqK5dE5YdOmFJBZR9FwczhJehHhAZN6BKXQPcs-VvdSo"},
-					BizSubAppid:      wxpay_utility.String("wx1234567890123456"),
+// OpenClaw security redaction: secret removed from archive.
 				},
 				MpInfo: &MpInfo{
 					MpAppid:    wxpay_utility.String("wx1234567890123456"),

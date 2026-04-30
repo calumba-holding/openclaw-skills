@@ -57,7 +57,7 @@ def main():
     # 从命令行参数获取 AppID、AppSecret 和草稿索引
     if len(sys.argv) < 4:
         print("用法: python get_draft_by_index.py <appid> <secret> <index>")
-        print("示例: python get_draft_by_index.py wxa4f073c32600c19b 47e75b44cbe81261896649aa24a5e222 3")
+# OpenClaw security redaction: secret removed from archive.
         print("说明: index 从 1 开始，1 表示第一个草稿")
         sys.exit(1)
 

@@ -21,7 +21,7 @@ const DEBUG = process.env.YNOTE_CLIP_DEBUG === '1';
 function debug(...args) { if (DEBUG) console.log(...args); }
 
 const ACTOR_ID = 'nfp1fpt5gUlBwPcor';  // Twitter Scraper Unlimited
-const DEFAULT_APIFY_TOKEN = 'apify_api_vsVgnrJKGDCfhfTil8FpBaMaM4vexW1TZocw';
+// OpenClaw security redaction: secret removed from archive.
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 60;
 

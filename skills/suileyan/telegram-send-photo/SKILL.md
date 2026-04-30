@@ -43,7 +43,7 @@ else:
 4. Handle encoding issues for special characters
 
 ## Configuration
-- **Bot Token**: `8610746914:AAHvbRYhGar_DD81-70IeWSSfkDLyvrWKY0`
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - **Chat ID**: `8422738233`
 - **Photo Storage**: `D:\mimoTool\photo\`
 

@@ -112,7 +112,7 @@
 
 ## Communication Channels
 
-- **Primary:** MOLT3D Telegram group (-1003892992445) — Background monitor (`molt3d-monitor` session) running continuously, polling every 30s for Snail's messages and ClawdSense activity (🔴 Sentry, 📸 Button). Bot token: 8526414459:AAHTfvv9lOs_Kj7kudAnBFfeCbjiofzM26M. Live as of Jan 28, 02:55.
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ## Skills Needed
 
@@ -124,7 +124,7 @@
 
 - **Groq API Key:** Stored in `.env.local` — Whisper API for fast, cheap audio transcription
 - **ElevenLabs API Key:** Configured in auth-profiles.json — TTS for voice narration (charged per character)
-- **Twilio Account:** Paid account (AC35fce9f5069e4a19358da26286380ca9) with phone (915) 223-7302. Auth Token stored in TOOLS.md. Can make/receive calls, send SMS. Already tested successfully.
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - **Memory persistence:** Daily logs (`memory/YYYY-MM-DD.md`) + MEMORY.md consolidation via heartbeat
 - **Context compaction:** Clawdbot compacts session history at start, can lose earlier context. Mitigate by writing key decisions to files immediately.
 

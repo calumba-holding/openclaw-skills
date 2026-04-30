@@ -18,7 +18,7 @@ Get up and running with semantic memory for Clawdbot in under 5 minutes.
 
 ```bash
 # Replace with your actual credentials
-export BAIDU_API_STRING='${BAIDU_API_STRING}'
+<!-- OpenClaw security redaction: secret removed from archive. -->
 export BAIDU_SECRET_KEY='${BAIDU_SECRET_KEY}'
 ```
 

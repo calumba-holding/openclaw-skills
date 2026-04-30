@@ -124,7 +124,7 @@ tags:
 |--------|------|---------------|
 | appKey | 必填，不能为空字符串 | "基础信息 Sheet 中的 appKey 未填写，请从 MobTech 官网获取" |
 | appSecret | 必填，不能为空字符串 | "基础信息 Sheet 中的 appSecret 未填写" |
-| 微信 appId | 如填写，必须以 `wx` 开头 | "微信 appId 格式不正确，应以 wx 开头（如 wx1234567890abcdef）" |
+<!-- OpenClaw security redaction: secret removed from archive. -->
 | 微信 appSecret | 如填写，长度应为 32 位 | "微信 appSecret 格式不正确，应为 32 位字符串" |
 | QQ appId | 如填写，必须为纯数字 | "QQ appId 格式不正确，应为纯数字（如 100371282）" |
 | QQ appKey | 如填写，长度应为 32 位 | "QQ appKey 格式不正确，应为 32 位字符串" |

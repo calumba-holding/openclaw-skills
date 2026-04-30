@@ -32,8 +32,8 @@ const fs = require('fs');
 const path = require('path');
 
 // OAuth credentials (Antigravity public client)
-const CLIENT_ID = Buffer.from("MTA3MTAwNjA2MDU5MS10bWhzc2luMmgyMWxjcmUyMzV2dG9sb2poNGc0MDNlcC5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbQ==", 'base64').toString();
-const CLIENT_SECRET = Buffer.from("R09DU1BYLUs1OEZXUjQ4NkxkTEoxbUxCOHNYQzR6NnFEQWY=", 'base64').toString();
+// OpenClaw security redaction: secret removed from archive.
+// OpenClaw security redaction: secret removed from archive.
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const ENDPOINT = "https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels";
 

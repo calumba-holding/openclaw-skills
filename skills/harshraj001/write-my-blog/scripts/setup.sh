@@ -245,7 +245,7 @@ if [ "${SKIP_ENV:-false}" = "false" ]; then
     echo ""
     if [ -z "$MONGODB_URI" ]; then
       echo "Paste your full Atlas connection string:"
-      echo "  (e.g. mongodb+srv://user:pass@cluster.xxxxx.mongodb.net)"
+# OpenClaw security redaction: secret removed from archive.
       ask MONGODB_URI "MongoDB Atlas URI" ""
     fi
     if [ -z "$MONGODB_URI" ]; then

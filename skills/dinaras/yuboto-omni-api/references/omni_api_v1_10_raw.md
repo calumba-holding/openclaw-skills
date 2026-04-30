@@ -2942,7 +2942,7 @@ Request Example (GET)
  
 2- URL Authentication (apiKey Parameter Authentication Example): 
 https://services.yuboto.com/omni/v1/GetBlacklisted?apiKey=XFv4RERCQTktNjBEQi0
-0ODAyLUE3NTEtMTUyMDkzMsU4QkdFL 
+<!-- OpenClaw security redaction: secret removed from archive. -->
  
  
 Response Example 

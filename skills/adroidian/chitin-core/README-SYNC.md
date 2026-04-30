@@ -64,7 +64,7 @@ Providers without keys are skipped (won't crash).
 
 ## Telegram Notifications
 
-- **Bot Token:** 8547915559:AAGqJlIiflFVBayXwT5GS5DsWyBTW_vlfw8
+<!-- OpenClaw security redaction: secret removed from archive. -->
 - **Chat ID:** 1156712793
 - **Trigger:** New models found OR deprecated models detected OR renamed candidates
 

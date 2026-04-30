@@ -1,7 +1,7 @@
 import { Client } from '@larksuiteoapi/node-sdk';
 
 const APP_ID = 'cli_a92115f36af9dcd5';
-const APP_SECRET = 'iRuP8Jj8LT5iJlFXTRpbiWJr2yRiBx84';
+// OpenClaw security redaction: secret removed from archive.
 const USER_OPEN_ID = 'ou_3aed530e2f42a906b704bc474609d7ce';
 
 const client = new Client({

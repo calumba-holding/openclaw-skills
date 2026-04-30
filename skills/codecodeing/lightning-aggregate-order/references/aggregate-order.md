@@ -53,7 +53,7 @@
 
 ```json
 {
-    "sub_appid": "wx1234567890abcdef",
+<!-- OpenClaw security redaction: secret removed from archive. -->
     "sub_openid": "oUpF8uMuAJO_M2pxb1Q9zNjWeS6o"
 }
 ```

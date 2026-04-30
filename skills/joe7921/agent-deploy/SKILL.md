@@ -79,7 +79,7 @@ bash {baseDir}/scripts/remove.sh research
 1. **NEVER edit openclaw.json directly.** Do not use `write`, `edit`, `apply_patch`, or any file editing tool on `openclaw.json`. The deploy script uses `openclaw config set` which is the only safe way.
 2. **NEVER skip the pre-flight check.** Always run the full deploy.sh script. Do not try to run individual `openclaw config set` commands yourself.
 3. **NEVER change the agentId format.** It must be lowercase letters, numbers, and hyphens only. No spaces, no uppercase, no special characters.
-4. **NEVER deploy without a valid bot token.** The token must match the format: `digits:alphanumeric` (e.g., `123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw`).
+<!-- OpenClaw security redaction: secret removed from archive. -->
 5. **NEVER modify the main agent.** The `remove.sh` script refuses to remove the main agent. Do not try to work around this.
 
 ## WHAT THE SCRIPT DOES AUTOMATICALLY

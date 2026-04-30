@@ -61,7 +61,7 @@ This skill is designed to integrate as a primary agent tool:
 - You must supply the user's `act_XXXX` via natural language passing or CLI flags.
 - OpenClaw workers manage the instantiation of your environmental keys dynamically before running `python3 scripts/pipeline.py`.
 
-## Cron Integration
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 Run discovery daily:
 

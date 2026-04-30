@@ -152,7 +152,7 @@ export const secretPatterns: SecurityPattern[] = [
     language: 'all',
     description: 'Slack token',
     examples: [
-      'xoxb-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
+// OpenClaw security redaction: secret removed from archive.
       'xoxa-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
       'xoxp-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',
       'xoxr-1111111111111-2222222222222-FAKE1EXAMPLE2TESTING3456',

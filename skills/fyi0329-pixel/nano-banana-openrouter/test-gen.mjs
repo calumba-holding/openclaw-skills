@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const apiKey = "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";
+// OpenClaw security redaction: secret removed from archive.
 
 async function generate() {
   console.log("Generating logo...");

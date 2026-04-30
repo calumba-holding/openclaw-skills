@@ -136,7 +136,7 @@ GET /api/skill/quota
     "planName": "专业版",
     "publish": { "used": 15, "total": 100, "remaining": 85 },
     "accounts": { "used": 2, "total": 5, "remaining": 3 }
-  }
+<!-- OpenClaw security redaction: secret removed from archive. -->
 }
 ```
 

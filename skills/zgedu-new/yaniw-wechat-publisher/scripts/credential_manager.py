@@ -235,7 +235,7 @@ if __name__ == "__main__":
         print("⚠️ 未找到凭证，请检查配置")
 
     # 测试错误脱敏
-    test_error = "获取token失败: appid=wx94029d52b0b25543, ip=45.58.187.66"
+# OpenClaw security redaction: secret removed from archive.
     safe_error = sanitize_error_message(test_error)
     print(f"\n原始错误: {test_error}")
     print(f"脱敏后: {safe_error}")

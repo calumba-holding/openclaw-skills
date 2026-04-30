@@ -8,7 +8,7 @@ Usage: python3 create_draft.py "<标题>" "<正文HTML>"
 """
 import sys, os, json, urllib.request, urllib.parse, shutil, re
 from html.parser import HTMLParser
-
+# OpenClaw security redaction: secret removed from archive.
 APPID = os.environ.get('WECHAT_APPID', '')
 APPSECRET = os.environ.get('WECHAT_APPSECRET', '')
 UPLOAD_IMG_URL = 'https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token={token}'

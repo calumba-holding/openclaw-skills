@@ -8,7 +8,7 @@ import * as https from 'https';
 
 // 配置
 const APP_ID = 'cli_a93b936aa9391cc7';
-const APP_SECRET = 'aMRJMyi3KSXbSJhRgyx7ycvyT5D3rsrs';
+// OpenClaw security redaction: secret removed from archive.
 
 /**
  * 获取 tenant_access_token

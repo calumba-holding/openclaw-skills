@@ -111,7 +111,7 @@ Use `GET /cgi-bin/freepublish/get?access_token=TOKEN&publish_id=ID` to check pub
 
 ```json
 {
-  "appid": "wx1234567890abcdef",
+<!-- OpenClaw security redaction: secret removed from archive. -->
   "appsecret": "your_appsecret_here"
 }
 ```

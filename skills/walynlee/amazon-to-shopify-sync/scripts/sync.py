@@ -5,7 +5,7 @@ import re
 # 配置
 SHOPIFY_STORE = "dinoho.myshopify.com"
 CLIENT_ID = "81c4dcc547a273e387e7f61d5181b41e"
-CLIENT_SECRET = "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"
+# OpenClaw security redaction: secret removed from archive.
 
 def get_fresh_token():
     url = f"https://{SHOPIFY_STORE}/admin/oauth/access_token"

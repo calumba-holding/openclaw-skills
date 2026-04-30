@@ -71,7 +71,7 @@ def _get_innertube_context(video_url):
     try:
         config = json.loads(m.group(1))
         ctx = config.get("INNERTUBE_CONTEXT")
-        key = config.get("INNERTUBE_API_KEY", "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8")
+# OpenClaw security redaction: secret removed from archive.
         return ctx, key
     except json.JSONDecodeError:
         return None, None

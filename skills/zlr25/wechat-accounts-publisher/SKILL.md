@@ -161,7 +161,7 @@ config.json 支持多个微信公众号账号：
     "accounts": {
       "account1": {
         "name": "账号名称",
-        "appId": "wx1234567890abcdef",
+<!-- OpenClaw security redaction: secret removed from archive. -->
         "appSecret": "your_app_secret",
         "type": "subscription",
         "enabled": true

@@ -39,7 +39,7 @@ openclaw skill config smart-wechat-publisher
 
 # 或命令行配置
 openclaw skill config smart-wechat-publisher \
-  --app-id wxebff9eadface1489 \
+<!-- OpenClaw security redaction: secret removed from archive. -->
   --app-secret 44c10204ceb1bfb3f7ac096754976454
 ```
 

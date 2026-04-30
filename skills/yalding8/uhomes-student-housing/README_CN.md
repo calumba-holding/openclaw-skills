@@ -67,7 +67,7 @@ Skill 会自动使用你的语言回复。房源名称和房型术语（en-suite
 ## 微信小程序
 
 中文用户可以通过微信小程序浏览 uhomes 房源：
-- 微信搜索小程序 **异乡好居**（AppID: `wx787e7828382ba76a`）
+<!-- OpenClaw security redaction: secret removed from archive. -->
 
 ## 版本
 
