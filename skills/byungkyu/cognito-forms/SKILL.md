@@ -25,7 +25,7 @@ Access the Cognito Forms API with managed OAuth authentication. List forms, mana
 # List all forms
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/cognito-forms/api/forms')
+req = urllib.request.Request('https://api.maton.ai/cognito-forms/api/forms')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/cognito-forms/{native-api-path}
+https://api.maton.ai/cognito-forms/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Cognito Forms API endpoint path (starting with `api/`). The gateway proxies requests to `www.cognitoforms.com` and automatically injects your OAuth token.
+Maton proxies requests to `www.cognitoforms.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -61,14 +61,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Cognito Forms OAuth connections at `https://ctrl.maton.ai`.
+Manage your Cognito Forms OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=cognito-forms&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=cognito-forms&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -80,7 +80,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'cognito-forms'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -92,7 +92,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "77de1a60-5f69-45fc-977c-9dfffe7a64d4",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-08T10:39:10.245446Z",
     "last_updated_time": "2026-02-09T04:11:08.342101Z",
@@ -120,7 +120,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -133,14 +133,19 @@ If you have multiple Cognito Forms connections, specify which one to use with th
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/cognito-forms/api/forms')
+req = urllib.request.Request('https://api.maton.ai/cognito-forms/api/forms')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '77de1a60-5f69-45fc-977c-9dfffe7a64d4')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to forms, entries, and documents within the connected Cognito Forms account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -298,7 +303,7 @@ Multiple choice:
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/cognito-forms/api/forms',
+  'https://api.maton.ai/cognito-forms/api/forms',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -315,7 +320,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/cognito-forms/api/forms',
+    'https://api.maton.ai/cognito-forms/api/forms',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 forms = response.json()
@@ -334,7 +339,7 @@ entry_data = {
 }
 
 response = requests.post(
-    'https://gateway.maton.ai/cognito-forms/api/forms/ContactForm/entries',
+    'https://api.maton.ai/cognito-forms/api/forms/ContactForm/entries',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -379,7 +384,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -389,8 +394,8 @@ EOF
 
 1. Ensure your URL path starts with `cognito-forms`. For example:
 
-- Correct: `https://gateway.maton.ai/cognito-forms/api/forms`
-- Incorrect: `https://gateway.maton.ai/api/forms`
+- Correct: `https://api.maton.ai/cognito-forms/api/forms`
+- Incorrect: `https://api.maton.ai/api/forms`
 
 ## Resources
 
