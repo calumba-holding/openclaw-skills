@@ -3,11 +3,16 @@
   "slug": "clickfunnels",
   "displayName": "ClickFunnels",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1770762355467,
-    "commit": "https://github.com/openclaw/skills/commit/0c66ab58930c0ffb1eaf1eeb045adc2b86374d46"
+    "version": "1.0.3",
+    "publishedAt": 1777590802986,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1770762355467,
+      "commit": "https://github.com/openclaw/skills/commit/0c66ab58930c0ffb1eaf1eeb045adc2b86374d46"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770637969400,
