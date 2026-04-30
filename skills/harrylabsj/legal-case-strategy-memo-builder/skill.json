@@ -1,0 +1,28 @@
+{
+  "name": "Legal Case Strategy Memo Builder",
+  "slug": "legal-case-strategy-memo-builder",
+  "version": "1.0.0",
+  "description": "Structures case strategy memos around facts, issues, claims, defenses, strengths, weaknesses, risks, and next actions.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "case-strategy",
+    "litigation",
+    "memo",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "case strategy memo",
+    "litigation risk assessment",
+    "claims defenses",
+    "legal memo",
+    "legal-case-strategy-memo-builder",
+    "legal case strategy memo builder"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
