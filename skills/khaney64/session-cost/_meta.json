@@ -3,11 +3,16 @@
   "slug": "session-cost",
   "displayName": "Session Cost",
   "latest": {
-    "version": "1.0.4",
-    "publishedAt": 1774202026044,
-    "commit": "https://github.com/openclaw/skills/commit/80ef690a149f59095abdc3e0af324ed2b06fdc6f"
+    "version": "1.0.5",
+    "publishedAt": 1777582431188,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.4",
+      "publishedAt": 1774202026044,
+      "commit": "https://github.com/openclaw/skills/commit/80ef690a149f59095abdc3e0af324ed2b06fdc6f"
+    },
     {
       "version": "1.0.3",
       "publishedAt": 1772667612649,

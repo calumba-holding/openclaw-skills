@@ -223,3 +223,5 @@ The "By Agent" section is shown only when multiple agents are present.
 - When `--path` is provided, it overrides agent auto-discovery and scans exactly that directory. The agent name is inferred from the path (e.g., `.../agents/main/sessions` → "main").
 - `--agent` and `--provider` filters can be combined (e.g., `--agent main --provider anthropic`).
 - Single session lookup (`--details <id>`) searches across all discovered agents to find the session file.
+- `*.trajectory.jsonl` files are skipped — they use a different schema and would otherwise show up as `unknown/unknown` rows with zero tokens.
+- Local models (Ollama, etc.) that genuinely report zero token usage display `(not reported by model)` next to the token counts so they can be distinguished from sessions with no assistant activity.

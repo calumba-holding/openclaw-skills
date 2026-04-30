@@ -115,7 +115,9 @@ function findJsonlFiles(dirPath) {
 
       if (entry.isDirectory()) {
         walk(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith('.jsonl')) {
+      } else if (entry.isFile()
+                 && entry.name.endsWith('.jsonl')
+                 && !entry.name.endsWith('.trajectory.jsonl')) {
         files.push(fullPath);
       }
     }
@@ -148,6 +150,7 @@ function analyzeSession(filePath, cutoffTime, agentName) {
   let sessionId = null;
   let firstTimestamp = null;
   let lastTimestamp = null;
+  let assistantMessageCount = 0;
 
   for (const line of lines) {
     try {
@@ -185,6 +188,10 @@ function analyzeSession(filePath, cutoffTime, agentName) {
         if (msg.api) api = msg.api;
         if (msg.model) model = msg.model;
         if (msg.provider) provider = msg.provider;
+
+        if (msg.role === 'assistant') {
+          assistantMessageCount++;
+        }
       }
     } catch (err) {
       // Skip malformed lines
@@ -204,6 +211,7 @@ function analyzeSession(filePath, cutoffTime, agentName) {
     provider: provider || 'unknown',
     model: model || 'unknown',
     usage,
+    assistantMessageCount,
     firstTimestamp: firstTimestamp ? new Date(firstTimestamp).toISOString() : null,
     lastTimestamp: lastTimestamp ? new Date(lastTimestamp).toISOString() : null,
     durationMin: firstTimestamp && lastTimestamp ?
@@ -222,10 +230,12 @@ function sumUsage(sessions) {
     costOutput: acc.costOutput + r.usage.costOutput,
     costCacheRead: acc.costCacheRead + r.usage.costCacheRead,
     costCacheWrite: acc.costCacheWrite + r.usage.costCacheWrite,
-    costTotal: acc.costTotal + r.usage.costTotal
+    costTotal: acc.costTotal + r.usage.costTotal,
+    assistantMessageCount: acc.assistantMessageCount + (r.assistantMessageCount || 0)
   }), {
     input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
-    costInput: 0, costOutput: 0, costCacheRead: 0, costCacheWrite: 0, costTotal: 0
+    costInput: 0, costOutput: 0, costCacheRead: 0, costCacheWrite: 0, costTotal: 0,
+    assistantMessageCount: 0
   });
 }
 
@@ -300,11 +310,14 @@ function printTableRow(result, multiAgent) {
 
 function printModelSummary(label, sessions, totals, indent) {
   const p = indent || '';
+  const tokensUnreported =
+    totals.totalTokens === 0 && totals.assistantMessageCount > 0;
+  const suffix = tokensUnreported ? ' (not reported by model)' : '';
   console.log(`\n${p}${label}`);
   console.log(p + '-'.repeat(80));
   console.log(`${p}  Sessions: ${sessions.length}`);
-  console.log(`${p}  Tokens:   ${totals.totalTokens.toLocaleString()} (input: ${totals.input.toLocaleString()}, output: ${totals.output.toLocaleString()})`);
-  console.log(`${p}  Cache:    read: ${totals.cacheRead.toLocaleString()} tokens, write: ${totals.cacheWrite.toLocaleString()} tokens`);
+  console.log(`${p}  Tokens:   ${totals.totalTokens.toLocaleString()}${suffix} (input: ${totals.input.toLocaleString()}, output: ${totals.output.toLocaleString()})`);
+  console.log(`${p}  Cache:    read: ${totals.cacheRead.toLocaleString()} tokens, write: ${totals.cacheWrite.toLocaleString()} tokens${suffix}`);
   console.log(`${p}  Cost:     $${totals.costTotal.toFixed(4)}`);
   console.log(`${p}    Input:       $${totals.costInput.toFixed(4)}`);
   console.log(`${p}    Output:      $${totals.costOutput.toFixed(4)}`);
@@ -527,12 +540,14 @@ function main() {
       return;
     }
 
+    const unreported = result.usage.totalTokens === 0 && (result.assistantMessageCount || 0) > 0;
+    const sfx = unreported ? ' (not reported by model)' : '';
     console.log(`Session: ${result.sessionId || 'unknown'}`);
     console.log(`Agent: ${result.agent}`);
     console.log(`Model: ${result.provider}/${result.model} (${result.api})`);
     console.log(`Duration: ${result.durationMin} minutes`);
     console.log(`Timestamps: ${result.firstTimestamp || 'N/A'} → ${result.lastTimestamp || 'N/A'}`);
-    console.log(`Tokens: input=${result.usage.input.toLocaleString()}, output=${result.usage.output.toLocaleString()}, total=${result.usage.totalTokens.toLocaleString()}`);
+    console.log(`Tokens: input=${result.usage.input.toLocaleString()}, output=${result.usage.output.toLocaleString()}, total=${result.usage.totalTokens.toLocaleString()}${sfx}`);
     console.log(`Cache: read=${result.usage.cacheRead.toLocaleString()}, write=${result.usage.cacheWrite.toLocaleString()}`);
     console.log(`Cost: $${result.usage.costTotal.toFixed(4)} (input=$${result.usage.costInput.toFixed(4)}, output=$${result.usage.costOutput.toFixed(4)})`);
     return;
@@ -627,12 +642,14 @@ function main() {
       }
     } else {
       for (const r of results) {
+        const unreported = r.usage.totalTokens === 0 && (r.assistantMessageCount || 0) > 0;
+        const sfx = unreported ? ' (not reported by model)' : '';
         console.log(`\nSession: ${r.sessionId || 'unknown'}`);
         if (multiAgent) console.log(`Agent: ${r.agent}`);
         console.log(`Model: ${r.provider}/${r.model} (${r.api})`);
         console.log(`Duration: ${r.durationMin} minutes`);
         console.log(`Timestamps: ${r.firstTimestamp || 'N/A'} → ${r.lastTimestamp || 'N/A'}`);
-        console.log(`Tokens: input=${r.usage.input.toLocaleString()}, output=${r.usage.output.toLocaleString()}, total=${r.usage.totalTokens.toLocaleString()}`);
+        console.log(`Tokens: input=${r.usage.input.toLocaleString()}, output=${r.usage.output.toLocaleString()}, total=${r.usage.totalTokens.toLocaleString()}${sfx}`);
         console.log(`Cache: read=${r.usage.cacheRead.toLocaleString()}, write=${r.usage.cacheWrite.toLocaleString()}`);
         console.log(`Cost: $${r.usage.costTotal.toFixed(4)} (input=$${r.usage.costInput.toFixed(4)}, output=$${r.usage.costOutput.toFixed(4)})`);
       }
