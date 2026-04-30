@@ -25,7 +25,7 @@ Access the Quo API with managed OAuth authentication. Send SMS messages, manage 
 # List phone numbers
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/quo/v1/phone-numbers')
+req = urllib.request.Request('https://api.maton.ai/quo/v1/phone-numbers')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('User-Agent', 'Maton/1.0')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/quo/{native-api-path}
+https://api.maton.ai/quo/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Quo API endpoint path. The gateway proxies requests to `api.openphone.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.openphone.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -63,14 +63,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Quo OAuth connections at `https://ctrl.maton.ai`.
+Manage your Quo OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=quo&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=quo&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -82,7 +82,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'quo'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -104,7 +104,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "21fd90f9-5935-43cd-b6c8-bde9d915ca80",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2025-12-08T07:20:53.488460Z",
     "last_updated_time": "2026-01-31T20:03:32.593153Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,15 +135,20 @@ If you have multiple Quo connections, specify which one to use with the `Maton-C
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/quo/v1/phone-numbers')
+req = urllib.request.Request('https://api.maton.ai/quo/v1/phone-numbers')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('User-Agent', 'Maton/1.0')
-req.add_header('Maton-Connection', '21fd90f9-5935-43cd-b6c8-bde9d915ca80')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to calls, messages, contacts, and conversations for your business phone system within the connected Quo account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -521,7 +526,7 @@ When `nextPageToken` is `null`, you've reached the last page.
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/quo/v1/phone-numbers',
+  'https://api.maton.ai/quo/v1/phone-numbers',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`,
@@ -539,7 +544,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/quo/v1/phone-numbers',
+    'https://api.maton.ai/quo/v1/phone-numbers',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'User-Agent': 'Maton/1.0'
@@ -555,7 +560,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/quo/v1/messages',
+    'https://api.maton.ai/quo/v1/messages',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'User-Agent': 'Maton/1.0',
@@ -608,7 +613,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -618,8 +623,8 @@ EOF
 
 1. Ensure your URL path starts with `quo`. For example:
 
-- Correct: `https://gateway.maton.ai/quo/v1/phone-numbers`
-- Incorrect: `https://gateway.maton.ai/openphone/v1/phone-numbers`
+- Correct: `https://api.maton.ai/quo/v1/phone-numbers`
+- Incorrect: `https://api.maton.ai/openphone/v1/phone-numbers`
 
 ## Resources
 

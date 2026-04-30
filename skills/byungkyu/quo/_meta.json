@@ -3,11 +3,16 @@
   "slug": "quo",
   "displayName": "Quo",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1770762424613,
-    "commit": "https://github.com/openclaw/skills/commit/17d10efbbd113b7c78894b7aae75ea4897c3ad8a"
+    "version": "1.0.3",
+    "publishedAt": 1777589129980,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1770762424613,
+      "commit": "https://github.com/openclaw/skills/commit/17d10efbbd113b7c78894b7aae75ea4897c3ad8a"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770638067183,
