@@ -1,0 +1,173 @@
+name: CodeQL Skills High Severity
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - ".github/CODEOWNERS"
+      - ".github/codeql/**"
+      - ".github/workflows/**"
+  push:
+    branches:
+      - main
+      - "security/**"
+    paths:
+      - ".github/CODEOWNERS"
+      - ".github/codeql/**"
+      - ".github/workflows/**"
+      - "skills/**"
+  schedule:
+    - cron: "20 7 * * *"
+
+concurrency:
+  group: codeql-skills-high-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  workflow-actions:
+    name: Actions workflow security
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout workflow metadata
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            .github
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+        with:
+          languages: actions
+          build-mode: none
+          config-file: ./.github/codeql/workflows-security-high.yml
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+        with:
+          category: "/codeql-skills-high/actions"
+
+  skill-shard:
+    name: Skill shard (${{ matrix.shard }}, ${{ matrix.language }})
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - shard: "0-9"
+            language: javascript-typescript
+            config_file: ./.github/codeql/skills-security-high-0-9.yml
+            sparse_checkout: |
+              .github
+              skills/0*
+              skills/0*/**
+              skills/1*
+              skills/1*/**
+              skills/2*
+              skills/2*/**
+              skills/3*
+              skills/3*/**
+              skills/4*
+              skills/4*/**
+              skills/5*
+              skills/5*/**
+              skills/6*
+              skills/6*/**
+              skills/7*
+              skills/7*/**
+              skills/8*
+              skills/8*/**
+              skills/9*
+              skills/9*/**
+          - shard: "0-9"
+            language: python
+            config_file: ./.github/codeql/skills-security-high-0-9.yml
+            sparse_checkout: |
+              .github
+              skills/0*
+              skills/0*/**
+              skills/1*
+              skills/1*/**
+              skills/2*
+              skills/2*/**
+              skills/3*
+              skills/3*/**
+              skills/4*
+              skills/4*/**
+              skills/5*
+              skills/5*/**
+              skills/6*
+              skills/6*/**
+              skills/7*
+              skills/7*/**
+              skills/8*
+              skills/8*/**
+              skills/9*
+              skills/9*/**
+          - shard: "a"
+            language: javascript-typescript
+            config_file: ./.github/codeql/skills-security-high-a.yml
+            sparse_checkout: |
+              .github
+              skills/a*
+              skills/a*/**
+              skills/A*
+              skills/A*/**
+          - shard: "a"
+            language: python
+            config_file: ./.github/codeql/skills-security-high-a.yml
+            sparse_checkout: |
+              .github
+              skills/a*
+              skills/a*/**
+              skills/A*
+              skills/A*/**
+          - shard: "b"
+            language: javascript-typescript
+            config_file: ./.github/codeql/skills-security-high-b.yml
+            sparse_checkout: |
+              .github
+              skills/b*
+              skills/b*/**
+              skills/B*
+              skills/B*/**
+          - shard: "b"
+            language: python
+            config_file: ./.github/codeql/skills-security-high-b.yml
+            sparse_checkout: |
+              .github
+              skills/b*
+              skills/b*/**
+              skills/B*
+              skills/B*/**
+    steps:
+      - name: Checkout shard
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: ${{ matrix.sparse_checkout }}
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config-file: ${{ matrix.config_file }}
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+        with:
+          category: "/codeql-skills-high/${{ matrix.language }}/${{ matrix.shard }}"

@@ -1,0 +1,39 @@
+name: skills-security-high-b
+
+disable-default-queries: true
+
+queries:
+  - uses: security-extended
+
+query-filters:
+  - include:
+      precision:
+        - high
+        - very-high
+      tags contain: security
+      security-severity: /([7-9]|10)\.(\d)+/
+
+paths:
+  - skills/b*
+  - skills/b*/**
+  - skills/B*
+  - skills/B*/**
+
+paths-ignore:
+  - "**/node_modules"
+  - "**/node_modules/**"
+  - "**/vendor"
+  - "**/vendor/**"
+  - "**/coverage"
+  - "**/coverage/**"
+  - "**/dist"
+  - "**/dist/**"
+  - "**/build"
+  - "**/build/**"
+  - "**/*.min.js"
+  - "**/*.bundle.js"
+  - "**/*.generated.*"
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "**/*fixture*"
+  - "**/*mock*"
