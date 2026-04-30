@@ -1,0 +1,28 @@
+{
+  "name": "Legal IP Portfolio Audit Guide",
+  "slug": "legal-ip-portfolio-audit-guide",
+  "version": "1.0.0",
+  "description": "Helps organize intellectual property assets, ownership records, registrations, licenses, enforcement needs, and commercialization risks.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "ip",
+    "intellectual-property",
+    "audit",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "IP audit",
+    "trademark portfolio",
+    "patent checklist",
+    "intellectual property assets",
+    "legal-ip-portfolio-audit-guide",
+    "legal ip portfolio audit guide"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
