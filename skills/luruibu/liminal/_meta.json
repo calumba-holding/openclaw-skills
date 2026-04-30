@@ -3,11 +3,16 @@
   "slug": "liminal",
   "displayName": "Liminal",
   "latest": {
-    "version": "1.0.8",
-    "publishedAt": 1773635797662,
-    "commit": "https://github.com/openclaw/skills/commit/c97ad1d2fa64d1ca890efe09635126a167b2f34f"
+    "version": "1.0.9",
+    "publishedAt": 1777205468805,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.8",
+      "publishedAt": 1773635797662,
+      "commit": "https://github.com/openclaw/skills/commit/c97ad1d2fa64d1ca890efe09635126a167b2f34f"
+    },
     {
       "version": "1.0.7",
       "publishedAt": 1773334827704,
