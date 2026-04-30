@@ -1,0 +1,10 @@
+# Optional dependencies for file parsing
+# Install only if you need to parse local files
+
+# PDF parsing (alternative: use PyPDF2 which is pure Python)
+pdfplumber>=0.10.0
+
+# EPUB parsing
+ebooklib>=0.18
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
