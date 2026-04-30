@@ -1,13 +1,18 @@
 {
   "owner": "therohitdas",
   "slug": "yt",
-  "displayName": "Yt",
+  "displayName": "yt",
   "latest": {
-    "version": "1.4.1",
-    "publishedAt": 1770817084287,
-    "commit": "https://github.com/openclaw/skills/commit/1d421511ff54d6d0073fbba8d461890a678fe04d"
+    "version": "1.5.1",
+    "publishedAt": 1777474354856,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.4.1",
+      "publishedAt": 1770817084287,
+      "commit": "https://github.com/openclaw/skills/commit/1d421511ff54d6d0073fbba8d461890a678fe04d"
+    },
     {
       "version": "1.3.2",
       "publishedAt": 1769930234664,
