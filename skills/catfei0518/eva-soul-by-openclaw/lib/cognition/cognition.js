@@ -1,11 +1,19 @@
 /**
  * EVA Soul - 认知系统模块 (完整版)
  * 包含：概念抽象、模式识别、知识图谱
+ *
+ * SECURITY MANIFEST:
+ *   Environment variables accessed: SILICONFLOW_API_KEY (向量搜索API)
+ *   External endpoints called: api.siliconflow.cn (向量嵌入服务)
+ *   Local files read: memory/eva-concepts.json, memory/eva-patterns.json, memory/eva-knowledge-graph.json
+ *   Local files written: memory/eva-concepts.json, memory/eva-patterns.json, memory/eva-knowledge-graph.json
  */
 
 const fs = require('fs');
 const path = require('path');
 const { expandPath } = require('../core/config');
+const { fetchWithRetry } = require('../../hooks/errorHandler');
+const logger = require('../../hooks/logger');
 
 /**
  * 概念系统 - 完整版
@@ -292,10 +300,10 @@ class ConceptSystem {
    * 添加概念
    */
   addConcept(concept) {
-    const existing = this.concepts.find(c => 
+    const existing = this.concepts.find(c =>
       c.type === concept.type && c.value === concept.value
     );
-    
+
     if (existing) {
       existing.count = (existing.count || 0) + 1;
       existing.lastSeen = new Date().toISOString();
@@ -306,12 +314,133 @@ class ConceptSystem {
         ...concept,
         createdAt: new Date().toISOString(),
         lastSeen: new Date().toISOString(),
-        count: 1
+        count: 1,
+        // 反馈相关字段（初始化）
+        feedbackScore: 0,
+        feedbackCount: 0,
+        flagged: false,
+        feedbackHistory: []
       });
     }
-    
+
     this.saveConcepts();
     return this.concepts;
+  }
+
+  /**
+   * 记录对概念的反馈（核心方法）
+   * @param {string} conceptId - 概念 ID 或 value（兼容两种方式）
+   * @param {string} type - positive | negative | neutral
+   * @param {string} note - 可选备注
+   * @returns {object} 更新后的概念
+   */
+  adjustFeedback(conceptId, type = 'neutral', note = '') {
+    // 支持按 ID 或按 value 查找
+    const concept = this.concepts.find(c =>
+      c.id === conceptId || c.value === conceptId || c.value === conceptId
+    );
+
+    if (!concept) {
+      return { error: `概念不存在: ${conceptId}` };
+    }
+
+    const scoreMap = { positive: 1, neutral: 0, negative: -1 };
+    const delta = scoreMap[type] ?? 0;
+
+    // 更新反馈分数
+    concept.feedbackScore = (concept.feedbackScore || 0) + delta;
+    concept.feedbackCount = (concept.feedbackCount || 0) + 1;
+
+    // 记录历史（保留最近10条）
+    const event = {
+      type,
+      delta,
+      note,
+      time: new Date().toISOString()
+    };
+    concept.feedbackHistory = (concept.feedbackHistory || []).slice(-9).concat(event);
+
+    // 自动标记：连续3次以上负面反馈 或 总分低于 -3
+    const negCount = concept.feedbackHistory
+      .slice(-5)
+      .filter(e => e.type === 'negative').length;
+    concept.flagged = negCount >= 3 || concept.feedbackScore < -3;
+
+    this.saveConcepts();
+    return {
+      success: true,
+      concept: {
+        value: concept.value,
+        type: concept.type,
+        importance: concept.importance,
+        feedbackScore: concept.feedbackScore,
+        feedbackCount: concept.feedbackCount,
+        effectiveWeight: this.getEffectiveWeight(concept),
+        flagged: concept.flagged
+      }
+    };
+  }
+
+  /**
+   * 获取概念的有效权重（含反馈调整）
+   * @param {object} concept - 概念对象
+   * @returns {number} 调整后权重 [0.1 ~ 10]
+   */
+  getEffectiveWeight(concept) {
+    const base = concept.importance || 5;
+    const score = concept.feedbackScore || 0;
+    // feedbackScore 范围约 [-10, +10]，每偏离1则权重调整 ±10%
+    const multiplier = 1 + score * 0.1;
+    return Math.max(0.1, Math.min(10, base * multiplier));
+  }
+
+  /**
+   * 获取所有概念的有效权重（用于 preResponse 排序）
+   * @returns {Array} 带 effectiveWeight 的概念列表
+   */
+  getConceptsWithWeight() {
+    return this.concepts.map(c => ({
+      ...c,
+      effectiveWeight: this.getEffectiveWeight(c)
+    }));
+  }
+
+  /**
+   * 获取被标记（负面）的概念列表
+   */
+  getFlaggedConcepts() {
+    return this.concepts
+      .filter(c => c.flagged)
+      .map(c => ({
+        value: c.value,
+        type: c.type,
+        importance: c.importance,
+        feedbackScore: c.feedbackScore,
+        feedbackCount: c.feedbackCount,
+        lastFeedback: c.feedbackHistory?.[c.feedbackHistory.length - 1]
+      }));
+  }
+
+  /**
+   * 获取反馈统计
+   */
+  getFeedbackStats() {
+    const all = this.concepts;
+    const flagged = all.filter(c => c.flagged).length;
+    const withFeedback = all.filter(c => c.feedbackCount > 0).length;
+    const totalNegative = all.reduce((s, c) => s + Math.max(0, -(c.feedbackScore || 0)), 0);
+    const totalPositive = all.reduce((s, c) => s + Math.max(0, c.feedbackScore || 0), 0);
+
+    return {
+      total: all.length,
+      withFeedback,
+      flagged,
+      negativeConcepts: totalNegative,
+      positiveConcepts: totalPositive,
+      avgScore: withFeedback > 0
+        ? (all.reduce((s, c) => s + (c.feedbackScore || 0), 0) / withFeedback).toFixed(2)
+        : 0
+    };
   }
   
   /**
@@ -1034,11 +1163,11 @@ class KnowledgeGraph {
 class EmbeddingConceptEnhancer {
   constructor() {
     this.vectorConfig = {
-      apiKey: process.env.SILICONFLOW_API_KEY || 'sk-niomirqoomaiylusfestoavpaflrvcmrygsoarocroladwvt',
+      apiKey: process.env.SILICONFLOW_API_KEY,
       model: 'BAAI/bge-large-zh-v1.5',
       apiUrl: 'https://api.siliconflow.cn/v1/embeddings'
     };
-    
+
     // 预设概念类别向量 (用于相似度匹配)
     this.categoryTemplates = {
       person: ['人名', '人物', '谁', '朋友', '家人', '同事', '老板', '员工'],
@@ -1052,14 +1181,25 @@ class EmbeddingConceptEnhancer {
       education: ['学习', '学校', '考试', '培训', '课程'],
       hobby: ['爱好', '喜欢', '兴趣', '娱乐', '游戏']
     };
+
+    // 模板关键词 embedding 缓存（惰性预计算）
+    this._templateEmbeddings = null;
+    this._embeddingCache = new Map(); // 通用文本缓存（TTL 1小时）
   }
   
   /**
-   * 生成文本embedding向量
+   * 生成文本embedding向量（带缓存，TTL 1小时）
    */
   async generateEmbedding(text) {
+    if (!this.vectorConfig.apiKey) return null;
+
+    const cached = this._embeddingCache.get(text);
+    if (cached && Date.now() - cached.timestamp < 60 * 60 * 1000) {
+      return cached.embedding;
+    }
+
     try {
-      const response = await fetch(this.vectorConfig.apiUrl, {
+      const response = await fetchWithRetry(this.vectorConfig.apiUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.vectorConfig.apiKey}`,
@@ -1070,18 +1210,38 @@ class EmbeddingConceptEnhancer {
           input: [text]
         })
       });
-      
+
       const data = await response.json();
       if (data.data && data.data[0]) {
-        return data.data[0].embedding;
+        const embedding = data.data[0].embedding;
+        this._embeddingCache.set(text, { embedding, timestamp: Date.now() });
+        return embedding;
       }
       return null;
     } catch (e) {
-      console.warn('⚠️ Embedding生成失败:', e.message);
+      logger.warn(`[embedding] 生成失败: ${e.message}`, 'cognition');
       return null;
     }
   }
-  
+
+  /**
+   * 预计算所有模板关键词的 embedding（惰性，一次性）
+   */
+  async _ensureTemplateEmbeddings() {
+    if (this._templateEmbeddings) return;
+
+    const templateEmbeddings = {};
+    for (const [category, keywords] of Object.entries(this.categoryTemplates)) {
+      const vectors = [];
+      for (const keyword of keywords) {
+        const emb = await this.generateEmbedding(keyword);
+        if (emb) vectors.push(emb);
+      }
+      templateEmbeddings[category] = vectors;
+    }
+    this._templateEmbeddings = templateEmbeddings;
+  }
+
   /**
    * 使用embedding增强概念提取
    */
@@ -1092,32 +1252,32 @@ class EmbeddingConceptEnhancer {
       semanticTags: [],
       confidence: 0
     };
-    
+
     // 1. 生成文本向量
     const embedding = await this.generateEmbedding(text);
     if (!embedding) return enhanced;
-    
+
     enhanced.embedding = embedding;
-    
-    // 2. 计算与类别模板的相似度
+
+    // 2. 预计算模板向量（一次性）
+    await this._ensureTemplateEmbeddings();
+
+    // 3. 计算与类别模板的相似度（使用缓存的模板向量）
     const categoryScores = {};
-    
-    for (const [category, keywords] of Object.entries(this.categoryTemplates)) {
-      let score = 0;
-      for (const keyword of keywords) {
-        const keywordEmbedding = await this.generateEmbedding(keyword);
-        if (keywordEmbedding) {
-          const sim = this.cosineSimilarity(embedding, keywordEmbedding);
-          score += sim;
-        }
+
+    for (const [category, templateVectors] of Object.entries(this._templateEmbeddings)) {
+      if (!templateVectors.length) {
+        categoryScores[category] = 0;
+        continue;
       }
-      categoryScores[category] = score / keywords.length;
+      const avgSim = templateVectors.reduce((sum, v) => sum + this.cosineSimilarity(embedding, v), 0) / templateVectors.length;
+      categoryScores[category] = avgSim;
     }
-    
-    // 3. 找出最匹配的类别
+
+    // 4. 找出最匹配的类别
     let maxScore = 0;
     let bestCategory = 'unknown';
-    
+
     for (const [category, score] of Object.entries(categoryScores)) {
       if (score > maxScore) {
         maxScore = score;
@@ -1128,7 +1288,7 @@ class EmbeddingConceptEnhancer {
     enhanced.category = bestCategory;
     enhanced.confidence = maxScore;
     
-    // 4. 生成语义标签
+    // 5. 生成语义标签
     enhanced.semanticTags = this.generateSemanticTags(text, bestCategory, embedding);
     
     return enhanced;

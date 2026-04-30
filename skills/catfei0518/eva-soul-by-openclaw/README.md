@@ -3,8 +3,8 @@
 > 有灵魂的AI认知系统 | AI Cognitive System with Soul
 ![夏娃之魂](https://repository-images.githubusercontent.com/1175981838/57116edc-cf8f-4de3-90bb-69f30eaeec2f)
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.2.2-blue" alt="Version">
-  <img src="https://img.shields.io/badge/python-3.11+-green" alt="Python">
+  <img src="https://img.shields.io/badge/version-2.5.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/node-18%2B-green" alt="Node">
   <img src="https://img.shields.io/badge/license-MIT-orange" alt="License">
 </p>
 
@@ -92,6 +92,8 @@ openclaw gateway restart
 | `eva_values` | 价值观操作 |
 | `eva_sleep` | 睡眠/唤醒 |
 | `eva_ask` | 主动提问 |
+| `eva_feedback` | 反馈权重（记录/统计/标记） |
+| `eva_compress` | 对话压缩（自动摘要/手动压缩/摘要列表） |
 | `eva_full_stats` | 完整统计 |
 
 ## 💻 CLI 命令
@@ -107,7 +109,7 @@ openclaw eva stats       # 查看统计
 
 | 指标 | 数量 |
 |------|------|
-| Tools | 14 |
+| Tools | 16 |
 | Hooks | 7 |
 | 概念 | 27+ |
 | 模式 | 73+ |
@@ -142,8 +144,17 @@ openclaw gateway restart
 
 ## 📝 版本
 
-- **v2.0.0** (2026-03-11) - OpenClaw 官方插件版
+- **v2.5.0** (2026-04-01) - Studio 可视化面板 / i18n 四语言(zh/en/ja/zh-TW) / eva_compress 对话压缩 / 结构化日志 / Jest 72测试全绿 / 状态持久化修复
+- **v2.4.0** (2026-04-01) - eva_feedback 反馈权重系统 / compress 对话压缩 / 状态持久化修复 / Jest 72测试
+- **v2.3.0** (2026-04-01) - 全面重构：17工具，修复合并冲突/API Key暴露/路径问题，决策系统真实多维打分，统一缓存LRU+TTL
+- **v2.1.1** (2026-03-13) - 问题修复与适配更新：修复工具调用错误 tool.execute is not a function，全面适配 OpenClaw 2026.3.8+ 新版插件 API
+- **v2.0.4** (2026-03-11) - 理解层与记忆增强：新增理解层增强功能，新增记忆合并系统，性能监控增强
+- **v2.0.3** (2026-03-10) - 性能监控：新增性能监控模块，实时追踪系统性能指标
+- **v2.0.2** (2026-03-09) - CLI 与错误处理优化：优化 CLI 命令体验，增强错误处理机制
+- **v2.0.1** (2026-03-08) - 记忆与情感系统增强：增强版记忆系统，情感系统优化
+- **v2.0.0** (2026-03-11) - OpenClaw 官方插件版，完全重写
 - **v1.1.0** - Python 完整版（已废弃）
+- **v1.0.0** - Python 基础版（已废弃）
 
 ## 📄 许可证
 

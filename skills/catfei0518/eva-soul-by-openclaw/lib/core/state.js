@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { expandPath } = require('./config');
+const logger = require('../../hooks/logger');
 
 /**
  * 默认状态
@@ -99,7 +100,7 @@ function loadState(memoryPath) {
       const data = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
       return { ...DEFAULT_STATE, ...data };
     } catch (e) {
-      console.warn('⚠️ EVA: Failed to load state:', e.message);
+      logger.warn(`Failed to load state: ${e.message}`, 'state');
       return createState();
     }
   }
@@ -118,7 +119,7 @@ function saveState(state, memoryPath) {
     fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
     return true;
   } catch (e) {
-    console.warn('⚠️ EVA: Failed to save state:', e.message);
+    logger.warn(`Failed to save state: ${e.message}`, 'state');
     return false;
   }
 }
@@ -160,11 +161,15 @@ function updatePersonality(state, personality, modifiers = {}) {
 
 /**
  * 记录交互
+ * @param {object} state - 当前状态
+ * @param {string} [message] - 最后一条交互内容摘要
  */
-function recordInteraction(state) {
+function recordInteraction(state, message = '') {
   state.lastInteraction = new Date().toISOString();
   state.totalInteractions++;
-  
+  if (message) {
+    state.lastInteractionMessage = message.substring(0, 200);
+  }
   return state;
 }
 

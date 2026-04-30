@@ -4,10 +4,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const logger = require('./logger');
 
 async function preCompactionHook(ctx, plugin) {
-  console.log('🎀 EVA: Pre-compaction state save...');
-  
+  logger.hook(logger.t('hooks.preCompaction.saving'), 'preCompaction');
+
   // 保存当前状态
   const stateData = {
     currentEmotion: plugin.state.currentEmotion,
@@ -16,17 +17,17 @@ async function preCompactionHook(ctx, plugin) {
     ownerInfo: plugin.state.ownerInfo,
     savedAt: new Date().toISOString()
   };
-  
+
   // 创建锚点文件
   const anchorFile = path.join(plugin.config.memoryPath, 'eva-compaction-anchor.json');
-  
+
   try {
     fs.writeFileSync(anchorFile, JSON.stringify(stateData, null, 2));
-    console.log('🎀 EVA: State saved for compaction');
+    logger.hook(logger.t('hooks.preCompaction.saved'), 'preCompaction');
   } catch (e) {
-    console.warn('⚠️ EVA: Failed to save state:', e.message);
+    logger.hookWarn(logger.t('hooks.preCompaction.saveFailed', { error: e.message }), 'preCompaction');
   }
-  
+
   return ctx;
 }
 
