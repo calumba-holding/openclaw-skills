@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-news-by-category-query",
+  "displayName": "IMDb News by Category API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777309186079,
+    "commit": null
+  },
+  "history": []
+}
