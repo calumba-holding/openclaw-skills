@@ -1,0 +1,23 @@
+{
+  "name": "Multi-Platform Social Caption Kit",
+  "description": "One message → optimized captions for 6 social platforms (WeChat Moments, Weibo, Instagram, Facebook, Twitter/X, LinkedIn). Preserves brand voice while adapting tone, length, hashtags, and CTAs per platform.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "Social Media Content / Multi-Platform",
+  "keywords": [
+    "social caption", "朋友圈文案", "Weibo caption", "Instagram caption",
+    "cross-platform", "brand voice", "hashtag strategy",
+    "social media pack", "配文", "multi-platform"
+  ],
+  "platforms": ["WeChat Moments (朋友圈)", "Weibo", "Instagram", "Facebook", "Twitter/X", "LinkedIn"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No platform TOS violations (engagement bait, misleading content). Authentic tone — no fake persona or fabricated identity. Proper disclosure for sponsored/paid content. Respect per-platform content policies and restricted topics. No impersonation of individuals or brands."
+  }
+}
