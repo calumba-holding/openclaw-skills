@@ -25,7 +25,7 @@ Access the SignNow API with managed OAuth authentication. Upload documents, send
 # Get current user info
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/signnow/user')
+req = urllib.request.Request('https://api.maton.ai/signnow/user')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/signnow/{resource}
+https://api.maton.ai/signnow/{resource}
 ```
 
-The gateway proxies requests to `api.signnow.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.signnow.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -61,14 +61,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your SignNow OAuth connections at `https://ctrl.maton.ai`.
+Manage your SignNow OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=signnow&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=signnow&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -80,7 +80,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'signnow'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -92,7 +92,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "5ff5474b-5f21-41ba-8bf3-afb33cce5a75",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-08T20:47:23.019763Z",
     "last_updated_time": "2026-02-08T20:50:32.210896Z",
@@ -120,7 +120,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -133,14 +133,19 @@ If you have multiple SignNow connections, specify which one to use with the `Mat
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/signnow/user')
+req = urllib.request.Request('https://api.maton.ai/signnow/user')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '5ff5474b-5f21-41ba-8bf3-afb33cce5a75')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to documents, templates, signing invites, and folders within the connected SignNow account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -223,7 +228,7 @@ with open('document.pdf', 'rb') as f:
     file_content = f.read()
 
 content_type, body = encode_multipart_formdata([('file', 'document.pdf', file_content)])
-req = urllib.request.Request('https://gateway.maton.ai/signnow/document', data=body, method='POST')
+req = urllib.request.Request('https://api.maton.ai/signnow/document', data=body, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', content_type)
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -573,7 +578,7 @@ DELETE /signnow/event_subscription/{subscription_id}
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/signnow/user',
+  'https://api.maton.ai/signnow/user',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -590,7 +595,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/signnow/user',
+    'https://api.maton.ai/signnow/user',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -604,7 +609,7 @@ import requests
 
 with open('document.pdf', 'rb') as f:
     response = requests.post(
-        'https://gateway.maton.ai/signnow/document',
+        'https://api.maton.ai/signnow/document',
         headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
         files={'file': ('document.pdf', f, 'application/pdf')}
     )
@@ -620,7 +625,7 @@ import requests
 
 doc_id = "c63a7bc73f03449c987bf0feaa36e96212408352"
 response = requests.post(
-    f'https://gateway.maton.ai/signnow/document/{doc_id}/invite',
+    f'https://api.maton.ai/signnow/document/{doc_id}/invite',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -681,7 +686,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -691,8 +696,8 @@ EOF
 
 1. Ensure your URL path starts with `signnow`. For example:
 
-- Correct: `https://gateway.maton.ai/signnow/user`
-- Incorrect: `https://gateway.maton.ai/user`
+- Correct: `https://api.maton.ai/signnow/user`
+- Incorrect: `https://api.maton.ai/user`
 
 ## Resources
 
