@@ -1,10 +1,17 @@
-# x402 Payment (v3 — Intent Mandate) — Reference
+# x402 Payment — Reference
 
 ## Overview
 
-x402 is an HTTP-native payment protocol. When an agent requests a paid API, the server responds with HTTP 402 and payment requirements. The agent signs a payment via FluxA Wallet and retries with an `X-Payment` header.
+x402 is an HTTP-native payment protocol. When an agent requests a paid API, the server responds with HTTP 402 and payment requirements. The agent signs a payment via FluxA Wallet and retries with a payment header.
 
-**x402 v3** uses **intent mandates**: the user pre-approves a spending plan (budget + time window), then the agent can make autonomous payments within those limits.
+The CLI supports both **x402 v1** and **x402 v2** formats automatically:
+
+| Version | 402 Response Format | Retry Header | Detection |
+|---------|-------------------|--------------|-----------|
+| v1 | Response body (JSON) | `X-Payment` | Default (no `x402Version` or `x402Version !== 2`) |
+| v2 | `PAYMENT-REQUIRED` header (base64) | `PAYMENT-SIGNATURE` | `x402Version === 2` in payload |
+
+Both versions use **intent mandates**: the user pre-approves a spending plan (budget + time window), then the agent can make autonomous payments within those limits.
 
 This document uses the **CLI** method.
 
@@ -13,7 +20,6 @@ This document uses the **CLI** method.
 | Scenario | Document |
 |----------|----------|
 | Pay for a paid API (HTTP 402) | **This document** |
-| Pay to a payment link | [PAYMENT-LINK.md](PAYMENT-LINK.md) — see "Paying TO a Payment Link" section |
 | Send USDC to a wallet address | [PAYOUT.md](PAYOUT.md) |
 
 ## End-to-End Flow
@@ -21,16 +27,25 @@ This document uses the **CLI** method.
 ```
 1. Create an intent mandate → user signs at authorizationUrl
 2. Agent hits paid API → receives HTTP 402
-3. Agent calls x402-v3 (CLI) or x402V3Payment (API) with mandateId + 402 payload
-4. Agent retries API with X-Payment header → gets data
+3. Agent inspects 402 response:
+   - Has PAYMENT-REQUIRED header? → x402 v2 (use header value as payload)
+   - No header? → x402 v1 (use response body as payload)
+4. Agent calls fluxa-wallet x402 with mandateId + payload
+5. Agent retries API with payment header → gets data
+   - v1: X-Payment header (use xPaymentB64)
+   - v2: PAYMENT-SIGNATURE header (use paymentPayloadB64)
 ```
 
-**Important**: The x402-v3 command requires both `--mandate` and `--payload`. You must create a mandate first (Step 1) before executing payments.
+**Important**: The `x402` command requires both `--mandate` and `--payload`. You must create a mandate first (Step 1) before executing payments.
+
+## Step 0 — Mandate Planning
+
+Before create intent mandate, mandate planning must be completed to estimate the required budget. read MANDATE-PLANNING.md
 
 ## Step 1 — Create Intent Mandate
 
 ```bash
-node scripts/fluxa-cli.bundle.js mandate-create \
+fluxa-wallet mandate-create \
   --desc "Spend up to 0.10 USDC for Polymarket recommendations for 30 days" \
   --amount 100000 \
   --seconds 2592000 \
@@ -45,7 +60,7 @@ node scripts/fluxa-cli.bundle.js mandate-create \
 | `--amount` | Yes | — | Budget limit in atomic units |
 | `--seconds` | No | `28800` (8h) | Validity duration in seconds |
 | `--category` | No | `general` | Category tag |
-| `--currency` | No | `USDC` | Currency |
+| `--currency` | No | `USDC` | Currency. Supported: `USDC`, `XRP`, `FLUXA_MONETIZE_CREDITS` (aliases: `credits`, `fluxa-monetize-credits`) |
 
 **Output:**
 
@@ -77,7 +92,7 @@ node scripts/fluxa-cli.bundle.js mandate-create \
 **Important:** Use `--id`, not `--mandate`:
 
 ```bash
-node scripts/fluxa-cli.bundle.js mandate-status --id mand_xxxxxxxxxxxxx
+fluxa-wallet mandate-status --id mand_xxxxxxxxxxxxx
 ```
 
 **Output:**
@@ -104,19 +119,28 @@ node scripts/fluxa-cli.bundle.js mandate-status --id mand_xxxxxxxxxxxxx
 
 Wait until `mandate.status` is `"signed"`.
 
-## Step 3 — Make x402 v3 Payment
+## Step 3 — Handle 402 Response & Make Payment
 
-Pass the **complete** HTTP 402 response body as `--payload`. The payload **must** contain an `accepts` array.
+When you receive an HTTP 402 response, determine the x402 version:
 
-**Critical:** Do NOT extract individual fields. Pass the entire 402 response JSON:
+### Detecting the version
+
+```
+HTTP 402 received
+  ├─ Has PAYMENT-REQUIRED header? → x402 v2
+  │    payload = header value (base64 string)
+  └─ No header? → x402 v1
+       payload = response body (JSON string)
+```
+
+### Making the payment
+
+The same CLI command handles both versions. Pass the payload as-is — the CLI auto-detects v2 (by checking `x402Version === 2` in the decoded payload).
 
 ```bash
-# Store the 402 response in a variable first
-PAYLOAD_402='{"accepts":[{"scheme":"exact","network":"base","maxAmountRequired":"10000","asset":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913","payTo":"0xFf319473ba1a09272B37c34717f6993b3F385CD3","resource":"https://fluxa-x402-api.gmlgtm.workers.dev/polymarket_recommendations_last_1h","description":"Get Polymarket trading recommendations","extra":{"name":"USD Coin","version":"2"},"maxTimeoutSeconds":60}]}'
-
-node scripts/fluxa-cli.bundle.js x402-v3 \
+fluxa-wallet x402 \
   --mandate mand_xxxxxxxxxxxxx \
-  --payload "$PAYLOAD_402"
+  --payload "$PAYLOAD"
 ```
 
 **Options:**
@@ -124,7 +148,15 @@ node scripts/fluxa-cli.bundle.js x402-v3 \
 | Option | Required | Description |
 |--------|----------|-------------|
 | `--mandate` | Yes | Mandate ID from Step 1 |
-| `--payload` | Yes | The **complete** HTTP 402 response body (must include `accepts` array) |
+| `--payload` | Yes | The 402 payload — either JSON string or base64-encoded string |
+
+**`--payload` accepts both formats:**
+- Raw JSON: `'{"accepts":[...]}'` (v1) or `'{"x402Version":2,"resource":{...},"accepts":[...]}'` (v2)
+- Base64: `'eyJ4NDAyVmVyc2lvbi...'` (e.g. raw `PAYMENT-REQUIRED` header value)
+
+**Currency matching (v1 only):** The CLI automatically selects the `accepts` entry that matches the mandate's currency. If the 402 response contains multiple entries (e.g., USDC + FLUXA_MONETIZE_CREDITS), only the one matching the mandate currency is used. For v2, asset selection is handled by the server.
+
+**Critical:** Do NOT extract individual fields. Pass the entire 402 payload:
 
 **Wrong:**
 ```bash
@@ -134,11 +166,11 @@ node scripts/fluxa-cli.bundle.js x402-v3 \
 
 **Correct:**
 ```bash
-# Pass the full 402 response with accepts array
+# Pass the full 402 payload with accepts array
 --payload '{"accepts":[{...}]}'
 ```
 
-**Output:**
+### v1 output
 
 ```json
 {
@@ -153,13 +185,36 @@ node scripts/fluxa-cli.bundle.js x402-v3 \
 }
 ```
 
-## Step 4 — Retry with X-Payment Header
+### v2 output
 
-Use `xPaymentB64` as the `X-Payment` header:
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "paymentPayloadB64": "eyJ4NDAyVmVyc2lvbi...",
+    "paymentRecordId": 42,
+    "expiresAt": 1711000300
+  }
+}
+```
 
+Note: v2 output does not include `paymentPayload` (filtered by CLI). Use `paymentPayloadB64` directly.
+
+## Step 4 — Retry with Payment Header
+
+Use the correct header name based on the x402 version:
+
+**v1 server** (uses `X-Payment`):
 ```bash
-curl -H "X-Payment: eyJ4NDAyVmVyc2lvbi..." \
+curl -H "X-Payment: <xPaymentB64>" \
   https://fluxa-x402-api.gmlgtm.workers.dev/polymarket_recommendations_last_1h
+```
+
+**v2 server** (uses `PAYMENT-SIGNATURE`):
+```bash
+curl -H "PAYMENT-SIGNATURE: <paymentPayloadB64>" \
+  https://laso.finance/auth
 ```
 
 ## Mandate Ownership Caveat
@@ -172,23 +227,37 @@ If using both methods, ensure you're using the same agent identity.
 
 ```bash
 #!/bin/bash
-CLI="node scripts/fluxa-cli.bundle.js"
-API_URL="https://fluxa-x402-api.gmlgtm.workers.dev/polymarket_recommendations_last_1h"
+CLI="fluxa-wallet"
+API_URL="https://example.com/paid-endpoint"
 MANDATE_ID="mand_xxxxxxxxxxxxx"
 
-# Hit the API
-RESPONSE=$(curl -s -w "\n%{http_code}" "$API_URL")
-HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+# Hit the API, capture headers and body separately
+HTTP_RESPONSE=$(curl -s -D /tmp/x402_headers -w "\n%{http_code}" "$API_URL")
+HTTP_CODE=$(echo "$HTTP_RESPONSE" | tail -n1)
+BODY=$(echo "$HTTP_RESPONSE" | head -n -1)
 
 if [ "$HTTP_CODE" = "402" ]; then
-  PAYLOAD=$(echo "$RESPONSE" | head -n -1)
+  # Check for PAYMENT-REQUIRED header (x402 v2)
+  PR_HEADER=$(grep -i '^payment-required:' /tmp/x402_headers | sed 's/^[^:]*: *//' | tr -d '\r')
+
+  if [ -n "$PR_HEADER" ]; then
+    # v2: use header value (base64) as payload
+    PAYLOAD="$PR_HEADER"
+    HEADER_NAME="PAYMENT-SIGNATURE"
+    FIELD="paymentPayloadB64"
+  else
+    # v1: use response body as payload
+    PAYLOAD="$BODY"
+    HEADER_NAME="X-Payment"
+    FIELD="xPaymentB64"
+  fi
 
   # Sign payment
-  RESULT=$($CLI x402-v3 --mandate "$MANDATE_ID" --payload "$PAYLOAD")
-  XPAYMENT=$(echo "$RESULT" | jq -r '.data.xPaymentB64')
+  RESULT=$($CLI x402 --mandate "$MANDATE_ID" --payload "$PAYLOAD")
+  TOKEN=$(echo "$RESULT" | jq -r ".data.$FIELD")
 
   # Retry with payment header
-  curl -H "X-Payment: $XPAYMENT" "$API_URL"
+  curl -H "$HEADER_NAME: $TOKEN" "$API_URL"
 fi
 ```
 
@@ -198,19 +267,24 @@ fi
 |----------------|---------|--------|
 | `Missing required parameters: --desc, --amount` | mandate-create called without required flags | Add both `--desc "..."` and `--amount <number>` |
 | `Missing required parameter: --id` | mandate-status called with wrong flag | Use `--id`, not `--mandate` |
-| `Missing required parameters: --mandate, --payload` | x402-v3 called without prerequisites | Create a mandate first using `mandate-create` |
-| `Invalid payload: missing accepts array` | Payload is incomplete or malformed | Pass the **complete** 402 response JSON including `accepts` array |
+| `Missing required parameters: --mandate, --payload` | x402 called without prerequisites | Create a mandate first using `mandate-create` |
+| `Invalid payload: missing accepts array` | Payload is incomplete or malformed | Pass the **complete** 402 payload including `accepts` array |
+| `Invalid --payload: not valid JSON or base64-encoded JSON` | Payload is neither valid JSON nor valid base64 | Check the payload string |
+| `Invalid v2 payload: missing resource.url` | v2 payload missing `resource.url` object | Ensure the v2 payload has `resource: { url: "..." }` |
 | `mandate_not_signed` | User hasn't signed yet | Ask user to open `authorizationUrl` |
 | `mandate_expired` | Time window passed | Create a new mandate |
 | `mandate_budget_exceeded` | Budget exhausted | Create a new mandate with higher limit |
 | `mandate_insufficient_budget` | Payment amount exceeds remaining budget | Create a new mandate with higher limit |
 | `mandate_not_found` | Mandate ID doesn't exist or belongs to different agent | Verify mandate ID and agent identity |
+| `currency_mismatch` / `No accepts entry matches mandate currency` | v1: 402 payload has no entry for the mandate's currency | Ensure the mandate currency matches one of the 402 `accepts` currencies |
+| `no_supported_payment_option` | v2: no `accepts` entry matches supported assets | Check that the 402 server supports Base USDC |
+| `invalid_payment_request` | v2: payload structure invalid | Verify `x402Version`, `resource`, and `accepts` fields |
 | `agent_not_registered` | No Agent ID | Run `init` first |
 
 ## Network Format Note
 
 The 402 response may use different network formats:
-- `eip155:8453` — Chain ID format (EIP-155)
-- `base` — Human-readable network name
+- `eip155:8453` — Chain ID format (EIP-155), typically used by x402 v2
+- `base` — Human-readable network name, typically used by x402 v1
 
 Both refer to Base network. The CLI and API accept either format.

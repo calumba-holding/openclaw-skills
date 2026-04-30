@@ -3,11 +3,16 @@
   "slug": "fluxa-agent-wallet",
   "displayName": "FluxA-agent-wallet",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1770690580714,
-    "commit": "https://github.com/openclaw/skills/commit/503830937bfb3a2fd78de8b1f4777bd1e0fc5bb5"
+    "version": "1.4.5",
+    "publishedAt": 1777258389378,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1770690580714,
+      "commit": "https://github.com/openclaw/skills/commit/503830937bfb3a2fd78de8b1f4777bd1e0fc5bb5"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770176433527,
