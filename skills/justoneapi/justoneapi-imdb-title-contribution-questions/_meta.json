@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-title-contribution-questions",
+  "displayName": "IMDb Contribution Questions API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777327927648,
+    "commit": null
+  },
+  "history": []
+}
