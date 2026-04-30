@@ -1,7 +1,7 @@
 ---
 name: content-quality-auditor
-description: 'Publish-readiness gate: 80-item CORE-EEAT audit with weighted scoring, veto checks, and fix plan. 内容质量/EEAT评分'
-version: "9.0.0"
+description: 'Use when auditing content quality, E-E-A-T, publish readiness, or 内容质量/EEAT评分. Runs 80-item CORE-EEAT scoring with veto checks and fix plan.'
+version: "9.9.5"
 license: Apache-2.0
 allowed-tools: WebFetch
 compatibility: "Claude Code, skills.sh, ClawHub, Vercel Labs, Cursor, Windsurf, Codex CLI, Amp, Gemini CLI, Kimi Code, Qwen Code, CodeBuddy"
@@ -11,7 +11,7 @@ argument-hint: "<URL or paste content> [keyword]"
 class: auditor
 metadata:
   author: aaron-he-zhu
-  version: "9.0.0"
+  version: "9.9.5"
   geo-relevance: "high"
   tags:
     - seo
@@ -230,10 +230,10 @@ Repeat the same table format for **Ept** (Expertise), **A** (Authority), and **T
 
 See [references/item-reference.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/content-quality-auditor/references/item-reference.md) for the complete 80-item ID lookup table and site-level item handling notes.
 
-<!-- runbook-sync start: source_sha256=4a5e414fe8ca7082b173cd76f09a081504997534b80ac4dabd45084f80440a61 block_sha256=260ff0119ba5a4719c2dd3c1fce59771f73cbfa4c55acba45f9c010a9e5ddd0a -->
+<!-- runbook-sync start: source_sha256=782eb8827d3139216dbf55154285f72b5fe6d1601acc693bb93d769df5224e2f block_sha256=5053bbe68577b7ca6fd16551244ac6de6b9c7e694be6c400ecef1af0a4df820d -->
 ## §1 · Handoff Schema (authoritative)
 
-Every auditor-class handoff MUST follow this shape. Emitted audit artifact files (e.g., `memory/audits/**/*.md`) MUST include `class: auditor-output` in their YAML frontmatter so the PostToolUse Artifact Gate and Stop-time archiving hooks can detect them by frontmatter class instead of prose pattern-matching. Files lacking this marker are not treated as audit artifacts regardless of body content.
+Every auditor-class handoff MUST follow this shape. Emitted audit artifact files (e.g., `memory/audits/**/*.md`) MUST include `class: auditor-output` in their YAML frontmatter so the PostToolUse Artifact Gate and guarded auditor archive checks can detect them by frontmatter class instead of prose pattern-matching. Files lacking this marker are not treated as audit artifacts regardless of body content.
 
 ```yaml
 ---
@@ -256,15 +256,17 @@ raw_overall_score: <number>      # REQUIRED for auditors; score before cap
 final_overall_score: <number>    # REQUIRED for auditors; score after cap
 ```
 
-### Backward compatibility (v7.1.0 → v7.2.0 deprecation window)
+### Legacy compatibility for archived outputs
 
-Downstream skills consuming handoffs must treat the cap-related fields as **optional with documented defaults** during the deprecation window. If absent, apply these defaults:
+New auditor-class outputs MUST include the cap-related fields. The Artifact Gate treats missing `cap_applied`, `raw_overall_score`, or `final_overall_score` (unless `status: BLOCKED`) as a validation failure.
+
+Consumers reading pre-v7.2 archived outputs may apply these defaults:
 
 - `cap_applied: false` (assume no cap when field missing)
 - `raw_overall_score: <use final_overall_score>` (treat as equal)
 - `final_overall_score: <use the overall score from the audit, whatever field name>`
 
-This prevents breakage when an audit produced before the upgrade is consumed by a skill after the upgrade. A consuming skill MUST never error on missing cap fields during the deprecation window. After v7.2.0, fields become required for all auditor-class producers; consumers may then treat absence as a BLOCKED upstream.
+This compatibility rule is read-time only; it does not permit new auditor artifacts to omit required auditor-extension fields.
 
 ### Non-auditor skills
 
@@ -374,7 +376,7 @@ Handoff:
       evidence: "..."
 ```
 
-**Why BLOCKED, not "capped at 40"**: the 40-tier cap number is unvalidated. Blocking forces manual review, which is more honest than publishing an eyeballed number. Calibration trigger: 30+ real multi-veto audits in `memory/audits/`. Review date: 2026-07-10 via `/seo:p2-review`.
+**Why BLOCKED, not "capped at 40"**: the 40-tier cap number is unvalidated. Blocking forces manual review, which is more honest than publishing an eyeballed number. Calibration trigger: 30+ real multi-veto audits in `memory/audits/`, reviewed through `/seo:run-evals` plus maintainer calibration.
 
 **Note on dimension vs count**: the 2+ veto threshold counts **total veto failures across all dimensions**, not per-dimension. Example 3 shows T04 (Trust dim) + R10 (Referenceability dim) on different dimensions, but T03 + T09 both on the Trust dimension would also trigger BLOCKED. The veto count is dimension-agnostic.
 
