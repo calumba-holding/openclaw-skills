@@ -15,7 +15,7 @@ metadata:
 
 # Todoist
 
-Access the Todoist REST API v2 with managed OAuth authentication. Manage tasks, projects, sections, labels, and comments.
+Access the Todoist API v1 with managed OAuth authentication. Manage tasks, projects, sections, labels, and comments.
 
 ## Quick Start
 
@@ -23,7 +23,7 @@ Access the Todoist REST API v2 with managed OAuth authentication. Manage tasks, 
 # List all tasks
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/todoist/rest/v2/tasks')
+req = urllib.request.Request('https://gateway.maton.ai/todoist/api/v1/tasks')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -32,10 +32,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/todoist/rest/v2/{resource}
+https://gateway.maton.ai/todoist/api/v1/{resource}
 ```
 
-The gateway proxies requests to `api.todoist.com/rest/v2` and automatically injects your OAuth token.
+The gateway proxies requests to `api.todoist.com/api/v1` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -131,7 +131,7 @@ If you have multiple Todoist connections, specify which one to use with the `Mat
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/todoist/rest/v2/tasks')
+req = urllib.request.Request('https://gateway.maton.ai/todoist/api/v1/tasks')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Maton-Connection', '21fd90f9-5935-43cd-b6c8-bde9d915ca80')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -147,37 +147,41 @@ If omitted, the gateway uses the default (oldest) active connection.
 #### List Projects
 
 ```bash
-GET /todoist/rest/v2/projects
+GET /todoist/api/v1/projects
 ```
 
 **Response:**
 ```json
-[
-  {
-    "id": "2366738772",
-    "name": "Inbox",
-    "color": "charcoal",
-    "parent_id": null,
-    "order": 0,
-    "is_shared": false,
-    "is_favorite": false,
-    "is_inbox_project": true,
-    "view_style": "list",
-    "url": "https://app.todoist.com/app/project/..."
-  }
-]
+{
+  "results": [
+    {
+      "id": "6fwFRqmVCFvWVX5R",
+      "name": "Inbox",
+      "color": "charcoal",
+      "parent_id": null,
+      "child_order": 0,
+      "is_shared": false,
+      "is_favorite": false,
+      "inbox_project": true,
+      "view_style": "list",
+      "description": "",
+      "is_archived": false
+    }
+  ],
+  "next_cursor": null
+}
 ```
 
 #### Get Project
 
 ```bash
-GET /todoist/rest/v2/projects/{id}
+GET /todoist/api/v1/projects/{id}
 ```
 
 #### Create Project
 
 ```bash
-POST /todoist/rest/v2/projects
+POST /todoist/api/v1/projects
 Content-Type: application/json
 
 {
@@ -200,7 +204,7 @@ Content-Type: application/json
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'name': 'My New Project', 'color': 'blue'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/todoist/rest/v2/projects', data=data, method='POST')
+req = urllib.request.Request('https://gateway.maton.ai/todoist/api/v1/projects', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -210,7 +214,7 @@ EOF
 #### Update Project
 
 ```bash
-POST /todoist/rest/v2/projects/{id}
+POST /todoist/api/v1/projects/{id}
 Content-Type: application/json
 
 {
@@ -222,7 +226,7 @@ Content-Type: application/json
 #### Delete Project
 
 ```bash
-DELETE /todoist/rest/v2/projects/{id}
+DELETE /todoist/api/v1/projects/{id}
 ```
 
 Returns 204 No Content on success.
@@ -230,7 +234,7 @@ Returns 204 No Content on success.
 #### Get Project Collaborators
 
 ```bash
-GET /todoist/rest/v2/projects/{id}/collaborators
+GET /todoist/api/v1/projects/{id}/collaborators
 ```
 
 ### Tasks
@@ -238,7 +242,7 @@ GET /todoist/rest/v2/projects/{id}/collaborators
 #### List Tasks
 
 ```bash
-GET /todoist/rest/v2/tasks
+GET /todoist/api/v1/tasks
 ```
 
 **Query Parameters:**
@@ -252,41 +256,42 @@ GET /todoist/rest/v2/tasks
 
 **Response:**
 ```json
-[
-  {
-    "id": "9993408170",
-    "content": "Buy groceries",
-    "description": "",
-    "project_id": "2366834771",
-    "section_id": null,
-    "parent_id": null,
-    "order": 1,
-    "priority": 2,
-    "is_completed": false,
-    "labels": [],
-    "due": {
-      "date": "2026-02-07",
-      "string": "tomorrow",
-      "lang": "en",
-      "is_recurring": false
-    },
-    "url": "https://app.todoist.com/app/task/9993408170",
-    "comment_count": 0,
-    "created_at": "2026-02-06T20:41:08.449320Z"
-  }
-]
+{
+  "results": [
+    {
+      "id": "6fwhG9wMHr4wxgpR",
+      "content": "Buy groceries",
+      "description": "",
+      "project_id": "6fwFRqmVCFvWVX5R",
+      "section_id": null,
+      "parent_id": null,
+      "child_order": 1,
+      "priority": 2,
+      "checked": false,
+      "labels": [],
+      "due": {
+        "date": "2026-02-07T10:00:00",
+        "string": "tomorrow at 10am",
+        "lang": "en",
+        "is_recurring": false
+      },
+      "added_at": "2026-02-06T20:41:08.449320Z"
+    }
+  ],
+  "next_cursor": null
+}
 ```
 
 #### Get Task
 
 ```bash
-GET /todoist/rest/v2/tasks/{id}
+GET /todoist/api/v1/tasks/{id}
 ```
 
 #### Create Task
 
 ```bash
-POST /todoist/rest/v2/tasks
+POST /todoist/api/v1/tasks
 Content-Type: application/json
 
 {
@@ -325,7 +330,7 @@ data = json.dumps({
     'due_string': 'tomorrow at 5pm',
     'labels': ['work', 'urgent']
 }).encode()
-req = urllib.request.Request('https://gateway.maton.ai/todoist/rest/v2/tasks', data=data, method='POST')
+req = urllib.request.Request('https://gateway.maton.ai/todoist/api/v1/tasks', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -335,7 +340,7 @@ EOF
 #### Update Task
 
 ```bash
-POST /todoist/rest/v2/tasks/{id}
+POST /todoist/api/v1/tasks/{id}
 Content-Type: application/json
 
 {
@@ -347,7 +352,7 @@ Content-Type: application/json
 #### Close Task (Complete)
 
 ```bash
-POST /todoist/rest/v2/tasks/{id}/close
+POST /todoist/api/v1/tasks/{id}/close
 ```
 
 Returns 204 No Content. For recurring tasks, this schedules the next occurrence.
@@ -355,7 +360,7 @@ Returns 204 No Content. For recurring tasks, this schedules the next occurrence.
 #### Reopen Task
 
 ```bash
-POST /todoist/rest/v2/tasks/{id}/reopen
+POST /todoist/api/v1/tasks/{id}/reopen
 ```
 
 Returns 204 No Content.
@@ -363,7 +368,7 @@ Returns 204 No Content.
 #### Delete Task
 
 ```bash
-DELETE /todoist/rest/v2/tasks/{id}
+DELETE /todoist/api/v1/tasks/{id}
 ```
 
 Returns 204 No Content.
@@ -373,32 +378,38 @@ Returns 204 No Content.
 #### List Sections
 
 ```bash
-GET /todoist/rest/v2/sections
-GET /todoist/rest/v2/sections?project_id={project_id}
+GET /todoist/api/v1/sections
+GET /todoist/api/v1/sections?project_id={project_id}
 ```
 
 **Response:**
 ```json
-[
-  {
-    "id": "214670251",
-    "project_id": "2366834771",
-    "order": 1,
-    "name": "To Do"
-  }
-]
+{
+  "results": [
+    {
+      "id": "6g424m6CQm47v7mm",
+      "project_id": "6g424jv8X52hP7qF",
+      "section_order": 1,
+      "name": "To Do",
+      "added_at": "2026-02-20T22:25:04.203675Z",
+      "is_archived": false,
+      "is_collapsed": false
+    }
+  ],
+  "next_cursor": null
+}
 ```
 
 #### Get Section
 
 ```bash
-GET /todoist/rest/v2/sections/{id}
+GET /todoist/api/v1/sections/{id}
 ```
 
 #### Create Section
 
 ```bash
-POST /todoist/rest/v2/sections
+POST /todoist/api/v1/sections
 Content-Type: application/json
 
 {
@@ -415,7 +426,7 @@ Content-Type: application/json
 #### Update Section
 
 ```bash
-POST /todoist/rest/v2/sections/{id}
+POST /todoist/api/v1/sections/{id}
 Content-Type: application/json
 
 {
@@ -426,7 +437,7 @@ Content-Type: application/json
 #### Delete Section
 
 ```bash
-DELETE /todoist/rest/v2/sections/{id}
+DELETE /todoist/api/v1/sections/{id}
 ```
 
 Returns 204 No Content.
@@ -436,32 +447,35 @@ Returns 204 No Content.
 #### List Labels
 
 ```bash
-GET /todoist/rest/v2/labels
+GET /todoist/api/v1/labels
 ```
 
 **Response:**
 ```json
-[
-  {
-    "id": "2182980313",
-    "name": "urgent",
-    "color": "red",
-    "order": 1,
-    "is_favorite": false
-  }
-]
+{
+  "results": [
+    {
+      "id": "2182980313",
+      "name": "urgent",
+      "color": "red",
+      "order": 1,
+      "is_favorite": false
+    }
+  ],
+  "next_cursor": null
+}
 ```
 
 #### Get Label
 
 ```bash
-GET /todoist/rest/v2/labels/{id}
+GET /todoist/api/v1/labels/{id}
 ```
 
 #### Create Label
 
 ```bash
-POST /todoist/rest/v2/labels
+POST /todoist/api/v1/labels
 Content-Type: application/json
 
 {
@@ -480,7 +494,7 @@ Content-Type: application/json
 #### Update Label
 
 ```bash
-POST /todoist/rest/v2/labels/{id}
+POST /todoist/api/v1/labels/{id}
 Content-Type: application/json
 
 {
@@ -492,7 +506,7 @@ Content-Type: application/json
 #### Delete Label
 
 ```bash
-DELETE /todoist/rest/v2/labels/{id}
+DELETE /todoist/api/v1/labels/{id}
 ```
 
 Returns 204 No Content.
@@ -502,36 +516,40 @@ Returns 204 No Content.
 #### List Comments
 
 ```bash
-GET /todoist/rest/v2/comments?task_id={task_id}
-GET /todoist/rest/v2/comments?project_id={project_id}
+GET /todoist/api/v1/comments?task_id={task_id}
+GET /todoist/api/v1/comments?project_id={project_id}
 ```
 
 **Note:** Either `task_id` or `project_id` is required.
 
 **Response:**
 ```json
-[
-  {
-    "id": "3966541561",
-    "task_id": "9993408170",
-    "project_id": null,
-    "content": "This is a comment",
-    "posted_at": "2026-02-06T20:41:35.734376Z",
-    "posted_by_id": "57402826"
-  }
-]
+{
+  "results": [
+    {
+      "id": "6g424pWVXPpwW7hR",
+      "item_id": "6g424pQr2xfCcFr2",
+      "content": "This is a comment",
+      "posted_at": "2026-02-20T22:25:20.045703Z",
+      "posted_uid": "57402826",
+      "file_attachment": null,
+      "reactions": null
+    }
+  ],
+  "next_cursor": null
+}
 ```
 
 #### Get Comment
 
 ```bash
-GET /todoist/rest/v2/comments/{id}
+GET /todoist/api/v1/comments/{id}
 ```
 
 #### Create Comment
 
 ```bash
-POST /todoist/rest/v2/comments
+POST /todoist/api/v1/comments
 Content-Type: application/json
 
 {
@@ -547,7 +565,7 @@ Content-Type: application/json
 #### Update Comment
 
 ```bash
-POST /todoist/rest/v2/comments/{id}
+POST /todoist/api/v1/comments/{id}
 Content-Type: application/json
 
 {
@@ -558,7 +576,7 @@ Content-Type: application/json
 #### Delete Comment
 
 ```bash
-DELETE /todoist/rest/v2/comments/{id}
+DELETE /todoist/api/v1/comments/{id}
 ```
 
 Returns 204 No Content.
@@ -586,7 +604,7 @@ Use ONE of these formats per request:
 
 ```javascript
 // Create a task
-const response = await fetch('https://gateway.maton.ai/todoist/rest/v2/tasks', {
+const response = await fetch('https://gateway.maton.ai/todoist/api/v1/tasks', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${process.env.MATON_API_KEY}`,
@@ -609,7 +627,7 @@ import requests
 
 # Create a task
 response = requests.post(
-    'https://gateway.maton.ai/todoist/rest/v2/tasks',
+    'https://gateway.maton.ai/todoist/api/v1/tasks',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     json={
         'content': 'Review pull request',
@@ -663,12 +681,11 @@ EOF
 
 1. Ensure your URL path starts with `todoist`. For example:
 
-- Correct: `https://gateway.maton.ai/todoist/rest/v2/tasks`
-- Incorrect: `https://gateway.maton.ai/rest/v2/tasks`
+- Correct: `https://gateway.maton.ai/todoist/api/v1/tasks`
+- Incorrect: `https://gateway.maton.ai/api/v1/tasks`
 
 ## Resources
 
-- [Todoist REST API v2 Documentation](https://developer.todoist.com/rest/v2)
 - [Todoist API v1 Documentation](https://developer.todoist.com/api/v1)
 - [Todoist Filter Syntax](https://todoist.com/help/articles/introduction-to-filters)
 - [Todoist OAuth Documentation](https://developer.todoist.com/guides/#oauth)
