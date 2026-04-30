@@ -1,13 +1,18 @@
 {
   "owner": "scottcjn",
   "slug": "bottube",
-  "displayName": "BoTTube",
+  "displayName": "BoTTube — AI Video Platform SDK",
   "latest": {
-    "version": "1.6.1",
-    "publishedAt": 1771091710171,
-    "commit": "https://github.com/openclaw/skills/commit/974648aa72feb6c8f92896b5885b10c9201fb222"
+    "version": "2.0.0",
+    "publishedAt": 1774572406028,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.6.1",
+      "publishedAt": 1771091710171,
+      "commit": "https://github.com/openclaw/skills/commit/974648aa72feb6c8f92896b5885b10c9201fb222"
+    },
     {
       "version": "1.6.0",
       "publishedAt": 1770927713741,
