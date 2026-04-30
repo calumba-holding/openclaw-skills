@@ -26,7 +26,7 @@ Access the Vimeo API with managed OAuth authentication. Upload and manage videos
 # Get current user info
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/vimeo/me')
+req = urllib.request.Request('https://api.maton.ai/vimeo/me')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/vimeo/{resource}
+https://api.maton.ai/vimeo/{resource}
 ```
 
-The gateway proxies requests to `api.vimeo.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.vimeo.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Vimeo OAuth connections at `https://ctrl.maton.ai`.
+Manage your Vimeo OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=vimeo&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=vimeo&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'vimeo'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "a6ecb894-3148-4f4c-a54c-e9d917e3f2a9",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-09T08:56:53.522100Z",
     "last_updated_time": "2026-02-09T08:58:39.407864Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Vimeo connections, specify which one to use with the `Maton
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/vimeo/me')
+req = urllib.request.Request('https://api.maton.ai/vimeo/me')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'a6ecb894-3148-4f4c-a54c-e9d917e3f2a9')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to videos, folders, albums, showcases, and video settings within the connected Vimeo account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -588,7 +593,7 @@ Parameters:
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/vimeo/me/videos',
+  'https://api.maton.ai/vimeo/me/videos',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -605,7 +610,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/vimeo/me/videos',
+    'https://api.maton.ai/vimeo/me/videos',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -618,7 +623,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/vimeo/me/folders',
+    'https://api.maton.ai/vimeo/me/folders',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -637,7 +642,7 @@ import requests
 
 video_id = "1163160198"
 response = requests.patch(
-    f'https://gateway.maton.ai/vimeo/videos/{video_id}',
+    f'https://api.maton.ai/vimeo/videos/{video_id}',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -693,7 +698,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -703,8 +708,8 @@ EOF
 
 1. Ensure your URL path starts with `vimeo`. For example:
 
-- Correct: `https://gateway.maton.ai/vimeo/me/videos`
-- Incorrect: `https://gateway.maton.ai/me/videos`
+- Correct: `https://api.maton.ai/vimeo/me/videos`
+- Incorrect: `https://api.maton.ai/me/videos`
 
 ## Resources
 
