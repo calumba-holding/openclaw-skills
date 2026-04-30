@@ -1,0 +1,11 @@
+{
+  "owner": "schchit",
+  "slug": "coe-consensus",
+  "displayName": "COE Consensus",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777210506864,
+    "commit": null
+  },
+  "history": []
+}
