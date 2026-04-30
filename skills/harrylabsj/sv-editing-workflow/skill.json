@@ -1,0 +1,27 @@
+{
+  "slug": "sv-editing-workflow",
+  "name": "Short Video Editing Workflow Planner",
+  "description": "Defines structured editing workflows — from ingest to export — with decision points for cuts, pacing, effects, and quality checks for short video.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "editing",
+    "workflow",
+    "post-production",
+    "efficiency",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "editing workflow",
+    "video editing process",
+    "post-production",
+    "editing pipeline",
+    "export settings",
+    "timeline organization"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
