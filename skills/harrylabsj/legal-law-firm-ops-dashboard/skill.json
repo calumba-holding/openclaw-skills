@@ -1,0 +1,28 @@
+{
+  "name": "Legal Law Firm Ops Dashboard",
+  "slug": "legal-law-firm-ops-dashboard",
+  "version": "1.0.0",
+  "description": "Designs descriptive dashboards for law firm matter status, workload, deadlines, billing hygiene, client communication, and risk flags.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "law-firm",
+    "legal-ops",
+    "dashboard",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "law firm dashboard",
+    "matter status report",
+    "legal operations",
+    "billing hygiene",
+    "legal-law-firm-ops-dashboard",
+    "legal law firm ops dashboard"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
