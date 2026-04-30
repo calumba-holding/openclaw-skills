@@ -1,13 +1,18 @@
 {
   "owner": "morpheis",
   "slug": "chitin",
-  "displayName": "Chitin",
+  "displayName": "Chitin — Personality Persistence for AI Agents",
   "latest": {
-    "version": "1.0.5",
-    "publishedAt": 1771105504790,
-    "commit": "https://github.com/openclaw/skills/commit/e99e9cb3d70922d7d2dee56af96deb9a90b56de5"
+    "version": "1.4.5",
+    "publishedAt": 1775076807649,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.5",
+      "publishedAt": 1771105504790,
+      "commit": "https://github.com/openclaw/skills/commit/e99e9cb3d70922d7d2dee56af96deb9a90b56de5"
+    },
     {
       "version": "1.0.4",
       "publishedAt": 1770781029883,
