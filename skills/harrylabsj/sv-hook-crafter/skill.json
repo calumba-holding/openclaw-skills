@@ -1,0 +1,27 @@
+{
+  "slug": "sv-hook-crafter",
+  "name": "Short Video Hook Crafter",
+  "description": "Specializes in crafting attention-grabbing first-3-second hooks — visual, verbal, and pattern-interrupt — for short videos.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "hook",
+    "engagement",
+    "attention",
+    "script",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video hook",
+    "attention hook",
+    "first 3 seconds",
+    "hook ideas",
+    "retention hook",
+    "pattern interrupt"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
