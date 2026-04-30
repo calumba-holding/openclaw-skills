@@ -1,0 +1,28 @@
+{
+  "slug": "sv-title-optimizer",
+  "name": "Short Video Title & Description Optimizer",
+  "description": "Optimizes video titles and descriptions for discoverability, curiosity, and click-through — with platform-specific character limits and keyword strategies.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "title",
+    "description",
+    "SEO",
+    "optimization",
+    "copywriting",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video title",
+    "title optimization",
+    "description writing",
+    "video SEO",
+    "hashtag strategy",
+    "click-through title"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
