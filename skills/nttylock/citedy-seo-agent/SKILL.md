@@ -10,7 +10,7 @@ description: >
   content, ultra-cheap turbo articles from 2 credits, generate short-form
   AI UGC viral videos with subtitles, and run fully automated content autopilot.
   Powered by Citedy.
-version: "3.2.0"
+version: "3.5.0"
 author: Citedy
 tags:
   - seo
@@ -174,16 +174,28 @@ Extract content from any URL first, then use it for article creation:
 2. Poll `GET /api/agent/ingest/{id}` every 10s until `status` is `"completed"`
 3. Use the extracted summary/content as research for `POST /api/agent/autopilot`
 
+### GSC Morning Report → Article → Social
+
+Check search performance, find content opportunities, write and publish:
+
+1. `GET /api/agent/gsc/report` — get daily GSC report with top queries, movers, and article suggestions
+2. Pick a keyword from `articleSuggestions` (high impressions, not yet covered)
+3. `POST /api/agent/autopilot` with `{ "topic": "<suggested keyword>" }` — generate article
+4. `POST /api/agent/adapt` for social distribution across all platforms
+
+If GSC is not connected, the report returns `connected: false` with a URL to connect it.
+
 ### Choosing the Right Path
 
-| User intent                   | Best path         | Why                                     |
-| ----------------------------- | ----------------- | --------------------------------------- |
-| "Extract this YouTube video"  | `ingest`          | Get transcript + summary, no article    |
-| "Write about this link"       | `source_urls`     | Lowest effort, source material provided |
-| "Write about AI marketing"    | `topic`           | Direct topic, no scraping needed        |
-| "What's trending on X?"       | scout → autopilot | Discover topics first, then generate    |
-| "Find gaps vs competitor.com" | gaps → autopilot  | Data-driven content strategy            |
-| "Post 2 articles daily"       | session           | Set-and-forget automation               |
+| User intent                   | Best path              | Why                                     |
+| ----------------------------- | ---------------------- | --------------------------------------- |
+| "Extract this YouTube video"  | `ingest`               | Get transcript + summary, no article    |
+| "Write about this link"       | `source_urls`          | Lowest effort, source material provided |
+| "Write about AI marketing"    | `topic`                | Direct topic, no scraping needed        |
+| "What's trending on X?"       | scout → autopilot      | Discover topics first, then generate    |
+| "Find gaps vs competitor.com" | gaps → autopilot       | Data-driven content strategy            |
+| "Show my GSC report"          | gsc.report → autopilot | Data from Google Search Console         |
+| "Post 2 articles daily"       | session                | Set-and-forget automation               |
 
 ---
 
@@ -716,6 +728,7 @@ Generate AI UGC viral videos with subtitles — from script to finished video.
 2. `/shorts/avatar` — generate AI avatar image (user approves)
 3. `/shorts` — generate video segment(s) with avatar + prompt + speech_text
 4. `/shorts/merge` — merge segments + add professional subtitles (if multi-segment)
+5. `/shorts/publish` — publish video directly to YouTube Shorts and/or Instagram Reels
 
 **Generate Script:**
 
@@ -803,17 +816,43 @@ POST /api/agent/shorts/merge
 - Returns `{ video_url, r2_key, duration, segment_durations, credits_charged }`
 - Only 1 concurrent merge per agent (returns 409 if busy)
 
+**Publish Video:**
+
+```http
+POST /api/agent/shorts/publish
+{
+  "video_url": "https://download.citedy.com/agent/shorts/.../video-sub.mp4",
+  "speech_text": "I just found 8 hidden competitors in 3 minutes...",
+  "targets": [
+    {"platform": "instagram_reels", "account_id": "uuid-of-ig-account"},
+    {"platform": "youtube_shorts", "account_id": "uuid-of-yt-account"}
+  ],
+  "privacy_status": "public"
+}
+```
+
+- Instagram Reels: 5 credits. YouTube Shorts: 0 credits (free)
+- `video_url` — HTTPS URL from `/shorts` or `/shorts/merge` response (must be `download.citedy.com` or Supabase storage)
+- `speech_text` — original spoken text; used to derive title, hashtags, descriptions via LLM
+- `targets` — 1-2 entries, each platform may appear at most once. Get `account_id` from `GET /api/agent/me` → `connected_platforms`
+- `privacy_status` — `public` (default), `unlisted`, `private` (YouTube only, ignored for Instagram)
+- Returns `{ results: [{ platform, ok, post_id?, error? }], metadata_provider, metadata_degraded, timings: { metadata_ms, total_ms }, credits_charged }`
+- Does **not** require an article — publishes directly from video URL + speech text
+
 **Pricing:**
 
-| Step               | Credits |
-| ------------------ | ------- |
-| Script             | 1       |
-| Avatar             | 3       |
-| Video (5s)         | 60      |
-| Video (10s)        | 130     |
-| Video (15s)        | 185     |
-| Merge + subtitles  | 5       |
-| **Full 10s video** | **139** |
+| Step                        | Credits |
+| --------------------------- | ------- |
+| Script                      | 1       |
+| Avatar                      | 3       |
+| Video (5s)                  | 60      |
+| Video (10s)                 | 130     |
+| Video (15s)                 | 185     |
+| Merge + subtitles           | 5       |
+| Publish (IG Reels)          | 5       |
+| Publish (YT Shorts)         | 0       |
+| **Full 10s video**          | **139** |
+| **Full 10s + publish both** | **144** |
 
 ### Trend Scan
 
@@ -1333,5 +1372,5 @@ Call `GET /api/agent/me` every 4 hours as a keep-alive. This updates `last_activ
 
 ---
 
-_Citedy SEO Agent Skill v3.2.0_
+_Citedy SEO Agent Skill v3.1.0_
 _https://www.citedy.com_
