@@ -1,0 +1,28 @@
+{
+  "name": "Legal Evidence Organization Matrix",
+  "slug": "legal-evidence-organization-matrix",
+  "version": "1.0.0",
+  "description": "Creates evidence organization frameworks linking documents, witnesses, issues, authenticity, relevance, and proof gaps.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "evidence",
+    "litigation",
+    "case-prep",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "evidence matrix",
+    "proof map",
+    "witness documents",
+    "chain of custody",
+    "legal-evidence-organization-matrix",
+    "legal evidence organization matrix"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
