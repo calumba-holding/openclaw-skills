@@ -1,0 +1,28 @@
+{
+  "name": "Legal Deposition Prep Coach",
+  "slug": "legal-deposition-prep-coach",
+  "version": "1.0.0",
+  "description": "Builds deposition preparation outlines for witnesses, attorneys, themes, exhibits, and question sequences.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "deposition",
+    "litigation",
+    "witness-prep",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "deposition prep",
+    "witness preparation",
+    "deposition outline",
+    "question sequence",
+    "legal-deposition-prep-coach",
+    "legal deposition prep coach"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
