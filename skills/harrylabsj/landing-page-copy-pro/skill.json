@@ -1,0 +1,23 @@
+{
+  "name": "Landing Page Conversion Copy Pro",
+  "description": "Full landing page copy generation — hero, value prop, feature-benefit bridge, social proof, pricing, FAQ, and CTA cascade. Conversion copywriting frameworks built-in, with variant generation for A/B testing.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "Marketing / Conversion Optimization",
+  "keywords": [
+    "landing page copy", "conversion copy", "hero headline", "CTA",
+    "sales page", "lead gen", "value proposition", "social proof",
+    "落地页文案", "转化文案", "landing page writer"
+  ],
+  "platforms": ["Web (Platform-Agnostic)"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No false or misleading claims about product/service. No fabricated testimonials or statistics. Clear pricing and terms — no hidden conditions in copy. No dark patterns in CTA language (no deceptive urgency). Recommend A/B testing before launch."
+  }
+}
