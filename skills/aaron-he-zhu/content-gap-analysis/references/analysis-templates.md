@@ -1,202 +1,87 @@
 # Content Gap Analysis -- Analysis Templates
 
-Templates for each step of the content gap analysis workflow.
+Compact templates for content-gap-analysis. Keep evidence attached to each recommendation so the output does not become a generic editorial calendar.
 
-## Content Inventory Template
-
-```markdown
-## Your Content Inventory
-**Total Indexed Pages**: [X]
-
-**Content by Type**: Blog: [X] | Landing: [X] | Resources: [X] | Tools: [X] | Case studies: [X]
-
-**Content by Topic Cluster**:
-| Topic | Articles | Keywords Ranking | Traffic |
-|-------|----------|------------------|---------|
-| [topic 1] | [X] | [X] | [X] |
-
-**Top Performing Content**:
-1. [Title] - [traffic] visits - [keywords] keywords
-
-**Strengths**: [list]
-**Weaknesses**: [list]
-```
-
-## Competitor Content Analysis Template
+## 1. Inventory And Competitor Baseline
 
 ```markdown
-## Competitor Content Analysis
+## Content Inventory Baseline
+**Your site**: [domain] | **Competitors**: [domains] | **Date**: [date]
 
-### [Name/URL]
-**Content Volume**: [X] pages | **Monthly Traffic**: [X]
+| Site | Indexed / analyzed pages | Est. traffic | Ranking KWs | Top Content Types |
+|------|--------------------------|--------------|-------------|-------------------|
+| You | [X] | [X] | [X] | [types] |
+| [comp] | [X] | [X] | [X] | [types] |
 
-| Type | Count | Est. Traffic |
-|------|-------|--------------|
-| Blog posts | [X] | [X] |
-| Guides | [X] | [X] |
-| Tools | [X] | [X] |
+| Topic | Your Coverage | Competitor Coverage | Traffic / KW Evidence | Gap |
+|-------|---------------|---------------------|-----------------------|-----|
+| [topic] | [pages/KWs] | [pages/KWs] | [source + value] | Yes/No |
 
-**Topic Coverage**:
-| Topic | Their Articles | Your Coverage |
-|-------|---------------|---------------|
-| [topic] | [X] | [X or "None"] |
-
-**Unique Content They Have**:
-1. [Content piece] - [traffic] - [why it works]
+**Your strengths**: [topics/formats that already win]
+**Weaknesses**: [coverage, depth, format, authority, freshness]
 ```
 
-## Keyword Gap Analysis Template
+## 2. Keyword And Topic Gaps
 
 ```markdown
 ## Keyword Gap Analysis
 
-### High Priority Gaps (High volume, achievable difficulty)
-| Keyword | Volume | Difficulty | Competitor | Their Position |
-|---------|--------|------------|------------|----------------|
-| [kw 1] | [vol] | [diff] | [comp] | [pos] |
+| Tier | Keyword | Volume | Difficulty | Competitor URL | Their Position | Why It Matters |
+|------|---------|--------|------------|----------------|----------------|----------------|
+| Quick win | [kw] | [vol] | [diff] | [URL] | [pos] | [reason] |
+| Strategic build | [kw] | [vol] | [diff] | [URL] | [pos] | [reason] |
+| Long-term | [kw] | [vol] | [diff] | [URL] | [pos] | [reason] |
 
-### Quick Win Gaps (Lower volume, low difficulty)
-| Keyword | Volume | Difficulty | Competitor | Their Position |
-|---------|--------|------------|------------|----------------|
-| [kw 1] | [vol] | [diff] | [comp] | [pos] |
-
-### Long-term Gaps (High volume, high difficulty)
-| Keyword | Volume | Difficulty | Competitor | Their Position |
-|---------|--------|------------|------------|----------------|
-| [kw 1] | [vol] | [diff] | [comp] | [pos] |
-
-### Keyword Overlap
-- A: Keywords only you rank for: [X]
-- B: Shared with competitors: [X]
-- C: Gap (they have, you don't): [X]
+## Missing Topic Cluster: [Topic]
+- Competitor coverage: [who covers what]
+- Opportunity size: [traffic / keyword / AI citation potential]
+- Required subtopics: [list]
+- Recommended approach: [pillar + cluster or standalone]
 ```
 
-## Topic Gap Analysis Template
+## 3. Format, GEO, And Journey Gaps
 
 ```markdown
-## Topic Gap Analysis
+## Format And Journey Gap Matrix
 
-| Topic Area | You | Comp 1 | Comp 2 | Comp 3 | Gap? |
-|------------|-----|--------|--------|--------|------|
-| [Topic 1] | [X] | [X] | [X] | [X] | No |
-| [Topic 2] | 0 | [X] | [X] | [X] | **Yes** |
+| Gap Type | You | Competitor Pattern | Missing Asset | Priority |
+|----------|-----|--------------------|---------------|----------|
+| Guide / tutorial | [state] | [state] | [asset] | P0/P1/P2 |
+| Comparison / alternative | [state] | [state] | [asset] | P0/P1/P2 |
+| Template / tool | [state] | [state] | [asset] | P0/P1/P2 |
+| Case study / proof | [state] | [state] | [asset] | P0/P1/P2 |
+| Awareness / consideration / decision / retention | [state] | [state] | [asset] | P0/P1/P2 |
 
-### Missing Topic Cluster: [Topic Area]
-**Competitor coverage**: [Who covers it and how]
-**Opportunity size**: [Traffic/keyword potential]
-**Sub-topics to cover**:
-1. [Sub-topic] - [X] search volume
+## GEO Gap Analysis
 
-**Recommended approach**: Pillar: [topic] | Cluster articles: [list]
+| Query / Topic | Competitor Cited | Why They Win | Your Missing Evidence | Combined SEO+GEO Priority |
+|---------------|------------------|--------------|-----------------------|---------------------------|
+| [query] | [comp] | [definition/stat/source/structure] | [need] | [score] |
 ```
 
-## Content Format Gap Template
-
-```markdown
-## Content Format Gap Analysis
-
-| Format | You | Comp 1 | Comp 2 | Industry Avg |
-|--------|-----|--------|--------|--------------|
-| Long-form guides | [X] | [X] | [X] | [X] |
-| Tutorials | [X] | [X] | [X] | [X] |
-| Comparison posts | [X] | [X] | [X] | [X] |
-| Case studies | [X] | [X] | [X] | [X] |
-| Templates | [X] | [X] | [X] | [X] |
-| Video content | [X] | [X] | [X] | [X] |
-| Original research | [X] | [X] | [X] | [X] |
-
-### Gap: [Format Type]
-**Current state**: You have [X], competitors average [Y]
-**Best examples**: [Competitor content]
-**Effort**: [L/M/H] | **Impact**: [L/M/H]
-**Recommended first project**: [Specific idea]
-```
-
-## GEO Content Gap Template
-
-```markdown
-## GEO Content Gap Analysis
-
-**Topics where competitors get AI citations (you don't)**:
-| Topic | AI Cites | Why They're Cited | Your Gap |
-|-------|----------|-------------------|----------|
-| [topic 1] | [Comp] | [reason] | [what you need] |
-
-**Missing Q&A Content**:
-| Question | Volume | Currently Answered By |
-|----------|--------|----------------------|
-| [question] | [vol] | [competitor] |
-
-**Missing Definitions**:
-| Term | Volume | Best Current Source |
-|------|--------|---------------------|
-| [term] | [vol] | [source] |
-
-### GEO Opportunity Score
-| Topic | SEO Value | GEO Value | Combined Priority |
-|-------|----------|-----------|-------------------|
-| [topic] | [score] | [score] | [priority] |
-```
-
-## Audience Journey Gap Template
-
-```markdown
-## Audience Journey Gap Analysis
-
-| Stage | Your Content | Competitor Avg | Gap |
-|-------|--------------|----------------|-----|
-| Awareness | [X] articles | [X] articles | [+/-X] |
-| Consideration | [X] articles | [X] articles | [+/-X] |
-| Decision | [X] articles | [X] articles | [+/-X] |
-| Retention | [X] articles | [X] articles | [+/-X] |
-
-### Stage Gaps
-**Awareness**: Missing [topics] | Opportunity: [description]
-**Consideration**: Missing [topics] | Opportunity: [description]
-**Decision**: Missing [topics] | Opportunity: [description]
-```
-
-## Prioritized Gap Report Template
+## 4. Prioritized Gap Report
 
 ```markdown
 # Content Gap Analysis Report
-**Analysis Date**: [Date] | **Sites**: [Your site] vs [Competitors]
+**Date**: [date] | **Sites**: [your site] vs [competitors]
 
-**Key Findings**:
-1. [Most significant gap]
-2. [Second gap]
-3. [Third gap]
+## Key Findings
+1. [largest gap + evidence]
+2. [fastest win + evidence]
+3. [strategic content moat + evidence]
 
-**Total Opportunity**: [X] keyword gaps | [X]/month traffic potential | [X] quick wins
+## Prioritized Backlog
+| Tier | Content To Create / Refresh | Target KW / Topic | Evidence | Effort | Impact | Owner |
+|------|-----------------------------|-------------------|----------|--------|--------|-------|
+| 1 Quick win | [title] | [kw/topic] | [vol/rank/source] | L/M/H | H/M/L | [owner] |
+| 2 Strategic | [title] | [kw/topic] | [vol/rank/source] | L/M/H | H/M/L | [owner] |
+| 3 Long-term | [title] | [kw/topic] | [vol/rank/source] | L/M/H | H/M/L | [owner] |
 
-## Prioritized Gap List
-
-### Tier 1: Quick Wins (Do Now)
-| Content to Create | Target Keyword | Volume | Difficulty | Impact |
-|-------------------|----------------|--------|------------|--------|
-| [Title idea] | [keyword] | [vol] | [diff] | High |
-
-### Tier 2: Strategic Builds (This Quarter)
-| Content to Create | Target Keyword | Volume | Difficulty | Impact |
-|-------------------|----------------|--------|------------|--------|
-| [Title idea] | [keyword] | [vol] | [diff] | High |
-
-### Tier 3: Long-term Investments (This Year)
-| Content to Create | Target Keyword | Volume | Difficulty | Impact |
-|-------------------|----------------|--------|------------|--------|
-| [Title idea] | [keyword] | [vol] | [diff] | High |
-
-## Content Calendar
-
-| Week | Content | Type | Target Keyword | Status |
-|------|---------|------|----------------|--------|
-| 1 | [Title] | [Type] | [Keyword] | Planned |
+## Editorial Calendar
+| Week | Asset | Type | Target | Dependency | Status |
+|------|-------|------|--------|------------|--------|
+| [week] | [title] | [type] | [keyword/topic] | [SME/data/design] | Planned |
 
 ## Success Metrics
-| Metric | Current | 3-Month Target | 6-Month Target |
-|--------|---------|----------------|----------------|
-| Keyword coverage | [X] | [X] | [X] |
-| Topic clusters | [X] | [X] | [X] |
-| Traffic from new content | [X] | [X] | [X] |
-| AI citations | [X] | [X] | [X] |
+Keyword coverage, topic cluster depth, new-content traffic, assisted conversions, AI citations, internal links added.
 ```
