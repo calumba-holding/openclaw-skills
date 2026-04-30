@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-main-search-query",
+  "displayName": "IMDb Keyword Search API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777309177596,
+    "commit": null
+  },
+  "history": []
+}
