@@ -1,0 +1,11 @@
+{
+  "owner": "mailbirdagent",
+  "slug": "mailbird-mcp",
+  "displayName": "Mailbird",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777274866410,
+    "commit": null
+  },
+  "history": []
+}
