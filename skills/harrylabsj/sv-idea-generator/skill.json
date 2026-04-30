@@ -1,0 +1,26 @@
+{
+  "slug": "sv-idea-generator",
+  "name": "Short Video Idea Generator",
+  "description": "Generates short-video topic ideas, creative angles, and format suggestions based on niche, trend, and audience.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "ideation",
+    "brainstorming",
+    "creative",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video ideas",
+    "content ideas",
+    "brainstorm video",
+    "video topics",
+    "creative angles",
+    "short video brainstorm"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
