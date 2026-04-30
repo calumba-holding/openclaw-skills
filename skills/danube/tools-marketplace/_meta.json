@@ -1,0 +1,11 @@
+{
+  "owner": "danube",
+  "slug": "tools-marketplace",
+  "displayName": "Danube Tools Marketplace",
+  "latest": {
+    "version": "8.0.13",
+    "publishedAt": 1776217162805,
+    "commit": null
+  },
+  "history": []
+}
