@@ -3,11 +3,16 @@
   "slug": "raygun",
   "displayName": "Raygun",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1776893096020,
-    "commit": "https://github.com/openclaw/skills/commit/1d9a011b2c689339ebf8b04e04e7b641b96967ea"
+    "version": "1.0.2",
+    "publishedAt": 1777570305124,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1776893096020,
+      "commit": "https://github.com/openclaw/skills/commit/1d9a011b2c689339ebf8b04e04e7b641b96967ea"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1775261046878,
