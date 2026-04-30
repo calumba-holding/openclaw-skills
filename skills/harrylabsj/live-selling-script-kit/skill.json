@@ -1,0 +1,23 @@
+{
+  "name": "Live Commerce Sales Script Kit",
+  "description": "Ready-to-use live streaming sales scripts — product introduction flows, pricing reveal cadence, urgency-building phrases, audience Q&A prep, and full-session outlines for live commerce hosts.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "E-Commerce / Live Commerce",
+  "keywords": [
+    "live commerce", "直播带货", "直播话术", "sales script",
+    "live selling", "抖音直播", "快手直播", "淘宝直播",
+    "flash sale", "audience engagement", "anchor script"
+  ],
+  "platforms": ["抖音直播", "快手直播", "Taobao Live", "General Live Streaming"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No false scarcity (e.g., fake 'only 3 left'). No fabricated price anchors or fake original prices. No pressure tactics targeting vulnerable consumers. Must disclose actual stock levels and limitations. Comply with live commerce platform regulations."
+  }
+}
