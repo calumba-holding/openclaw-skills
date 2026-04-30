@@ -3,11 +3,16 @@
   "slug": "serp-analysis",
   "displayName": "Serp Analysis",
   "latest": {
-    "version": "9.1.0",
-    "publishedAt": 1776940431262,
-    "commit": "https://github.com/openclaw/skills/commit/1255eb2856b2cda47a21b7a9d42382b651347f05"
+    "version": "9.9.5",
+    "publishedAt": 1777349126179,
+    "commit": null
   },
   "history": [
+    {
+      "version": "9.1.0",
+      "publishedAt": 1776940431262,
+      "commit": "https://github.com/openclaw/skills/commit/1255eb2856b2cda47a21b7a9d42382b651347f05"
+    },
     {
       "version": "8.0.0",
       "publishedAt": 1776184640489,
