@@ -1,0 +1,27 @@
+{
+  "slug": "sv-narration-writer",
+  "name": "Short Video Narration & Voiceover Writer",
+  "description": "Helps creators write natural, engaging narration and voiceover scripts with pacing, tone, and delivery guidance for short videos.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "narration",
+    "voiceover",
+    "script",
+    "audio",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "voiceover script",
+    "narration writing",
+    "VO script",
+    "talking points",
+    "voice script",
+    "faceless video"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
