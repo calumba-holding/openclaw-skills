@@ -1,0 +1,27 @@
+{
+  "slug": "sv-pacing-guide",
+  "name": "Short Video Pacing & Rhythm Guide",
+  "description": "Teaches pacing techniques — cut timing, beat structure, BGM coordination, and energy curve — to maximize short video retention and engagement.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "pacing",
+    "editing",
+    "rhythm",
+    "retention",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video pacing",
+    "cut rhythm",
+    "beat sync",
+    "retention pacing",
+    "editing rhythm",
+    "video energy"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
