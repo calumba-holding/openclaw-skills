@@ -1,0 +1,11 @@
+{
+  "owner": "sdk-team",
+  "slug": "alibabacloud-ecs-reboot-or-crash-diagnosis",
+  "displayName": "Alibabacloud Ecs Reboot Or Crash Diagnosis",
+  "latest": {
+    "version": "0.0.1",
+    "publishedAt": 1777271733752,
+    "commit": null
+  },
+  "history": []
+}
