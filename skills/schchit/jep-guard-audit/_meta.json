@@ -1,0 +1,11 @@
+{
+  "owner": "schchit",
+  "slug": "jep-guard-audit",
+  "displayName": "JEP-Guard Audit",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777211731835,
+    "commit": null
+  },
+  "history": []
+}
