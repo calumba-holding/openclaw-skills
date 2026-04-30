@@ -1,0 +1,11 @@
+{
+  "owner": "sdk-team",
+  "slug": "alibabacloud-ecs-install-extension",
+  "displayName": "Alibabacloud Ecs Install Extension",
+  "latest": {
+    "version": "0.0.1",
+    "publishedAt": 1777289355814,
+    "commit": null
+  },
+  "history": []
+}
