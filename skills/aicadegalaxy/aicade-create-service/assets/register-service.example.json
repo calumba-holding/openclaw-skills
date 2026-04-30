@@ -1,0 +1,75 @@
+{
+  "service_id": "my-llm-service",
+  "service_name": "My LLM Service",
+  "endpoint_url": "https://api.example.com/v1/chat",
+  "auth_type": "API_KEY",
+  "auth_location": "HEADER",
+  "outbound_auth": {
+    "type": "API_KEY",
+    "api_key": {
+      "location": "header",
+      "query_param": null,
+      "value": "sk-xxxx"
+    }
+  },
+  "route_path": "/api/my-llm-service",
+  "strip_prefix": 1,
+  "route_order": 10,
+  "timeout_ms": 60000,
+  "description": "A public LLM service exposed through the aicade gateway",
+  "tags": ["llm", "chat"],
+  "input_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["messages"],
+    "properties": {
+      "messages": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "role": {"type": "string"},
+            "content": {"type": "string"}
+          },
+          "required": ["role", "content"]
+        }
+      }
+    }
+  },
+  "output_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "content": {"type": "string"},
+      "usage": {
+        "type": "object",
+        "properties": {
+          "prompt_tokens": {"type": "integer"},
+          "completion_tokens": {"type": "integer"}
+        }
+      }
+    }
+  },
+  "billing": {
+    "billing_type": "PER_TOKEN",
+    "flow_type": "INCOME",
+    "currency": "POINTS",
+    "prompt_price_per_1k": 0.01,
+    "completion_price_per_1k": 0.03,
+    "monthly_token_limit": 1000000,
+    "fallback_strategy": "REJECT"
+  },
+  "rate_limits": [
+    {
+      "limit_dimension": "SERVICE",
+      "qps": 100,
+      "rpm": 1000
+    },
+    {
+      "limit_dimension": "USER",
+      "rpm": 60,
+      "rpd": 1000,
+      "ip_blacklist": "[\"1.2.3.4\"]"
+    }
+  ]
+}

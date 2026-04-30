@@ -1,0 +1,30 @@
+{
+  "service_id": "my-service-01",
+  "service_name": "My Service",
+  "endpoint_url": "https://api.example.com/v1/endpoint",
+  "auth_type": "NONE",
+  "auth_location": "HEADER",
+  "outbound_auth": null,
+  "route_path": "/api/my-service-01",
+  "strip_prefix": 0,
+  "route_order": 0,
+  "timeout_ms": 30000,
+  "description": "",
+  "tags": [],
+  "input_schema": {
+    "type": "object",
+    "properties": {}
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {}
+  },
+  "billing": {
+    "billing_type": "FREE",
+    "flow_type": "INCOME",
+    "currency": "",
+    "price_per_request": 0,
+    "fallback_strategy": "REJECT"
+  },
+  "rate_limits": []
+}

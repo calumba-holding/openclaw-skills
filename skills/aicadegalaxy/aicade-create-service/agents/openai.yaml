@@ -1,0 +1,4 @@
+interface:
+  display_name: "Aicade Register Skills"
+  short_description: "Guide aicade service registration JSON creation"
+  default_prompt: "Use $aicade-register-skills to ask me the required questions and prepare a confirmed service registration JSON."
