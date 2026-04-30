@@ -1,0 +1,11 @@
+{
+  "owner": "lbs-amap",
+  "slug": "amap-map-google-maps-migration",
+  "displayName": "AMap Map Google Maps Migration",
+  "latest": {
+    "version": "1.0.3",
+    "publishedAt": 1777448294739,
+    "commit": null
+  },
+  "history": []
+}
