@@ -1,0 +1,28 @@
+{
+  "name": "Legal Trial Preparation Checklist",
+  "slug": "legal-trial-preparation-checklist",
+  "version": "1.0.0",
+  "description": "Provides trial readiness checklists for exhibits, witnesses, motions, openings, closings, logistics, and daily courtroom workflow.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "trial",
+    "litigation",
+    "checklist",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "trial preparation",
+    "trial checklist",
+    "trial notebook",
+    "courtroom logistics",
+    "legal-trial-preparation-checklist",
+    "legal trial preparation checklist"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
