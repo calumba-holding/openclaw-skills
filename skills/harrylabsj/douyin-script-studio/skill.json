@@ -1,0 +1,23 @@
+{
+  "name": "Douyin Short Video Script Studio",
+  "description": "Structured Douyin oral script generation with hook-driven openings (0-3s grab), timed content beats, visual cues, BGM mood guidance, and transition scripting for short video creators.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "Social Media Content / Platform-Specific",
+  "keywords": [
+    "douyin", "抖音", "抖音脚本", "口播脚本", "short video script",
+    "opening hook", "storyboard", "trending", "抖音文案",
+    "video script", "creator toolkit"
+  ],
+  "platforms": ["抖音 (Douyin / TikTok CN)"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No false product efficacy claims. No misleading before/after transformations. Explicit disclosure of commercial/sponsored content. No dangerous challenge or behavior suggestions. Respect Douyin content review policies."
+  }
+}
