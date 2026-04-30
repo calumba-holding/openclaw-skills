@@ -3,11 +3,16 @@
   "slug": "systeme",
   "displayName": "Systeme.io",
   "latest": {
-    "version": "1.0.4",
-    "publishedAt": 1770840226796,
-    "commit": "https://github.com/openclaw/skills/commit/52f3ad7745c1fae79d107660f63e70060e3d16ae"
+    "version": "1.0.5",
+    "publishedAt": 1777589110368,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.4",
+      "publishedAt": 1770840226796,
+      "commit": "https://github.com/openclaw/skills/commit/52f3ad7745c1fae79d107660f63e70060e3d16ae"
+    },
     {
       "version": "1.0.3",
       "publishedAt": 1770765764730,

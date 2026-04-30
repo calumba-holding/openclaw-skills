@@ -26,7 +26,7 @@ Access the Systeme.io API with managed OAuth authentication. Manage contacts, ta
 # List contacts
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/systeme/api/contacts')
+req = urllib.request.Request('https://api.maton.ai/systeme/api/contacts')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/systeme/{native-api-path}
+https://api.maton.ai/systeme/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Systeme.io API endpoint path. The gateway proxies requests to `api.systeme.io` and automatically injects your API key.
+Maton proxies requests to `api.systeme.io` and automatically injects your API key.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Systeme.io connections at `https://ctrl.maton.ai`.
+Manage your Systeme.io connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=systeme&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=systeme&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'systeme'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "21fd90f9-5935-43cd-b6c8-bde9d915ca80",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2025-12-08T07:20:53.488460Z",
     "last_updated_time": "2026-01-31T20:03:32.593153Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Systeme.io connections, specify which one to use with the `
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/systeme/api/contacts')
+req = urllib.request.Request('https://api.maton.ai/systeme/api/contacts')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '21fd90f9-5935-43cd-b6c8-bde9d915ca80')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to contacts, tags, courses, communities, and subscriptions within the connected Systeme.io account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -413,7 +418,7 @@ When `hasMore` is `true`, use the ID of the last item in `items` as `startingAft
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/systeme/api/contacts',
+  'https://api.maton.ai/systeme/api/contacts',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -430,7 +435,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/systeme/api/contacts',
+    'https://api.maton.ai/systeme/api/contacts',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -444,7 +449,7 @@ import requests
 
 # Create contact
 contact = requests.post(
-    'https://gateway.maton.ai/systeme/api/contacts',
+    'https://api.maton.ai/systeme/api/contacts',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -458,7 +463,7 @@ contact = requests.post(
 
 # Assign tag
 requests.post(
-    f'https://gateway.maton.ai/systeme/api/contacts/{contact["id"]}/tags',
+    f'https://api.maton.ai/systeme/api/contacts/{contact["id"]}/tags',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -470,7 +475,7 @@ requests.post(
 ## Notes
 
 - Systeme.io uses API key authentication (passed as `X-API-Key` header natively)
-- The gateway automatically handles auth header transformation
+- Maton automatically handles auth header transformation
 - Use `application/merge-patch+json` content type for PATCH requests
 - Contact, tag, course, and enrollment IDs are numeric integers
 - Rate limits are enforced via `X-RateLimit-*` headers
@@ -501,7 +506,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -511,8 +516,8 @@ EOF
 
 1. Ensure your URL path starts with `systeme`. For example:
 
-- Correct: `https://gateway.maton.ai/systeme/api/contacts`
-- Incorrect: `https://gateway.maton.ai/api/contacts`
+- Correct: `https://api.maton.ai/systeme/api/contacts`
+- Incorrect: `https://api.maton.ai/api/contacts`
 
 ## Resources
 
