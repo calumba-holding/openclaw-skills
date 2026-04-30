@@ -1,0 +1,23 @@
+{
+  "name": "Promotional Email Writer",
+  "description": "Complete promotional email copy — subject lines, preview text, body copy, and CTAs for launches, flash sales, abandoned cart, newsletters, and seasonal campaigns. Conversion-focused with CAN-SPAM compliance.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "Marketing / Email Marketing",
+  "keywords": [
+    "email copy", "promo email", "marketing email", "subject line",
+    "abandoned cart", "newsletter", "email campaign",
+    "CAN-SPAM", "email sequence", "营销邮件"
+  ],
+  "platforms": ["Email (Platform-Agnostic)"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "CAN-SPAM/GDPR compliant subject lines — no deceptive openers. Clear unsubscribe mechanism language. No misleading discount claims. Proper sender identity. GDPR-aware data handling reminders."
+  }
+}
