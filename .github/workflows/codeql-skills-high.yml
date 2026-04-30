@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/CODEOWNERS"
       - ".github/codeql/**"
+      - ".github/scripts/**"
       - ".github/workflows/**"
   push:
     branches:
@@ -15,6 +16,7 @@ on:
     paths:
       - ".github/CODEOWNERS"
       - ".github/codeql/**"
+      - ".github/scripts/**"
       - ".github/workflows/**"
   schedule:
     - cron: "20 7 * * *"
@@ -170,3 +172,71 @@ jobs:
         uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
         with:
           category: "/codeql-skills-high/${{ matrix.language }}/${{ matrix.shard }}"
+
+  skill-audit:
+    name: Skill audit (${{ matrix.shard }})
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - shard: "0-9"
+            sparse_checkout: |
+              .github
+              skills/0*
+              skills/0*/**
+              skills/1*
+              skills/1*/**
+              skills/2*
+              skills/2*/**
+              skills/3*
+              skills/3*/**
+              skills/4*
+              skills/4*/**
+              skills/5*
+              skills/5*/**
+              skills/6*
+              skills/6*/**
+              skills/7*
+              skills/7*/**
+              skills/8*
+              skills/8*/**
+              skills/9*
+              skills/9*/**
+          - shard: "a"
+            sparse_checkout: |
+              .github
+              skills/a*
+              skills/a*/**
+              skills/A*
+              skills/A*/**
+          - shard: "b"
+            sparse_checkout: |
+              .github
+              skills/b*
+              skills/b*/**
+              skills/B*
+              skills/B*/**
+    steps:
+      - name: Checkout shard
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: ${{ matrix.sparse_checkout }}
+
+      - name: Audit skill content
+        run: >
+          python3 .github/scripts/skill-security-audit.py
+          --root skills
+          --shard "${{ matrix.shard }}"
+          --sarif "skill-audit-${{ matrix.shard }}.sarif"
+
+      - name: Upload audit SARIF
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+        with:
+          sarif_file: skill-audit-${{ matrix.shard }}.sarif
+          category: "/llm-skill-audit/${{ matrix.shard }}"
