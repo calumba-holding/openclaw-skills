@@ -1,0 +1,11 @@
+{
+  "owner": "zvirb",
+  "slug": "crm-entity-extraction",
+  "displayName": "CRM Entity Extraction",
+  "latest": {
+    "version": "1.0.4",
+    "publishedAt": 1777335308249,
+    "commit": null
+  },
+  "history": []
+}
