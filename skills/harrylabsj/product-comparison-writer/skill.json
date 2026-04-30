@@ -1,0 +1,23 @@
+{
+  "name": "Product Comparison & Review Copywriter",
+  "description": "Fair, structured product comparison copy — feature matrices, pros/cons tables, 'best for' recommendations, buying guides, and review roundups. Built-in fairness guardrails ensure ethical competitive comparison.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "E-Commerce / Product Content",
+  "keywords": [
+    "product comparison", "VS", "对比评测", "buying guide",
+    "选购指南", "pros and cons", "review roundup", "comparison table",
+    "best for", "spec comparison"
+  ],
+  "platforms": ["E-Commerce Product Pages", "Blogs", "Editorial Review Sites"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "MUST maintain fairness — no invented competitor weaknesses. No suppressed competitor advantages. Cite sources for third-party data. Label editorial vs sponsored. No defamatory language. All claims must be verifiable."
+  }
+}
