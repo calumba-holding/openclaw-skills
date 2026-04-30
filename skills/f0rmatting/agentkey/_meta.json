@@ -1,0 +1,11 @@
+{
+  "owner": "f0rmatting",
+  "slug": "agentkey",
+  "displayName": "One command. Full internet access for your AI agent. Browse Twitter, search LinkedIn, scrape social media, read any webpage. Zero config. Just install and go.",
+  "latest": {
+    "version": "1.1.0",
+    "publishedAt": 1777280650486,
+    "commit": null
+  },
+  "history": []
+}
