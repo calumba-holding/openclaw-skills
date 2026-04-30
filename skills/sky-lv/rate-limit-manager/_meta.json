@@ -1,0 +1,11 @@
+{
+  "owner": "sky-lv",
+  "slug": "rate-limit-manager",
+  "displayName": "Rate Limit Manager",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777327274775,
+    "commit": null
+  },
+  "history": []
+}
