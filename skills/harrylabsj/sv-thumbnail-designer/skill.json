@@ -1,0 +1,28 @@
+{
+  "slug": "sv-thumbnail-designer",
+  "name": "Short Video Thumbnail & Cover Designer",
+  "description": "Guides the design of high-click-through video covers/thumbnails with composition rules, text hierarchy, color psychology, and platform-specific specs.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "thumbnail",
+    "cover",
+    "design",
+    "CTR",
+    "visual",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video thumbnail",
+    "cover design",
+    "thumbnail design",
+    "video cover",
+    "CTR improvement",
+    "cover image"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
