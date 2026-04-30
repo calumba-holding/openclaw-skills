@@ -1,205 +1,88 @@
 # Schema Markup Validation Guide
 
-Complete reference for validating, testing, and troubleshooting structured data.
+Compact reference for validating, testing, troubleshooting, and maintaining structured data.
 
 ## Validation Tools
 
-| Tool | URL | Purpose |
-|------|-----|---------|
-| Google Rich Results Test | https://search.google.com/test/rich-results | Check rich result eligibility |
-| Schema.org Validator | https://validator.schema.org/ | Validate against Schema.org spec |
-| Google Search Console | Enhancements section | Monitor rich results at scale |
+| Tool | Use |
+|------|-----|
+| Google Rich Results Test | Check Google rich result eligibility. |
+| Schema.org Validator | Validate against Schema.org syntax/spec. |
+| Google Search Console Enhancements | Monitor structured-data issues at scale. |
 
----
+## Common JSON-LD Errors
 
-## Common JSON-LD Syntax Errors
+| Error | Bad pattern | Fix |
+|-------|-------------|-----|
+| Trailing comma | Last property ends with `,` | Remove comma after final property. |
+| Missing quotes | `@context: "..."` | Quote property names: `"@context"`. |
+| Wrong date format | Locale date such as `MM/DD/YYYY` | Use ISO 8601: `[ISO 8601 date-time]`. |
+| Relative URL | `"/images/photo.jpg"` | Use absolute `https://...` URL. |
+| Multiple values not in array | `"image": "a.jpg", "b.jpg"` | Use an array: `["a.jpg", "b.jpg"]`. |
+| Dynamic-only injection | Schema absent from source/rendered test | Ensure crawler-visible JSON-LD is present. |
 
-| Error | Bad | Fix |
-|-------|-----|-----|
-| Trailing comma | `"headline": "Title",` } | Remove comma after last property |
-| Missing quotes | `@context: "..."` | Quote all property names: `"@context"` |
-| Wrong date format | `"01/15/2024"` | ISO 8601: `"2024-01-15T08:00:00+00:00"` |
-| Relative URL | `"/images/photo.jpg"` | Absolute: `"https://example.com/images/photo.jpg"` |
-| Multiple values not in array | `"image": "a.jpg", "b.jpg"` | Use array: `["a.jpg", "b.jpg"]` |
+## Required and Recommended Properties
 
----
+| Type | Required | Recommended / eligibility notes |
+|------|----------|---------------------------------|
+| FAQPage | `mainEntity`, `Question.name`, `Answer.text` | Minimum 2 visible Q&A pairs; not for forums, UGC Q&A, or promotional FAQs. |
+| HowTo | `name`, `step`, `step.text` | Minimum 2 steps; complete process; use Recipe schema for recipes; add image/totalTime when available. |
+| Article / BlogPosting | `headline`, `image`, `datePublished`, `author`, `publisher`, `publisher.logo` | Headline max 110 chars; image >=1200px wide; add `dateModified` when content changes. |
+| Product | `name`, `image` | Price display needs `offers.price`, `priceCurrency`, `availability`; stars need genuine `aggregateRating` or `review`; add brand/sku. |
+| LocalBusiness | `name`, `address` | Add `geo`, `telephone`, and `openingHoursSpecification`. |
+| Organization | `name`, `url` | Add `logo` and `sameAs` profiles. |
 
-## Required vs Recommended Properties
+## Rich Result Policy Checks
 
-### FAQPage
-
-| Property | Status | Notes |
-|----------|--------|-------|
-| mainEntity | Required | Array of Question objects |
-| Question.name | Required | The question text |
-| Answer.text | Required | The answer text |
-
-Minimum: 2 Q&A pairs
-
-### HowTo
-
-| Property | Status | Notes |
-|----------|--------|-------|
-| name | Required | Title of the how-to |
-| step | Required | Array of HowToStep objects |
-| step.text | Required | Step instructions |
-| image | Recommended | Improves visibility |
-| totalTime | Recommended | Shows duration in results |
-
-Minimum: 2 steps with text
-
-### Article
-
-| Property | Status | Notes |
-|----------|--------|-------|
-| headline | Required | Max 110 characters |
-| image | Required | Minimum 1200px wide |
-| datePublished | Required | ISO 8601 format |
-| author | Required | Person or Organization |
-| publisher | Required | Organization with logo |
-| publisher.logo | Required | Max 600x60px |
-| dateModified | Recommended | Update when content changes |
-
-### Product
-
-| Property | Status | Notes |
-|----------|--------|-------|
-| name | Required | Product name |
-| image | Required | Product images |
-| offers.price | Recommended | Required for price display |
-| offers.priceCurrency | Recommended | Required for price display |
-| offers.availability | Recommended | Stock status |
-| aggregateRating | Recommended | Required for star ratings |
-| brand / sku | Recommended | Product identifiers |
-
-### LocalBusiness
-
-| Property | Status | Notes |
-|----------|--------|-------|
-| name | Required | Business name |
-| address | Required | Full PostalAddress object |
-| geo | Recommended | Latitude/longitude |
-| telephone | Recommended | Phone number |
-| openingHoursSpecification | Recommended | Business hours |
-
-### Organization
-
-| Property | Status | Notes |
-|----------|--------|-------|
-| name | Required | Organization name |
-| url | Required | Website URL |
-| logo | Recommended | Brand logo |
-| sameAs | Recommended | Social media profiles |
-
----
-
-## Google Rich Result Eligibility
-
-### FAQ Rich Results
-- Minimum 2 Q&A pairs
-- Questions must be actual questions
-- Content must match visible page content exactly
-- Not for forums, user-generated Q&A (use QAPage), or promotional content
-
-### How-To Rich Results
-- Minimum 2 steps with clear instructions
-- Complete process from start to finish
-- Not for single-step processes or recipes (use Recipe schema)
-
-### Product Rich Results
-- **Price display**: requires `offers` with `price`, `priceCurrency`, `availability`
-- **Review stars**: requires `aggregateRating` or individual `review`
-- Reviews must be genuine, not paid/incentivized
-
-### Article Rich Results
-- Valid Article/BlogPosting/NewsArticle schema
-- Proper `publisher` with valid logo
-- Images meet size requirements (1200px wide)
-- Minimum ~300 words content
-
----
+| Policy risk | Example | Fix |
+|-------------|---------|-----|
+| Content mismatch | FAQ schema not visible on page | Markup must match visible content. |
+| Deceptive reviews | Fake, paid, or incentivized reviews | Use only genuine, verifiable review data. |
+| Irrelevant schema | Product schema on generic blog post | Use schema types that match page purpose. |
+| Hidden content | Answers only in JSON-LD | Make marked-up content visible to users. |
+| Promotional FAQ | `Why is [Brand] best?` | Use neutral, informational questions. |
 
 ## Testing Workflow
 
-### Initial Implementation
-1. Add schema to dev/staging environment
-2. Validate syntax at validator.schema.org
-3. Test at Google Rich Results Test
-4. View page source to confirm schema is present
+| Stage | Steps |
+|-------|-------|
+| Initial implementation | Add schema in dev/staging; validate syntax; run Rich Results Test; confirm source/rendered page contains JSON-LD. |
+| Pre-launch | Test staging URL; verify required properties; confirm visible content match; test combined schema types. |
+| Post-launch | Submit sitemap; monitor Search Console Enhancements; re-test after content changes; fix errors within 30 days. |
 
-### Pre-Launch
-1. Test staging URL with Rich Results Test
-2. Verify all required properties present
-3. Confirm content matches visible page content
-4. Test multiple schema types if combining
+## Troubleshooting
 
-### Post-Launch Monitoring
-1. Submit sitemap to Google Search Console
-2. Monitor Enhancements reports for errors
-3. Re-test pages if content changes
-4. Fix errors within 30 days to avoid rich result removal
+| Symptom | Checks |
+|---------|--------|
+| Schema not found | View source and rendered HTML; search for `"@type"`; confirm `type="application/ld+json"`; check dynamic rendering. |
+| Rich result not showing | Check Enhancements, URL Inspection, eligibility, indexing status, and allow days/weeks for display. |
+| Errors vs warnings | Errors block eligibility and must be fixed; warnings are recommended-property improvements. |
 
----
+## Quick Error Reference
 
-## Common Policy Violations
+| Message | Fix |
+|---------|-----|
+| Missing required field | Add the required property for that schema type. |
+| Invalid date format | Use ISO 8601 date/date-time. |
+| URL is not absolute | Use full `https://` URLs. |
+| Unexpected token | Check quotes, brackets, commas, and arrays. |
+| Not eligible for rich results | Re-check type-specific eligibility and policy rules. |
+| Image too small | Use image at least 1200px wide where required. |
+| The attribute price is required | Add `offers.price` plus currency and availability when price display is needed. |
 
-| Violation | Example | Fix |
-|-----------|---------|-----|
-| Content mismatch | FAQ schema with Q&A not visible on page | Schema must reflect actual page content |
-| Deceptive content | Fake or incentivized reviews | Only include genuine, verifiable info |
-| Spammy markup | Product schema on every blog post | Only use schema types relevant to page |
-| Hidden content | FAQ answers only in schema | Make all schema content visible to users |
-| Promotional FAQ | "Why is [Brand] the best?" | Use neutral, informational questions |
+## Maintenance Checklist
 
----
-
-## Debugging Common Issues
-
-### Schema Not Appearing in Rich Results Test
-1. View page source (not inspect element) and search for `"@type"`
-2. Check script tag has `type="application/ld+json"`
-3. Copy JSON to validator.schema.org and fix syntax errors
-4. Ensure content is not served dynamically after page load
-
-### Rich Results Not Showing in Search
-1. Check Search Console > Enhancements
-2. Use URL Inspection tool to request indexing
-3. Verify schema passes Rich Results Test
-4. Allow days/weeks for new schema to appear
-
-### Warnings vs Errors
-- **Errors** (must fix): Invalid syntax, missing required properties, invalid values
-- **Warnings** (should fix): Missing recommended properties, non-standard extensions
-
----
-
-## Schema Maintenance Checklist
-
-**Monthly**: Check Search Console for errors, verify rich results appearing, update `dateModified`
-**Quarterly**: Audit all schema, test key pages, update outdated info, check for new relevant schema types
-**After content changes**: Update schema to match, update `dateModified`, re-validate, request re-indexing
-**After site migration**: Verify schema preserved, update absolute URLs, submit new sitemap
-
----
-
-## Quick Reference: Error Messages
-
-| Error Message | Fix |
-|---------------|-----|
-| "Missing required field" | Add the required property |
-| "Invalid date format" | Use ISO 8601: 2024-01-15T08:00:00+00:00 |
-| "URL is not absolute" | Add full URL with https:// |
-| "Unexpected token" | Check for missing quotes, brackets, commas |
-| "Not eligible for rich results" | Review eligibility requirements above |
-| "Image too small" | Use image at least 1200px wide |
-| "The attribute price is required" | Add offers.price property |
-
----
+| Timing | Action |
+|--------|--------|
+| Monthly | Check Search Console errors, verify rich result status, update `dateModified` only when content changes. |
+| Quarterly | Audit key schema types, test priority pages, update outdated info, evaluate new relevant schema types. |
+| After content changes | Sync visible content and schema, update `dateModified`, revalidate, request indexing if important. |
+| After migration | Verify schema survived, update absolute URLs, submit sitemap. |
 
 ## Resources
 
-- **Schema.org**: https://schema.org/
-- **Google Search Central**: https://developers.google.com/search/docs/appearance/structured-data
-- **Rich Results Test**: https://search.google.com/test/rich-results
-- **Schema Validator**: https://validator.schema.org/
-- **JSON-LD Playground**: https://json-ld.org/playground/
+- Schema.org: `https://schema.org/`
+- Google structured data docs: `https://developers.google.com/search/docs/appearance/structured-data`
+- Rich Results Test: `https://search.google.com/test/rich-results`
+- Schema Validator: `https://validator.schema.org/`
+- JSON-LD Playground: `https://json-ld.org/playground/`
