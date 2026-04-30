@@ -1,0 +1,11 @@
+{
+  "owner": "francemichaell-15",
+  "slug": "ai-subtitle-jellyfin",
+  "displayName": "Ai Subtitle Jellyfin",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777223236240,
+    "commit": null
+  },
+  "history": []
+}
