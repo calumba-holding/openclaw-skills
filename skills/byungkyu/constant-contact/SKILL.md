@@ -1,8 +1,8 @@
 ---
 name: constant-contact
 description: |
-  Constant Contact API integration with managed OAuth. Manage contacts, email campaigns, lists, segments, and marketing automation.
-  Use this skill when users want to manage email marketing campaigns, contact lists, or analyze campaign performance.
+  Constant Contact API integration with managed OAuth. Manage contacts, email campaigns, lists, segments, tags, custom fields, and marketing analytics.
+  Use this skill when users want to manage email marketing campaigns, contact lists, bulk operations, or analyze campaign performance.
   For other third party apps, use the api-gateway skill (https://clawhub.ai/byungkyu/api-gateway).
   Requires network access and valid Maton API key.
 metadata:
@@ -17,7 +17,7 @@ metadata:
 
 # Constant Contact
 
-Access the Constant Contact V3 API with managed OAuth authentication. Manage contacts, email campaigns, contact lists, segments, and marketing analytics.
+Access the Constant Contact V3 API with managed OAuth authentication. Manage contacts, email campaigns, contact lists, tags, custom fields, segments, bulk operations, and marketing analytics.
 
 ## Quick Start
 
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "4314bd0f-fd56-40ab-8c65-2676dd2c23c4",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-07T07:41:05.859244Z",
     "last_updated_time": "2026-02-07T07:41:32.658230Z",
@@ -135,7 +135,7 @@ python <<'EOF'
 import urllib.request, os, json
 req = urllib.request.Request('https://gateway.maton.ai/constant-contact/v3/contacts')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '4314bd0f-fd56-40ab-8c65-2676dd2c23c4')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
@@ -152,11 +152,69 @@ If omitted, the gateway uses the default (oldest) active connection.
 GET /constant-contact/v3/account/summary
 ```
 
+**Response:**
+```json
+{
+  "contact_email": "user@example.com",
+  "contact_phone": "5551234567",
+  "country_code": "us",
+  "encoded_account_id": "abc123",
+  "first_name": "John",
+  "last_name": "Doe",
+  "organization_name": "Acme Inc",
+  "state_code": "CA",
+  "time_zone_id": "US/Eastern"
+}
+```
+
+#### Update Account Summary
+
+```bash
+PUT /constant-contact/v3/account/summary
+Content-Type: application/json
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "organization_name": "Acme Inc",
+  "time_zone_id": "US/Eastern"
+}
+```
+
 #### Get Account Emails
+
+Returns confirmed sender email addresses for the account.
 
 ```bash
 GET /constant-contact/v3/account/emails
 ```
+
+**Response:**
+```json
+[
+  {
+    "email_id": 1,
+    "email_address": "marketing@example.com",
+    "roles": ["BILLING", "CONTACT", "DEFAULT_FROM", "REPLY_TO"],
+    "confirm_status": "CONFIRMED",
+    "confirm_time": "2026-02-05T07:32:49.766+0000",
+    "confirm_source_type": "SITE_OWNER"
+  }
+]
+```
+
+#### Add Account Email
+
+```bash
+POST /constant-contact/v3/account/emails
+Content-Type: application/json
+
+{
+  "email_address": "newsender@example.com"
+}
+```
+
+A confirmation email will be sent to the address. The email must be confirmed before it can be used as a sender.
 
 #### Get User Privileges
 
@@ -174,13 +232,20 @@ GET /constant-contact/v3/contacts
 
 Query parameters:
 - `status` - Filter by status: `all`, `active`, `deleted`, `not_set`, `pending_confirmation`, `temp_hold`, `unsubscribed`
-- `email` - Filter by email address
-- `lists` - Filter by list ID(s)
+- `email` - Filter by exact email address
+- `lists` - Filter by list ID(s), comma-separated
 - `segment_id` - Filter by segment ID
-- `tags` - Filter by tag ID(s)
-- `updated_after` - ISO-8601 date filter
-- `include` - Include subresources: `custom_fields`, `list_memberships`, `taggings`, `notes`
+- `tags` - Filter by tag ID(s), comma-separated
+- `updated_after` - ISO-8601 date filter (e.g., `2026-04-01T00:00:00Z`)
+- `include` - Include subresources: `custom_fields`, `list_memberships`, `taggings`, `notes` (comma-separated)
 - `limit` - Results per page (default 50, max 500)
+
+**Example with filters:**
+```bash
+GET /constant-contact/v3/contacts?email=john@example.com&status=all
+GET /constant-contact/v3/contacts?updated_after=2026-04-01T00:00:00Z&limit=100
+GET /constant-contact/v3/contacts?include=custom_fields,list_memberships,taggings&limit=50
+```
 
 #### Get Contact
 
@@ -188,7 +253,42 @@ Query parameters:
 GET /constant-contact/v3/contacts/{contact_id}
 ```
 
+Query parameters:
+- `include` - Include subresources: `custom_fields`, `list_memberships`, `taggings`, `notes` (comma-separated)
+
+**Example:**
+```bash
+GET /constant-contact/v3/contacts/{contact_id}?include=custom_fields,list_memberships,taggings,notes
+```
+
+**Response:**
+```json
+{
+  "contact_id": "uuid",
+  "email_address": {
+    "address": "john@example.com",
+    "permission_to_send": "implicit",
+    "created_at": "2026-04-28T21:46:22Z",
+    "updated_at": "2026-04-28T21:46:22Z",
+    "opt_in_source": "Account",
+    "opt_in_date": "2026-04-28T21:46:22Z",
+    "confirm_status": "off"
+  },
+  "first_name": "John",
+  "last_name": "Doe",
+  "create_source": "Account",
+  "created_at": "2026-04-28T21:46:22Z",
+  "updated_at": "2026-04-28T21:46:22Z",
+  "custom_fields": [],
+  "list_memberships": ["list-uuid"],
+  "taggings": [],
+  "notes": []
+}
+```
+
 #### Create Contact
+
+**IMPORTANT:** The `create_source` field is required.
 
 ```bash
 POST /constant-contact/v3/contacts
@@ -203,11 +303,16 @@ Content-Type: application/json
   "last_name": "Doe",
   "job_title": "Developer",
   "company_name": "Acme Inc",
+  "create_source": "Account",
   "list_memberships": ["list-uuid-here"]
 }
 ```
 
+Valid `create_source` values: `Account`, `Contact`, `Landing Page`
+
 #### Update Contact
+
+**IMPORTANT:** The `update_source` field is required.
 
 ```bash
 PUT /constant-contact/v3/contacts/{contact_id}
@@ -218,9 +323,12 @@ Content-Type: application/json
     "address": "john@example.com"
   },
   "first_name": "John",
-  "last_name": "Smith"
+  "last_name": "Smith",
+  "update_source": "Account"
 }
 ```
+
+Valid `update_source` values: `Account`, `Contact`, `Landing Page`
 
 #### Delete Contact
 
@@ -228,9 +336,11 @@ Content-Type: application/json
 DELETE /constant-contact/v3/contacts/{contact_id}
 ```
 
+Returns `204 No Content` on success.
+
 #### Create or Update Contact (Sign-Up Form)
 
-Use this endpoint to create a new contact or update an existing one without checking if they exist first:
+Use this endpoint to create a new contact or update an existing one by email address without checking if they exist first:
 
 ```bash
 POST /constant-contact/v3/contacts/sign_up_form
@@ -244,10 +354,31 @@ Content-Type: application/json
 }
 ```
 
+**Response:**
+```json
+{
+  "contact_id": "uuid",
+  "action": "created"
+}
+```
+
+The `action` field indicates whether the contact was `created` or `updated`.
+
 #### Get Contact Counts
 
 ```bash
 GET /constant-contact/v3/contacts/counts
+```
+
+**Response:**
+```json
+{
+  "total": 150,
+  "explicit": 100,
+  "implicit": 40,
+  "pending": 5,
+  "unsubscribed": 5
+}
 ```
 
 ### Contact Lists
@@ -259,15 +390,41 @@ GET /constant-contact/v3/contact_lists
 ```
 
 Query parameters:
-- `include_count` - Include contact count per list
-- `include_membership_count` - Include membership count
+- `include_count` - Include total list count (`true`/`false`)
+- `include_membership_count` - Include contact count per list: `all`, `active`, `unsubscribed`
 - `limit` - Results per page
+
+**Example:**
+```bash
+GET /constant-contact/v3/contact_lists?include_membership_count=all
+```
+
+**Response:**
+```json
+{
+  "lists": [
+    {
+      "list_id": "uuid",
+      "name": "Newsletter Subscribers",
+      "description": "Main newsletter",
+      "favorite": false,
+      "created_at": "2026-02-05T07:19:59Z",
+      "updated_at": "2026-02-05T07:19:59Z",
+      "membership_count": 150
+    }
+  ],
+  "lists_count": 1
+}
+```
 
 #### Get Contact List
 
 ```bash
 GET /constant-contact/v3/contact_lists/{list_id}
 ```
+
+Query parameters:
+- `include_membership_count` - Include membership count: `all`, `active`, `unsubscribed`
 
 #### Create Contact List
 
@@ -301,6 +458,8 @@ Content-Type: application/json
 DELETE /constant-contact/v3/contact_lists/{list_id}
 ```
 
+Returns `202 Accepted` (deletion is asynchronous).
+
 ### Tags
 
 #### List Tags
@@ -308,6 +467,9 @@ DELETE /constant-contact/v3/contact_lists/{list_id}
 ```bash
 GET /constant-contact/v3/contact_tags
 ```
+
+Query parameters:
+- `limit` - Results per page
 
 #### Create Tag
 
@@ -337,6 +499,8 @@ Content-Type: application/json
 DELETE /constant-contact/v3/contact_tags/{tag_id}
 ```
 
+Returns `202 Accepted` (deletion is asynchronous).
+
 ### Custom Fields
 
 #### List Custom Fields
@@ -357,6 +521,21 @@ Content-Type: application/json
 }
 ```
 
+Valid types: `string`, `date`
+
+**Response:**
+```json
+{
+  "custom_field_id": "uuid",
+  "label": "Customer ID",
+  "name": "customer_id",
+  "type": "string",
+  "version": 1,
+  "created_at": "2026-04-28T21:45:57Z",
+  "updated_at": "2026-04-28T21:45:57Z"
+}
+```
+
 #### Delete Custom Field
 
 ```bash
@@ -373,11 +552,50 @@ GET /constant-contact/v3/emails
 
 Query parameters:
 - `limit` - Results per page (default 50)
+- `before_date` - ISO-8601 date filter
+- `after_date` - ISO-8601 date filter
+
+**Response:**
+```json
+{
+  "campaigns": [
+    {
+      "campaign_id": "uuid",
+      "name": "March Newsletter",
+      "current_status": "Draft",
+      "type": "CUSTOM_CODE_EMAIL",
+      "type_code": 26,
+      "created_at": "2026-04-28T21:47:35.000Z",
+      "updated_at": "2026-04-28T21:47:35.000Z"
+    }
+  ]
+}
+```
 
 #### Get Email Campaign
 
 ```bash
 GET /constant-contact/v3/emails/{campaign_id}
+```
+
+**Response includes campaign activity IDs:**
+```json
+{
+  "campaign_activities": [
+    {
+      "campaign_activity_id": "uuid",
+      "role": "primary_email"
+    },
+    {
+      "campaign_activity_id": "uuid",
+      "role": "permalink"
+    }
+  ],
+  "campaign_id": "uuid",
+  "current_status": "DRAFT",
+  "name": "March Newsletter",
+  "type": "CUSTOM_CODE_EMAIL"
+}
 ```
 
 #### Create Email Campaign
@@ -401,29 +619,110 @@ Content-Type: application/json
 }
 ```
 
-#### Update Email Campaign Activity
+The `from_email` must be a confirmed account email address (see Account Emails).
+
+#### Rename Email Campaign
+
+```bash
+PATCH /constant-contact/v3/emails/{campaign_id}
+Content-Type: application/json
+
+{
+  "name": "New Campaign Name"
+}
+```
+
+#### Delete Email Campaign
+
+```bash
+DELETE /constant-contact/v3/emails/{campaign_id}
+```
+
+Returns `204 No Content` on success.
+
+### Email Campaign Activities
+
+Campaign activities are the content/configuration of a campaign. Use the `campaign_activity_id` with role `primary_email` from the campaign response.
+
+#### Get Campaign Activity
+
+```bash
+GET /constant-contact/v3/emails/activities/{campaign_activity_id}
+```
+
+**Response:**
+```json
+{
+  "campaign_activity_id": "uuid",
+  "campaign_id": "uuid",
+  "role": "primary_email",
+  "contact_list_ids": [],
+  "segment_ids": [],
+  "current_status": "DRAFT",
+  "format_type": 5,
+  "from_email": "marketing@example.com",
+  "from_name": "Company",
+  "reply_to_email": "reply@example.com",
+  "subject": "Newsletter"
+}
+```
+
+#### Update Campaign Activity
+
+Updates the email content, targeting, and sender information. All fields in the request body are replaced.
 
 ```bash
 PUT /constant-contact/v3/emails/activities/{campaign_activity_id}
 Content-Type: application/json
 
 {
-  "contact_list_ids": ["list-uuid-here"],
   "from_name": "Updated Name",
-  "subject": "Updated Subject"
+  "from_email": "marketing@example.com",
+  "reply_to_email": "reply@example.com",
+  "subject": "Updated Subject",
+  "html_content": "<html><body><h1>Updated Content</h1></body></html>",
+  "contact_list_ids": ["list-uuid-here"]
+}
+```
+
+**IMPORTANT:** `from_email` is required in the update body. Omitting it returns a validation error.
+
+#### Preview Campaign Activity
+
+Returns the rendered HTML and text preview of the email.
+
+```bash
+GET /constant-contact/v3/emails/activities/{campaign_activity_id}/previews
+```
+
+**Response:**
+```json
+{
+  "campaign_activity_id": "uuid",
+  "from_email": "marketing@example.com",
+  "from_name": "Company",
+  "preview_html_content": "<html>...</html>",
+  "preview_text_content": "Plain text version...",
+  "reply_to_email": "reply@example.com",
+  "subject": "Newsletter"
 }
 ```
 
 #### Send Test Email
+
+Sends a test/proof version of the email to specified addresses.
 
 ```bash
 POST /constant-contact/v3/emails/activities/{campaign_activity_id}/tests
 Content-Type: application/json
 
 {
-  "email_addresses": ["test@example.com"]
+  "email_addresses": ["test@example.com"],
+  "personal_message": "Please review this draft"
 }
 ```
+
+Returns `204 No Content` on success.
 
 #### Schedule Email Campaign
 
@@ -432,8 +731,36 @@ POST /constant-contact/v3/emails/activities/{campaign_activity_id}/schedules
 Content-Type: application/json
 
 {
-  "scheduled_date": "2026-03-01T10:00:00Z"
+  "scheduled_date": "2026-06-01T10:00:00Z"
 }
+```
+
+**Note:** The campaign activity must have a valid `from_email`, a physical address on the account, and at least one target list or segment before scheduling.
+
+#### Get Campaign Schedule
+
+```bash
+GET /constant-contact/v3/emails/activities/{campaign_activity_id}/schedules
+```
+
+#### Unschedule Email Campaign
+
+```bash
+DELETE /constant-contact/v3/emails/activities/{campaign_activity_id}/schedules
+```
+
+#### Get Non-Opener Resend
+
+```bash
+GET /constant-contact/v3/emails/activities/{campaign_activity_id}/non_opener_resends
+```
+
+Returns resend details for sent campaigns. Returns empty array if no resend is configured.
+
+#### Get A/B Test
+
+```bash
+GET /constant-contact/v3/emails/activities/{campaign_activity_id}/abtest
 ```
 
 ### Segments
@@ -444,6 +771,10 @@ Content-Type: application/json
 GET /constant-contact/v3/segments
 ```
 
+Query parameters:
+- `sort_by` - Sort field (e.g., `name`, `date`)
+- `sort_order` - `asc` or `desc`
+
 #### Get Segment
 
 ```bash
@@ -452,13 +783,32 @@ GET /constant-contact/v3/segments/{segment_id}
 
 #### Create Segment
 
+Segments use a criteria object to define the audience filter:
+
 ```bash
 POST /constant-contact/v3/segments
 Content-Type: application/json
 
 {
   "name": "Engaged Subscribers",
-  "segment_criteria": "..."
+  "segment_criteria": {
+    "version": "3.0.0",
+    "criteria": { ... }
+  }
+}
+```
+
+**Note:** The `segment_criteria` must be a JSON object (not a string). The criteria schema is complex and version-dependent. Refer to the [Constant Contact Segments Documentation](https://developer.constantcontact.com/api_guide/segment_overview.html) for the full criteria format.
+
+#### Update Segment
+
+```bash
+PUT /constant-contact/v3/segments/{segment_id}
+Content-Type: application/json
+
+{
+  "name": "Updated Segment Name",
+  "segment_criteria": { ... }
 }
 ```
 
@@ -470,13 +820,40 @@ DELETE /constant-contact/v3/segments/{segment_id}
 
 ### Bulk Activities
 
-#### Import Contacts
+Bulk activities run asynchronously. After creating a bulk activity, poll the activity status endpoint until completion.
+
+#### List Activities
 
 ```bash
-POST /constant-contact/v3/activities/contacts_file_import
-Content-Type: multipart/form-data
+GET /constant-contact/v3/activities
+```
 
-{file: contacts.csv, list_ids: ["list-uuid"]}
+Query parameters:
+- `limit` - Results per page
+- `state` - Filter by state: `processing`, `completed`, `cancelled`, `failed`, `timed_out`
+
+#### Get Activity Status
+
+```bash
+GET /constant-contact/v3/activities/{activity_id}
+```
+
+**Response:**
+```json
+{
+  "activity_id": "uuid",
+  "state": "completed",
+  "started_at": "2026-04-28T21:48:16Z",
+  "completed_at": "2026-04-28T21:48:16Z",
+  "created_at": "2026-04-28T21:48:15Z",
+  "updated_at": "2026-04-28T21:48:16Z",
+  "percent_done": 100,
+  "activity_errors": [],
+  "status": {
+    "items_total_count": 1,
+    "items_completed_count": 1
+  }
+}
 ```
 
 #### Add Contacts to Lists
@@ -493,6 +870,17 @@ Content-Type: application/json
 }
 ```
 
+The `source` can also use `list_ids` to copy contacts from other lists:
+
+```bash
+{
+  "source": {
+    "list_ids": ["source-list-uuid"]
+  },
+  "list_ids": ["target-list-uuid"]
+}
+```
+
 #### Remove Contacts from Lists
 
 ```bash
@@ -501,10 +889,82 @@ Content-Type: application/json
 
 {
   "source": {
-    "list_ids": ["source-list-uuid"]
+    "contact_ids": ["contact-uuid-1", "contact-uuid-2"]
   },
   "list_ids": ["target-list-uuid"]
 }
+```
+
+#### Add Tags to Contacts
+
+```bash
+POST /constant-contact/v3/activities/contacts_taggings_add
+Content-Type: application/json
+
+{
+  "source": {
+    "contact_ids": ["contact-uuid-1", "contact-uuid-2"]
+  },
+  "tag_ids": ["tag-uuid"]
+}
+```
+
+#### Remove Tags from Contacts
+
+```bash
+POST /constant-contact/v3/activities/contacts_taggings_remove
+Content-Type: application/json
+
+{
+  "source": {
+    "contact_ids": ["contact-uuid-1", "contact-uuid-2"]
+  },
+  "tag_ids": ["tag-uuid"]
+}
+```
+
+#### Export Contacts
+
+```bash
+POST /constant-contact/v3/activities/contact_exports
+Content-Type: application/json
+
+{
+  "contact_ids": ["contact-uuid-1", "contact-uuid-2"],
+  "fields": ["first_name", "last_name", "email"]
+}
+```
+
+The response includes a `results` link to download the export:
+
+```json
+{
+  "activity_id": "uuid",
+  "state": "initialized",
+  "_links": {
+    "self": { "href": "/v3/activities/{activity_id}" },
+    "results": { "href": "/v3/contact_exports/{export_id}" }
+  }
+}
+```
+
+#### Download Contact Export
+
+After the export activity completes, download the CSV:
+
+```bash
+GET /constant-contact/v3/contact_exports/{export_id}
+```
+
+Returns CSV data.
+
+#### Import Contacts
+
+```bash
+POST /constant-contact/v3/activities/contacts_file_import
+Content-Type: multipart/form-data
+
+{file: contacts.csv, list_ids: ["list-uuid"]}
 ```
 
 #### Delete Contacts in Bulk
@@ -518,18 +978,6 @@ Content-Type: application/json
 }
 ```
 
-#### Get Activity Status
-
-```bash
-GET /constant-contact/v3/activities/{activity_id}
-```
-
-#### List Activities
-
-```bash
-GET /constant-contact/v3/activities
-```
-
 ### Reporting
 
 #### Email Campaign Summaries
@@ -538,20 +986,50 @@ GET /constant-contact/v3/activities
 GET /constant-contact/v3/reports/summary_reports/email_campaign_summaries
 ```
 
-Query parameters:
-- `start` - Start date (ISO-8601)
-- `end` - End date (ISO-8601)
+**Response:**
+```json
+{
+  "bulk_email_campaign_summaries": [...],
+  "aggregate_percents": {
+    "click": 5.2,
+    "open": 22.1,
+    "did_not_open": 72.7,
+    "bounce": 1.3,
+    "unsubscribe": 0.2
+  }
+}
+```
 
 #### Get Email Campaign Report
+
+Returns detailed metrics for a specific sent campaign activity.
 
 ```bash
 GET /constant-contact/v3/reports/email_reports/{campaign_activity_id}
 ```
 
+**Note:** Only available for sent campaigns. Draft campaigns return 404.
+
 #### Contact Activity Summary
 
 ```bash
 GET /constant-contact/v3/reports/contact_reports/{contact_id}/activity_summary
+```
+
+**Response:**
+```json
+{
+  "contact_id": "uuid",
+  "campaign_activities": [
+    {
+      "campaign_activity_id": "uuid",
+      "sends": 1,
+      "opens": 1,
+      "clicks": 0,
+      "bounces": 0
+    }
+  ]
+}
 ```
 
 ## Pagination
@@ -580,6 +1058,8 @@ Use the cursor from the `next` link for subsequent pages:
 ```bash
 GET /constant-contact/v3/contacts?cursor=abc123
 ```
+
+When there are no more pages, the `_links.next` field is absent from the response.
 
 ## Code Examples
 
@@ -618,8 +1098,11 @@ data = response.json()
 - Maximum 1,000 contact lists per account
 - A contact can belong to up to 50 lists
 - Bulk operations are asynchronous - check activity status for completion
-- Email campaigns require verified sender email addresses
+- Email campaigns require confirmed sender email addresses
 - `format_type: 5` for custom HTML emails
+- `create_source` is required when creating contacts; `update_source` is required when updating
+- Scheduling a campaign requires a valid physical address on the account and at least one target list
+- Delete operations on tags and lists return `202 Accepted` (asynchronous); contacts and campaigns return `204 No Content`
 - IMPORTANT: When using curl commands, use `curl -g` when URLs contain brackets to disable glob parsing
 - IMPORTANT: When piping curl output to `jq` or other commands, environment variables like `$MATON_API_KEY` may not expand correctly in some shell environments
 
@@ -638,10 +1121,12 @@ data = response.json()
 ### Error Response Format
 
 ```json
-{
-  "error_key": "unauthorized",
-  "error_message": "Unauthorized"
-}
+[
+  {
+    "error_key": "contacts.api.validation.error",
+    "error_message": "create_source is missing, create_source does not have a valid value"
+  }
+]
 ```
 
 ### Troubleshooting: API Key Issues
