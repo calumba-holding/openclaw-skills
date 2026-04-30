@@ -1,40 +1,49 @@
 ---
 name: music-cog
-description: "Original music, fully yours. 5 seconds to 10 minutes using frontier music generation models. Instrumental and vocal tracks with perfect vocals. Cinematic scores, background tracks, podcast intros, game soundtracks, ambient soundscapes, jingles, lo-fi beats, orchestral compositions, songs with lyrics."
+description: "AI music generation powered by CellCog. Original instrumental and vocal tracks, 5 seconds to 10 minutes. Cinematic scores, background tracks, podcast intros, game soundtracks, ambient soundscapes, jingles, lo-fi beats, orchestral compositions, songs with lyrics. Royalty-free."
 metadata:
   openclaw:
     emoji: "🎶"
+    os: [darwin, linux, windows]
+    requires:
+      bins: [python3]
+      env: [CELLCOG_API_KEY]
 author: CellCog
+homepage: https://cellcog.ai
 dependencies: [cellcog]
 ---
-
 # Music Cog - Original Music, Fully Yours
 
-**Original music, fully yours. No licensing, no attribution, no fees.** 5 seconds to 10 minutes using frontier music generation models. Instrumental and vocal tracks with perfect vocals.
+Music generation — 5 seconds to 10 minutes. Instrumental and vocal tracks with high-quality AI vocals.
 
-Every track generated is royalty-free and 100% yours to use commercially — YouTube, podcasts, apps, games, ads, films, streaming. No strings attached.
+Generated tracks are royalty-free for commercial use per CellCog's terms of service — YouTube, podcasts, apps, games, ads, films, streaming.
 
----
+## How to Use
 
-## Prerequisites
+For your first CellCog task in a session, read the **cellcog** skill for the full SDK reference — file handling, chat modes, timeouts, and more.
 
-This skill requires the `cellcog` skill for SDK setup and API calls.
-
-```bash
-clawhub install cellcog
-```
-
-**Read the cellcog skill first** for SDK setup. This skill shows you what's possible.
-
-**Quick pattern (v1.0+):**
+**OpenClaw (fire-and-forget):**
 ```python
 result = client.create_chat(
-    prompt="[your music request]",
+    prompt="[your task prompt]",
     notify_session_key="agent:main:main",
-    task_label="music-creation",
-    chat_mode="agent"
+    task_label="my-task",
+    chat_mode="agent",
 )
 ```
+
+**All agents except OpenClaw (blocks until done):**
+```python
+from cellcog import CellCogClient
+client = CellCogClient(agent_provider="openclaw|cursor|claude-code|codex|...")
+result = client.create_chat(
+    prompt="[your task prompt]",
+    task_label="my-task",
+    chat_mode="agent",
+)
+print(result["message"])
+```
+
 
 ---
 
@@ -42,7 +51,7 @@ result = client.create_chat(
 
 ### Simple Prompt (Use This 99% of the Time)
 
-Just describe what you want. The frontier model handles the rest — genre, arrangement, instrumentation, dynamics, and even lyrics:
+Just describe what you want. The model handles the rest — genre, arrangement, instrumentation, dynamics, and even lyrics:
 
 > "Compose a 90-second cinematic score. Start with solo piano, layer in strings at 30 seconds, build to a full orchestral swell, then resolve softly. Mood: bittersweet turning hopeful."
 
@@ -100,7 +109,7 @@ CellCog generates songs with **perfect AI vocals** — just describe the lyrical
 | **Duration** | 5 seconds to 10 minutes |
 | **Output** | MP3 (44.1kHz, 128kbps) |
 | **Vocals** | Instrumental or with AI vocals |
-| **Licensing** | Royalty-free, fully yours, no attribution |
+| **Licensing** | Royalty-free per CellCog terms of service |
 
 ---
 
@@ -142,3 +151,11 @@ CellCog generates songs with **perfect AI vocals** — just describe the lyrical
 5. **Energy arc matters**: "Starts quiet, builds at midpoint, resolves softly" gives clear compositional structure.
 
 6. **For video background music**: If the music is for a CellCog video, mention it in your video prompt instead — CellCog handles music as part of video production automatically.
+
+---
+
+## If CellCog is not installed
+
+Run `/cellcog-setup` (or `/cellcog:cellcog-setup` depending on your tool) to install and authenticate.
+**OpenClaw users:** Run `clawhub install cellcog` instead.
+**Manual setup:** `pip install -U cellcog` and set `CELLCOG_API_KEY`. See the **cellcog** skill for SDK reference.
