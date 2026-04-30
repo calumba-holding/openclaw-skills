@@ -1,0 +1,13 @@
+{
+  "name": "dispatch",
+  "version": "1.0.0",
+  "description": "AI-native project management with cost estimates, phased execution, and privacy-aware model selection",
+  "tags": ["project-management", "cost-tracking", "phases", "budget", "privacy", "workflow"],
+  "author": "neidraidd",
+  "license": "MIT",
+  "repository": "https://github.com/neidraidd/dispatch",
+  "openclaw": {
+    "minVersion": "2026.2.0",
+    "capabilities": ["sessions_spawn", "file_read", "file_write"]
+  }
+}

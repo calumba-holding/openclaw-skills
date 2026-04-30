@@ -1,0 +1,16 @@
+{
+  "name": "dispatch",
+  "version": "1.0.0",
+  "description": "AI-native project management for OpenClaw",
+  "main": "lib/index.js",
+  "bin": {
+    "dispatch": "./bin/dispatch.js"
+  },
+  "scripts": {
+    "setup": "node lib/setup.js",
+    "test": "node test/run.js"
+  },
+  "keywords": ["openclaw", "skill", "project-management", "ai"],
+  "author": "Echo 🚀",
+  "license": "MIT"
+}

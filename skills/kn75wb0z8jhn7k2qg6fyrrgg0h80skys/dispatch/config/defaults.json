@@ -1,0 +1,14 @@
+{
+  "providers": {},
+  "trust": {
+    "trusted": [],
+    "untrusted": []
+  },
+  "model_tiers": {
+    "fast": [],
+    "capable": [],
+    "powerful": []
+  },
+  "auto_check": "weekly",
+  "data_dir": "~/.openclaw/workspace/.dispatch"
+}
