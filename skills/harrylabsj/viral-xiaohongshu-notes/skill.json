@@ -1,0 +1,23 @@
+{
+  "name": "Viral Xiaohongshu Note Writer",
+  "description": "Generate viral-style Xiaohongshu (RED) notes with cover text, niche hashtag strategy, authentic 种草 tone, and platform-optimized formatting for beauty, fashion, travel, food, home, and parenting niches.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "Social Media Content / Platform-Specific",
+  "keywords": [
+    "xiaohongshu", "小红书", "种草文案", "小红书笔记", "RED note",
+    "cover text", "hashtag strategy", "viral content", "种草",
+    "product recommendation", "beauty note", "fashion note"
+  ],
+  "platforms": ["小红书 (Xiaohongshu / RED)"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "No fake reviews or fabricated user experiences. No unverified product efficacy claims. No medical/health claims without qualification. Must prompt user to disclose commercial relationships. Respect Xiaohongshu community guidelines."
+  }
+}
