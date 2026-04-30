@@ -1,0 +1,27 @@
+{
+  "slug": "sv-lighting-setup",
+  "name": "Short Video Lighting Setup Guide",
+  "description": "Provides lighting setup plans — natural and artificial — for short video shooting scenarios from zero-budget to professional.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "lighting",
+    "setup",
+    "filming",
+    "production",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video lighting",
+    "lighting setup",
+    "ring light",
+    "three-point lighting",
+    "natural light video",
+    "filming lighting"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
