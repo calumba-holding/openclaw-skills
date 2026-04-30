@@ -36,7 +36,6 @@ def connect() -> ProxmoxAPI:
         user=user,
         token_name=token_name,
         token_value=token_secret,
-        verify_ssl=False,
     )
 
 def list_nodes(p: ProxmoxAPI):
@@ -60,6 +59,26 @@ def action_vm(p: ProxmoxAPI, node: str, kind: str, vmid: str, action: str):
     endpoint = getattr(p.nodes(node), kind)
     return getattr(endpoint(vmid).status, action).post()
 
+def _vm_endpoint(p: ProxmoxAPI, node: str, kind: str, vmid: str):
+    if kind not in ("qemu", "lxc"):
+        jprint({"ok": False, "error": f"kind must be 'qemu' or 'lxc', got '{kind}'"}, 2)
+    return getattr(p.nodes(node), kind)(vmid)
+
+def list_snapshots(p: ProxmoxAPI, node: str, kind: str, vmid: str):
+    return _vm_endpoint(p, node, kind, vmid).snapshot.get()
+
+def take_snapshot(p: ProxmoxAPI, node: str, kind: str, vmid: str, snapname: str, description: str = ""):
+    payload = {"snapname": snapname}
+    if description:
+        payload["description"] = description
+    return _vm_endpoint(p, node, kind, vmid).snapshot.post(**payload)
+
+def rollback_snapshot(p: ProxmoxAPI, node: str, kind: str, vmid: str, snapname: str):
+    return _vm_endpoint(p, node, kind, vmid).snapshot(snapname).rollback.post()
+
+def delete_snapshot(p: ProxmoxAPI, node: str, kind: str, vmid: str, snapname: str):
+    return _vm_endpoint(p, node, kind, vmid).snapshot(snapname).delete()
+
 def usage():
     jprint({
         "ok": False,
@@ -69,7 +88,11 @@ def usage():
             "proxmox.py node_health <node>",
             "proxmox.py vms",
             "proxmox.py status <node> <qemu|lxc> <vmid>",
-            "proxmox.py <start|stop|reboot|shutdown> <node> <qemu|lxc> <vmid>"
+            "proxmox.py <start|stop|reboot|shutdown> <node> <qemu|lxc> <vmid>",
+            "proxmox.py list_snapshots <node> <qemu|lxc> <vmid>",
+            "proxmox.py take_snapshot <node> <qemu|lxc> <vmid> <snapname> [description]",
+            "proxmox.py rollback_snapshot <node> <qemu|lxc> <vmid> <snapname>",
+            "proxmox.py delete_snapshot <node> <qemu|lxc> <vmid> <snapname>"
         ]
     }, 2)
 
@@ -99,6 +122,23 @@ def main():
             if len(sys.argv) < 5: usage()
             # No manual 'CONFIRM' check here; OpenClaw handles Approval via SKILL.md
             data = action_vm(p, sys.argv[2], sys.argv[3].lower(), sys.argv[4], cmd)
+
+        elif cmd == "list_snapshots":
+            if len(sys.argv) < 5: usage()
+            data = list_snapshots(p, sys.argv[2], sys.argv[3].lower(), sys.argv[4])
+
+        elif cmd == "take_snapshot":
+            if len(sys.argv) < 6: usage()
+            desc = sys.argv[6] if len(sys.argv) >= 7 else ""
+            data = take_snapshot(p, sys.argv[2], sys.argv[3].lower(), sys.argv[4], sys.argv[5], desc)
+
+        elif cmd == "rollback_snapshot":
+            if len(sys.argv) < 6: usage()
+            data = rollback_snapshot(p, sys.argv[2], sys.argv[3].lower(), sys.argv[4], sys.argv[5])
+
+        elif cmd == "delete_snapshot":
+            if len(sys.argv) < 6: usage()
+            data = delete_snapshot(p, sys.argv[2], sys.argv[3].lower(), sys.argv[4], sys.argv[5])
 
         else:
             jprint({"ok": False, "error": f"unknown command: {cmd}"}, 2)
