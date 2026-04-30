@@ -1,0 +1,28 @@
+{
+  "name": "Legal Clause Risk Spotter",
+  "slug": "legal-clause-risk-spotter",
+  "version": "1.0.0",
+  "description": "Guides reviewers through identifying common risk patterns in clauses such as indemnity, liability, termination, IP, confidentiality, and governing law.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "contracts",
+    "clause-analysis",
+    "risk",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "clause risk",
+    "indemnity checklist",
+    "liability cap",
+    "contract clauses",
+    "legal-clause-risk-spotter",
+    "legal clause risk spotter"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
