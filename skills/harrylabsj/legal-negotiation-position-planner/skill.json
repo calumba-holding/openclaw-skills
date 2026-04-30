@@ -1,0 +1,28 @@
+{
+  "name": "Legal Negotiation Position Planner",
+  "slug": "legal-negotiation-position-planner",
+  "version": "1.0.0",
+  "description": "Structures legal and commercial negotiation preparation around objectives, leverage, concessions, BATNA, risks, and communication strategy.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "negotiation",
+    "contracts",
+    "settlement",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "legal negotiation",
+    "BATNA",
+    "concession matrix",
+    "settlement position",
+    "legal-negotiation-position-planner",
+    "legal negotiation position planner"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
