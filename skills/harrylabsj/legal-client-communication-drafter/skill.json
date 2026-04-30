@@ -1,0 +1,28 @@
+{
+  "name": "Legal Client Communication Drafter",
+  "slug": "legal-client-communication-drafter",
+  "version": "1.0.0",
+  "description": "Helps draft clear, professional, non-final client communication structures for updates, document requests, expectation setting, and next steps.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "client-communication",
+    "plain-language",
+    "law-firm",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "client update",
+    "legal email draft",
+    "document request email",
+    "plain language legal",
+    "legal-client-communication-drafter",
+    "legal client communication drafter"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
