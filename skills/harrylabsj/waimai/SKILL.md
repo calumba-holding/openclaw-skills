@@ -1,11 +1,24 @@
 ---
 name: waimai
-description: Help users make better takeout decisions from public merchant and promotion information across delivery scenarios. Use when the user wants to compare takeout stores, judge whether delivery offers are worth it, understand threshold and fee trade-offs, or choose a better ordering option for one-person, two-person, or group meals.
+description: Help users decide where and how to order takeout with the best tradeoff between merchant quality, promotions, delivery fees, threshold rules, and timing. Use when the user wants to 比较外卖商家、看满减划不划算、判断配送费和值不值、选单人餐双人餐夜宵方案, or needs a fast public decision workflow for takeout ordering without account access or checkout automation.
 ---
 
 # Waimai
 
 Help users make better takeout ordering decisions from public merchant and promotion signals.
+
+What makes this skill useful:
+- It focuses on actual order economics, not just headline discounts.
+- It helps users reason about 起送价, 配送费, 满减, and meal-size fit together.
+- It is strongest when the user wants a fast recommendation for what to order and from where.
+
+## Commerce Matrix
+
+This skill is the takeout-order economics node in the shopping matrix.
+
+Prefer nearby skills when the task changes:
+- `meituan` for Meituan-specific marketplace guidance when that repo is active
+- general shopping skills such as `jd-shopping`, `pdd-shopping`, or `taobao-shopping` when the user is buying goods instead of ordering takeout
 
 This is a low-sensitivity public skill. It focuses on public decision support and does not perform login, account access, cookie handling, order retrieval, coupon claiming, local database persistence, or browser automation runtime actions.
 

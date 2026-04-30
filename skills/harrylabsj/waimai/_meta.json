@@ -3,11 +3,16 @@
   "slug": "waimai",
   "displayName": "Waimai",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1773579128791,
-    "commit": "https://github.com/openclaw/skills/commit/df66524b9cbd7cdaf0909cc663a42912779b4525"
+    "version": "1.0.2",
+    "publishedAt": 1774951263225,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1773579128791,
+      "commit": "https://github.com/openclaw/skills/commit/df66524b9cbd7cdaf0909cc663a42912779b4525"
+    },
     {
       "version": "0.2.5",
       "publishedAt": 1773377814819,
