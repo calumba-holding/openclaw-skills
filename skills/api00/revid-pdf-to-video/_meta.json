@@ -1,0 +1,11 @@
+{
+  "owner": "api00",
+  "slug": "revid-pdf-to-video",
+  "displayName": "PDF to Video",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777216488992,
+    "commit": null
+  },
+  "history": []
+}
