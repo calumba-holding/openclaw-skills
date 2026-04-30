@@ -1,0 +1,11 @@
+{
+  "owner": "api00",
+  "slug": "revid-article-to-short",
+  "displayName": "Article to Short",
+  "latest": {
+    "version": "1.3.1",
+    "publishedAt": 1777201799871,
+    "commit": null
+  },
+  "history": []
+}
