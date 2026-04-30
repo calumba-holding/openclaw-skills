@@ -1,0 +1,11 @@
+{
+  "owner": "charlie-morrison",
+  "slug": "git-changelog-generator",
+  "displayName": "Git Changelog Generator",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777252035030,
+    "commit": null
+  },
+  "history": []
+}
