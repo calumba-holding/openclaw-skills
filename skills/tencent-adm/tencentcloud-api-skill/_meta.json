@@ -1,0 +1,11 @@
+{
+  "owner": "tencent-adm",
+  "slug": "tencentcloud-api-skill",
+  "displayName": "tencentcloud-api-skill",
+  "latest": {
+    "version": "1.0.3",
+    "publishedAt": 1777277594862,
+    "commit": null
+  },
+  "history": []
+}
