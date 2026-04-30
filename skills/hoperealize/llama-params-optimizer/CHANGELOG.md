@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v3.1.0 (2026-04-28)
+
+### ✨ 新增
+- 新增 Qwen3.6-27B Dense + RTX 4060Ti 16GB 实战案例
+- 新增推理模型（reasoning models）思考开销说明：Qwen3.6 内置推理链，TTFT 40-50 秒
+- 新增 OpenClaw 配置对齐指南：contextWindow/maxTokens 必须与 --ctx-size 匹配
+
+### 🐛 修正
+- 甜点公式从"唯一真理"降级为"起点参考"，强调理论计算不可靠，实测才是王道（27B 上公式算 110K OOM，实际甜点 96K）
+- batch-size 最优值因模型大小而异：35B Dense 上 2048 最优，27B Dense 上 512 反而快 6.6%
+- 核心原则从 7 条扩展至 10 条
+
+---
+
 ## v1.2.0 (2026-04-26)
 
 ### ✨ 国际化

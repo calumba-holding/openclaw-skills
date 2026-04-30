@@ -1,13 +1,18 @@
 {
   "owner": "hoperealize",
   "slug": "llama-params-optimizer",
-  "displayName": "Llama Params Optimizer",
+  "displayName": "llama-params-optimizer",
   "latest": {
-    "version": "1.2.0",
-    "publishedAt": 1777179688890,
-    "commit": "https://github.com/openclaw/skills/commit/1dd790222bc9b87c8b796ddfff2e7d3895a7c988"
+    "version": "3.1.0",
+    "publishedAt": 1777374463048,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.0",
+      "publishedAt": 1777179688890,
+      "commit": "https://github.com/openclaw/skills/commit/1dd790222bc9b87c8b796ddfff2e7d3895a7c988"
+    },
     {
       "version": "1.1.0",
       "publishedAt": 1777178782265,

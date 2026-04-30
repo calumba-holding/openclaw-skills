@@ -112,12 +112,12 @@
 
 ### ⚡ 方案一：速度优先（84.8 tokens/s + 80 tokens/s Prompt）
 ```cmd
-llama-server.exe -m "Qwen3.6-35B-A3B-APEX-I-Mini.gguf" --n-gpu-layers 9999 --ctx-size 65536 --port 8080 --host 0.0.0.0 --threads 8 --mlock --parallel 2 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
+llama-server.exe -m "Qwen3.6-35B-A3B-APEX-I-Mini.gguf" --n-gpu-layers 9999 --ctx-size 65536 --port 8080 --host 127.0.0.1 --threads 8 --mlock --parallel 2 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
 ```
 
 ### 📚 方案二：上下文优先（256K 超大窗口）
 ```cmd
-llama-server.exe -m "Qwen3.6-35B-A3B-APEX-I-Mini.gguf" --n-gpu-layers 9999 --ctx-size 262144 --port 8080 --host 0.0.0.0 --threads 8 --mlock --parallel 2 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
+llama-server.exe -m "Qwen3.6-35B-A3B-APEX-I-Mini.gguf" --n-gpu-layers 9999 --ctx-size 262144 --port 8080 --host 127.0.0.1 --threads 8 --mlock --parallel 2 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
 ```
 
 ---

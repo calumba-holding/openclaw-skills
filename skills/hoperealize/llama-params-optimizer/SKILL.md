@@ -1,13 +1,14 @@
 ---
 name: llama-params-optimizer
-version: 1.2.0
+version: 3.1.0
 description: >
   Complete methodology for local LLM performance optimization.
-  Discover the "context sweet spot" - 6% less context for 75% faster speed with ZERO quality loss.
+  Core principle: maximize context while fully covering GPU memory — find the sweet spot where GPU runs at full speed.
   Step-by-step 4-phase 10-step control variable testing process.
   Works for ALL llama.cpp / llama-server models on ANY hardware.
+  Cases: Qwen3.5-MoE, Qwen3.6-35B, Qwen3.6-27B (2026-04-28).
 author: fenglai
-keywords: [llama.cpp, performance optimization, local llm, llama-server, quantization, long context, control variable testing, speed optimization]
+keywords: [llama.cpp, performance optimization, local llm, llama-server, quantization, long context, control variable testing, speed optimization, reasoning models, OpenClaw config]
 tags: [llm, performance, optimization, local-first, chinese-support]
 ---
 
@@ -17,12 +18,19 @@ tags: [llm, performance, optimization, local-first, chinese-support]
 标准化的 LLM 本地部署启动参数优化评估流程，通过严格的控制变量测试，找到最佳的性能/质量平衡点。  
 _A standardized methodology for optimizing local LLM deployment parameters, using rigorous control variable testing to find the optimal performance/quality balance._
 
+**⚠️ 安全声明 / Safety Notice**
+- 本技能仅用于 **本地部署** 参数优化，所有测试应在隔离环境中进行。
+- **llama-server 和 llama.cpp 二进制文件**应仅从官方 GitHub 仓库 (https://github.com/ggerganov/llama.cpp) 获取，避免使用第三方来源。
+- **网络绑定安全**：本地开发/测试时建议绑定 `127.0.0.1`（localhost），生产环境必须通过反向代理 + HTTPS 暴露服务。
+- 参数调优可能触发 OOM 崩溃，**不确定最优参数时，建议使用云端模型（如 OpenAI/Gemini）进行推理验证**，本地只用于性能调优。
+- **不要在生产环境中使用本技能提供的示例命令直接暴露服务**，需根据实际安全需求调整。
+
 ## 🎯 核心卖点 / Key Features
-- ✅ **独创「上下文甜点阈值」发现方法** / _Discover the "context sweet spot"_：零质量损失，速度提升 50-100% | _Zero quality loss for 50-100% speed boost_
+- ✅ **GPU 内存覆盖原则** / _GPU Memory Coverage Principle_：在完全使用专用 GPU 内存的前提下，找到最大上下文值 | _Find max context while fully covering GPU memory_
 - ✅ **四阶段十步法控制变量测试** / _4-phase 10-step process_：完整的性能/质量评估 | _Comprehensive performance and quality evaluation_
 - ✅ **大量反常识踩坑经验** / _Battle-tested counterintuitive findings_：避免踩同样的坑 | _Avoid common pitfalls_
-- ✅ **通用方法论** / _Universal methodology_：任何模型、任何硬件都可以直接套用 | _Works for any model, any hardware_
-- ✅ **实战验证** / _Real-world proven_：35B+4060Ti 实战案例：从 49 token/s → 86 token/s，提升 75% | _35B + 4060Ti real case: 49 → 86 token/s, 75% improvement_
+- ✅ **通用方法论** / _Universal methodology_：提供系统化测试框架，具体参数需结合实际硬件验证 | _Provides a systematic testing framework; specific parameters must be validated against actual hardware._
+- ✅ **实战验证** / _Real-world proven_：35B+4060Ti 案例：~30 → ~90 token/s，提升 2-3 倍；27B 案例：~23.6 tok/s，验证理论公式不可靠 | _Multiple cases: MoE 262% boost, Dense 2-3x, 27B theoretical formula fails_
 
 ## 适用场景 / When to Use
 
@@ -108,7 +116,7 @@ _After each parameter test, record complete comparison table:_
 
 ---
 
-### 🎯 优先测试：上下文甜点阈值 / Priority: Find Context Sweet Spot
+### 🎯 优先测试：GPU 内存甜点阈值 / Priority: GPU Memory Sweet Spot
 **MUST DO first - highest ROI optimization!**
 
 **中文** | **English**  
@@ -145,10 +153,11 @@ _This is NOT a linear degradation, but a cliff! Common causes:_
 
 | 上下文大小 / Context | 生成速度 / Speed | 显存占用 / VRAM | 状态 / Status |
 |---------------------|------------------|-----------------|---------------|
-| 128K (厂商标称 / advertised) | 48.9 token/s | 15928MiB | ❌ Half speed |
-| 124K | 50.6 token/s | 15969MiB | ❌ Half speed |
-| **120K (黄金点 / SWEET SPOT)** | **86.4 token/s** | 15931MiB | ✅ Full speed |
-| 96K | 86.1 token/s | 15666MiB | ✅ Full speed |
+| 122880 (120K, 默认) | ~30 token/s | ~15.2 GB | ❌ 内存紧张 |
+| 118000 (118K) | ~29-36 token/s | ~15.1 GB | ❌ 内存紧张 |
+| **110000 (110K)** | **~90 token/s** | ~15.0 GB | ✅ 满速 |
+| 96K | ~86 token/s | ~14.5 GB | ✅ 满速 |
+| 64K | ~88 token/s | ~14.0 GB | ✅ 满速 |
 
 #### 核心结论 / Key Takeaways
 **中文** | **English**  
@@ -231,7 +240,7 @@ _This is NOT a linear degradation, but a cliff! Common causes:_
 
 ---
 
-### 案例1：Qwen3.5-MoE 35B + RTX 4060Ti 16GB（MoE 模型）
+### 案例1：Qwen3.5-MoE 35B + RTX 4060Ti 16GB（MoE 模型，仅供参考）
 
 #### 优化成果
 **初始速度：23.4 tokens/s → 最终速度：84.8 tokens/s，提升 262%！**
@@ -249,56 +258,171 @@ _This is NOT a linear degradation, but a cliff! Common causes:_
 
 ---
 
-### 案例2：Qwen3.6-35B Dense + RTX 4060Ti 16GB（Dense 模型，2026-04-26 最新测试）
+### 案例2：Qwen3.6-35B Dense + RTX 4060Ti 16GB（Dense 模型，2026-04-26 最新测试，仅供参考）
 
 #### 优化成果
-**初始速度：48.9 tokens/s → 最终速度：86.4 tokens/s，提升 77%！**
+**初始速度：~30 tokens/s → 最终速度：~90 tokens/s，提升 2-3 倍！**
 
-#### 核心发现：断崖式甜点阈值
+**📋 验证方法：**
+```bash
+# 标准 curl 测速命令（固定 temperature=0.7, max_tokens=100）
+curl -s http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"请写一段500字左右的技术博客文章，讨论本地部署大语言模型的性能优化方法"}],"max_tokens":100,"temperature":0.7}'
+```
+
+**⚠️ 关键原则：GPU 内存覆盖就是生命线**
+> "GPU 内存就是生命线，够用就快，不够用就慢。"
+
+公式：**最大上下文 = (GPU VRAM - 模型权重 - 安全缓冲) ÷ KV 缓存每 token开销**
+
+以 RTX 4060Ti 16GB + Qwen3.6-35B 为例：
+- 模型权重 ~13.4GB | KV缓存(ctx 110K) ~1.1GB | 计算缓冲 ~0.5GB | **总计 ~15GB**
+- 留出 ~1GB 缓冲，ctx-size=110000 是安全甜点
+
+#### 核心发现：GPU 内存覆盖原则
 | 上下文 | 速度 | 状态 |
 |--------|------|------|
-| 128K（厂商默认） | 48.9 token/s | ❌ 腰斩 |
-| 124K | 50.6 token/s | ❌ 腰斩 |
-| **120K（甜点阈值）** | **86.4 token/s** | ✅ 满速 |
-| 96K / 64K / 32K | 83-86 token/s | ✅ 满速 |
+| 122880 (120K) | ~30 token/s | ❌ GPU 内存不足 |
+| 118000 (118K) | ~29-36 token/s | ❌ GPU 内存不足 |
+| **110000 (110K)** | **~90 token/s** | ✅ GPU 完全覆盖 |
+| 96K / 64K / 32K | ~86-88 token/s | ✅ 满速 |
 
-仅减少 6% 上下文，速度提升 **77%**，零质量损失！
+减少 8% 上下文，速度提升 **2-3 倍**，零质量损失！
+
+**GPU 内存分析 / GPU Memory Analysis:**
+| 项目 / Item | 占用 / Usage |
+|-------------|-------------|
+| 模型权重 | ~13.4 GB |
+| KV 缓存 (ctx 120K) | ~1.2 GB |
+| 计算缓冲区 | ~0.5 GB |
+| **总计** | **~15.2 GB** |
+| GPU 总 VRAM | 16 GB |
+| **剩余** | **~0.8 GB** |
 
 #### 最佳参数
 | 参数 | 最佳值 | 说明 |
 |------|--------|------|
-| `--ctx-size` | **122880（120K）** | 甜点阈值，再大直接腰斩 |
+| `--ctx-size` | **110000（110K）** | GPU 完全覆盖，速度最快 |
 | `--threads` | 8 | 最佳 |
 | `-b / --batch-size` | 2048 | 最佳 |
 | `--parallel` | **1** | ❗ Dense 模型上 parallel=2 反而慢 40% |
 | `--flash-attn` | on | 必须开，长 Prompt 处理快 3-5 倍 |
 | `--cache-type-k/v` | q8_0 | q4_K 有兼容性问题 |
 
-### 最终最佳启动命令（Qwen3.6-35B Dense + 4060Ti，120K甜点阈值）
-```cmd
-# Windows
-llama-server.exe -m "你的模型路径.gguf" --n-gpu-layers 9999 --ctx-size 122880 --port 8080 --host 0.0.0.0 --threads 8 --mlock --parallel 1 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
-
-# Linux/WSL2（加上CPU亲和性绑定，+5%）
-taskset -c 0-7 llama-server -m "你的模型路径.gguf" --n-gpu-layers 9999 --ctx-size 122880 --port 8080 --host 0.0.0.0 --threads 8 --mlock --parallel 1 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
+### 最终最佳启动命令（Qwen3.6-35B Dense + 4060Ti，110K 甜点阈值）
+```bash
+# Linux/WSL2（推荐，绑定到 localhost）
+llama-server -m "你的模型路径.gguf" --n-gpu-layers 9999 --ctx-size 110000 --port 8080 --host 127.0.0.1 --threads 8 --mlock --parallel 1 --kv-unified --flash-attn on -b 2048 --cache-type-k q8_0 --cache-type-v q8_0
 ```
 
+> ⚠️ **生产环境建议**：如需对外提供服务，应通过 Nginx/Caddy 等反向代理 + HTTPS，不要直接暴露 llama-server。
+
+---
+
+### 案例3：Qwen3.6-27B Dense + RTX 4060Ti 16GB（2026-04-28 最新测试）
+
+**⚠️ 模型说明**：Qwen3.6-27B 是 Qwen3.6-35B 的更轻量版本，权重更小（~12GB vs ~13.4GB），但优化结论不完全相同！
+
+#### 优化成果
+**纯生成速度：~23.6 tok/s**
+
+#### 核心发现（与 35B 不同之处）
+
+**1. 理论计算不可靠！实际测试才是王道**
+- 理论公式算出甜点 = 110K（(16GB - 12GB - 1GB缓冲) ÷ KV每token ≈ 110K）
+- 实际测试 **110K 直接 CUDA OOM**
+- 真实甜点：**96K**（实测稳定，18.6 tok/s）
+- **结论：理论公式只能做起点参考，必须实际跑一遍才能确定**
+
+**2. Batch Size 对 27B 的影响与 35B 相反**
+- 35B（Dense）：2048 最佳
+- 27B（Dense）：**512 最佳**（2048 反而慢 6.6%）
+- 原因：27B 权重更小，GPU 有更多余量处理小 batch 的缓存效率
+
+**3. 推理模型的思考开销是硬伤**
+- Qwen3.6-27B 是推理模型（reasoning mode），内置思考过程
+- 简单问题（"写一句诗"）也要花 48 秒思考
+- 思考阶段输出 800+ reasoning chunks，但 max_tokens 被思考占满后无法输出
+- **如果不需要推理能力，换非推理版本（Qwen3.6-27B-Instruct 非推理版）体验更好**
+
+#### GPU 内存分析
+| 项目 | 占用 |
+|------|------|
+| 模型权重 | ~12 GB |
+| KV 缓存 (ctx 96K) | ~1.2 GB |
+| 计算缓冲区 | ~1.0 GB |
+| **总计** | **~14.2 GB** |
+| GPU 总 VRAM | 16 GB |
+| **剩余** | **~1.8 GB** |
+
+#### 最佳参数
+| 参数 | 最佳值 | 说明 |
+|------|--------|------|
+| `--ctx-size` | **96000** | 实测甜点（110K OOM） |
+| `--threads` | 8 | 比 16 省 50% CPU，速度差异 <2% |
+| `-b / --batch-size` | **512** | 27B 上 512 比 2048 快 6.6% |
+| `--parallel` | 1 | Dense 模型单请求最快 |
+| `--flash-attn` | on | off 会崩溃 |
+| `--cache-type-k/v` | q8_0 | 零质量损失，省显存 |
+
+#### 最终启动命令
+```bash
+llama-server -m "Qwen3.6-27B-Q3_K_S.gguf" \
+  --n-gpu-layers 9999 --ctx-size 96000 --port 8080 --host 127.0.0.1 \
+  --threads 8 --threads-batch 8 --mlock --parallel 1 \
+  --kv-unified --flash-attn on -b 512 \
+  --cache-type-k q8_0 --cache-type-v q8_0
+```
+
+#### 配套配置
+**llama-server 守护进程** (`~/.config/systemd/user/llama-server.service`)
+```ini
+[Service]
+ExecStart=/home/fenglai/llama.cpp/build/bin/llama-server \
+  -m /home/fenglai/models/Qwen3.6-27B-Q3_K_S.gguf \
+  --n-gpu-layers 9999 --ctx-size 96000 --port 8080 --host 127.0.0.1 \
+  --threads 8 --threads-batch 8 --mlock --parallel 1 \
+  --kv-unified --flash-attn on -b 512 \
+  --cache-type-k q8_0 --cache-type-v q8_0
+```
+
+**OpenClaw 配置** (`~/.openclaw/openclaw.json`)
+```json
+"contextWindow": 96000,
+"maxTokens": 48000
+```
+> ⚠️ OpenClaw 的 contextWindow 必须与 llama-server 的 --ctx-size 保持一致，否则会导致上下文截断或 OOM。maxTokens 设为 ctx-size 的一半左右，给 prompt 留出空间。
+
+#### OpenClaw 配置注意事项
+- `contextWindow` 必须等于 `--ctx-size`（96000）
+- `maxTokens` 建议设为 `ctx-size / 2`（48000），为 prompt 预留空间
+- `reserveTokensFloor`（compaction 保留 token）建议设为 20000，避免频繁压缩
+- 模型 `reasoning: true` 需开启，否则思考内容无法正确解析
+
 ### 进阶：CPU 亲和性绑定（+1-5% 速度，聊胜于无）
-Linux/WSL2 下可以用 taskset 把线程绑到同一物理核心簇上，减少跨核通讯开销：
+Linux/WSL2 下可以用 `taskset` 把线程绑到同一物理核心簇上，减少跨核通讯开销：
 ```bash
 taskset -c 0-7 llama-server ...
 ```
 注意：核心范围要和你的 `--threads` 参数对应，不要跨 CCX 模块。
 
+> ⚠️ **安全提示**：此功能仅在 Linux/WSL2 下可用，Windows 下无等效命令。
+
 ---
 
 ## 核心原则
 
-1. **控制变量高于一切**：每次只改一个参数，其他全部保持不变
-2. **不要只看生成速度**：Prompt 处理速度同样重要，甚至更重要
-3. **量化不一定是损失**：有时候反而更快，一定要实际测试
-4. **默认参数通常很保守**：一定要测试更大的 batch size、不同的线程数
-5. **不同模型结论不同**：MoE 和 Dense 模型的最佳参数可能完全相反，不要经验主义
+1. **GPU 内存覆盖优先**：在完全使用专用 GPU 内存的前提下，找到最大上下文值 — 这是提升速度最快的优化
+2. **GPU 内存就是生命线**：够用就快，不够用就慢（GPU↔CPU 交换是最大性能杀手）
+3. **甜点公式只是起点**：公式计算 (GPU VRAM - 权重 - 缓冲) ÷ KV 每 token 开销，但**实际测试才是唯一真理**（27B 上公式算 110K，实际 96K 才是甜点）
+4. **控制变量高于一切**：每次只改一个参数，其他全部保持不变
+5. **不要只看生成速度**：Prompt 处理速度同样重要，甚至更重要
+6. **量化不一定是损失**：有时候反而更快，一定要实际测试
+7. **默认参数通常很保守**：一定要测试更大的 batch size、不同的线程数
+8. **不同模型结论不同**：MoE 和 Dense 最佳参数可能完全相反；同系列不同大小（27B vs 35B）的 batch size 最优值也可能相反
+9. **推理模型的思考开销**：Qwen3.6 等推理模型内置 thinking chain，TTFT 极长（40-50s），不适合需要低延迟的对话场景
+10. **OpenClaw 配置必须对齐**：`contextWindow` 必须等于 `--ctx-size`，`maxTokens` 约等于 `ctx-size / 2`，否则上下文异常
 
 ---
 
@@ -313,3 +437,32 @@ taskset -c 0-7 llama-server ...
 - [ ] 已做基本能力冒烟测试
 - [ ] 已记录所有反常识的发现
 - [ ] 已产出最终的一键启动命令
+
+## 安全与调试建议
+
+### 参数调试安全指南
+1. **小步测试**：每次调整幅度不超过 10%，避免 OOM
+2. **监控显存**：使用 `nvidia-smi` 实时观察，确保不突破 GPU 上限
+3. **崩溃自救**：如果模型频繁崩溃，尝试减小 `--ctx-size` 或 `--batch-size`
+4. **云端辅助调试**：当本地模型因参数不当反复崩溃时，建议使用云端模型（OpenAI / Gemini / 通义千问等）进行推理验证和逻辑测试。本地环境只用于性能调优，不用于逻辑正确性验证
+5. **参数记录**：所有测试参数必须记录，避免重复试错
+6. **避免生产配置泄露**：不要在公网文档、代码仓库中暴露 llama-server 的内部参数
+
+### 反常识发现总结
+**必须记录所有反直觉的结论！** 这些是最有价值的经验：
+
+**示例（来自 Qwen3.5-MoE 35B 实战）：**
+1. ❗ 默认 batch size 是 512，改成 2048 直接快 67.7%！
+2. ❗ KV q8_0 量化不是损失，反而让 Prompt 处理快了 128%！
+3. ❗ Flash Attention 对 MoE 模型：生成慢 1.3%，但 Prompt 快 128%，整体收益巨大！
+4. ❗ 线程不是越多越好：8 线程比 12/16 都快！
+5. ❗ 链式测试会严重误导结论：必须严格控制变量！
+
+**示例（来自 Qwen3.6-27B Dense 实战，2026-04-28）：**
+1. ❗ **理论计算不可靠**：公式算出 110K 甜点，实际 110K 直接 CUDA OOM，真实甜点 96K。必须实测！
+2. ❗ **Batch size 结论因模型而异**：35B Dense 上 2048 最优，27B Dense 上 512 反而快 6.6%。不要照搬！
+3. ❗ **推理模型有思考开销**：Qwen3.6 内置推理链，简单问题也要 40-50 秒 TTFT，不适合日常对话
+4. ❗ **threads-batch 影响**：--threads-batch 8 比默认 1 提升 prompt 处理速度
+5. ❗ **OpenClaw contextWindow 必须匹配**：配置里的 contextWindow/maxTokens 要跟 --ctx-size 对齐，否则上下文异常
+
+> 💡 **重要提醒**：不同模型、不同量化版本的最佳参数差异可能很大。**不要直接套用**他人参数，必须实际测试。如果本地模型因参数设置不当频繁崩溃，可先用云端模型做逻辑验证，本地只用于性能调优。
