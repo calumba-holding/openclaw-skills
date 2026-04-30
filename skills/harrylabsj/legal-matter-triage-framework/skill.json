@@ -1,0 +1,28 @@
+{
+  "name": "Legal Matter Triage Framework",
+  "slug": "legal-matter-triage-framework",
+  "version": "1.0.0",
+  "description": "Helps legal teams triage incoming matters by urgency, risk, deadlines, forum, and required expertise.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "triage",
+    "legal-ops",
+    "risk",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "matter triage",
+    "legal request prioritization",
+    "legal helpdesk",
+    "risk scoring",
+    "legal-matter-triage-framework",
+    "legal matter triage framework"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
