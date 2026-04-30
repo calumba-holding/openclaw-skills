@@ -1,0 +1,27 @@
+{
+  "slug": "sv-niche-finder",
+  "name": "Short Video Content Niche Finder",
+  "description": "Guides creators through identifying, validating, and refining a unique content niche and positioning for short video platforms.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "niche",
+    "positioning",
+    "strategy",
+    "branding",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "find niche",
+    "content niche",
+    "video positioning",
+    "channel niche",
+    "niche validation",
+    "content strategy"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
