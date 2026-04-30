@@ -1,0 +1,11 @@
+{
+  "owner": "vega6dev",
+  "slug": "cfcrm-build",
+  "displayName": "Cfcrm Build",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777218804438,
+    "commit": null
+  },
+  "history": []
+}
