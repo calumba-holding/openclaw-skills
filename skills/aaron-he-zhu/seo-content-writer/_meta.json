@@ -3,11 +3,16 @@
   "slug": "seo-content-writer",
   "displayName": "Seo Content Writer",
   "latest": {
-    "version": "9.1.0",
-    "publishedAt": 1776940432480,
-    "commit": "https://github.com/openclaw/skills/commit/75d0b81a2ca39b6e287c159316d897b34eb577b9"
+    "version": "9.9.5",
+    "publishedAt": 1777349128150,
+    "commit": null
   },
   "history": [
+    {
+      "version": "9.1.0",
+      "publishedAt": 1776940432480,
+      "commit": "https://github.com/openclaw/skills/commit/75d0b81a2ca39b6e287c159316d897b34eb577b9"
+    },
     {
       "version": "8.0.0",
       "publishedAt": 1776184649201,
