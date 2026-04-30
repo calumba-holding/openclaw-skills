@@ -1,0 +1,28 @@
+{
+  "name": "Legal Employment Policy Reviewer",
+  "slug": "legal-employment-policy-reviewer",
+  "version": "1.0.0",
+  "description": "Provides a structured framework for reviewing employee handbooks, workplace policies, HR procedures, and employment risk areas.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "employment",
+    "hr-policy",
+    "compliance",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "employment policy review",
+    "employee handbook",
+    "HR legal checklist",
+    "workplace policy",
+    "legal-employment-policy-reviewer",
+    "legal employment policy reviewer"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
