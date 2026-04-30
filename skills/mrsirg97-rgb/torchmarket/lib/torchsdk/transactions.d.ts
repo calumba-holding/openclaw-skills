@@ -4,14 +4,8 @@
  * Build unsigned transactions for buy, sell, create, star, vault, and lending.
  * Agents sign these locally and submit to the network.
  */
-import { Connection, AddressLookupTableAccount } from '@solana/web3.js';
-import { BuyParams, DirectBuyParams, SellParams, CreateTokenParams, StarParams, MigrateParams, BorrowParams, RepayParams, LiquidateParams, ClaimProtocolRewardsParams, HarvestFeesParams, SwapFeesToSolParams, CreateVaultParams, DepositVaultParams, WithdrawVaultParams, WithdrawTokensParams, LinkWalletParams, UnlinkWalletParams, TransferAuthorityParams, ReclaimParams, TransactionResult, BuyTransactionResult, CreateTokenResult } from './types';
-/**
- * Fetch the Torch ALT for this network. Cached per connection instance.
- */
-export declare const fetchAddressLookupTable: (connection: Connection) => Promise<AddressLookupTableAccount | null>;
-/** Clear the cached ALT (useful after deploying a new table). */
-export declare const clearAltCache: () => void;
+import { Connection, PublicKey } from '@solana/web3.js';
+import { BuyParams, DirectBuyParams, SellParams, CreateTokenParams, StarParams, MigrateParams, BorrowParams, RepayParams, LiquidateParams, OpenShortParams, CloseShortParams, LiquidateShortParams, EnableShortSellingParams, ClaimProtocolRewardsParams, HarvestFeesParams, SwapFeesToSolParams, AdvanceProtocolEpochParams, CreateVaultParams, DepositVaultParams, WithdrawVaultParams, WithdrawTokensParams, LinkWalletParams, UnlinkWalletParams, TransferAuthorityParams, ReclaimParams, TransactionResult, BuyTransactionResult, CreateTokenResult, WalletAdapter } from './types';
 /**
  * Build an unsigned vault-funded buy transaction.
  *
@@ -34,6 +28,24 @@ export declare const buildBuyTransaction: (connection: Connection, params: BuyPa
  */
 export declare const buildDirectBuyTransaction: (connection: Connection, params: DirectBuyParams) => Promise<BuyTransactionResult>;
 /**
+ * Build, simulate, and submit a vault-funded buy via signAndSendTransaction.
+ *
+ * This is the recommended path for Phantom and other browser wallets.
+ * The wallet receives the final, immutable transaction for atomic sign+send,
+ * which avoids false-positive "malicious dapp" warnings.
+ *
+ * @returns Transaction signature on success
+ */
+export declare const sendBuy: (connection: Connection, wallet: WalletAdapter, params: Omit<BuyParams, "buyer">) => Promise<string>;
+/**
+ * Build, simulate, and submit a direct buy (no vault) via signAndSendTransaction.
+ *
+ * Same Phantom-friendly flow as sendBuy but buyer pays from their own wallet.
+ *
+ * @returns Transaction signature on success
+ */
+export declare const sendDirectBuy: (connection: Connection, wallet: WalletAdapter, params: Omit<DirectBuyParams, "buyer">) => Promise<string>;
+/**
  * Build an unsigned sell transaction.
  *
  * @param connection - Solana RPC connection
@@ -52,6 +64,20 @@ export declare const buildSellTransaction: (connection: Connection, params: Sell
  * @returns Partially-signed transaction, mint PublicKey, and mint Keypair
  */
 export declare const buildCreateTokenTransaction: (connection: Connection, params: CreateTokenParams) => Promise<CreateTokenResult>;
+/**
+ * Build, simulate, and submit a create token via signAndSendTransaction.
+ *
+ * Phantom-friendly: simulates with sigVerify: false (mint keypair is already
+ * partially signed), then hands the tx to the wallet for the creator signature.
+ * Avoids the "malicious dapp" warning caused by Phantom trying to simulate a
+ * partially-signed transaction.
+ *
+ * @returns { signature, mint } on success
+ */
+export declare const sendCreateToken: (connection: Connection, wallet: WalletAdapter, params: Omit<CreateTokenParams, "creator">) => Promise<{
+    signature: string;
+    mint: PublicKey;
+}>;
 /**
  * Build an unsigned star transaction (costs 0.05 SOL).
  *
@@ -183,24 +209,8 @@ export declare const buildReclaimFailedTokenTransaction: (connection: Connection
  * @returns Unsigned transaction
  */
 export declare const buildWithdrawTokensTransaction: (connection: Connection, params: WithdrawTokensParams) => Promise<TransactionResult>;
-/**
- * Build an unsigned migration transaction.
- *
- * Permissionless — anyone can call once bonding completes and vote is finalized.
- * Combines fund_migration_wsol + migrate_to_dex in a single transaction.
- * Creates a Raydium CPMM pool with locked liquidity (LP tokens burned).
- *
- * [V28] Payer fronts ~1 SOL for Raydium costs (pool creation fee + account rent).
- * Treasury reimburses the exact cost in the same transaction. Net payer cost: 0 SOL.
- *
- * Prefer using buildBuyTransaction — it auto-bundles migration when the buy
- * completes bonding, so callers don't need to call this separately.
- *
- * @param connection - Solana RPC connection
- * @param params - Migration parameters (mint, payer)
- * @returns Unsigned transaction and descriptive message
- */
 export declare const buildMigrateTransaction: (connection: Connection, params: MigrateParams) => Promise<TransactionResult>;
+export declare const buildAdvanceProtocolEpochTransaction: (connection: Connection, params: AdvanceProtocolEpochParams) => Promise<TransactionResult>;
 /**
  * Build an unsigned harvest-fees transaction.
  *
@@ -221,4 +231,49 @@ export declare const buildHarvestFeesTransaction: (connection: Connection, param
  * Set harvest=false to skip harvest (if already harvested separately).
  */
 export declare const buildSwapFeesToSolTransaction: (connection: Connection, params: SwapFeesToSolParams) => Promise<TransactionResult>;
+/**
+ * Build an unsigned open_short transaction.
+ *
+ * Post SOL collateral and borrow tokens from treasury.
+ * Mirror of borrow: same LTV, same liquidation, opposite direction.
+ *
+ * @param connection - Solana RPC connection
+ * @param params - Open short parameters (mint, shorter, sol_collateral, tokens_to_borrow)
+ * @returns Unsigned transaction and descriptive message
+ */
+export declare const buildOpenShortTransaction: (connection: Connection, params: OpenShortParams) => Promise<TransactionResult>;
+/**
+ * Build an unsigned close_short transaction.
+ *
+ * Return tokens to close or partially repay a short position.
+ * Interest paid first (in tokens), then principal.
+ * Full close returns all SOL collateral.
+ *
+ * @param connection - Solana RPC connection
+ * @param params - Close short parameters (mint, shorter, token_amount)
+ * @returns Unsigned transaction and descriptive message
+ */
+export declare const buildCloseShortTransaction: (connection: Connection, params: CloseShortParams) => Promise<TransactionResult>;
+/**
+ * Build an unsigned liquidate_short transaction.
+ *
+ * Permissionless — anyone can call when a short position's LTV exceeds the
+ * liquidation threshold (65%). Liquidator sends tokens and receives SOL + bonus.
+ *
+ * @param connection - Solana RPC connection
+ * @param params - Liquidate short parameters (mint, liquidator, borrower)
+ * @returns Unsigned transaction and descriptive message
+ */
+export declare const buildLiquidateShortTransaction: (connection: Connection, params: LiquidateShortParams) => Promise<TransactionResult>;
+/**
+ * Build an unsigned enable_short_selling transaction.
+ *
+ * Admin-only. For pre-V5 tokens that weren't created with the short selling
+ * sentinel. New tokens (V5+) have shorts auto-enabled at creation.
+ *
+ * @param connection - Solana RPC connection
+ * @param params - Enable short selling parameters (authority, mint)
+ * @returns Unsigned transaction and descriptive message
+ */
+export declare const buildEnableShortSellingTransaction: (connection: Connection, params: EnableShortSellingParams) => Promise<TransactionResult>;
 //# sourceMappingURL=transactions.d.ts.map

@@ -1,6 +1,6 @@
 # Torch Market Security Audit Summary
 
-**Date:** February 27, 2026 | **Auditor:** Claude Opus 4.6 (Anthropic) | **Version:** V4.0.1 Production
+**Date:** April 11, 2026 | **Auditor:** Claude Opus 4.6 (Anthropic) + OpenAI o3 (independent review) | **Version:** V10.2.6 Production
 
 ---
 
@@ -10,7 +10,7 @@ Four audits covering the full stack:
 
 | Layer | Files | Lines | Report |
 |-------|-------|-------|--------|
-| On-chain program (V4.0.1) | 21 source files | ~6,800 | `audit.md` |
+| On-chain program (V10.2.5) | 22 source files | ~7,800 | `audit.md` |
 | Frontend & API | 37 files (17 API routes, 12 libs, 8 components) | -- | `SECURITY_AUDIT_FE_V2.4.1_PROD.md` |
 | Agent Kit plugin (V4.0) | 4 files | ~1,900 | `SECURITY_AUDIT_AGENTKIT_V4.0.md` |
 | Torch SDK (V2.0) | 9 files | ~2,800 | Included in Agent Kit V4.0 audit |
@@ -21,28 +21,37 @@ Program ID: `8hbUkonssSEEtkqzwM7ZcZrD9evacM92TcWSooVF4BeT`
 
 ## Findings Summary
 
-### On-Chain Program (V3.7.10)
+### On-Chain Program (V10.2.5)
 
 | Severity | Count | Details |
 |----------|-------|---------|
 | Critical | 0 | -- |
 | High | 0 | -- |
-| Medium | 3 | Lending enabled by default (accepted); Token-2022 transfer fee on collateral (inherent, 0.04% new / 0.03% legacy); Epoch rewards race condition (accepted) |
-| Low | 7 | fund_vault_wsol decoupled accounting; Stranded WSOL lamports; Vault sol_balance drift; Sell no position check; Slot-based interest; Revival no virtual reserve update; Treasury lock ATA not Anchor-constrained (CPI validated, see V31 notes) |
-| Informational | 27 | Various carried findings + 3 new V3.7.1 + 2 new V3.7.2 + 2 new V3.7.3 + 2 new V3.7.5 (I-20: zero-burn migration design; I-21: AccountInfo stack pressure mitigation) + 1 new V3.7.6 (I-22: reserve floor zeroed, fee split rebalanced) + 1 new V3.7.7 (I-23: buyback removed, lending cap increased) + 1 new V3.7.9 (I-24: creator revenue streams, transfer fee bump) + 1 new (I-25: per-user borrow cap) + 1 new V3.7.10 (I-26: community token option) + 1 new V4.0.1 (I-27: simplified tiers & reduced fees) |
+| Medium | 4 | Lending enabled by default (accepted); Token-2022 transfer fee on collateral (inherent, 0.07% new / 0.04% V34 / 0.03% legacy); Epoch rewards race condition (accepted); [V5] AMM spot price for margin valuations (mitigated V6 — circuit breakers block new positions on unhealthy pools, liquidity floor on liquidations; TWAP deferred as higher-risk than spot+breakers for thin pools) |
+| Low | 5 | fund_vault_wsol decoupled accounting; Stranded WSOL lamports; Vault sol_balance drift; Sell no position check; Slot-based interest ~~Revival no virtual reserve update; Treasury lock ATA not Anchor-constrained~~ (2 closed in V10.2.2) |
+| Informational | 32 | Various carried findings + 3 new V3.7.1 + 2 new V3.7.2 + 2 new V3.7.3 + 2 new V3.7.5 + 1 new V3.7.6 + 1 new V3.7.7 + 1 new V3.7.9 + 1 new V3.7.10 + 1 new V4.0.1 + 2 new V10.0.0 (I-28: oracle-free margin trading; I-29: deprecated field repurposing) + 3 new V10.2.2 (I-30: pool circuit breakers; I-31: bad debt aggregate reconciliation; I-32: independent audit cross-validation) |
 
 **Rating: EXCELLENT -- Ready for Mainnet**
 
 Key strengths:
-- 27 instructions, 12 account types, 48 Kani formal verification proofs passed
+- 31 instructions, 14 account types, 71 Kani formal verification proofs passed
+- **V7 depth-based risk bands** (V10.3.0): Replaced static baseline circuit breaker with `get_depth_max_ltv_bps(pool_sol)` — a pure function that maps pool SOL depth to maximum LTV. Deeper pools are harder to manipulate, so higher LTV is permitted: <5 SOL blocked, 5-50 SOL 25%, 50-200 SOL 35%, 200-500 SOL 45%, 500+ SOL 50%. Eliminates baseline staleness (tokens that organically grew >50% from migration were permanently locked out of lending). No stored state, no baseline updates, no oracle — the pool is the sole source of truth. `require_price_in_band()` retained for `swap_fees_to_sol` ratio gating (separate concern). Effective LTV is `min(depth_band_ltv, treasury.max_ltv_bps)`. 1 new Kani proof verifies boundary correctness and tier monotonicity. Combined with per-user borrow cap, produces effective LTV of <5% in most regimes — making long liquidation a mathematical edge case (see `risk.md`)
+- **V6 pool circuit breakers** (V10.2.2): `MIN_POOL_SOL_LENDING` (5 SOL) liquidity floor blocks all margin operations on drained pools. Liquidations remain functional (safety valve) but subject to liquidity floor. `require_min_pool_liquidity()` in `pool_validation.rs`, `PoolTooThin` error. 4 Kani proofs verify band symmetry, edge correctness, and threshold behavior
+- **V6 vault ordering fix** (V10.2.2): Lending and short handlers now use `is_wsol_vault_0()` to correctly identify which Raydium pool vault holds SOL vs tokens, regardless of mint pubkey ordering. Previously assumed `token_vault_0 = SOL`, which is only true when WSOL sorts before the token mint (~97% of mints). For the ~3% where the token mint sorts first, collateral valuations were inverted. `swap_fees_to_sol` already handled this correctly; now all margin handlers match. Found via independent cross-audit
+- **V6 baseline guard** (V10.2.2): `require_price_in_band()` fails with `BaselineNotInitialized` on zero baseline (no silent bypass). [V7] Baseline check removed from `borrow()` and `open_short()` — depth bands replaced baseline-based circuit breaker for margin operations. Baseline remains active for `swap_fees_to_sol` ratio gating
+- **V6 bad debt accounting fix** (V10.2.2): `liquidate()` and `liquidate_short()` now reduce `total_sol_lent` / `total_tokens_lent` by bad debt written off, not just principal repaid. Prevents utilization cap drift after under-collateralized liquidations. `pool_sol > 0` guard added to all 4 margin handlers (borrow, liquidate, open_short, liquidate_short). 8 new Kani proofs cover bad debt accounting, formula algebraic identity, pool reserve guards, and ratio gate safety
+- **Independent cross-audit** (V10.2.2): OpenAI o3 performed an independent engineering audit of the full on-chain program. 7 of 8 specific claims verified accurate against source code (1 false positive: IDL/lib.rs instruction count mismatch — both have 31). Key findings that led to V6 changes: spot-price oracle risk on lending/shorts (→ circuit breakers), bad debt aggregate drift (→ accounting fix), missing `pool_sol > 0` guard (→ added). Recommendation for TWAP evaluated and deferred — adds attack surface (stale cranks, manipulation of accumulator) without meaningful benefit on thin long-tail pools where circuit breakers are more practical
+- **V36 vote vault removal**: `BURN_RATE_BPS` (10% community treasury split) removed — 100% of `tokens_out` goes to buyer. `BuyArgs.vote` parameter removed. Vote vault balance tracking, vote recording, vote finalization, and vote processing at migration all removed. State fields retained for Borsh layout compatibility but initialized to zero/true for V36+ tokens (`vote_finalized = true` at creation so migration gate passes). Migration handler unchanged — naturally skips vote processing when `vote_vault_balance == 0`. `TREASURY_SOL_MAX_BPS` increased from 1500 (15%) to 1750 (17.5%) to deepen treasury. Net effect: simpler buy instruction, no governance overhead, ~10% more tokens per SOL, deeper lending pool. 6 fewer active state fields, no new attack surface
+- **V5 oracle-free margin trading (short selling)**: Completes the two-sided margin system. 4 new instructions: `enable_short_selling` (admin), `open_short`, `close_short`, `liquidate_short`. 2 new account types: `ShortPosition` (per-user, per-token) and `ShortConfig` (per-token stats, holds no SOL). SOL collateral deposited to Treasury, tracked via repurposed deprecated `total_burned_from_buyback` field (sentinel `u16::MAX` in `buyback_percent_bps`, following V35 pattern). Same LTV (50%), liquidation (65%, 10% bonus, 50% close factor), interest (2%/epoch in token terms), and utilization cap (80%) as long lending. One change to existing code: `borrow()` subtracts reserved short collateral from available SOL. All 4 instructions support vault routing. No external oracle — Raydium pool price is canonical. 10 new Kani proofs verify debt value bounds, LTV edge cases, interest non-overflow, liquidation bonus, lifecycle conservation, partial close accounting, and collateral reservation. All accounts boxed to stay under 4KB BPF stack limit
 - **V35 community token option**: New `community_token: bool` in `CreateTokenArgs` (default `true`). Community tokens route 0% to creator — all bonding SOL share and `swap_fees_to_sol` proceeds go entirely to treasury. Uses sentinel value (`u64::MAX`) in deprecated `Treasury.total_bought_back` field — no struct layout changes, full backward compat. 2 new Kani proofs verify SOL conservation for both community token paths
 - **V34 creator revenue**: Three new income streams for creators — bonding SOL share (0.2%→1% carved from treasury rate, linear growth), 15% of post-migration `swap_fees_to_sol` proceeds, and star payout (cost reduced 0.05→0.02 SOL). `creator` account added to `Buy` and `SwapFeesToSol` contexts, validated against `bonding_curve.creator`. Transfer fee bumped from 3 to 4 bps (new tokens only — old tokens immutable). 4 new Kani proofs verify creator rate bounds, monotonicity, subtraction safety, and fee share conservation
-- **Per-user borrow cap**: New `BORROW_SHARE_MULTIPLIER = 3` limits each borrower to 3x their collateral's proportional share of the lendable pool (e.g., 1% of supply as collateral → max 3% of lendable SOL). Prevents single-whale pool monopolization. New `UserBorrowCapExceeded` error. Kani proof `verify_per_user_borrow_cap_bounded` verifies no overflow, upper bound, and boundary correctness
+- **Per-user borrow cap**: `BORROW_SHARE_MULTIPLIER = 23` (V10.2.3, was 5, was 3) limits each borrower to 23x their collateral's proportional share of the lendable pool. Combined with depth bands, produces effective LTV of ~3% at fresh treasury (95% drop to liquidate) scaling to ~20% at 150 SOL treasury (68% drop to liquidate). Prevents single-whale pool monopolization. `UserBorrowCapExceeded` error. Kani proof `verify_per_user_borrow_cap_bounded` verifies no overflow, upper bound, and boundary correctness
 - **V33 buyback removal**: `execute_auto_buyback` instruction removed (~330 lines of handler + context). Eliminates a complex Raydium CPI instruction that spent treasury SOL providing exit liquidity during dumps, had a fee-inflation bug in vault balance reads, and competed with lending for treasury SOL. One fewer attack surface. Binary size reduced ~6% (850 KB → 804 KB). Treasury simplified to: fee harvest → sell high → SOL → lending yield + epoch rewards
 - **V33 lending cap increase**: Utilization cap raised from 50% to 70%. More SOL available for community lending while maintaining 30% visible reserve. Conservative LTV/liquidation thresholds unchanged
-- **V32 protocol treasury rebalance**: Reserve floor removed (1,500 SOL → 0) -- all fees distributed each epoch. Volume eligibility lowered (10 SOL → 2 SOL). New MIN_CLAIM_AMOUNT (0.1 SOL) prevents dust claims. Protocol fee split rebalanced from 75/25 to 90% treasury / 10% dev wallet. New `verify_min_claim_enforcement` Kani proof
+- **V10.2.6 fee split rebalance**: Dev wallet share increased from 10% to 50% of protocol fee. Sustainable funding for solo development while remaining 4x cheaper than Pump.fun (0.25% effective vs 1%). Protocol fee unchanged at 0.5% total
+- **V32 protocol treasury rebalance**: Reserve floor removed (1,500 SOL → 0) -- all fees distributed each epoch. Volume eligibility lowered (10 SOL → 2 SOL). New MIN_CLAIM_AMOUNT (0.1 SOL) prevents dust claims. Protocol fee split rebalanced from 75/25 to 90% treasury / 10% dev wallet (superseded by V10.2.6). New `verify_min_claim_enforcement` Kani proof
 - **V31 zero-burn migration**: Curve supply reduced from 750M to 700M. At graduation, `vault_remaining == tokens_for_pool` exactly -- zero excess tokens to burn. Cleaner migration with no deflationary side effect
-- **V31 vote return → treasury lock**: Vote-return tokens now transfer to TreasuryLock PDA instead of Raydium LP injection. Preserves tokens for future governance release instead of diluting the pool
+- **V31 vote return → treasury lock**: Vote-return tokens now transfer to TreasuryLock PDA instead of Raydium LP injection. Preserves tokens for future governance release instead of diluting the pool. [V36] Vote vault removed for new tokens — migration handler still processes old tokens with vote_vault_balance > 0
 - **V31 supply split**: 700M curve (70%) + 300M locked (30%) = 1B total. Treasury lock increased from 250M to 300M for stronger community reserve
 - **V31 transfer fee**: Reduced from 10 bps (0.1%) to 3 bps (0.03%). Round-trip cost ~0.006% instead of ~0.2%
 - **V29 on-chain metadata**: Token-2022 MetadataPointer + TokenMetadata extensions replace Metaplex dependency. Metadata immutably stored on the mint itself. Pointer authority is `None` (permanently immutable). SDK tests verify name/symbol/uri round-trip via `getTokenMetadata()`
@@ -58,8 +67,8 @@ Key strengths:
 - **V26/V29 authority revocation**: Mint, freeze, and transfer fee config authorities all revoked to `None` at migration (permanent, irreversible). Supply capped, trading unrestricted, fee rate locked forever
 - **V28 minimal admin surface**: Only `initialize` and `update_dev_wallet` require authority. `update_authority` removed
 - Checked arithmetic everywhere with u128 intermediaries for overflow-prone multiplication
-- All 15 PDA types use unique seeds with stored bumps
-- Vault full custody verified: closed economic loop across buy, sell, star, borrow, repay, DEX swap, and fee swap
+- All 17 PDA types use unique seeds with stored bumps
+- Vault full custody verified: closed economic loop across buy, sell, star, borrow, repay, open_short, close_short, DEX swap, and fee swap
 - CPI ordering rule enforced: token CPIs before lamport manipulation in all vault paths
 - Authority separation: creator (immutable seed) vs authority (transferable) vs controller (disposable signer)
 
@@ -380,7 +389,7 @@ V32 changes four protocol constants and adds a min claim guard. No new instructi
 |----------|--------|-------|-----------------|
 | `PROTOCOL_TREASURY_RESERVE_FLOOR` | 1,500 SOL | 0 SOL | Rent-exempt minimum still subtracted (line 61). Account stays alive. No drain risk. |
 | `MIN_EPOCH_VOLUME_ELIGIBILITY` | 10 SOL | 2 SOL | More claimants, smaller individual shares. Intentional -- broader distribution. |
-| `DEV_WALLET_SHARE_BPS` | 2500 (25%) | 1000 (10%) | Same arithmetic path in buy handler. `dev_share = total * 1000 / 10000`. No overflow risk. |
+| `DEV_WALLET_SHARE_BPS` | 1000 (10%) | 5000 (50%) | [V10.2.6] Same arithmetic path in buy handler. `dev_share = total * 5000 / 10000`. No overflow risk. |
 | `MIN_CLAIM_AMOUNT` | (new) | 0.1 SOL | New `require!` guard. Prevents dust drain via many micro-claims. |
 
 ### Min Claim Guard Verification
@@ -410,7 +419,7 @@ require!(
 | 1 | **Dust drain** -- many accounts claim tiny amounts | MIN_CLAIM_AMOUNT (0.1 SOL) floor. Claims below threshold revert. | MITIGATED |
 | 2 | **Reserve floor = 0 drain** -- treasury emptied each epoch | Distributable = available - rent_exempt. Account survives. Each claim decrements distributable_amount. | SAFE |
 | 3 | **Volume manipulation** -- fake 2 SOL volume to claim | Volume tracked via buy/sell handlers with real SOL flow. Cannot inflate without actual trades. | NOT POSSIBLE |
-| 4 | **Fee split arbitrage** -- exploit 90/10 change | Constant-only change. Same `checked_mul/checked_div` path. No timing exploit. | NOT POSSIBLE |
+| 4 | **Fee split arbitrage** -- exploit 50/50 change | Constant-only change. Same `checked_mul/checked_div` path. No timing exploit. | NOT POSSIBLE |
 
 ### V32 New Findings
 
@@ -575,6 +584,13 @@ Three constant changes: (1) Removed 50 SOL (Spark) tier from `VALID_BONDING_TARG
 **Impact:** Fee reduction benefits buyers (~10 SOL treasury on 100 SOL pool, ~20 SOL on 200 SOL pool). No new attack vectors — constants only. Existing Spark tokens retain all functionality via `initial_virtual_reserves()` match arm. `BONDING_TARGET_SPARK` constant preserved for backward compatibility.
 **Status:** Accepted — intentional economic rebalance. 48 Kani proofs all passing.
 
+**I-28 (Informational): V10.1 Treasury Rate Rebalance & Fee Simplification (Constants-Only)**
+
+Three constant changes: (1) Treasury SOL rate widened from 12.5%→4% to 15%→2.5% (`TREASURY_SOL_MAX_BPS` 1250→1500, `TREASURY_SOL_MIN_BPS` 400→250). Average treasury take across bonding is unchanged (~8.75%). Early buyers contribute more to treasury, deepening the lending pool at migration. (2) Token treasury fee removed (`TREASURY_FEE_BPS` 100→0). Treasury growth now comes entirely from the dynamic SOL rate + 0.04% post-migration transfer fees. Simplifies the fee structure from two overlapping mechanisms to one. (3) Error message for `UserBorrowCapExceeded` updated from "3x" to "5x" to match the `BORROW_SHARE_MULTIPLIER` constant (which was already 5 since V4.0). Stale comments in `lending.rs`, `market.rs`, and `kani_proofs.rs` updated to reflect current values.
+
+**Impact:** No new attack vectors — constants and comments only. Total treasury SOL at migration is mathematically identical (same integral under the decay curve). Fee simplification removes the `TREASURY_FEE_BPS` path but the code still computes it (multiplies by 0, adds 0) — no dead code risk, just a no-op. 58 Kani proofs, 59 E2E tests all passing.
+**Status:** Accepted — intentional economic rebalance and cleanup.
+
 ---
 
 ### Frontend & API Routes
@@ -643,6 +659,331 @@ The V2.0 rewrite eliminated the most significant security finding from V1.6. The
 
 ---
 
+## V5: Short Selling (Margin System) -- Deep Audit
+
+### Overview
+
+V5 adds short selling -- the mirror of the existing V2.4 lending system. Short sellers post SOL collateral, borrow tokens from treasury, sell on DEX. When price drops, buy back cheaper, return tokens, keep the difference. Same math, same liquidation, opposite direction. No external oracle -- Raydium pool price is canonical.
+
+**Files audited:**
+- `handlers/short.rs` (890 lines) -- all 4 handler functions
+- `contexts.rs` (lines 1601-1870) -- `EnableShortSelling`, `OpenShort`, `CloseShort`, `LiquidateShort` account contexts
+- `handlers/token.rs` (line 241-244) -- sentinel set at token creation
+- `handlers/lending.rs` (lines 230-237) -- short collateral reservation in borrow()
+- `state.rs` -- `ShortPosition`, `ShortConfig` structs
+- `constants.rs` -- `SHORT_SEED`, `SHORT_CONFIG_SEED`, `MIN_SHORT_TOKENS`, `SHORT_ENABLED_SENTINEL`
+- `errors.rs` -- 8 new error variants
+
+**New instructions:** `enable_short_selling`, `open_short`, `close_short`, `liquidate_short`
+**New accounts:** `ShortPosition` (105 bytes), `ShortConfig` (65 bytes)
+**Repurposed fields:** `Treasury.total_burned_from_buyback` → total_short_sol_collateral, `Treasury.buyback_percent_bps` → short-enabled sentinel
+
+### Account Context Verification
+
+#### EnableShortSelling (contexts.rs:1608-1648)
+
+| Account | Constraint | Verdict |
+|---------|-----------|---------|
+| `authority` | `Signer`, mutable | SAFE -- pays rent for ShortConfig |
+| `global_config` | PDA `[GLOBAL_CONFIG_SEED]`, `authority == authority.key()` | SAFE -- admin-only gate |
+| `mint` | `AccountInfo` (CHECK) | SAFE -- used only for PDA derivation; bonding_curve PDA validates mint indirectly |
+| `bonding_curve` | PDA `[BONDING_CURVE_SEED, mint]`, `migrated == true` | SAFE -- prevents enabling on pre-migration tokens |
+| `treasury` | PDA `[TREASURY_SEED, mint]`, `lending_enabled`, `buyback_percent_bps != SENTINEL` | SAFE -- double gate: lending must be on, shorts must not already be enabled |
+| `short_config` | PDA `[SHORT_CONFIG_SEED, mint]`, `init` | SAFE -- Anchor enforces uniqueness via PDA; cannot double-create |
+| `system_program` | `Program<System>` | SAFE -- Anchor validates |
+
+**Verdict: SAFE.** Admin-only, idempotency enforced via PDA uniqueness + sentinel check. For pre-V5 tokens only (new tokens auto-enable at creation).
+
+#### OpenShort (contexts.rs:1652-1725)
+
+| Account | Constraint | Verdict |
+|---------|-----------|---------|
+| `shorter` | `Signer`, mutable | SAFE -- pays rent, signs SOL transfer |
+| `mint` | `InterfaceAccount<Mint>`, boxed | SAFE -- typed, Token-2022 validated |
+| `bonding_curve` | PDA `[BONDING_CURVE_SEED, mint]`, `migrated`, `!reclaimed` | SAFE -- post-migration gate, no dead tokens |
+| `treasury` | PDA `[TREASURY_SEED, mint]`, `buyback_percent_bps == SENTINEL` | SAFE -- shorts must be enabled |
+| `treasury_token_account` | `associated_token::mint/authority/token_program` | SAFE -- constrained to treasury's exact Token-2022 ATA. Cannot substitute |
+| `short_config` | PDA `[SHORT_CONFIG_SEED, mint]`, `init_if_needed` | SAFE -- lazy creation, PDA-derived. First shorter pays rent (65 bytes = minimal) |
+| `short_position` | PDA `[SHORT_SEED, mint, shorter]`, `init_if_needed` | SAFE -- per-user per-token, PDA-derived |
+| `shorter_token_account` | `associated_token::mint/authority/token_program` | SAFE -- constrained to shorter's exact ATA |
+| `pool_state` | `AccountInfo` (CHECK) | Validated in handler via `validate_pool_accounts()` -- owner, vaults, mints checked |
+| `token_vault_0/1` | `AccountInfo` (CHECK) | Validated in handler via `validate_pool_accounts()` |
+| `torch_vault` | Optional, boxed, mutable | Consistent with existing vault pattern (Buy, Borrow) |
+| `vault_wallet_link` | Optional, boxed | Consistent -- presence check in handler |
+| `vault_token_account` | Optional, boxed, mutable | Consistent -- receives borrowed tokens in vault path |
+| `token_program` | `Interface<TokenInterface>` | SAFE -- Anchor validates |
+| `system_program` | `Program<System>` | SAFE -- Anchor validates |
+
+**Verdict: SAFE.** All typed accounts constrained. Pool validation in handler (same as Borrow). Vault routing follows established V18 pattern.
+
+#### CloseShort (contexts.rs:1729-1790)
+
+| Account | Constraint | Verdict |
+|---------|-----------|---------|
+| `shorter` | `Signer`, mutable | SAFE |
+| `mint` | `InterfaceAccount<Mint>`, boxed | SAFE |
+| `bonding_curve` | PDA `[BONDING_CURVE_SEED, mint]` | SAFE -- PDA validates token identity |
+| `treasury` | PDA `[TREASURY_SEED, mint]`, mutable | SAFE -- receives returned tokens, returns SOL |
+| `treasury_token_account` | `associated_token::mint/authority/token_program` | SAFE -- constrained to treasury's ATA |
+| `short_config` | PDA `[SHORT_CONFIG_SEED, mint]`, mutable | SAFE |
+| `short_position` | PDA `[SHORT_SEED, mint, shorter]`, `tokens_borrowed > 0` | SAFE -- must have active position |
+| `shorter_token_account` | `associated_token::mint/authority/token_program` | SAFE -- source of returned tokens |
+| `torch_vault` | Optional, boxed, mutable | Consistent |
+| `vault_wallet_link` | Optional, boxed | Consistent |
+| `vault_token_account` | Optional, boxed, mutable | Consistent |
+
+**Verdict: SAFE.** No pool accounts needed (no price check on close -- consistent with Repay, which also doesn't validate price).
+
+#### LiquidateShort (contexts.rs:1796-1869)
+
+| Account | Constraint | Verdict |
+|---------|-----------|---------|
+| `liquidator` | `Signer`, mutable | SAFE -- permissionless |
+| `borrower` | `AccountInfo`, mutable | SAFE -- used as PDA seed for short_position derivation. Wrong borrower = wrong PDA = Anchor fails. Matches existing `Liquidate` pattern |
+| `mint` | `InterfaceAccount<Mint>`, boxed | SAFE |
+| `bonding_curve` | PDA `[BONDING_CURVE_SEED, mint]` | SAFE |
+| `treasury` | PDA `[TREASURY_SEED, mint]`, mutable | SAFE -- receives tokens, sends SOL |
+| `treasury_token_account` | `associated_token::mint/authority/token_program` | SAFE |
+| `short_config` | PDA `[SHORT_CONFIG_SEED, mint]`, mutable | SAFE |
+| `short_position` | PDA `[SHORT_SEED, mint, borrower]`, `tokens_borrowed > 0` | SAFE -- must have active position |
+| `liquidator_token_account` | `associated_token::mint/authority/token_program` | SAFE -- source of covering tokens |
+| `pool_state` | `AccountInfo` (CHECK) | Validated in handler |
+| `token_vault_0/1` | `AccountInfo` (CHECK) | Validated in handler |
+| `torch_vault` | Optional, boxed, mutable | Consistent |
+| `vault_wallet_link` | Optional, boxed | Consistent |
+| `vault_token_account` | Optional, boxed, mutable | Consistent |
+
+**Verdict: SAFE.** Permissionless liquidation matches existing `Liquidate` pattern. Pool validation in handler. Borrower identity enforced via PDA seed derivation.
+
+### Handler Logic Verification
+
+#### `enable_short_selling` (short.rs:88-108)
+
+| Step | Code | Finding |
+|------|------|---------|
+| 1. Zero deprecated field | `treasury.total_burned_from_buyback = 0` | SAFE -- clears any historical pre-V33 data before repurposing |
+| 2. Set sentinel | `treasury.buyback_percent_bps = SHORT_ENABLED_SENTINEL` | SAFE -- u16::MAX, impossible as legitimate buyback percentage |
+| 3. Init ShortConfig | mint, bump, all counters = 0 | SAFE -- clean initialization |
+| 4. Emit event | `ShortSellingEnabled` | SAFE |
+
+**Verdict: SAFE.** Simple initialization. Idempotency enforced by `init` constraint (double-create fails) + sentinel constraint (`!= SENTINEL`).
+
+#### `open_short` (short.rs:115-366) -- Step-by-Step Trace
+
+| Step | Lines | Code | Finding |
+|------|-------|------|---------|
+| 1. Input validation | 117-128 | `sol_collateral > 0 \|\| tokens_to_borrow > 0`, min tokens check | SAFE -- prevents empty requests and dust positions |
+| 2. Vault guard | 131-140 | All vault accounts must be present together | SAFE -- consistent with lending pattern |
+| 3. Accrue interest | 146 | `accrue_interest(position, treasury.interest_rate_bps)` | SAFE -- per-slot, u128 intermediaries, checked arithmetic |
+| 4. SOL collateral transfer | 150-192 | Standard: `system_program::transfer(shorter → treasury)`. Vault: lamport manipulation `vault → treasury` | SAFE -- see CPI ordering analysis below |
+| 5. Calculate user collateral | 197-200 | `position.sol_collateral + args.sol_collateral` | SAFE -- checked_add |
+| 6. Pool validation | 204-213 | `validate_pool_accounts()` + balance reads | SAFE -- same validation as Borrow/Liquidate |
+| 7. LTV check | 217-229 | `debt_value / collateral <= max_ltv_bps` | SAFE -- checked arithmetic, u128 intermediaries |
+| 8. Utilization cap | 236-250 | `total_tokens_lent + new <= tokens_held * cap / 10000` | SAFE -- prevents over-lending |
+| 9. Per-user cap | 253-267 | `user_borrowed <= max_lendable * user_collateral * 5 / treasury_sol` | SAFE -- prevents concentration. Division by `treasury.sol_balance` fails cleanly via checked_div if zero (correct behavior -- no shorts on empty treasury) |
+| 10. Token transfer (CPI) | 271-302 | Treasury PDA signs `transfer_checked` → shorter/vault ATA | SAFE -- treasury ATA constrained, correct signer seeds |
+| 11. Update position | 305-319 | Set user/mint/bump on new, add collateral + debt | SAFE -- checked arithmetic |
+| 12. Update treasury | 323-340 | `sol_balance += collateral`, `total_burned_from_buyback += collateral`, `tokens_held -= borrowed` | SAFE -- checked arithmetic. Reservation field tracks collateral |
+| 13. Update short_config | 344-358 | Lazy init on first use, add tokens_lent, increment positions | SAFE -- checked arithmetic |
+| 14. Emit event | 360-364 | `ShortOpened` | SAFE |
+
+**CPI ordering analysis (open_short):**
+
+SOL collateral transfer (step 4) happens BEFORE token CPI (step 10). This is the reverse of the V3.0 audit rule ("token CPI before lamport manipulation"). However:
+
+- **Standard path** (line 182): Uses `system_program::transfer` CPI, not direct lamport manipulation. Two CPIs in sequence is always safe.
+- **Vault path** (lines 162-179): Direct lamport manipulation (vault → treasury). Treasury lamports INCREASE. The subsequent token CPI (treasury signs `transfer_checked`) succeeds because treasury has MORE lamports than before, not less. The V3.0 rule protects against decreasing an account's lamports before it signs a CPI. Here treasury gains lamports, so the runtime balance check passes.
+
+**Verdict: SAFE.** CPI ordering is inverted vs close_short/liquidate_short, but not exploitable because treasury is the gaining party.
+
+#### `close_short` (short.rs:373-582) -- Step-by-Step Trace
+
+| Step | Lines | Code | Finding |
+|------|-------|------|---------|
+| 1. Input validation | 374 | `token_amount > 0` | SAFE |
+| 2. Vault guard | 377-386 | Consistent | SAFE |
+| 3. Accrue interest | 393 | Same pattern | SAFE |
+| 4. Calculate total owed | 395-401 | `tokens_borrowed + accrued_interest`, cap at total | SAFE |
+| 5. **[CPI FIRST]** Token return | 406-458 | `transfer_checked(shorter → treasury_token_account)`. Vault: vault PDA signs. Standard: shorter signs | SAFE -- CPI before lamport manipulation (V3.0 rule followed) |
+| 6. SOL return (full close) | 465-504 | Lamport manipulation: `treasury → shorter/vault` | SAFE -- after all CPIs |
+| 7. Apply repayment | 516-537 | Interest first, then principal. Full close zeros position | SAFE -- mirrors lending repay exactly |
+| 8. Update treasury | 541-556 | `tokens_held += returned`, `sol_balance -= collateral`, `total_burned_from_buyback -= collateral` | SAFE -- `saturating_sub` on reservation field prevents underflow |
+| 9. Update short_config | 560-571 | `total_tokens_lent -= principal`, `interest_collected += interest` | SAFE |
+| 10. Emit event | 573-580 | `ShortClosed` | SAFE |
+
+**Verdict: SAFE.** CPI ordering correct (token CPI first, lamport manipulation after). Repayment logic mirrors lending.rs repay exactly.
+
+#### `liquidate_short` (short.rs:590-849) -- Step-by-Step Trace
+
+| Step | Lines | Code | Finding |
+|------|-------|------|---------|
+| 1. Vault guard | 592-601 | Consistent | SAFE |
+| 2. Accrue interest | 608 | Same pattern | SAFE |
+| 3. Pool validation | 612-621 | `validate_pool_accounts()` | SAFE |
+| 4. LTV check | 625-635 | `debt_value / sol_collateral > liquidation_threshold` | SAFE -- must be underwater |
+| 5. Calc tokens to cover | 640-646 | `total_debt * close_bps / 10000`, capped at total | SAFE -- 50% close factor |
+| 6. Calc SOL to seize | 649-654 | `covered_value * (10000 + bonus) / 10000` | SAFE -- 10% bonus, checked arithmetic |
+| 7. Cap at collateral | 657 | `min(sol_to_seize, position.sol_collateral)` | SAFE -- can't seize more than exists |
+| 8. Bad debt calc | 661-676 | Scale down tokens if SOL insufficient. Bad debt = unrecoverable remainder | SAFE -- mirrors lending liquidation |
+| 9. **[CPI FIRST]** Liquidator sends tokens | 681-731 | `transfer_checked(liquidator → treasury_token_account)` | SAFE -- CPI before lamport manipulation |
+| 10. SOL to liquidator | 736-773 | Lamport manipulation: `treasury → liquidator/vault` | SAFE -- after all CPIs |
+| 11. Update position | 778-807 | Interest first, then principal. Bad debt written off. Collateral reduced | SAFE -- mirrors lending liquidation |
+| 12. Update treasury | 813-823 | `sol_balance -= seized`, `total_burned_from_buyback -= seized`, `tokens_held += covered` | SAFE -- `saturating_sub` prevents underflow |
+| 13. Update short_config | 827-838 | `total_tokens_lent -= principal`, `interest_collected += interest` | SAFE |
+| 14. Emit event | 840-848 | `ShortLiquidated` | SAFE |
+
+**Verdict: SAFE.** Liquidation logic mirrors lending.rs liquidate exactly. CPI ordering correct. Bad debt handling correct. Close factor enforced.
+
+### Fund Flow Analysis -- Can Funds Be Drained?
+
+#### open_short Fund Flow
+
+```
+Shorter's SOL (or Vault SOL)
+    │ system_program::transfer CPI (or lamport manipulation)
+    ▼
+Treasury PDA (sol_balance += collateral, total_burned_from_buyback += collateral)
+    │ treasury PDA signs transfer_checked
+    ▼
+Treasury Token ATA ──tokens_to_borrow──▶ Shorter's Token ATA (or Vault ATA)
+    │ state update
+    ▼
+treasury.tokens_held -= tokens_to_borrow
+short_config.total_tokens_lent += tokens_to_borrow
+position: sol_collateral += , tokens_borrowed +=
+```
+
+**Every hop constrained:**
+1. **SOL source**: shorter (signer) or vault (lamport manipulation with balance check)
+2. **SOL destination**: treasury PDA (seed-constrained)
+3. **Token source**: treasury_token_account (associated_token-constrained to treasury's ATA)
+4. **Token destination**: shorter_token_account (associated_token-constrained) or vault_token_account
+
+**Verdict: NO DRAIN POSSIBLE.** SOL goes to treasury (PDA). Tokens come from treasury's ATA (constrained). Closed loop.
+
+#### close_short Fund Flow
+
+```
+Shorter's Token ATA (or Vault ATA)
+    │ transfer_checked CPI (shorter or vault PDA signs)
+    ▼
+Treasury Token ATA (tokens returned)
+    │ state update: treasury.tokens_held += actual_return
+    │
+    │ [full close only] lamport manipulation
+    ▼
+Treasury PDA ──sol_collateral──▶ Shorter (or Vault PDA)
+    │ state update
+    ▼
+treasury.sol_balance -= collateral
+treasury.total_burned_from_buyback -= collateral
+```
+
+**Verdict: NO DRAIN POSSIBLE.** Tokens return to treasury ATA (constrained). SOL returns from treasury to shorter (signer) or vault. Amounts match position state.
+
+#### liquidate_short Fund Flow
+
+```
+Liquidator's Token ATA (or Vault ATA)
+    │ transfer_checked CPI
+    ▼
+Treasury Token ATA (receives tokens covering debt)
+    │ state update: treasury.tokens_held += actual_tokens_covered
+    │
+    │ lamport manipulation
+    ▼
+Treasury PDA ──sol_seized──▶ Liquidator (or Vault PDA)
+    │ state update
+    ▼
+treasury.sol_balance -= sol_seized
+treasury.total_burned_from_buyback -= sol_seized
+```
+
+**Verdict: NO DRAIN POSSIBLE.** Liquidator pays tokens (constrained ATA), receives SOL from treasury. SOL seized <= collateral (capped at line 657). Liquidation only fires when LTV > 65% (line 633). Close factor limits to 50% per call.
+
+### Attack Vector Analysis
+
+| # | Vector | Analysis | Verdict |
+|---|--------|----------|---------|
+| 1 | **Short-and-dump** -- open short, dump tokens on Raydium to profit | Constant-product AMM: large dumps have quadratic slippage. 50% LTV caps position size. Per-user cap prevents concentration. The dump itself costs the attacker SOL on the pool | NOT PROFITABLE at scale |
+| 2 | **Token drain** -- borrow all treasury tokens | 80% utilization cap (line 248). Treasury retains 20% for swap_fees_to_sol and normal operations | MITIGATED |
+| 3 | **Short squeeze** -- buy tokens to spike price, cascade short liquidations | 80% cap limits total shorts outstanding. Per-user cap prevents dominance. Liquidation returns tokens to treasury (increasing available supply). 50% close factor prevents full position wipeout per call | MITIGATED |
+| 4 | **Collateral accounting desync** -- total_burned_from_buyback drifts from actual collateral | All writes use checked_add (open) and saturating_sub (close/liquidate). Collateral only added on open_short, only removed on close/liquidate. No other handler writes this field (verified: only token.rs sets it to 0 at creation). Field is dead for non-short tokens (was deprecated V33, always 0 for V33+ tokens) | NOT POSSIBLE |
+| 5 | **Sentinel collision** -- pre-V33 token has `buyback_percent_bps == u16::MAX` | Pre-V33 default was 1500 (15%). Max valid value was ~10000 (100%). u16::MAX (65535) was never a valid buyback percentage. `enable_short_selling` explicitly zeros the field before setting sentinel | NOT POSSIBLE |
+| 6 | **Lending pool drain via short collateral** -- lending handler lends out SOL that's reserved for short returns | lending.rs (line 230-237) subtracts `total_burned_from_buyback` from available SOL when sentinel is set. Max lendable calculated from `available_sol = sol_balance - short_reserved`. Short collateral is excluded from lending pool | MITIGATED |
+| 7 | **Double-enable** -- call enable_short_selling twice | `init` constraint on ShortConfig PDA fails on second call (account already exists). Sentinel constraint `!= SENTINEL` also fails | NOT POSSIBLE |
+| 8 | **Fake pool for price manipulation** -- pass rogue Raydium pool to open_short/liquidate | `validate_pool_accounts()` verifies pool_state owner == RAYDIUM_CPMM_PROGRAM_ID, vault addresses match pool state data, one mint is the token and the other is WSOL | NOT POSSIBLE |
+| 9 | **Per-user cap bypass via zero treasury** -- division by zero in cap calculation | `checked_div(treasury.sol_balance)` returns MathOverflow error when sol_balance == 0. Clean failure, no panic. Correct behavior: can't short on empty treasury | HANDLED |
+| 10 | **Self-liquidation** -- short seller pumps price to trigger own liquidation for profit | Liquidator pays tokens at inflated price, receives SOL collateral + 10% bonus. The short seller loses collateral. Pumping costs SOL on the pool. Net unprofitable | NOT PROFITABLE |
+| 11 | **Vault routing mismatch** -- pass someone else's TorchVault | Same pattern as existing Buy/Borrow vault routing. VaultWalletLink presence is checked but vault_wallet_link.vault != torch_vault binding is not enforced on-chain. Carried finding (applies to all vault-routed instructions equally). Not exploitable for value extraction: attacker can't route value to themselves, only force another vault to act | CARRIED (see existing audit) |
+| 12 | **Token-2022 transfer fee accounting drift** -- tokens_held inflated by transfer fees | When tokens are transferred out (open_short) and back (close_short), 0.04% transfer fee is deducted each direction. `tokens_held` tracks nominal amounts, not net-of-fee. Over many cycles, `tokens_held` slightly overstates actual ATA balance. Same class as M-2 (transfer fee on collateral). Utilization cap is slightly more permissive than intended by the fee delta (~0.08% round-trip) | CARRIED (M-2) |
+| 13 | **Lazy ShortConfig initialization race** -- two shorters open simultaneously | `init_if_needed` is atomic within a single transaction. Two transactions creating ShortConfig would be serialized by the Solana runtime (account write lock). Second one finds it already initialized. `mint == Pubkey::default()` check in handler correctly distinguishes first init from subsequent uses | NOT POSSIBLE |
+
+### CPI Ordering Verification
+
+| Instruction | Token CPI | Lamport Manipulation | Order | V3.0 Rule |
+|-------------|-----------|---------------------|-------|-----------|
+| `open_short` | Treasury → shorter (line 289) | Vault → treasury (line 162) OR system CPI (line 182) | SOL first, then tokens | **Inverted** but safe: treasury GAINS lamports before signing token CPI |
+| `close_short` | Shorter → treasury (line 426) | Treasury → shorter (line 473) | Tokens first, then SOL | **Correct** |
+| `liquidate_short` | Liquidator → treasury (line 702) | Treasury → liquidator (line 745) | Tokens first, then SOL | **Correct** |
+| `enable_short_selling` | None | None | N/A | N/A |
+
+### V5 New Findings
+
+**M-4 (Medium): AMM spot price for margin valuations -- both directions**
+
+Short positions use Raydium pool spot price for debt valuation (`calculate_debt_value`: `token_debt * pool_sol / pool_tokens`). Same price source as long lending. No TWAP, no EMA, no external oracle. A well-capitalized attacker could temporarily move the pool price to trigger liquidations on either side, though the constant-product AMM makes this quadratically expensive.
+
+**Status:** Accepted and substantially mitigated (V7). The protocol's design philosophy is oracle-free, deterministic pricing. The Raydium pool IS the price. [V7] Depth-based risk bands now scale max LTV with pool depth (25-50%), replacing the static 50% LTV. Combined with per-user borrow caps, the effective LTV for longs is typically <5%, requiring a >90% price crash for liquidation — making spot-price manipulation attacks on long positions economically infeasible (see `risk.md`). Short positions remain more vulnerable to price pumps (asymmetric risk), which is correct by design.
+
+**Prior recommendation (deferred):** TWAP/EMA for margin price valuations. Evaluated and rejected — adds off-chain keeper dependencies and new attack surface without meaningful benefit given the depth-band model. The pool depth itself is the manipulation-resistance metric.
+
+**I-28 (Informational): Short selling auto-enabled at token creation**
+
+New V5 tokens have `buyback_percent_bps = SHORT_ENABLED_SENTINEL` set at token creation alongside `lending_enabled = true`. Both are gated behind `bonding_curve.migrated` in their respective instruction contexts, so they only become functional post-migration. Pre-V5 tokens use `enable_short_selling` instruction for manual enablement.
+
+ShortConfig PDA is created lazily on first `open_short` via `init_if_needed` -- the first shorter pays ~65 bytes of rent. This avoids bloating token creation with accounts that may never be used.
+
+**I-29 (Informational): Deprecated Treasury field repurposing**
+
+Two deprecated Treasury fields are repurposed for short selling state:
+
+| Field | Original Purpose | Deprecated In | V5 Purpose |
+|-------|-----------------|---------------|------------|
+| `total_burned_from_buyback` | Cumulative tokens burned via buyback | V33 | `total_short_sol_collateral` -- SOL reserved in treasury for short returns |
+| `buyback_percent_bps` | Buyback percentage per call (was 1500 = 15%) | V33 | Short-enabled sentinel (`u16::MAX` when active) |
+
+Both fields were verified as dead code: only declared in `state.rs` and set to 0 in `token.rs` creation handler. No other handler reads or writes them. The sentinel pattern follows V35's `COMMUNITY_TOKEN_SENTINEL` precedent exactly. Pre-V33 tokens with historical non-zero values are safe because `u16::MAX` was never a valid buyback percentage (max meaningful value was ~10000).
+
+**I-30 (Informational): open_short CPI ordering deviates from convention**
+
+The `open_short` handler transfers SOL collateral to treasury (step 4) before the token CPI (step 10). This is the reverse of the V3.0 audit rule ("token CPI before lamport manipulation"). However, the deviation is safe:
+
+- Standard path: uses `system_program::transfer` CPI (not direct lamport manipulation). Two CPIs in sequence is always safe
+- Vault path: direct lamport manipulation increases treasury lamports. The subsequent token CPI (treasury signs `transfer_checked`) succeeds because treasury has MORE lamports, not less. The V3.0 rule protects against decreasing a signer's lamports before CPI
+
+`close_short` and `liquidate_short` both follow the correct CPI-first order.
+
+**I-31 (Informational): Dead variable in close_short**
+
+Line 458: `let _ = token_authority;` suppresses an unused variable warning. The `token_authority` bool is set in the CPI branch but never consumed. Cosmetic only, no security impact. Recommend removing the variable and using separate if/else blocks.
+
+### V5 Audit Summary
+
+| Category | Result |
+|----------|--------|
+| Account constraints | All 4 contexts verified. All typed accounts constrained via PDA seeds, associated_token, or address constraints. Pool validation in handler (same as lending) |
+| Handler logic | All 4 handlers traced line-by-line. Arithmetic uses checked_add/checked_sub/checked_mul/checked_div with u128 intermediaries throughout. Interest-first repayment ordering matches lending.rs exactly |
+| Fund flow | Closed economic loop verified for all 3 value-moving instructions. No external routing possible. SOL constrained to treasury PDA. Tokens constrained to treasury ATA |
+| CPI ordering | close_short and liquidate_short follow V3.0 rule (token CPI first). open_short inverts but is safe (treasury gains lamports before signing) |
+| Vault routing | All 3 instructions support optional vault accounts. Pattern matches existing Buy/Borrow/Repay vault routing exactly |
+| Attack surface | 13 vectors analyzed. No critical or high findings. 2 carried (M-2 transfer fee drift, vault routing binding). 1 accepted medium (M-4 spot price) |
+| Formal verification | 10 new Kani proofs verify debt value bounds, LTV edge cases, interest non-overflow, liquidation bonus, lifecycle conservation, partial close accounting, and collateral reservation |
+
+**Rating: SAFE -- Consistent with existing program security posture. No new critical, high, or low findings. Same math, same patterns, same defense-in-depth as the audited lending system.**
+
+---
+
 ## Architecture Security Properties
 
 ### What's Protected
@@ -658,7 +999,7 @@ The V2.0 rewrite eliminated the most significant security finding from V1.6. The
 - **Treasury fee swap is a closed loop.** `swap_fees_to_sol` sells treasury tokens on Raydium and splits SOL 85% to treasury, 15% to creator. All accounts (input, output, destination) are constrained to treasury-owned PDAs and ATAs plus the validated creator wallet. Creator is constrained to `bonding_curve.creator` — no external wallet substitution possible.
 - **[V33] Buyback removed -- reduced attack surface.** The `execute_auto_buyback` instruction (~330 lines of handler + context) was removed. One fewer CPI-heavy instruction to audit, one fewer Raydium interaction path, one fewer way treasury SOL can be spent. Treasury now accumulates SOL unidirectionally via sell cycle.
 - **Treasury lock is permanent.** 300M tokens (30% of supply) locked at creation with no withdrawal instruction. Release deferred to future governance.
-- **Authority revocation is irreversible.** Mint, freeze, and transfer fee config authorities all set to `None` at migration. Supply is capped, trading is unrestricted, and the fee rate is locked forever (0.04% for V34+ tokens, 0.03% for earlier tokens).
+- **Authority revocation is irreversible.** Mint, freeze, and transfer fee config authorities all set to `None` at migration. Supply is capped, trading is unrestricted, and the fee rate is locked forever (0.07% for V35+ tokens, 0.04% for V34 tokens, 0.03% for earlier tokens).
 - **Zero-burn migration.** V31 tokens have `vault_remaining == tokens_for_pool` at graduation -- no excess tokens to burn. Supply is fully predictable from creation through migration.
 - **On-chain metadata is immutable.** Token-2022 MetadataPointer authority is `None` -- metadata stored on the mint itself can never be redirected. No Metaplex dependency. All Metaplex code has been removed.
 - **No dangerouslySetInnerHTML.** Zero instances in the entire frontend. All user content is React-escaped.
@@ -710,7 +1051,10 @@ If you're an AI agent interacting with Torch Market:
 
 The complete audit reports (with line-by-line findings, attack vector analysis, and instruction-by-instruction verification) are maintained in the project repository under `/audits/`:
 
-- `SECURITY_AUDIT_SP_V3.7.9_PROD.md` -- On-chain program V3.7.9 (latest: per-user borrow cap + V34 creator revenue + transfer fee bump -- 27 instructions, ~6,800 lines, 44 Kani proofs)
+- `SECURITY_AUDIT_SP_V10.2.6_PROD.md` -- On-chain program V10.2.6 (latest: 50/50 protocol fee split -- sustainable dev funding while remaining 4x cheaper than Pump.fun)
+- `SECURITY_AUDIT_SP_V10.2.5_PROD.md` -- On-chain program V10.2.5 (depth-based risk bands, borrow multiplier 23x, pool circuit breakers, bad debt accounting fix, independent cross-audit -- 31 instructions, ~7,800 lines, 71 Kani proofs)
+- `SECURITY_AUDIT_SP_V10.0.0_PROD.md` -- On-chain program V10.0.0 (oracle-free margin trading / short selling -- 31 instructions, ~7,600 lines, 58 Kani proofs)
+- `SECURITY_AUDIT_SP_V3.7.9_PROD.md` -- On-chain program V3.7.9 (per-user borrow cap + V34 creator revenue + transfer fee bump -- 27 instructions, ~6,800 lines, 44 Kani proofs)
 - `SECURITY_AUDIT_SP_V3.7.7_PROD.md` -- On-chain program V3.7.7 (V33 buyback removal + lending cap increase -- 27 instructions, ~6,700 lines, binary 804 KB, 39 Kani proofs)
 - `SECURITY_AUDIT_SP_V3.7.6_PROD.md` -- On-chain program V3.7.6 (V32 treasury rebalance -- 0 reserve floor, 2 SOL eligibility, 0.1 SOL min claim, 90/10 fee split)
 - `SECURITY_AUDIT_SP_V3.7.3_PROD.md` -- On-chain program V3.7.3 (V29 on-chain metadata, fee config authority revocation)

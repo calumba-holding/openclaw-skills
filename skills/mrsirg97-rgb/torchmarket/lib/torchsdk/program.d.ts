@@ -92,12 +92,50 @@ export interface LoanPosition {
     last_update_slot: BN;
     bump: number;
 }
+export interface ShortPosition {
+    user: PublicKey;
+    mint: PublicKey;
+    sol_collateral: BN;
+    tokens_borrowed: BN;
+    accrued_interest: BN;
+    last_update_slot: BN;
+    bump: number;
+}
+export interface ShortConfig {
+    mint: PublicKey;
+    total_tokens_lent: BN;
+    active_positions: BN;
+    total_interest_collected: BN;
+    bump: number;
+}
+export interface UserStats {
+    user: PublicKey;
+    total_volume: BN;
+    volume_current_epoch: BN;
+    volume_previous_epoch: BN;
+    last_epoch_claimed: BN;
+    total_rewards_claimed: BN;
+    last_volume_epoch: BN;
+    bump: number;
+}
+export interface ProtocolTreasury {
+    authority: PublicKey;
+    current_balance: BN;
+    reserve_floor: BN;
+    total_fees_received: BN;
+    total_distributed: BN;
+    current_epoch: BN;
+    last_epoch_ts: BN;
+    total_volume_current_epoch: BN;
+    total_volume_previous_epoch: BN;
+    distributable_amount: BN;
+    bump: number;
+}
 export declare const decodeString: (bytes: number[]) => string;
 export declare const getGlobalConfigPda: () => [PublicKey, number];
 export declare const getBondingCurvePda: (mint: PublicKey) => [PublicKey, number];
 export declare const getTreasuryTokenAccount: (mint: PublicKey, treasury: PublicKey) => PublicKey;
 export declare const getUserPositionPda: (bondingCurve: PublicKey, user: PublicKey) => [PublicKey, number];
-export declare const getVoteRecordPda: (bondingCurve: PublicKey, voter: PublicKey) => [PublicKey, number];
 export declare const getTokenTreasuryPda: (mint: PublicKey) => [PublicKey, number];
 export declare const getProtocolTreasuryPda: () => [PublicKey, number];
 export declare const getUserStatsPda: (user: PublicKey) => [PublicKey, number];
@@ -107,15 +145,16 @@ export declare const getCollateralVaultPda: (mint: PublicKey) => [PublicKey, num
 export declare const getTorchVaultPda: (creator: PublicKey) => [PublicKey, number];
 export declare const getVaultWalletLinkPda: (wallet: PublicKey) => [PublicKey, number];
 export declare const getTreasuryLockPda: (mint: PublicKey) => [PublicKey, number];
+export declare const getShortPositionPda: (mint: PublicKey, shorter: PublicKey) => [PublicKey, number];
+export declare const getShortConfigPda: (mint: PublicKey) => [PublicKey, number];
 export declare const getTreasuryLockTokenAccount: (mint: PublicKey, treasuryLock: PublicKey) => PublicKey;
 export declare const getProgram: (provider: AnchorProvider) => Program;
 export declare const calculateTokensOut: (solAmount: bigint, virtualSolReserves: bigint, virtualTokenReserves: bigint, realSolReserves?: bigint, // V2.3: needed for dynamic rate calculation
-protocolFeeBps?: number, // [V4.0] 0.5% protocol fee (was 1%) (90% protocol treasury, 10% dev)
-treasuryFeeBps?: number, // 1% treasury fee
+protocolFeeBps?: number, // [V4.0] 0.5% protocol fee (90% protocol treasury, 10% dev)
+treasuryFeeBps?: number, // [V10] 0% token treasury fee (removed — treasury funded by dynamic SOL rate + transfer fees)
 bondingTarget?: bigint) => {
     tokensOut: bigint;
     tokensToUser: bigint;
-    tokensToCommunity: bigint;
     protocolFee: bigint;
     treasuryFee: bigint;
     solToCurve: bigint;

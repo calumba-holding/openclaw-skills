@@ -5,7 +5,7 @@
  */
 import { Connection, PublicKey } from '@solana/web3.js';
 import { BondingCurve, Treasury } from './program';
-import { TokenDetail, TokenListParams, TokenListResult, HoldersResult, MessagesResult, LendingInfo, LoanPositionInfo, AllLoanPositionsResult, VaultInfo, VaultWalletLinkInfo, TokenMetadataResult } from './types';
+import { TokenDetail, TokenListParams, TokenListResult, HoldersResult, MessagesResult, LendingInfo, LoanPositionInfo, ShortPositionInfo, AllLoanPositionsResult, VaultInfo, VaultWalletLinkInfo, UserStatsInfo, ProtocolTreasuryInfo, TreasuryInfo, TokenMetadataResult } from './types';
 declare const fetchTokenRaw: (connection: Connection, mint: PublicKey) => Promise<{
     bondingCurve: BondingCurve;
     treasury: Treasury | null;
@@ -51,6 +51,13 @@ export declare const getLendingInfo: (connection: Connection, mintStr: string) =
  */
 export declare const getLoanPosition: (connection: Connection, mintStr: string, walletStr: string) => Promise<LoanPositionInfo>;
 /**
+ * Get a user's short position for a given token.
+ *
+ * Reads the ShortPosition PDA on-chain and computes health status
+ * using the Raydium pool price to value the token debt against SOL collateral.
+ */
+export declare const getShortPosition: (connection: Connection, mintStr: string, walletStr: string) => Promise<ShortPositionInfo>;
+/**
  * Get all active loan positions for a given token mint.
  *
  * Scans on-chain LoanPosition accounts, computes health for each,
@@ -77,5 +84,8 @@ export declare const getVaultForWallet: (connection: Connection, walletStr: stri
  * Returns the link info (which vault it's linked to, when) or null if not linked.
  */
 export declare const getVaultWalletLink: (connection: Connection, walletStr: string) => Promise<VaultWalletLinkInfo | null>;
+export declare const getUserStats: (connection: Connection, walletStr: string) => Promise<UserStatsInfo | null>;
+export declare const getProtocolTreasuryState: (connection: Connection) => Promise<ProtocolTreasuryInfo | null>;
+export declare const getTreasuryState: (connection: Connection, mintStr: string) => Promise<TreasuryInfo | null>;
 export { fetchTokenRaw };
 //# sourceMappingURL=tokens.d.ts.map
