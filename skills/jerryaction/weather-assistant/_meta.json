@@ -1,0 +1,11 @@
+{
+  "owner": "jerryaction",
+  "slug": "weather-assistant",
+  "displayName": "Weather Assistant",
+  "latest": {
+    "version": "1.1.0",
+    "publishedAt": 1777199757959,
+    "commit": null
+  },
+  "history": []
+}
