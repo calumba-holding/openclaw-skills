@@ -75,7 +75,8 @@ def ppt_generate(api_key: str, query: str, style_id: int = 0, tpl_id: int = None
     """Generate PPT - simple version"""
     headers = {
         "Authorization": "Bearer %s" % api_key,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Appbuilder-From": "openclaw",
     }
     
     # Get theme
@@ -104,7 +105,8 @@ def ppt_generate(api_key: str, query: str, style_id: int = 0, tpl_id: int = None
         "title": outline.title,
         "style_id": style_id,
         "tpl_id": tpl_id,
-        "web_content": web_content
+        "web_content": web_content,
+        "enable_save_bos": True,
     }
     with requests.post(URL_PREFIX + "generate_ppt_by_outline", headers=headers, json=params, stream=True) as response:
         if response.status_code != 200:
