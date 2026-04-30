@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-streaming-picks-query",
+  "displayName": "IMDb Streaming Picks API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777322256530,
+    "commit": null
+  },
+  "history": []
+}
