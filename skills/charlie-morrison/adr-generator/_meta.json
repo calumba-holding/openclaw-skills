@@ -1,0 +1,11 @@
+{
+  "owner": "charlie-morrison",
+  "slug": "adr-generator",
+  "displayName": "ADR Generator",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777249041023,
+    "commit": null
+  },
+  "history": []
+}
