@@ -1,0 +1,11 @@
+{
+  "owner": "zvirb",
+  "slug": "google-drive-download-file",
+  "displayName": "Google Drive Download File",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777263341600,
+    "commit": null
+  },
+  "history": []
+}
