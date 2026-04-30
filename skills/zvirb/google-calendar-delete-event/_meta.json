@@ -1,0 +1,11 @@
+{
+  "owner": "zvirb",
+  "slug": "google-calendar-delete-event",
+  "displayName": "Google Calendar Delete Event",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1777263322331,
+    "commit": null
+  },
+  "history": []
+}
