@@ -1,0 +1,11 @@
+{
+  "owner": "api00",
+  "slug": "revid-shopify-product-promo",
+  "displayName": "Shopify Product Promo",
+  "latest": {
+    "version": "1.2.1",
+    "publishedAt": 1777201794448,
+    "commit": null
+  },
+  "history": []
+}
