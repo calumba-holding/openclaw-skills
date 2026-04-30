@@ -1,0 +1,28 @@
+{
+  "name": "Legal Discovery Request Planner",
+  "slug": "legal-discovery-request-planner",
+  "version": "1.0.0",
+  "description": "Helps litigation teams plan discovery objectives, request categories, custodians, objections, and production review workflows.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "discovery",
+    "ediscovery",
+    "litigation",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "discovery plan",
+    "document requests",
+    "custodian map",
+    "eDiscovery",
+    "legal-discovery-request-planner",
+    "legal discovery request planner"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
