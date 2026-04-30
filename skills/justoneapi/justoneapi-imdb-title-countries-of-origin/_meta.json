@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-title-countries-of-origin",
+  "displayName": "IMDb Countries of Origin API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777327936024,
+    "commit": null
+  },
+  "history": []
+}
