@@ -1,0 +1,23 @@
+{
+  "name": "conversation-summary-skill",
+  "version": "1.0.0",
+  "description": "OpenClaw skill for conversation summarization",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "openclaw",
+    "skill",
+    "conversation",
+    "summary"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
