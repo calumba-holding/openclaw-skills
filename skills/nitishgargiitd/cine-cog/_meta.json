@@ -1,13 +1,18 @@
 {
   "owner": "nitishgargiitd",
   "slug": "cine-cog",
-  "displayName": "cine-cog",
+  "displayName": "Cine Cog",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1770773935531,
-    "commit": "https://github.com/openclaw/skills/commit/12523f47ecf2d34bb9a096041c9c2fb21facd733"
+    "version": "1.0.11",
+    "publishedAt": 1776925113701,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1770773935531,
+      "commit": "https://github.com/openclaw/skills/commit/12523f47ecf2d34bb9a096041c9c2fb21facd733"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770419708899,

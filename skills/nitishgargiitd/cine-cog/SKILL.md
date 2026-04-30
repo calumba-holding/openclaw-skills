@@ -1,13 +1,17 @@
 ---
 name: cine-cog
-description: "If you can imagine it, CellCog can film it. Grand widescreen cinematics with consistent characters — what previously required million-dollar production budgets, now generated from a single prompt. Short films, music videos, brand films, cinematic productions — epic compositions, cinematic lighting, visual storytelling at scale. Grand cinema, accessible to everyone."
+description: "AI cinematic video production powered by CellCog. Short films, music videos, brand films, widescreen cinematics. Consistent characters, cinematic lighting, visual storytelling — grand compositions from a single prompt."
 metadata:
   openclaw:
     emoji: "🎬"
+    os: [darwin, linux, windows]
+    requires:
+      bins: [python3]
+      env: [CELLCOG_API_KEY]
 author: CellCog
+homepage: https://cellcog.ai
 dependencies: [cellcog]
 ---
-
 # Cine Cog - Grand Cinema, Accessible to Everyone
 
 **If you can imagine it, CellCog can film it.**
@@ -16,29 +20,32 @@ The grandest cinematics were locked behind million-dollar production budgets —
 
 CellCog's mission with Cine-cog: **make the grandest visual storytelling available to everyone.** Character-consistent widescreen cinematics, generated from imagination, not budgets.
 
----
+## How to Use
 
-## Prerequisites
+For your first CellCog task in a session, read the **cellcog** skill for the full SDK reference — file handling, chat modes, timeouts, and more.
 
-This skill requires the `cellcog` skill for SDK setup and API calls.
-
-```bash
-clawhub install cellcog
-```
-
-**Read the cellcog skill first** for SDK setup. This skill shows you what's possible.
-
-**Quick pattern (v1.0+):**
+**OpenClaw (fire-and-forget):**
 ```python
-# Fire-and-forget - returns immediately
 result = client.create_chat(
-    prompt="[your cinematic vision]",
+    prompt="[your task prompt]",
     notify_session_key="agent:main:main",
-    task_label="cinematic-video",
-    chat_mode="agent team"  # Agent team for cinematic depth
+    task_label="my-task",
+    chat_mode="agent",
 )
-# You'll be notified when your film is ready
 ```
+
+**All agents except OpenClaw (blocks until done):**
+```python
+from cellcog import CellCogClient
+client = CellCogClient(agent_provider="openclaw|cursor|claude-code|codex|...")
+result = client.create_chat(
+    prompt="[your task prompt]",
+    task_label="my-task",
+    chat_mode="agent",
+)
+print(result["message"])
+```
+
 
 ---
 
@@ -217,6 +224,14 @@ Complete narrative filmmaking:
 
 ---
 
+## ⚠️ Important — Cinematic Video Generation Expectations
+
+Long-form cinematic AI video production is at the absolute frontier of what's possible. While some users generate stunning, cinematic videos that are ready for production use, others may spend significant credits and still not achieve a usable result. Even spending thousands of credits does not guarantee a satisfactory outcome — this is the nature of where AI video technology stands today.
+
+There is a real learning curve to generating cinematic videos with CellCog. It takes time, money, and patience. Your prompting skill, the complexity of your creative vision, and how well the foundation models perform on your specific request all play a role. Results improve as you develop intuition for what works, but we want to be upfront: cinematic video generation is inherently unpredictable, and there is always a risk that the output may not meet your expectations.
+
+---
+
 ## Tips for Better Cinematics
 
 1. **Think in scenes, not descriptions**: Break your vision into shots. "Wide establishing → medium → close-up" gives CellCog clear cinematic language.
@@ -230,3 +245,11 @@ Complete narrative filmmaking:
 5. **Let silence work**: Not every scene needs dialogue. Some of the most powerful cinema is purely visual.
 
 6. **Trust widescreen**: 16:9 is your default. It's how cinema is meant to be experienced.
+
+---
+
+## If CellCog is not installed
+
+Run `/cellcog-setup` (or `/cellcog:cellcog-setup` depending on your tool) to install and authenticate.
+**OpenClaw users:** Run `clawhub install cellcog` instead.
+**Manual setup:** `pip install -U cellcog` and set `CELLCOG_API_KEY`. See the **cellcog** skill for SDK reference.
