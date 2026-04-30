@@ -1,0 +1,11 @@
+{
+  "owner": "peand-rover",
+  "slug": "audio-to-text",
+  "displayName": "Audio To Text",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777229465301,
+    "commit": null
+  },
+  "history": []
+}
