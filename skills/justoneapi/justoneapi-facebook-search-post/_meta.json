@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-facebook-search-post",
+  "displayName": "Facebook Post Search API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777272311666,
+    "commit": null
+  },
+  "history": []
+}
