@@ -1,0 +1,28 @@
+{
+  "slug": "sv-seo-hashtag",
+  "name": "Short Video SEO & Hashtag Guide",
+  "description": "Guides video SEO strategy — keyword research, hashtag selection, search-optimized descriptions, and discoverability tactics for short video platforms.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "SEO",
+    "hashtag",
+    "discovery",
+    "keywords",
+    "growth",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "video SEO",
+    "hashtag strategy",
+    "keyword research",
+    "video discoverability",
+    "Douyin SEO",
+    "hashtag guide"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
