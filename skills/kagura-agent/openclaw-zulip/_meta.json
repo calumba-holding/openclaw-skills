@@ -1,0 +1,11 @@
+{
+  "owner": "kagura-agent",
+  "slug": "openclaw-zulip",
+  "displayName": "OpenClaw Zulip Channel Plugin",
+  "latest": {
+    "version": "0.1.0",
+    "publishedAt": 1777187441262,
+    "commit": null
+  },
+  "history": []
+}
