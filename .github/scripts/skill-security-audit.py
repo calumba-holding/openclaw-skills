@@ -46,6 +46,12 @@ CODE_EXTENSIONS = {
     ".tsx",
 }
 
+SHELL_EXTENSIONS = {
+    ".bash",
+    ".ps1",
+    ".sh",
+}
+
 CONTENT_ONLY_PARTS = {
     "docs",
     "documentation",
@@ -53,6 +59,27 @@ CONTENT_ONLY_PARTS = {
     "reference",
     "references",
     "templates",
+}
+
+TEST_PATH_PARTS = {
+    "__tests__",
+    "test",
+    "tests",
+    "fixture",
+    "fixtures",
+    "mock",
+    "mocks",
+}
+
+TEST_NAME_MARKERS = {
+    ".spec.",
+    ".test.",
+    "-spec.",
+    "-test.",
+    "_spec.",
+    "_test.",
+    "fixture",
+    "mock",
 }
 
 BINARY_EXTENSIONS = {
@@ -254,17 +281,33 @@ def is_content_only_path(path: Path) -> bool:
     return any(part.lower() in CONTENT_ONLY_PARTS for part in path.parts)
 
 
+def is_test_path(path: Path) -> bool:
+    lowered_parts = [part.lower() for part in path.parts]
+    lowered_name = path.name.lower()
+    return any(part in TEST_PATH_PARTS for part in lowered_parts) or any(
+        marker in lowered_name for marker in TEST_NAME_MARKERS
+    )
+
+
 def is_code_path(path: Path) -> bool:
-    return path.suffix.lower() in CODE_EXTENSIONS and not is_content_only_path(path)
+    return path.suffix.lower() in CODE_EXTENSIONS and not is_content_only_path(path) and not is_test_path(path)
+
+
+def is_shell_path(path: Path) -> bool:
+    return path.suffix.lower() in SHELL_EXTENSIONS and not is_content_only_path(path) and not is_test_path(path)
+
+
+def is_skill_entrypoint(path: Path) -> bool:
+    return path.name == "SKILL.md" and not is_content_only_path(path) and not is_test_path(path)
 
 
 def should_report_to_sarif(rule_id: str, signal: str, path: Path, line: str) -> bool:
     if rule_id == "suspicious.install_untrusted_source":
         return True
     if signal == "network-fetch-piped-to-shell":
-        return True
+        return is_shell_path(path) or is_skill_entrypoint(path)
     if signal in {"private-key-block", "provider-secret-token"}:
-        return True
+        return not is_content_only_path(path) and not is_test_path(path)
     if signal == "reverse-shell":
         return is_code_path(path)
     if signal == "large-base64-like-payload":
