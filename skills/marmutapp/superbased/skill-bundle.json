@@ -1,0 +1,60 @@
+{
+  "slug": "superbased",
+  "name": "SuperBased",
+  "version": "2.0.2",
+  "description": "Screen capture, AI vision, OCR, recording, dictation, and full GUI automation (72 MCP tools) with humanization v2 + CAPTCHA-solving guidance — gives OpenClaw agents eyes on the screen and hands on the desktop.",
+  "homepage": "https://superbased.app",
+  "repository": "https://github.com/marmutapp/superbased-openclaw-plugin",
+  "license": "MIT",
+  "author": {
+    "name": "Gaja AI",
+    "email": "contact@marmut.app"
+  },
+  "tags": [
+    "screenshot",
+    "screen-capture",
+    "ocr",
+    "ai-vision",
+    "screen-recording",
+    "visual-testing",
+    "token-compression",
+    "dictation",
+    "monitor",
+    "gui-automation",
+    "click-automation",
+    "form-fill",
+    "captcha",
+    "humanization",
+    "mcp"
+  ],
+  "skills": [
+    "screenshot",
+    "visual-qa",
+    "monitor",
+    "compress",
+    "redact",
+    "dictation",
+    "annotate",
+    "walkthrough",
+    "gui-automation",
+    "captcha-solving",
+    "humanization"
+  ],
+  "requirements": {
+    "mcpServer": {
+      "name": "superbased",
+      "transport": "stdio",
+      "command": "superbased",
+      "args": [
+        "mcp"
+      ],
+      "installHint": "npm install -g superbased"
+    },
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "node": ">=20"
+  }
+}
