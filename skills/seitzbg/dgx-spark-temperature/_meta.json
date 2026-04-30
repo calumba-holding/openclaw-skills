@@ -1,0 +1,11 @@
+{
+  "owner": "seitzbg",
+  "slug": "dgx-spark-temperature",
+  "displayName": "Dgx Spark Temperature",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777261318320,
+    "commit": null
+  },
+  "history": []
+}
