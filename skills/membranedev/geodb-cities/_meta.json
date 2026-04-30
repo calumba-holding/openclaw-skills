@@ -3,9 +3,15 @@
   "slug": "geodb-cities",
   "displayName": "Geodb Cities",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1773284547347,
-    "commit": "https://github.com/openclaw/skills/commit/b8f6b512e0ff79009eaef35c5c4376f8371ba505"
+    "version": "1.0.5",
+    "publishedAt": 1777562981112,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1773284547347,
+      "commit": "https://github.com/openclaw/skills/commit/b8f6b512e0ff79009eaef35c5c4376f8371ba505"
+    }
+  ]
 }
