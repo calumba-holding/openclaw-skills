@@ -1,0 +1,17 @@
+{
+  "name": "sms-verify-code-assistant",
+  "version": "1.0.11",
+  "description": "短信验证码查询助手（Python3实现）。通过手机号查询最新短信验证码，返回验证码、短信内容和发送时间。**需要配置环境变量 SMS_AUTH_TOKEN**。",
+  "homepage": "https://www.ddguanhuai.com/",
+  "openclaw": {
+    "type": "model-skill",
+    "runtime": "python3",
+    "entry": "./scripts/sms_verify_code.py",
+    "env": {
+      "SMS_AUTH_TOKEN": {
+        "description": "API 认证 Token",
+        "required": true
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "owner": "romicboy",
+  "slug": "sms-verify-code-assistant",
+  "displayName": "短信验证码查询",
+  "latest": {
+    "version": "1.0.11",
+    "publishedAt": 1777302349521,
+    "commit": null
+  },
+  "history": []
+}
