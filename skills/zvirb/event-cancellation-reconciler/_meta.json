@@ -1,0 +1,11 @@
+{
+  "owner": "zvirb",
+  "slug": "event-cancellation-reconciler",
+  "displayName": "Event Cancellation Reconciler",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777335312037,
+    "commit": null
+  },
+  "history": []
+}
