@@ -3,11 +3,16 @@
   "slug": "tally-api",
   "displayName": "Tally",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1770762452926,
-    "commit": "https://github.com/openclaw/skills/commit/03702c904b43628d95ac6cd86225df3fe5d51dea"
+    "version": "1.0.3",
+    "publishedAt": 1777589093974,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1770762452926,
+      "commit": "https://github.com/openclaw/skills/commit/03702c904b43628d95ac6cd86225df3fe5d51dea"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770638139943,

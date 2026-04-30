@@ -25,7 +25,7 @@ Access the Tally API with managed OAuth authentication. Manage forms, submission
 # List your forms
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/tally/forms')
+req = urllib.request.Request('https://api.maton.ai/tally/forms')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('User-Agent', 'Maton/1.0')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/tally/{native-api-path}
+https://api.maton.ai/tally/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Tally API endpoint path. The gateway proxies requests to `api.tally.so` and automatically injects your OAuth token.
+Maton proxies requests to `api.tally.so` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -63,14 +63,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Tally OAuth connections at `https://ctrl.maton.ai`.
+Manage your Tally OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=tally&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=tally&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -82,7 +82,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'tally'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -104,7 +104,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "cd54e2b0-f1d0-435e-a97d-f2d6a5c474bf",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-07T21:00:31.222600Z",
     "last_updated_time": "2026-02-07T21:00:37.821240Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,14 +135,19 @@ If you have multiple Tally connections, specify which one to use with the `Maton
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/tally/forms')
+req = urllib.request.Request('https://api.maton.ai/tally/forms')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'cd54e2b0-f1d0-435e-a97d-f2d6a5c474bf')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to forms, submissions, workspaces, and webhooks within the connected Tally account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -617,7 +622,7 @@ For submissions, cursor-based pagination is also available using `afterId`.
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/tally/forms',
+  'https://api.maton.ai/tally/forms',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`,
@@ -636,7 +641,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/tally/forms',
+    'https://api.maton.ai/tally/forms',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'User-Agent': 'Maton/1.0'
@@ -682,7 +687,7 @@ form_data = {
 }
 
 response = requests.post(
-    'https://gateway.maton.ai/tally/forms',
+    'https://api.maton.ai/tally/forms',
     headers=headers,
     json=form_data
 )
@@ -691,7 +696,7 @@ print(f"Created form: {form['id']}")
 
 # Get submissions for a form
 response = requests.get(
-    f'https://gateway.maton.ai/tally/forms/{form["id"]}/submissions',
+    f'https://api.maton.ai/tally/forms/{form["id"]}/submissions',
     headers=headers
 )
 submissions = response.json()
@@ -732,7 +737,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -742,8 +747,8 @@ EOF
 
 1. Ensure your URL path starts with `tally`. For example:
 
-- Correct: `https://gateway.maton.ai/tally/forms`
-- Incorrect: `https://gateway.maton.ai/forms`
+- Correct: `https://api.maton.ai/tally/forms`
+- Incorrect: `https://api.maton.ai/forms`
 
 ## Resources
 
