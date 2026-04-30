@@ -1,0 +1,11 @@
+{
+  "owner": "api00",
+  "slug": "revid-product-description-to-ad",
+  "displayName": "Product Description to Ad",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1777201802355,
+    "commit": null
+  },
+  "history": []
+}
