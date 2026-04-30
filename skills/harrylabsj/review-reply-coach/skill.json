@@ -1,0 +1,23 @@
+{
+  "name": "Compliant Review Reply Coach",
+  "description": "Professional, tone-calibrated review response templates — positive (thank + reinforce), neutral (acknowledge + improve), and negative (apologize + resolve + take offline). Includes multi-language support and team policy building.",
+  "version": "1.0.0",
+  "type": "prompt-flow",
+  "category": "E-Commerce / Customer Service",
+  "keywords": [
+    "review reply", "差评回复", "review response", "customer review",
+    "Amazon review reply", "app review reply", "商家回复",
+    "review coach", "好评回复", "中评回复"
+  ],
+  "platforms": ["Amazon", "Taobao", "JD", "Google Reviews", "App Store", "Play Store", "Yelp"],
+  "requires": {},
+  "requires_api": false,
+  "author": "harrylabsj",
+  "license": "MIT",
+  "safety": {
+    "no_code_execution": true,
+    "no_network": true,
+    "no_credentials": true,
+    "compliance_notes": "CRITICAL: NEVER generate fake positive reviews. NEVER impersonate a customer. NEVER suggest review manipulation or removal. Templates are for RESPONDING to existing reviews ONLY. Always professional tone — no angry or defensive replies. Include escalation path for serious complaints."
+  }
+}
