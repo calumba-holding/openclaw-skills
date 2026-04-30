@@ -1,0 +1,11 @@
+{
+  "owner": "bhrum",
+  "slug": "litellm-vertex-codex",
+  "displayName": "Src",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777302928911,
+    "commit": null
+  },
+  "history": []
+}
