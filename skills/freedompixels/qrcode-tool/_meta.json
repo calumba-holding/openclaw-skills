@@ -1,0 +1,11 @@
+{
+  "owner": "freedompixels",
+  "slug": "qrcode-tool",
+  "displayName": "QRCode Generator",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777294541683,
+    "commit": null
+  },
+  "history": []
+}
