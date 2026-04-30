@@ -1,0 +1,11 @@
+{
+  "owner": "justoneapi",
+  "slug": "justoneapi-imdb-title-awards-summary-query",
+  "displayName": "IMDb Awards Summary API",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777322267210,
+    "commit": null
+  },
+  "history": []
+}
