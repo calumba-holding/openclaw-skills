@@ -1,140 +1,89 @@
 # Competitive Battlecard Template
 
-Fill-in template for competitive battlecards. Maintain one per major competitor, review quarterly.
+Maintain one battlecard per major competitor. Audience: sales, content strategy, and marketing leadership. Review quarterly, and immediately after pricing, feature, funding, review-trend, or win/loss changes.
 
-**Audience:** Sales, content strategy, marketing leadership
-**Update frequency:** Quarterly minimum; immediately on major competitor changes
-**Length target:** 2-3 pages per competitor (scannable)
+## Copy-Start Battlecard
 
----
+```markdown
+# Competitive Battlecard: [Competitor Name]
 
-## Battlecard Template
+**Last updated**: [date]
+**Owner**: [name/team]
+**Confidence**: [High/Medium/Low]
 
-### Header
-
-```
-COMPETITIVE BATTLECARD: [Competitor Name]
-Last Updated: [Date] | Updated By: [Name/Team]
-Confidence Level: [High/Medium/Low]
-```
-
-### Section 1: Competitor Overview
-
+## 1. Competitor Overview
 | Field | Details |
 |-------|---------|
-| **Company** | [Name] |
-| **Website** | [URL] |
-| **Founded** | [Year] |
-| **Size** | [Employees] |
-| **Funding/Revenue** | [Known data] |
-| **Target Customer** | [SMB/mid-market/enterprise] |
-| **Pricing** | [Model] | [Range] |
+| Company / website | [name] / [URL] |
+| Founded / size | [year] / [employees] |
+| Funding / revenue | [known data + source] |
+| Target customer | [SMB/mid-market/enterprise/persona] |
+| Pricing | [model + range + source date] |
+| Summary | [Competitor] helps [audience] achieve [benefit] through [mechanism]. |
 
-**Summary:** [Competitor] is a [category] that helps [audience] to [benefit] by [mechanism].
+## 2. Their Pitch
+**Tagline**: "[exact tagline]"
 
-### Section 2: Their Pitch
+| Claimed differentiator | Evidence | Counterpoint |
+|------------------------|----------|--------------|
+| [claim] | [source/demo/review] | [where your position is stronger] |
 
-**Tagline:** "[Their exact tagline]"
+**Reverse-engineered positioning**: For [audience], [product] is the [category] that [benefit] because [reason].
 
-**Top 3 Claimed Differentiators:**
-1. [Differentiator 1]
-2. [Differentiator 2]
-3. [Differentiator 3]
+## 3. Strengths and Weaknesses
+| Type | Item | Evidence | Deal impact / exploit path |
+|------|------|----------|----------------------------|
+| Strength | [strength] | [review/demo/customer quote] | [how it affects deals] |
+| Weakness | [weakness] | [G2/Capterra/support thread/date] | [talking point or demo moment] |
 
-**Positioning (reverse-engineered):**
-> For [audience], [product] is the [category] that [benefit] because [reason].
+**Common complaint quote**: "[short exact quote]" - [source, date]
 
-### Section 3: Strengths (Be Honest)
+## 4. Your Differentiators
+| Differentiator | Your advantage | Proof point | How to demo |
+|----------------|----------------|-------------|-------------|
+| [diff] | [what you do better] | [data/testimonial] | [demo step] |
 
-| Strength | Evidence | Impact on Deals |
-|----------|---------|----------------|
-| [Strength 1] | [Source: reviews, demos, feedback] | [Win rate impact] |
+## 5. Feature and Pricing Comparison
+| Area | You | [Competitor] | Advantage / caveat |
+|------|-----|--------------|--------------------|
+| Core feature | [Yes/No/Partial] | [Yes/No/Partial] | [context] |
+| Entry tier | [price + included] | [price + included] | [who wins] |
+| Mid-market | [price + included] | [price + included] | [who wins] |
+| Enterprise | [price + included] | [price + included] | [who wins] |
 
-### Section 4: Weaknesses
+**Hidden costs to validate**: [extra seats, add-ons, usage limits, implementation, support, migration].
 
-| Weakness | Evidence | How to Exploit |
-|----------|---------|---------------|
-| [Weakness 1] | [G2/Capterra/complaints] | [Talking point or demo moment] |
+## 6. Objection Handling and Landmines
+| Scenario | Response or question | Evidence / exposed advantage |
+|----------|----------------------|------------------------------|
+| "[Competitor] has more features" | [focus on outcome and adoption] | [case study/data] |
+| "[Competitor] is cheaper" | [TCO/ROI frame] | [pricing comparison] |
+| "We already use [Competitor]" | [migration ease] | [migration proof] |
+| Landmine: "How important is [your capability]?" | [exposes need] | [your capability] |
 
-**Common Complaints:**
-- "[Exact quote]" -- [Source, Date]
+## 7. Win/Loss and Market Intelligence
+| Theme | Win reasons | Loss reasons | Action |
+|-------|-------------|--------------|--------|
+| Product | [features that won] | [gaps that lost] | [roadmap/sales enablement] |
+| Pricing | [advantage] | [disadvantage] | [packaging response] |
+| Relationship | [support/sales quality] | [incumbency] | [proof or nurture] |
 
-### Section 5: Your Differentiators
+## 8. SEO/GEO Intelligence
+| Dimension | [Competitor] | Your position | Action |
+|-----------|--------------|---------------|--------|
+| Domain authority | [score + source/date] | [score + source/date] | [gap response] |
+| Organic traffic | [monthly + source/date] | [monthly + source/date] | [content priority] |
+| Keywords in top 10 | [count + source/date] | [count + source/date] | [keyword gap] |
+| Content publishing | [posts/month + source/date] | [posts/month + source/date] | [cadence response] |
+| AI citation frequency | [High/Med/Low + source/date] | [High/Med/Low + source/date] | [GEO response] |
+```
 
-| Differentiator | Your Advantage | Proof Point | How to Demo |
-|---------------|---------------|------------|-------------|
-| [Diff 1] | [What you do better] | [Data/testimonial] | [Demo step] |
+## Maintenance Checklist
 
-### Section 6: Feature Comparison
-
-| Feature/Capability | You | [Competitor] | Notes |
-|-------------------|-----|-------------|-------|
-| [Feature 1] | [Yes/No/Partial] | [Yes/No/Partial] | [Context] |
-
-### Section 7: Pricing Comparison
-
-| Tier | You | [Competitor] | Advantage |
-|------|-----|-------------|-----------|
-| Entry/Free | [Price + included] | [Price + included] | [Who wins] |
-| Mid-tier | [Price + included] | [Price + included] | [Who wins] |
-| Enterprise | [Price + included] | [Price + included] | [Who wins] |
-
-**Hidden Costs to Highlight:**
-- [Competitor charges extra for X, which you include]
-
-### Section 8: Objection Handling
-
-| When They Say... | You Respond With... | Evidence |
-|-----------------|--------------------|--------------------|
-| "[Competitor] has more features" | [Focus on outcomes] | [Case study/data] |
-| "[Competitor] is cheaper" | [Focus on total value/ROI] | [TCO comparison] |
-| "We're already using [Competitor]" | [Focus on switching ease] | [Migration case study] |
-
-### Section 9: Landmine Questions
-
-| Landmine Question | What It Exposes | Your Advantage |
-|------------------|----------------|---------------|
-| "How important is [your capability] to your workflow?" | Creates need for your differentiator | [Your capability] |
-| "Have you experienced [competitor pain point]?" | Surfaces known weakness | [Your solution] |
-
-### Section 10: Win/Loss Analysis
-
-| Theme | Win Reasons | Loss Reasons |
-|-------|-----------|-------------|
-| Product | [Features that drove win] | [Gaps that caused loss] |
-| Pricing | [Price advantage] | [Price disadvantage] |
-| Relationship | [Sales/support quality] | [Better existing relationship] |
-
-### Section 11: SEO/Content Intelligence
-
-| Dimension | [Competitor] | Your Position |
-|-----------|-------------|--------------|
-| Domain Authority | [Score] | [Score] |
-| Organic traffic | [Monthly] | [Monthly] |
-| Keywords in top 10 | [Count] | [Count] |
-| Content publishing | [Posts/month] | [Posts/month] |
-| AI citation frequency | [High/Med/Low] | [High/Med/Low] |
-
----
-
-## Battlecard Maintenance
-
-### Update Triggers
-
-| Trigger | What to Update |
-|---------|---------------|
-| New feature launch | Feature comparison, differentiators |
-| Pricing change | Pricing comparison, objection handling |
-| Funding/IPO | Overview, positioning |
-| Review trends change | Weaknesses, objection handling |
-| Significant win/loss | Win/loss analysis |
-
-### Quarterly Review Checklist
-
-- [ ] Verify pricing is current
-- [ ] Check for new features
-- [ ] Review latest G2/Capterra reviews
-- [ ] Update win/loss analysis
-- [ ] Refresh SEO/content metrics
-- [ ] Confirm differentiators still accurate
-- [ ] Test landmine questions with sales team
+- [ ] Pricing, packages, and hidden costs verified with source dates.
+- [ ] New feature launches reflected in comparison and objections.
+- [ ] Latest G2/Capterra/review trends checked.
+- [ ] Win/loss notes updated with recent sales feedback.
+- [ ] SEO/GEO metrics refreshed with source and date.
+- [ ] Differentiators and landmine questions tested with sales.
+- [ ] Confidence level adjusted if evidence is stale or incomplete.

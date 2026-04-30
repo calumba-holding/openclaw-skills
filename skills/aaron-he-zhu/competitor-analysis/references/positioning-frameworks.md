@@ -1,176 +1,106 @@
 # Positioning Frameworks
 
-Frameworks for analyzing competitor positioning, developing positioning strategy, and identifying differentiation opportunities.
+Use these compact frameworks to map competitor positioning, find white space, and turn differentiation into defensible messaging.
 
----
+## Positioning Statements
 
-## 1. Positioning Statement Templates
+```text
+Classic:
+For [target audience], [brand] is the [category] that [key benefit] because [proof].
 
-### Classic Positioning Statement
+Extended:
+For [audience] who [need], [brand] is the [category] that [functional benefit],
+unlike [alternative], because [unique capability]. This matters because [outcome].
 
-```
-For [target audience],
-[product/brand] is the [category]
-that [key benefit / point of difference]
-because [reason to believe / proof point].
-```
+Before/After/Bridge:
+Before: [painful current state]
+After: [desired state]
+Bridge: [product] makes this possible by [mechanism].
 
-### Extended Positioning Statement
-
-```
-For [target audience] who [situation/need],
-[product/brand] is the [category]
-that [functional benefit]
-unlike [competitive alternative]
-because [unique capability / proof].
-This matters because [emotional benefit / outcome].
+PAS:
+Problem: [struggle]
+Agitation: [why it matters now]
+Solution: [different solution]
 ```
 
-### Before/After/Bridge
+## Positioning Map
 
-```
-BEFORE: [Current painful state]
-AFTER:  [Desired improved state]
-BRIDGE: [Your product] makes this possible by [mechanism].
-```
-
-### Problem-Agitation-Solution
-
-```
-PROBLEM:    [What the target audience struggles with]
-AGITATION:  [Why this problem is worse than they think]
-SOLUTION:   [How your product solves it differently]
-```
-
----
-
-## 2. Positioning Map (2x2 Matrix)
-
-### Steps
-
-1. **Choose axes**: Meaningful to buyers, differentiating, independent of each other
-2. **Plot competitors** (including yourself) based on objective assessment
-3. **Identify white space**: empty quadrants = opportunity; crowded clusters = avoid or reframe
-4. **Choose your position**: aligns with capabilities, serves underserved segment, defensible
-
-### Common Axis Pairs
+1. Choose buyer-relevant, independent axes.
+2. Plot direct competitors, indirect alternatives, and your current position.
+3. Identify white space, crowded clusters, and places where the axis itself is wrong.
+4. Pick a position that is capability-aligned, underserved, and defensible.
 
 | Axis Pair | X-Axis | Y-Axis |
 |-----------|--------|--------|
-| Value | Price (Low->High) | Capability (Basic->Advanced) |
-| UX | Ease of Use (Complex->Simple) | Power (Limited->Comprehensive) |
-| Audience | SMB Focus <-> Enterprise Focus | Point Solution <-> Full Platform |
-| Innovation | Established <-> Cutting-Edge | Niche <-> Broad |
-
-### Anti-Patterns
+| Value | Price low -> high | Capability basic -> advanced |
+| UX | Complex -> simple | Limited -> powerful |
+| Audience | SMB -> enterprise | Point solution -> platform |
+| Innovation | Established -> new | Niche -> broad |
 
 | Anti-Pattern | Fix |
-|-------------|-----|
-| Aspiration mapping (where you want to be) | Plot current position; roadmap to desired |
-| Vanity axes (make you look good) | Validate axes with customer research |
-| Missing competitors (only direct) | Include indirect competitors and alternatives |
-| Static mapping (built once) | Refresh quarterly |
+|--------------|-----|
+| Aspiration map | Plot current position, then roadmap desired position |
+| Vanity axes | Validate axes with customer language |
+| Direct-only competitors | Include indirect tools, services, spreadsheets, and status quo |
+| Static map | Refresh quarterly or after major competitor launches |
 
----
+## Category Strategy
 
-## 3. Category Strategy Options
+| Strategy | Use When | Messaging Pattern | Main Risk |
+|----------|----------|-------------------|-----------|
+| Win existing category | Product is clearly better in a known frame | `The best [category] for [audience]` | Expensive head-to-head competition |
+| Create sub-category | Differentiator deserves its own label | `The first [new sub-category]` | Market may not search for it |
+| Create new category | Existing categories mislead buyers | `Introducing [new category]` | High education cost |
+| Reframe category | Existing frame favors incumbents | `Stop thinking [old]. Start thinking [new].` | Confusion if proof is weak |
 
-| Strategy | When to Use | Messaging Pattern | Risk |
-|----------|-----------|-----------------|------|
-| Win Existing Category | Genuinely superior product | "The best [category] for [audience]" | Head-to-head competition |
-| Create Sub-Category | Genuine differentiator deserves own label | "The first [new sub-category]" | Market may not recognize it |
-| Create New Category | Product doesn't fit existing categories | "Introducing [new category]" | High education cost |
-| Reframe Category | Existing frame disadvantages you | "Stop thinking [old]. Start thinking [new]." | Confusing prospects |
+Decision rule: if SEO demand and buyer language already exist, prefer existing category or sub-category. Use new-category moves only when product reality cannot fit the old frame.
 
-### Decision Matrix
+## Differentiation Audit
 
-| Factor | Win Existing | New Sub-Category | New Category | Reframe |
-|--------|-------------|-----------------|-------------|---------|
-| Product differentiation | Low-Medium | Medium-High | Very High | Medium |
-| Market education cost | Low | Medium | Very High | High |
-| Competitive intensity | High | Medium | Low (initially) | Medium |
-| SEO difficulty | High | Medium | Low | Medium |
+| Dimension | Your Approach | Competitor Approach | Strength | Defensibility |
+|-----------|---------------|---------------------|----------|---------------|
+| Core technology | [tech] | [their tech] | Weak/Med/Strong | Easy/Hard |
+| Target audience | [audience] | [audience] | Weak/Med/Strong | Easy/Hard |
+| Pricing model | [model] | [model] | Weak/Med/Strong | Easy/Hard |
+| Data/network | [advantage] | [advantage] | Weak/Med/Strong | Easy/Hard |
+| Methodology | [framework] | [framework] | Weak/Med/Strong | Easy/Hard |
 
----
+**Only-we test**: "Only [company] [does X] because [unique reason]." If a competitor can credibly say it, it is not a durable differentiator.
 
-## 4. Differentiation Playbooks
-
-### Types of Differentiation (by durability)
-
-| Type | Strength | Durability | Example |
-|------|---------|-----------|---------|
-| Feature | Low | Low (easily copied) | "We have feature X" |
-| Integration | Medium | Medium | "We connect to Y ecosystem" |
-| Experience | Medium-High | Medium-High | "UX designed for Z workflow" |
-| Data/Network | High | High | "Data from N users improves results" |
-| Methodology | High | High | "We invented the X framework" |
-| Mission/Values | High | Very High | "Only [category] focused on [mission]" |
-
-### Differentiation Audit Template
-
-| Dimension | Your Approach | Competitor's Approach | Strength | Defensibility |
-|-----------|-------------|---------------------|----------|--------------|
-| Core technology | [Your tech] | [Their tech] | [Weak/Medium/Strong] | [Easy/Hard to copy] |
-| Target audience | [Your audience] | [Their audience] | [Weak/Medium/Strong] | [Easy/Hard to copy] |
-| Pricing model | [Your model] | [Their model] | [Weak/Medium/Strong] | [Easy/Hard to copy] |
-| Data advantage | [Your data] | [Their data] | [Weak/Medium/Strong] | [Easy/Hard to copy] |
-
-### The "Only We" Test
-
-> "Only [your company] [does X] because [unique reason]."
-
-If a competitor could make the same claim, it is not a true differentiator.
-
-### Differentiation Messaging Formula
-
-```
-We're the only [category] that [unique capability]
-which means [customer benefit]
+```text
+Differentiation message:
+We're the only [category] that [unique capability],
+which means [customer benefit],
 so you can [desired outcome].
 ```
 
----
+## Messaging Vulnerability Scan
 
-## 5. Messaging Vulnerability Analysis
+| Vulnerability | Evidence | Counter |
+|---------------|----------|---------|
+| Promise-reality gap | Reviews, support complaints, churn comments | Proof of delivery, customer evidence |
+| Specificity gap | Vague claims, no metrics | Specific metric for a specific audience |
+| Audience mismatch | Enterprise copy for SMB pain, or reverse | Speak to ignored segment |
+| Legacy positioning | Old category story no longer fits | Position against their outdated frame |
+| Feature overload | Feature list without outcome | Lead with business outcome |
+| Price opacity | Hidden fees, unclear TCO | Transparent pricing or TCO comparison |
 
-### Vulnerability Types
+## Counter-Positioning Patterns
 
-| Type | How to Exploit |
-|------|---------------|
-| Promise-Reality Gap | Reference review data; offer proof of delivery |
-| Specificity Gap (vague claims) | Be specific with data-backed claims |
-| Audience Mismatch | Speak directly to underserved audience |
-| Legacy Positioning (outdated) | Position against their OLD story |
-| Feature Overload | Lead with outcomes, not features |
-| Price Sensitivity | Be transparent; create TCO comparisons |
+| Pattern | Use When | Example Shape |
+|---------|----------|---------------|
+| Contrast | Incumbent has clear weakness | `Unlike [competitor], we [strength].` |
+| Flanking | Competitor ignores valuable segment | `Built specifically for [segment].` |
+| Reframing | Their strength creates downside | `[Feature] sounds good until [consequence].` |
+| Elevation | Feature war is crowded | `What matters is [higher-level outcome].` |
+| Specificity | Competitor is vague | `[metric] for [audience] in [timeframe].` |
 
-### Competitor Messaging Audit
+## Combined Workflow
 
-| Touchpoint | Their Message | Vulnerability? | Your Counter-Message |
-|-----------|-------------|---------------|---------------------|
-| Homepage hero | [headline] | [what's weak?] | [your angle] |
-| Pricing page | [framing] | [what's hidden?] | [your transparency] |
-| Blog/content | [themes] | [what's missing?] | [your differentiation] |
-| Customer reviews | [what they say] | [gap from claims?] | [your alignment] |
-
-### Counter-Positioning Strategies
-
-| Strategy | When to Use | Pattern |
-|----------|-----------|---------|
-| Contrast | Dominant competitor has clear weakness | "Unlike [competitor], we [strength]" |
-| Flanking | Competitor ignores valuable segment | "Built specifically for [segment]" |
-| Reframing | Their strength is a disguised weakness | "[Feature] sounds good until [consequence]" |
-| Elevation | Feature competition is a losing game | "What matters is [higher-level outcome]" |
-| Specificity | Competitor uses vague claims | "[Metric] for [audience] in [timeframe]" |
-
----
-
-## Applying Frameworks Together
-
-1. Start with Positioning Maps to understand the landscape
-2. Analyze Category Strategy to frame competitive set
-3. Build Positioning Statement using templates
-4. Audit Differentiation to ensure claims are defensible
-5. Identify Messaging Vulnerabilities for attack angles
-6. Create Battlecards (see [battlecard-template.md](battlecard-template.md))
-7. Review quarterly
+1. Map the category and competitor positions.
+2. Choose category strategy.
+3. Draft a positioning statement.
+4. Run the differentiation audit and only-we test.
+5. Identify messaging vulnerabilities.
+6. Convert the result into battlecards.
+7. Re-check quarterly.

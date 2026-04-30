@@ -1,161 +1,139 @@
-# Competitor Analysis -- Analysis Templates
+# Competitor Analysis — Analysis Templates
 
-Templates for each step of the competitor analysis workflow.
+Compact templates for the competitor-analysis workflow.
 
-## Competitor Profile Template
+## Competitor Profile
 
 ```markdown
 ## Competitor Profile: [Name]
 - URL: [website]
-- Domain Age: [years]
-- Estimated Traffic: [monthly visits]
-- Domain Authority/Rating: [score]
-- Type: [SaaS/E-commerce/Content/etc.]
-- Target Audience: [description]
-- Key Offerings: [products/services]
+- Domain age: [years]
+- Estimated traffic: [monthly visits]
+- Authority: [DA / DR]
+- Type: [SaaS / e-commerce / content / other]
+- Audience: [description]
+- Key offerings: [products / services]
 ```
 
-## Keyword Analysis Template
+## Keyword Analysis
 
 ```markdown
 ### Keyword Analysis: [Competitor]
-**Total Keywords Ranking**: [X] | **Top 10**: [X] | **Top 3**: [X]
-
-#### Top Performing Keywords
+**Total Keywords**: [X] | **Top 10**: [X] | **Top 3**: [X]
 
 | Keyword | Position | Volume | Traffic Est. | Page |
 |---------|----------|--------|--------------|------|
-| [kw 1] | [pos] | [vol] | [traffic] | [url] |
+| [kw] | [pos] | [vol] | [traffic] | [url] |
 
-#### Intent Distribution
-- Informational: [X]% | Commercial: [X]% | Transactional: [X]% | Navigational: [X]%
+**Intent Mix**: Informational [X]% | Commercial [X]% | Transactional [X]% | Navigational [X]%
 
-#### Keyword Gaps (They rank, you don't)
-
-| Keyword | Their Position | Volume | Opportunity |
-|---------|----------------|--------|-------------|
-| [kw 1] | [pos] | [vol] | [analysis] |
+| Gap Keyword | Their Position | Volume | Opportunity |
+|-------------|----------------|--------|-------------|
+| [kw] | [pos] | [vol] | [analysis] |
 ```
 
-## Content Analysis Template
+## Content Analysis
 
 ```markdown
 ### Content Analysis: [Competitor]
+**Content Volume**: Total [X] | Blog [X] | Landing [X] | Resource [X]
 
-**Content Volume**: Total: [X] | Blog: [X] | Landing: [X] | Resources: [X]
-
-#### Top Performing Content
-
-| Title | URL | Est. Traffic | Keywords | Backlinks |
+| Title | URL | Traffic Est. | Keywords | Backlinks |
 |-------|-----|--------------|----------|-----------|
-| [title 1] | [url] | [traffic] | [X] | [X] |
+| [title] | [url] | [traffic] | [X] | [X] |
 
-**Content Patterns**:
-- Avg word count: [X] | Publishing frequency: [X]/month
-- Formats: Blog [X]%, Guides [X]%, Case studies [X]%, Tools [X]%, Videos [X]%
+**Patterns**: Avg word count [X] | Publish frequency [X]/month | Formats [summary]
 
-**Content Themes**:
-| Theme | # Articles | Combined Traffic |
-|-------|------------|------------------|
-| [theme 1] | [X] | [traffic] |
+| Theme | Articles | Combined Traffic |
+|-------|----------|------------------|
+| [theme] | [X] | [traffic] |
 ```
 
-## Backlink Analysis Template
+## Backlink Analysis
 
 ```markdown
 ### Backlink Analysis: [Competitor]
-**Total Backlinks**: [X] | **Referring Domains**: [X] | **DR**: [X]
+**Backlinks**: [X] | **Referring Domains**: [X] | **DR**: [X]
 
-**Quality Distribution**: High (DR 70+): [X]% | Medium (DR 30-69): [X]% | Low (<30): [X]%
+**Quality Mix**: High [X]% | Medium [X]% | Low [X]%
+**Link Acquisition Patterns**: Guest posts [X]% | Editorial [X]% | Resource pages [X]% | Directories [X]%
 
-**Top Linking Domains**:
 | Domain | DR | Link Type | Target Page |
-|--------|-----|-----------|-------------|
-| [domain 1] | [DR] | [type] | [page] |
+|--------|----|-----------|-------------|
+| [domain] | [DR] | [type] | [page] |
 
-**Acquisition Patterns**: Guest posts [X]%, Editorial [X]%, Resource pages [X]%, Directories [X]%
-
-**Linkable Assets**:
 | Asset | Type | Backlinks | Why It Works |
 |-------|------|-----------|--------------|
-| [asset 1] | [type] | [X] | [reason] |
+| [asset] | [type] | [X] | [reason] |
 ```
 
-## Technical SEO Assessment Template
+## Technical SEO Assessment
 
 ```markdown
 ### Technical Analysis: [Competitor]
-- Core Web Vitals: [Pass/Fail] | LCP: [X]s | FID: [X]ms | CLS: [X]
+- Core Web Vitals: [Pass/Fail] | LCP [X]s | CLS [X]
 - Mobile-friendly: [Yes/No]
-- Architecture depth: [X] levels | URL structure: [Clean/Messy]
+- Architecture depth: [X] levels
+- URL structure: [Clean / mixed / messy]
 - Strengths: [list]
 - Weaknesses: [list]
 ```
 
-## GEO/AI Citation Analysis Template
+## GEO / AI Citation Analysis
 
 ```markdown
 ### GEO Analysis: [Competitor]
 
 | Query | AI Mentions Competitor? | What's Cited | Why |
-|-------|------------------------|--------------|-----|
-| [query 1] | Yes/No | [content] | [reason] |
+|-------|-------------------------|--------------|-----|
+| [query] | Yes/No | [content] | [reason] |
 
-**GEO Strategies Observed**:
-1. Clear Definitions - Example: [quote] - Effectiveness: [rating]
-2. Quotable Statistics - Example: [quote]
-3. Q&A Format Content - [X] pages
-4. Authority Signals - Expert authorship: [Y/N] | Citations: [Y/N] | Original research: [Y/N]
+**Observed GEO Patterns**:
+- Definitions: [example]
+- Quotable stats: [example]
+- Q&A content: [X] pages
+- Authority signals: [author / citations / research]
 
-**GEO Opportunities They're Missing**:
-| Topic | Why Missing | Your Opportunity |
-|-------|-------------|------------------|
-| [topic 1] | [reason] | [action] |
+| Missed Topic | Why Missing | Your Opportunity |
+|--------------|-------------|------------------|
+| [topic] | [reason] | [action] |
 ```
 
-## Synthesis Report Template
+## Synthesis Report
 
 ```markdown
 # Competitive Analysis Report
-**Analysis Date**: [Date] | **Competitors**: [List] | **Your Site**: [URL]
+**Date**: [date] | **Competitors**: [list] | **Your Site**: [URL]
 
 ## Competitive Landscape
-
-| Metric | You | Competitor 1 | Competitor 2 | Competitor 3 |
-|--------|-----|--------------|--------------|--------------|
-| Domain Authority | [X] | [X] | [X] | [X] |
-| Organic Traffic | [X] | [X] | [X] | [X] |
-| Keywords Top 10 | [X] | [X] | [X] | [X] |
+| Metric | You | Comp 1 | Comp 2 | Comp 3 |
+|--------|-----|--------|--------|--------|
+| Authority | [X] | [X] | [X] | [X] |
+| Traffic | [X] | [X] | [X] | [X] |
+| Top 10 Keywords | [X] | [X] | [X] | [X] |
 | Backlinks | [X] | [X] | [X] | [X] |
-| Content Pages | [X] | [X] | [X] | [X] |
+| CITE Score | [X] | [X] | [X] | [X] |
 
-For domain-level comparison, run `domain-authority-auditor` for CITE scores.
+For domain-level comparison, run `domain-authority-auditor` and add the CITE score row here when available.
 
-## Competitor Strengths
-### [Competitor 1]
-- **Strength**: [description]
-- **How to Apply**: [action item]
+## Strengths to Learn From
+- [competitor] — [lesson]
 
-## Competitor Weaknesses to Exploit
-### Gap 1: [Description]
-- Who's weak: [competitors]
-- Recommended action: [steps]
+## Weaknesses to Exploit
+- [gap] — [action]
 
-## Keyword Opportunities
-| Keyword | Volume | Avg Position | Best Strategy |
-|---------|--------|--------------|---------------|
-| [kw] | [vol] | [pos] | [strategy] |
+## Priority Opportunities
+| Opportunity | Value | Action |
+|-------------|-------|--------|
+| [topic / keyword] | [score] | [next step] |
 
 ## Content Strategy Recommendations
-1. **Create**: [Content type] about [topic]
-2. **Improve**: [Existing content] to match [competitor content]
-3. **Promote**: [Content] to sites like [competitor's link sources]
+- **Create**: [content type / topic]
+- **Improve**: [existing asset]
+- **Promote**: [asset + channel]
 
 ## Action Plan
-### Immediate (This Week)
-1. [Action item]
-### Short-term (This Month)
-1. [Action item]
-### Long-term (This Quarter)
-1. [Action item]
+- **Immediate**: [action]
+- **Short-term**: [action]
+- **Long-term**: [action]
 ```
