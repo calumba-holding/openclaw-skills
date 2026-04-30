@@ -67,78 +67,60 @@ BINARY_MAGIC = {
 
 
 RULES = {
-    "llm/prompt-injection": {
+    "suspicious.prompt_injection_instructions": {
         "name": "Prompt-injection instruction",
         "level": "warning",
         "security_severity": "8.0",
         "description": "Skill content contains text commonly used to override, hide, or subvert LLM instructions.",
     },
-    "llm/system-prompt-exfiltration": {
+    "suspicious.potential_exfiltration": {
         "name": "System prompt or secret exfiltration instruction",
         "level": "error",
         "security_severity": "9.0",
         "description": "Skill content appears to request disclosure of system prompts, hidden instructions, credentials, or tool state.",
     },
-    "secret/private-key": {
-        "name": "Embedded private key",
-        "level": "error",
-        "security_severity": "9.3",
-        "description": "Skill content contains a private key block.",
-    },
-    "secret/provider-api-key": {
-        "name": "Provider API key literal",
+    "suspicious.exposed_secret_literal": {
+        "name": "Exposed secret literal",
         "level": "error",
         "security_severity": "8.8",
-        "description": "Skill content contains a provider API key shaped literal.",
+        "description": "Skill content contains a private key, provider token, or long secret-like literal.",
     },
-    "secret/token-assignment": {
-        "name": "Secret-like token assignment",
-        "level": "warning",
-        "security_severity": "7.5",
-        "description": "Skill content assigns a long secret-like value to a token, key, password, or credential field.",
-    },
-    "artifact/binary-payload": {
+    "suspicious.install_untrusted_source": {
         "name": "Binary payload in skill archive",
         "level": "error",
         "security_severity": "8.5",
         "description": "Skill contains a binary executable, archive, bytecode, or native module payload.",
     },
-    "artifact/encoded-payload": {
+    "suspicious.obfuscated_code": {
         "name": "Large encoded payload",
         "level": "warning",
         "security_severity": "7.8",
         "description": "Skill content includes a large base64-like payload often used to hide droppers or staged scripts.",
     },
-    "shell/network-execution": {
+    "malicious.install_terminal_payload": {
         "name": "Network fetch piped to shell",
         "level": "error",
         "security_severity": "9.0",
         "description": "Shell content fetches remote bytes and pipes them into an interpreter or shell.",
     },
-    "shell/reverse-shell": {
-        "name": "Reverse shell primitive",
-        "level": "error",
-        "security_severity": "9.5",
-        "description": "Shell content contains reverse shell or interactive remote execution primitives.",
-    },
-    "python/dangerous-exec": {
-        "name": "Dangerous Python execution primitive",
+    "suspicious.dangerous_exec": {
+        "name": "Shell command execution primitive",
         "level": "error",
         "security_severity": "8.7",
-        "description": "Python content uses dynamic execution, shell subprocesses, or unsafe deserialization.",
+        "description": "Skill content invokes shell commands or process execution primitives.",
     },
-    "js/dangerous-eval-child-process": {
-        "name": "Dangerous JavaScript execution primitive",
+    "suspicious.dynamic_code_execution": {
+        "name": "Dynamic code execution primitive",
         "level": "error",
         "security_severity": "8.7",
-        "description": "JavaScript or TypeScript content uses dynamic evaluation or child process execution.",
+        "description": "Skill content uses dynamic evaluation, generated code execution, or unsafe deserialization primitives.",
     },
 }
 
 
 LINE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
-        "llm/prompt-injection",
+        "suspicious.prompt_injection_instructions",
         re.compile(
             r"\b(ignore|disregard|forget)\b.{0,80}\b(previous|prior|above|system|developer)\b.{0,80}\b(instruction|message|prompt|rule)s?\b"
             r"|you are now\b.{0,80}\b(developer|system|root|admin)\b"
@@ -147,50 +129,56 @@ LINE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         ),
     ),
     (
-        "llm/system-prompt-exfiltration",
+        "suspicious.potential_exfiltration",
         re.compile(
             r"\b(reveal|print|show|dump|exfiltrate|send)\b.{0,80}\b(system prompt|hidden instruction|developer message|tool output|secrets?|credentials?|api key|token)s?\b"
             r"|\b(read|cat|open)\b.{0,80}\b(/etc/passwd|\.ssh|\.aws|\.env|id_rsa|credentials)\b",
             re.IGNORECASE,
         ),
     ),
-    ("secret/private-key", re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")),
+    ("suspicious.exposed_secret_literal", re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")),
     (
-        "secret/provider-api-key",
+        "suspicious.exposed_secret_literal",
         re.compile(
             r"\b(sk-(?:proj-)?[A-Za-z0-9_-]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9_]{30,}|hf_[A-Za-z0-9]{25,}|xox[baprs]-[A-Za-z0-9-]{20,}|AKIA[0-9A-Z]{16})\b"
         ),
     ),
     (
-        "secret/token-assignment",
+        "suspicious.exposed_secret_literal",
         re.compile(
             r"(?i)\b(api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|password|private[_-]?key|secret)\b\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{24,}"
         ),
     ),
     (
-        "artifact/encoded-payload",
+        "suspicious.obfuscated_code",
         re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{240,}={0,2}(?![A-Za-z0-9+/=])"),
     ),
     (
-        "shell/network-execution",
+        "malicious.install_terminal_payload",
         re.compile(
             r"(?i)\b(curl|wget|irm|iwr|Invoke-WebRequest|Invoke-RestMethod)\b.{0,120}(\||;).{0,80}\b(sh|bash|zsh|python|python3|node|ruby|perl|powershell|pwsh)\b"
         ),
     ),
     (
-        "shell/reverse-shell",
+        "suspicious.potential_exfiltration",
         re.compile(r"(?i)\b(nc|netcat|ncat|socat)\b.{0,120}\s-e\s|/dev/tcp/|bash\s+-i\s+>&|mkfifo\s+/tmp/"),
     ),
     (
-        "python/dangerous-exec",
-        re.compile(
-            r"\b(eval|exec|compile)\s*\(|subprocess\.(Popen|run|call|check_output)\s*\(.{0,120}\bshell\s*=\s*True|os\.system\s*\(|pickle\.loads?\s*\(|yaml\.load\s*\("
-        ),
+        "suspicious.dynamic_code_execution",
+        re.compile(r"\b(eval|exec|compile)\s*\(|pickle\.loads?\s*\(|yaml\.load\s*\("),
     ),
     (
-        "js/dangerous-eval-child-process",
+        "suspicious.dangerous_exec",
+        re.compile(r"subprocess\.(Popen|run|call|check_output)\s*\(.{0,120}\bshell\s*=\s*True|os\.system\s*\("),
+    ),
+    (
+        "suspicious.dynamic_code_execution",
+        re.compile(r"\b(eval|Function)\s*\("),
+    ),
+    (
+        "suspicious.dangerous_exec",
         re.compile(
-            r"\b(eval|Function)\s*\(|require\s*\(\s*['\"]child_process['\"]\s*\)|from\s+['\"]child_process['\"]|child_process\.|spawn\s*\(.{0,120}\bshell\s*:\s*true"
+            r"require\s*\(\s*['\"]child_process['\"]\s*\)|from\s+['\"]child_process['\"]|child_process\.|spawn\s*\(.{0,120}\bshell\s*:\s*true"
         ),
     ),
 ]
@@ -262,7 +250,7 @@ def sarif(results: list[dict], root: Path, shard: str) -> dict:
                     "driver": {
                         "name": "LLM Skill Security Audit",
                         "informationUri": "https://github.com/openclaw/skills",
-                        "semanticVersion": "1.0.0",
+                        "semanticVersion": "1.1.0",
                         "rules": [
                             {
                                 "id": rule_id,
@@ -314,7 +302,7 @@ def main() -> int:
         if binary_label:
             results.append(
                 make_result(
-                    "artifact/binary-payload",
+                    "suspicious.install_untrusted_source",
                     relative,
                     1,
                     f"{binary_label} found in skill content.",
