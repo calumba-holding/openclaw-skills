@@ -1,0 +1,27 @@
+{
+  "slug": "sv-platform-strategy",
+  "name": "Short Video Platform Publishing Strategy",
+  "description": "Provides platform-specific publishing guidance — optimal timing, format requirements, cross-platform adaptation, and launch sequencing for short videos.",
+  "type": "descriptive",
+  "requires_api": false,
+  "readiness": "stable",
+  "tags": [
+    "video",
+    "publishing",
+    "platform",
+    "distribution",
+    "strategy",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "publishing strategy",
+    "cross-platform",
+    "Douyin timing",
+    "video distribution",
+    "multi-platform",
+    "platform launch"
+  ],
+  "max_files": 4,
+  "language": "en",
+  "safety": "document-only informational guidance"
+}
