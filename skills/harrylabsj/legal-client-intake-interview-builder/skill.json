@@ -1,0 +1,28 @@
+{
+  "name": "Legal Client Intake Interview Builder",
+  "slug": "legal-client-intake-interview-builder",
+  "version": "1.0.0",
+  "description": "Builds structured intake interview plans for law firm consultations and new matter opening.",
+  "author": "Pearl Team (OpenClaw)",
+  "tags": [
+    "legal",
+    "law-firm",
+    "intake",
+    "client-service",
+    "descriptive"
+  ],
+  "trigger_keywords": [
+    "legal intake",
+    "client interview",
+    "new matter intake",
+    "law firm intake",
+    "legal-client-intake-interview-builder",
+    "legal client intake interview builder"
+  ],
+  "language": "en",
+  "outputs": "markdown",
+  "requires_api": false,
+  "readiness": "stable",
+  "type": "descriptive",
+  "legal_disclaimer": "Informational workflow support only; not legal advice."
+}
