@@ -12,6 +12,32 @@ query-filters:
         - very-high
       tags contain: security
       security-severity: /([7-9]|10)\.(\d)+/
+  # The skills repo is an untrusted archive, not one deployable app. Keep CodeQL focused on exploit-class
+  # findings and avoid filling code scanning with generic hygiene warnings from examples and toy services.
+  - exclude:
+      id: js/clear-text-logging
+  - exclude:
+      id: js/double-escaping
+  - exclude:
+      id: js/incomplete-multi-character-sanitization
+  - exclude:
+      id: js/incomplete-sanitization
+  - exclude:
+      id: js/incomplete-url-substring-sanitization
+  - exclude:
+      id: js/missing-rate-limiting
+  - exclude:
+      id: js/polynomial-redos
+  - exclude:
+      id: py/clear-text-logging-sensitive-data
+  - exclude:
+      id: py/clear-text-storage-sensitive-data
+  - exclude:
+      id: py/incomplete-url-substring-sanitization
+  - exclude:
+      id: py/weak-sensitive-data-hashing
+  - exclude:
+      id: rust/cleartext-logging
 
 paths:
   - skills/a*
@@ -30,6 +56,18 @@ paths-ignore:
   - "**/dist/**"
   - "**/build"
   - "**/build/**"
+  - "**/docs"
+  - "**/docs/**"
+  - "**/documentation"
+  - "**/documentation/**"
+  - "**/examples"
+  - "**/examples/**"
+  - "**/reference"
+  - "**/reference/**"
+  - "**/references"
+  - "**/references/**"
+  - "**/templates"
+  - "**/templates/**"
   - "**/*.min.js"
   - "**/*.bundle.js"
   - "**/*.generated.*"

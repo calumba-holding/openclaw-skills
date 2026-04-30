@@ -233,7 +233,41 @@ jobs:
           python3 .github/scripts/skill-security-audit.py
           --root skills
           --shard "${{ matrix.shard }}"
+          --sarif-mode high-confidence
           --sarif "skill-audit-${{ matrix.shard }}.sarif"
+          --summary-json "skill-audit-${{ matrix.shard }}.json"
+
+      - name: Summarize audit matches
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          summary = json.loads(Path("skill-audit-${{ matrix.shard }}.json").read_text(encoding="utf-8"))
+          lines = [
+              f"### Skill audit shard {summary['shard']}",
+              "",
+              f"- SARIF mode: `{summary['sarif_mode']}`",
+              f"- Code scanning findings: `{summary['sarif_findings']}`",
+              f"- Summary-only matches: `{summary['summary_only_findings']}`",
+              "",
+              "| Rule | Code scanning | Summary-only | Total |",
+              "| --- | ---: | ---: | ---: |",
+          ]
+          for rule_id, counts in summary["rules"].items():
+              lines.append(
+                  f"| `{rule_id}` | {counts['sarif']} | {counts['summary_only']} | {counts['total']} |"
+              )
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("\n".join(lines) + "\n")
+          PY
+
+      - name: Upload audit summary
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: skill-audit-summary-${{ matrix.shard }}
+          path: skill-audit-${{ matrix.shard }}.json
 
       - name: Upload audit SARIF
         uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
