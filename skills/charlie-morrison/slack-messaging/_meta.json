@@ -1,0 +1,11 @@
+{
+  "owner": "charlie-morrison",
+  "slug": "slack-messaging",
+  "displayName": "Slack Messaging",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1777248627617,
+    "commit": null
+  },
+  "history": []
+}
