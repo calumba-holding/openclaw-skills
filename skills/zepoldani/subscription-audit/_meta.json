@@ -1,0 +1,11 @@
+{
+  "owner": "zepoldani",
+  "slug": "subscription-audit",
+  "displayName": "Subscription Audit",
+  "latest": {
+    "version": "1.0.1",
+    "publishedAt": 1777321540584,
+    "commit": null
+  },
+  "history": []
+}
