@@ -1,0 +1,107 @@
+{
+  "name": "ym-mediatoolkit",
+  "version": "2.1.0",
+  "description": "流式视频处理工具集：视频压缩、封面提取、音频转换(MP3/WAV/AAC/M4A)，无需下载完整视频，内置 SSRF/LFI 防护 (DNS 级验证)",
+  "author": "your_name",
+  "entrypoint": "python run.py --input {input_json}",
+  "http_port": 8080,
+  "http_bind": "127.0.0.1 (默认，仅本地；可通过 --host 0.0.0.0 改为公网，需反向代理认证)",
+  "external_binaries": {
+    "ffmpeg": "必需 - 视频压缩、音频提取、流式处理",
+    "ffprobe": "必需 - 获取视频/音频流信息"
+  },
+  "security": {
+    "url_validation": "DNS解析 + IP范围检查 (IPv4/IPv6) + Punycode/IDN拦截 + 私有地址阻断",
+    "network": "HTTP 服务器默认绑定 127.0.0.1，不暴露到外部网络",
+    "file_write": "输出/临时文件写入，建议以最小权限运行",
+    "recommended_deployment": "隔离容器 (如 Docker)，限制网络出站，以非 root 用户运行"
+  },
+  "actions": [
+    {
+      "name": "compress",
+      "description": "流式压缩视频，保持清晰度，支持自适应 CRF",
+      "input_schema": {
+        "type": "object",
+        "required": ["video_url"],
+        "properties": {
+          "video_url": {"type": "string", "description": "视频 URL（仅支持 http/https）"},
+          "target_ratio": {"type": "number", "default": 0.1},
+          "adaptive": {"type": "boolean", "default": true},
+          "crf": {"type": "integer", "default": 24},
+          "preset": {"type": "string", "default": "veryfast"}
+        }
+      }
+    },
+    {
+      "name": "thumbnail",
+      "description": "从视频任意时间点或帧号提取封面，流式只下载必要部分",
+      "input_schema": {
+        "type": "object",
+        "required": ["video_url"],
+        "properties": {
+          "video_url": {"type": "string", "description": "视频 URL（仅支持 http/https）"},
+          "time_seconds": {"type": "number"},
+          "frame_number": {"type": "integer"},
+          "save_path": {"type": "string"},
+          "resize_width": {"type": "integer"},
+          "quality": {"type": "integer", "default": 85}
+        }
+      }
+    },
+    {
+      "name": "audio",
+      "description": "流式提取音频，支持 MP3/WAV/AAC/M4A 格式",
+      "input_schema": {
+        "type": "object",
+        "required": ["video_url"],
+        "properties": {
+          "video_url": {"type": "string", "description": "视频 URL（仅支持 http/https）"},
+          "format": {"type": "string", "enum": ["mp3", "wav", "aac", "m4a"], "default": "mp3"},
+          "bitrate": {"type": "string", "default": "128k", "description": "比特率: 128k, 192k, 320k"},
+          "sample_rate": {"type": "integer", "default": 44100, "description": "采样率: 44100, 48000"},
+          "channels": {"type": "integer", "default": 2, "description": "声道: 1=单声道, 2=立体声"},
+          "start_time": {"type": "number", "description": "开始时间（秒）"},
+          "duration": {"type": "number", "description": "持续时间（秒）"},
+          "output_path": {"type": "string", "description": "输出路径"}
+        }
+      }
+    },
+    {
+      "name": "audio_batch",
+      "description": "批量提取多个视频的音频",
+      "input_schema": {
+        "type": "object",
+        "required": ["videos"],
+        "properties": {
+          "videos": {"type": "array", "description": "视频列表 [{'url': '...', 'name': '...'}]"},
+          "output_dir": {"type": "string", "default": "./audio_output"},
+          "format": {"type": "string", "default": "mp3"},
+          "bitrate": {"type": "string", "default": "128k"},
+          "sample_rate": {"type": "integer", "default": 44100}
+        }
+      }
+    },
+    {
+      "name": "audio_info",
+      "description": "获取视频的音频流信息",
+      "input_schema": {
+        "type": "object",
+        "required": ["video_url"],
+        "properties": {
+          "video_url": {"type": "string", "description": "视频 URL（仅支持 http/https）"}
+        }
+      }
+    },
+    {
+      "name": "info",
+      "description": "获取完整视频信息（分辨率、时长、编码等）",
+      "input_schema": {
+        "type": "object",
+        "required": ["video_url"],
+        "properties": {
+          "video_url": {"type": "string", "description": "视频 URL（仅支持 http/https）"}
+        }
+      }
+    }
+  ]
+}
