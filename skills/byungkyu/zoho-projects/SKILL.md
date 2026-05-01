@@ -26,7 +26,7 @@ Access the Zoho Projects API with managed OAuth authentication. Manage projects,
 # List all portals
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/zoho-projects/restapi/portals/')
+req = urllib.request.Request('https://api.maton.ai/zoho-projects/restapi/portals/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/zoho-projects/{native-api-path}
+https://api.maton.ai/zoho-projects/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Zoho Projects API endpoint path. The gateway proxies requests to `projectsapi.zoho.com` and automatically injects your OAuth token.
+Maton proxies requests to `projectsapi.zoho.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Zoho Projects OAuth connections at `https://ctrl.maton.ai`.
+Manage your Zoho Projects OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=zoho-projects&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=zoho-projects&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'zoho-projects'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "522c11a9-b879-4504-b267-355e3dbac99f",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-28T00:12:25.223434Z",
     "last_updated_time": "2026-02-28T00:16:32.882675Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,14 +135,19 @@ If you have multiple Zoho Projects connections, specify which one to use with th
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/zoho-projects/restapi/portals/')
+req = urllib.request.Request('https://api.maton.ai/zoho-projects/restapi/portals/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '522c11a9-b879-4504-b267-355e3dbac99f')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to projects, tasks, milestones, tasklists, and team collaboration within the connected Zoho Projects account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -598,7 +603,7 @@ GET /zoho-projects/restapi/portal/{portal_id}/projects/{project_id}/tasks/?index
 ```javascript
 // List tasks in a project
 const response = await fetch(
-  'https://gateway.maton.ai/zoho-projects/restapi/portal/916020774/projects/2644874000000089119/tasks/',
+  'https://api.maton.ai/zoho-projects/restapi/portal/916020774/projects/2644874000000089119/tasks/',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -617,7 +622,7 @@ import requests
 
 # Create a task
 response = requests.post(
-    'https://gateway.maton.ai/zoho-projects/restapi/portal/916020774/projects/2644874000000089119/tasks/',
+    'https://api.maton.ai/zoho-projects/restapi/portal/916020774/projects/2644874000000089119/tasks/',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -665,7 +670,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -675,8 +680,8 @@ EOF
 
 Ensure your URL path starts with `zoho-projects`. For example:
 
-- Correct: `https://gateway.maton.ai/zoho-projects/restapi/portals/`
-- Incorrect: `https://gateway.maton.ai/restapi/portals/`
+- Correct: `https://api.maton.ai/zoho-projects/restapi/portals/`
+- Incorrect: `https://api.maton.ai/restapi/portals/`
 
 ## Resources
 
