@@ -1,0 +1,11 @@
+{
+  "owner": "shopify",
+  "slug": "shop",
+  "displayName": "Shop",
+  "latest": {
+    "version": "0.0.28",
+    "publishedAt": 1775570494069,
+    "commit": null
+  },
+  "history": []
+}
