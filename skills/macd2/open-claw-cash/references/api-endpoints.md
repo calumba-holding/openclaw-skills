@@ -19,7 +19,38 @@
 ## API Surfaces
 
 - **Agent API (`/api/agent/*`)**: authenticate with `X-Agent-Key`.
-- Public docs intentionally include only `/api/agent/*` endpoints.
+- **Public install metadata API (`/api/public/agentwalletapi/skill/latest`)**: no auth required.
+
+## Skill Install Metadata (Public, No Auth)
+
+```
+GET /api/public/agentwalletapi/skill/latest
+```
+
+Response:
+```json
+{
+  "skill": "agentwalletapi",
+  "version": "1.20.0",
+  "publishedAssets": {
+    "skillMdUrl": "https://openclawcash.com/agentwalletapi/SKILL.md",
+    "latestZipUrl": "https://openclawcash.com/agentwalletapi/agentwalletapi-skill.zip",
+    "versionedZipUrl": "https://openclawcash.com/agentwalletapi/agentwalletapi-skill-1.20.0.zip",
+    "setupScriptUrl": "https://openclawcash.com/agentwalletapi/scripts/setup.sh",
+    "cliScriptUrl": "https://openclawcash.com/agentwalletapi/scripts/agentwalletapi.sh"
+  },
+  "installInstructions": {
+    "targetDirectory": "<your-workspace>/skills/agentwalletapi",
+    "steps": [
+      "Download https://openclawcash.com/agentwalletapi/agentwalletapi-skill.zip",
+      "Unzip the archive into <your-workspace>/skills/",
+      "Verify the final folder is exactly <your-workspace>/skills/agentwalletapi",
+      "Read <your-workspace>/skills/agentwalletapi/SKILL.md before running commands"
+    ],
+    "agentPrompt": "Download https://openclawcash.com/agentwalletapi/agentwalletapi-skill.zip, unzip it into <your-workspace>/skills/, verify <your-workspace>/skills/agentwalletapi, then read <your-workspace>/skills/agentwalletapi/SKILL.md."
+  }
+}
+```
 
 ## Global User Tag (Checkout Identity)
 
@@ -121,20 +152,24 @@ GET /api/agent/wallet?walletId=2&chain=evm
 Response:
 ```json
 {
-  "id": 2,
+  "id": "W123ABC",
   "label": "Trading Bot",
   "address": "0x14ae8d93...",
   "network": "sepolia",
   "chain": "evm",
+  "nativeBalanceDisplay": "0.048",
+  "nativeBalanceBaseUnits": "48000000000000000",
   "balance": "0.048 ETH",
   "nativeSymbol": "ETH",
   "otherTokenCount": 1,
   "tokenBalances": [
-    { "token": "0x0000...0000", "symbol": "ETH", "balance": "0.048", "decimals": 18 },
-    { "token": "0xA0b86991...", "symbol": "USDC", "balance": "250.0", "decimals": 6 }
+    { "token": "0x0000...0000", "symbol": "ETH", "balance": "0.048", "balanceBaseUnits": "48000000000000000", "decimals": 18 },
+    { "token": "0xA0b86991...", "symbol": "USDC", "balance": "250.0", "balanceBaseUnits": "250000000", "decimals": 6 }
   ]
 }
 ```
+
+Note: Use `GET /api/agent/policies` or `GET /api/agent/policy` to retrieve wallet policies.
 
 ## Create Wallet (Agent API)
 
@@ -206,6 +241,99 @@ Notes:
 - API key must have wallet import enabled (`allowWalletImport`).
 - Supported networks: `mainnet`, `polygon-mainnet`, `solana-mainnet`.
 - Endpoint is rate-limited per API key; on limit exceeded returns `429` + `Retry-After`.
+
+## Get Policies
+
+List policies across all wallets for the authenticated API key:
+
+```
+GET /api/agent/policies
+X-Agent-Key: occ_your_api_key
+```
+
+Response:
+```json
+[
+  {
+    "wallet": {
+      "id": "W123ABC",
+      "label": "Trading Bot",
+      "address": "0x14ae8d93...",
+      "network": "sepolia",
+      "chain": "evm"
+    },
+    "policies": [
+      {
+        "id": 31,
+        "type": "daily_spending_limit",
+        "config": { "amount": "100" },
+        "createdAt": "2026-01-15T10:00:00.000Z",
+        "enabled": true,
+        "usage": {
+          "spent": "45.00",
+          "limit": "100.00",
+          "symbol": "USD",
+          "decimals": 2,
+          "window": "24h"
+        }
+      }
+    ]
+  }
+]
+```
+
+Notes:
+- Returns hydrated policy data including current usage for spending limit policies.
+- Supports `daily_spending_limit`, `weekly_spending_limit`, and `monthly_spending_limit` types.
+- Usage data shows `spent`, `limit`, `symbol`, `decimals`, and `window` (24h/week/month).
+
+## Get Policy
+
+Get policies for a specific wallet by walletId, walletLabel, or walletAddress:
+
+```
+GET /api/agent/policy?walletId=W123ABC
+X-Agent-Key: occ_your_api_key
+```
+
+Alternative selectors:
+```
+GET /api/agent/policy?walletLabel=Trading%20Bot
+GET /api/agent/policy?walletAddress=0x14ae8d93...
+```
+
+Response:
+```json
+{
+  "wallet": {
+    "id": "W123ABC",
+    "label": "Trading Bot",
+    "address": "0x14ae8d93...",
+    "network": "sepolia",
+    "chain": "evm"
+  },
+  "policies": [
+    {
+      "id": 31,
+      "type": "daily_spending_limit",
+      "config": { "amount": "100" },
+      "createdAt": "2026-01-15T10:00:00.000Z",
+      "enabled": true,
+      "usage": {
+        "spent": "45.00",
+        "limit": "100.00",
+        "symbol": "USD",
+        "decimals": 2,
+        "window": "24h"
+      }
+    }
+  ]
+}
+```
+
+Notes:
+- Requires exactly one wallet selector: `walletId`, `walletLabel`, or `walletAddress`.
+- Optional chain guard: `?chain=evm` or `?chain=solana`.
 
 ## Wallet Transaction History
 
@@ -541,6 +669,25 @@ Validation rules:
 - Minimum `3600` (1 hour) for all three fields.
 - `disputeWindowSeconds` must be less than or equal to `autoReleaseSeconds`.
 
+### Metadata Field (checkoutClientMetadataSchema)
+
+The `metadata` field on checkout requests supports structured client data with validation:
+
+```
+"metadata": {
+  "orderId": "order-12345",
+  "customerId": "cust-67890",
+  "notes": "Please deliver by end of day"
+}
+```
+
+Schema constraints:
+- **Keys**: Max 64 characters, alphanumeric with `.`, `_`, `:`, `-`, `/`, spaces
+- **Values**: Max 280 characters (512 bytes), max 3 levels nesting, max 20 keys per object
+- **Sensitive keys** are automatically stripped: `apikey`, `internal`, `debug`, `server`, keys containing `secret` or `password`
+
+Values are normalized (trimmed, Unicode NFKC normalized) before storage.
+
 ### Get Pay Request
 
 ```
@@ -872,6 +1019,40 @@ Notes:
 - Response is filtered to open markets only (`closed !== true`, `active !== false`, and not past `endDate`).
 - Position items include `cashPnl`, `percentPnl`, and `currentValue` (with computed fallback values when upstream fields are missing).
 
+## Polymarket Redeemable Positions (Agent API)
+
+```
+GET /api/agent/venues/polymarket/redeemable?walletId=Q7X2K9P&limit=100
+X-Agent-Key: occ_your_api_key
+```
+
+Response:
+```json
+{
+  "venue": "polymarket",
+  "walletId": "Q7X2K9P",
+  "network": "polygon-mainnet",
+  "userAddress": "0x49273d9d882032e11a02c8A6d66239D22492A0a5",
+  "items": [
+    {
+      "tokenId": "96960274267773372131583647731391642541817323912358042961702119095512805226258",
+      "conditionId": "0x19a4b3b4e2d612f2d39d27ca1e00a00b077264951984b5d4957ad517e4986ed4",
+      "outcomeIndex": 1,
+      "size": "391.5212",
+      "sizeBaseUnits": "391521200",
+      "negativeRisk": false,
+      "title": "Will the Kings win?",
+      "outcome": "Kings"
+    }
+  ]
+}
+```
+
+Notes:
+- Backed by Polymarket Data API `GET /positions?redeemable=true`.
+- `userAddress` is the exact Polymarket account address used for the redeemable lookup.
+- Use `items[].tokenId` as input to single-position redeem.
+
 ## Polymarket Redeem (Agent API)
 
 ```
@@ -885,7 +1066,8 @@ Request (single position):
 {
   "walletId": "Q7X2K9P",
   "tokenId": "1234567890",
-  "limit": 100
+  "limit": 100,
+  "signatureType": 0
 }
 ```
 
@@ -904,7 +1086,13 @@ Response:
   "network": "polygon-mainnet",
   "mode": "single",
   "requestedTokenId": "1234567890",
+  "requested": 1,
   "attempted": 1,
+  "remaining": 0,
+  "hasMoreRedeemable": false,
+  "maxPerRequest": 1,
+  "signingPath": "direct",
+  "signatureType": 0,
   "successful": 1,
   "failed": 0,
   "results": [
@@ -915,6 +1103,8 @@ Response:
       "sizeBaseUnits": "1000000",
       "negativeRisk": false,
       "status": "success",
+      "settlement": "submitted",
+      "signingPath": "direct",
       "txHash": "0xabc..."
     }
   ]
@@ -922,9 +1112,19 @@ Response:
 ```
 
 Notes:
-- Gasless relay flow is used under the hood (signatureType must be proxy/safe).
-- Use `tokenId` for targeted redeem; omit `tokenId` to redeem all currently redeemable positions.
+- Server picks the signing path automatically from the wallet's configured `signatureType`:
+  - `0` (direct EOA) → on-chain redeem signed by the wallet itself; wallet must hold a small amount of POL on Polygon to pay gas (cents).
+  - `1` (Polymarket proxy) or `2` (Gnosis Safe) → gasless redeem via Polymarket's relayer; requires API key/secret/passphrase configured for the wallet.
+- Optional `signatureType` request field defensively asserts the wallet's configured signing type. Mismatch returns `400 venue_config_invalid`. Omit to dispatch by wallet config.
+- Response includes top-level `signingPath` (`"direct"` | `"gasless"`) and `signatureType`, plus the same `signingPath` on each result item.
+- Discover a wallet's `signatureType` via `GET /api/agent/wallets` (`polymarket.signatureType`) or `GET /api/agent/venues/polymarket/account`.
+- Call `GET /api/agent/venues/polymarket/redeemable` first, then use one returned `tokenId` for targeted redeem.
+- Omit `tokenId` to redeem all currently redeemable positions.
 - `limit` controls how many redeemable positions are scanned when listing candidates (default `100`, max `200`).
+- Redeem requests are processed in bounded chunks to avoid edge timeout failures on large `redeem all` calls.
+- For `mode: "all"`, repeat redeem calls while `hasMoreRedeemable` is `true`.
+- `settlement: "submitted"` means submission succeeded and tx hash is available; on-chain confirmation can be checked asynchronously via transaction history.
+- For direct-path redeems against an empty wallet, the API returns `400 venue_insufficient_native_gas`; fund ~$0.01 of POL on Polygon and retry.
 
 ## Token Approval (ERC-20)
 

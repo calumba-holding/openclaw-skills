@@ -5,7 +5,7 @@ license: Proprietary
 compatibility: Requires network access to https://openclawcash.com
 metadata:
   author: agentwalletapi
-  version: "1.19.0"
+  version: "1.21.0"
   required_env_vars:
     - AGENTWALLETAPI_KEY
   optional_env_vars:
@@ -74,6 +74,7 @@ If MCP is unavailable, use the included tool script to make API calls directly:
 
 ```bash
 # Read-only (recommended first)
+bash scripts/agentwalletapi.sh skill-latest
 bash scripts/agentwalletapi.sh wallets
 bash scripts/agentwalletapi.sh user-tag-get
 bash scripts/agentwalletapi.sh user-tag-set my-agent-tag --yes
@@ -174,23 +175,25 @@ Content-Type: application/json
 - **Agent API (API key auth):** `/api/agent/*`
   - Authenticate with `X-Agent-Key`
   - Used for autonomous agent execution (wallets list/create/import, transactions, balance, transfer, swap, quote, approve, checkout escrow lifecycle, and polymarket venue operations)
-- Public docs intentionally include only `/api/agent/*` endpoints.
+- **Public install metadata API (no auth):** `GET /api/public/agentwalletapi/skill/latest`
+  - Returns latest skill version, GitHub repo URL, and install instructions.
 
 ## Workflow
 
-1. `GET /api/agent/wallets` - Discover available wallets (id, label, address, network, chain). Optional `?includeBalances=true` adds native `balance` + `nativeSymbol`
-2. `GET /api/agent/wallet?walletId=...` or `?walletLabel=...` or `?walletAddress=...` - Fetch one wallet with native/token balances
-3. Optional wallet lifecycle actions:
+1. `GET /api/public/agentwalletapi/skill/latest` - Fetch latest skill version, GitHub repo URL, and install instructions (no auth)
+2. `GET /api/agent/wallets` - Discover available wallets (id, label, address, network, chain). Optional `?includeBalances=true` adds native `balance` + `nativeSymbol`
+3. `GET /api/agent/wallet?walletId=...` or `?walletLabel=...` or `?walletAddress=...` - Fetch one wallet with native/token balances
+4. Optional wallet lifecycle actions:
    - `POST /api/agent/wallets/create` - Create a new wallet under API-key policy controls
    - `POST /api/agent/wallets/import` - Import a `mainnet`, `polygon-mainnet`, or `solana-mainnet` wallet under API-key policy controls
-4. `GET /api/agent/transactions?walletId=...` (or `walletLabel`/`walletAddress`) - Read merged wallet transaction history (on-chain + app-recorded)
-5. `GET /api/agent/supported-tokens?network=...` or `?chain=evm|solana` - Get recommended common, well-known token list + guidance (requires `X-Agent-Key`)
-6. `POST /api/agent/token-balance` - Check wallet balances (native + token balances; specific token by symbol/address supported)
-7. `POST /api/agent/quote` - Get a swap quote before execution on Uniswap (EVM) or Jupiter (Solana mainnet). `amountIn` is base-units integer string.
-8. `POST /api/agent/swap` - Execute token swap on Uniswap (EVM) or Jupiter (Solana mainnet). `amountIn` is base-units integer string.
-9. `POST /api/agent/transfer` - Send native coin or token on the wallet's chain (optional `chain` guard). Do not use this for checkout escrow funding.
-10. `GET /api/agent/user-tag` and `PUT /api/agent/user-tag` - Read/set the global checkout user tag (set is one-time / immutable once configured)
-11. Optional checkout flow (escrow by global user tag):
+5. `GET /api/agent/transactions?walletId=...` (or `walletLabel`/`walletAddress`) - Read merged wallet transaction history (on-chain + app-recorded)
+6. `GET /api/agent/supported-tokens?network=...` or `?chain=evm|solana` - Get recommended common, well-known token list + guidance (requires `X-Agent-Key`)
+7. `POST /api/agent/token-balance` - Check wallet balances (native + token balances; specific token by symbol/address supported)
+8. `POST /api/agent/quote` - Get a swap quote before execution on Uniswap (EVM) or Jupiter (Solana mainnet). `amountIn` is base-units integer string.
+9. `POST /api/agent/swap` - Execute token swap on Uniswap (EVM) or Jupiter (Solana mainnet). `amountIn` is base-units integer string.
+10. `POST /api/agent/transfer` - Send native coin or token on the wallet's chain (optional `chain` guard). Do not use this for checkout escrow funding.
+11. `GET /api/agent/user-tag` and `PUT /api/agent/user-tag` - Read/set the global checkout user tag (set is one-time / immutable once configured)
+12. Optional checkout flow (escrow by global user tag):
    - MCP default: `checkout_fund` (tries `quick-pay`, falls back to `swap-and-pay` when needed)
    - `POST /api/agent/checkout/payreq` - Create pay request + escrow
    - `GET /api/agent/checkout/payreq/:id` - Read pay request
@@ -211,7 +214,7 @@ Checkout timing fields for `POST /api/agent/checkout/payreq`:
 - `autoReleaseSeconds`: when funded escrow can auto-release if no dispute exists.
 - `disputeWindowSeconds`: how long dispute can be opened after auto-release point.
 - Constraints: all three must be at least `3600` seconds, and `disputeWindowSeconds <= autoReleaseSeconds`.
-12. Optional Polymarket venue flow (polygon-mainnet wallets only):
+13. Optional Polymarket venue flow (polygon-mainnet wallets only):
    - Prerequisite: user configures Polymarket in dashboard Venues settings for that wallet
    - `GET /api/agent/venues/polymarket/market/resolve` resolves `marketUrl`/`slug` + human-readable `outcome` to the exact `tokenId` needed for order tools
    - MCP helper: `polymarket_market_resolve` calls the same agent endpoint
@@ -220,11 +223,12 @@ Checkout timing fields for `POST /api/agent/checkout/payreq`:
    - `GET /api/agent/venues/polymarket/account` - Read account summary
    - `GET /api/agent/venues/polymarket/orders` - List open orders
    - `POST /api/agent/venues/polymarket/orders/cancel` - Cancel an order
-   - `POST /api/agent/venues/polymarket/redeem` - Redeem one position by `tokenId` or redeem all redeemable positions
+   - `GET /api/agent/venues/polymarket/redeemable` - List currently redeemable positions and tokenId candidates
+   - `POST /api/agent/venues/polymarket/redeem` - Redeem one position by `tokenId` or all redeemable positions; signing path is auto-selected by wallet `signatureType` (0 = direct on-chain EOA, 1 / 2 = gasless via relayer); pass optional `signatureType` to defensively assert; response includes `signingPath`. All-mode may require multiple calls until `hasMoreRedeemable=false`
    - `POST /api/agent/venues/polymarket/unlink` - Clear stored Polymarket integration config for a wallet
    - `GET /api/agent/venues/polymarket/activity` - List trade activity
    - `GET /api/agent/venues/polymarket/positions` - List open positions (open-market filtered, includes PnL fields)
-13. Use returned `txHash` / `orderId` values to confirm execution and lifecycle status
+14. Use returned `txHash` / `orderId` values to confirm execution and lifecycle status
 
 ### Approval Handling For Agents
 
@@ -262,6 +266,7 @@ Example:
 
 | Endpoint | Method | Auth | Purpose |
 |---|---|---|---|
+| `/api/public/agentwalletapi/skill/latest` | GET | No | Get latest skill version + GitHub repo URL + install instructions |
 | `/api/agent/wallets` | GET | Yes | List wallets (discovery; optional `includeBalances=true` for native balances) |
 | `/api/agent/wallet` | GET | Yes | Get one wallet detail with native/token balances |
 | `/api/agent/wallets/create` | POST | Yes | Create a new API-key-managed wallet |
@@ -297,7 +302,8 @@ Example:
 | `/api/agent/venues/polymarket/account` | GET | Yes | Read Polymarket account summary |
 | `/api/agent/venues/polymarket/orders` | GET | Yes | List Polymarket open orders |
 | `/api/agent/venues/polymarket/orders/cancel` | POST | Yes | Cancel Polymarket order |
-| `/api/agent/venues/polymarket/redeem` | POST | Yes | Redeem one or all redeemable Polymarket positions via gasless relay |
+| `/api/agent/venues/polymarket/redeemable` | GET | Yes | List currently redeemable Polymarket positions (tokenId candidates) |
+| `/api/agent/venues/polymarket/redeem` | POST | Yes | Redeem one or all redeemable Polymarket positions via gasless relay (chunked all-mode) |
 | `/api/agent/venues/polymarket/unlink` | POST | Yes | Clear Polymarket integration for wallet |
 | `/api/agent/venues/polymarket/activity` | GET | Yes | List Polymarket trade activity |
 | `/api/agent/venues/polymarket/positions` | GET | Yes | List Polymarket open positions (open-market filtered with PnL fields) |
@@ -351,6 +357,7 @@ Behavior notes:
   - `GET /api/agent/venues/polymarket/account`
   - `GET /api/agent/venues/polymarket/orders`
   - `POST /api/agent/venues/polymarket/orders/cancel` with `orderId`
+  - `GET /api/agent/venues/polymarket/redeemable` to fetch current redeemable tokenIds
   - `POST /api/agent/venues/polymarket/redeem` with optional `tokenId` (omit `tokenId` to redeem all)
   - `POST /api/agent/venues/polymarket/unlink` to clear stored venue config for a wallet
   - `GET /api/agent/venues/polymarket/activity`

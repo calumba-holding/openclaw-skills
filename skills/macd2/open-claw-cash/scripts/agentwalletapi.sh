@@ -6,6 +6,7 @@
 # Sensitive env var: AGENTWALLETAPI_KEY (in .env)
 #
 # Commands:
+#   skill-latest                Get latest skill version + zip/install metadata (public, no API key)
 #   wallets                     List all wallets
 #   user-tag-get                Read global checkout user tag for this API key owner
 #   user-tag-set <userTag> [--yes]   Set global checkout user tag once (immutable after set)
@@ -43,31 +44,11 @@
 #   polymarket-orders <walletSelector> [status] [limit] [cursor]
 #   polymarket-activity <walletSelector> [limit] [cursor]
 #   polymarket-positions <walletSelector> [limit]
-#   polymarket-redeem <walletSelector> [tokenId|all] [limit] [--yes]
+#   polymarket-redeem <walletSelector> [tokenId|all] [limit] [signatureType] [--yes]
 #   polymarket-cancel <walletSelector> <orderId> [--yes]
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="$SKILL_DIR/.env"
-
-if [ ! -f "$ENV_FILE" ]; then
-    echo "Error: .env file not found. Run setup first:"
-    echo "  bash $SKILL_DIR/scripts/setup.sh"
-    exit 1
-fi
-
-source "$ENV_FILE"
-
-if [ -z "$AGENTWALLETAPI_KEY" ] || [ "$AGENTWALLETAPI_KEY" = "occ_your_api_key" ]; then
-    echo "Error: API key not configured. Edit $ENV_FILE and set AGENTWALLETAPI_KEY."
-    exit 1
-fi
-
-if ! command -v curl >/dev/null 2>&1; then
-    echo "Error: curl is required but not installed."
-    exit 1
-fi
-
-BASE_URL="${AGENTWALLETAPI_URL:-https://openclawcash.com}"
 
 FORCE_RISKY=0
 FILTERED_ARGS=()
@@ -80,6 +61,30 @@ for arg in "$@"; do
 done
 set -- "${FILTERED_ARGS[@]}"
 COMMAND="$1"
+ALLOW_PUBLIC_ONLY=0
+if [ "$COMMAND" = "skill-latest" ]; then
+    ALLOW_PUBLIC_ONLY=1
+fi
+
+if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE"
+elif [ "$ALLOW_PUBLIC_ONLY" -eq 0 ]; then
+    echo "Error: .env file not found. Run setup first:"
+    echo "  bash $SKILL_DIR/scripts/setup.sh"
+    exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+    echo "Error: curl is required but not installed."
+    exit 1
+fi
+
+BASE_URL="${AGENTWALLETAPI_URL:-https://openclawcash.com}"
+
+if [ "$ALLOW_PUBLIC_ONLY" -eq 0 ] && { [ -z "$AGENTWALLETAPI_KEY" ] || [ "$AGENTWALLETAPI_KEY" = "occ_your_api_key" ]; }; then
+    echo "Error: API key not configured. Edit $ENV_FILE and set AGENTWALLETAPI_KEY."
+    exit 1
+fi
 
 json_escape_var() {
     DEST_VAR="$1"
@@ -232,6 +237,10 @@ confirm_risky_action() {
 }
 
 case "$COMMAND" in
+    skill-latest)
+        curl -s "$BASE_URL/api/public/agentwalletapi/skill/latest" | pretty_print_json
+        ;;
+
     wallets)
         curl -s -H "X-Agent-Key: $AGENTWALLETAPI_KEY" \
             "$BASE_URL/api/agent/wallets" | pretty_print_json
@@ -1026,8 +1035,9 @@ case "$COMMAND" in
         WALLET_SELECTOR="$2"
         TOKEN_OR_ALL="$3"
         LIMIT="$4"
+        SIGNATURE_TYPE="$5"
         if [ -z "$WALLET_SELECTOR" ]; then
-            echo "Usage: agentwalletapi.sh polymarket-redeem <walletSelector> [tokenId|all] [limit] [--yes]"
+            echo "Usage: agentwalletapi.sh polymarket-redeem <walletSelector> [tokenId|all] [limit] [signatureType] [--yes]"
             exit 1
         fi
         BODY="{"
@@ -1040,6 +1050,16 @@ case "$COMMAND" in
         if [ -n "$LIMIT" ]; then
             require_uint "limit" "$LIMIT"
             BODY="$BODY, \"limit\": $LIMIT"
+        fi
+        if [ -n "$SIGNATURE_TYPE" ]; then
+            case "$SIGNATURE_TYPE" in
+                0|1|2) ;;
+                *)
+                    echo "signatureType must be 0, 1, or 2 (defensive assertion: 0 = direct EOA, 1 = proxy, 2 = Gnosis Safe)"
+                    exit 1
+                    ;;
+            esac
+            BODY="$BODY, \"signatureType\": $SIGNATURE_TYPE"
         fi
         BODY="$BODY}"
         curl -s -X POST \
@@ -1074,6 +1094,7 @@ case "$COMMAND" in
         echo "Usage: agentwalletapi.sh <command> [options]"
         echo ""
         echo "Commands:"
+        echo "  skill-latest                               Get latest skill version + zip/install metadata (public)"
         echo "  wallets                                    List all wallets"
         echo "  user-tag-get                               Read global checkout user tag"
         echo "  user-tag-set <userTag> [--yes]            Set global checkout user tag once"
@@ -1111,10 +1132,11 @@ case "$COMMAND" in
         echo "  polymarket-orders <walletSelector> [status] [limit] [cursor]"
         echo "  polymarket-activity <walletSelector> [limit] [cursor]"
         echo "  polymarket-positions <walletSelector> [limit]"
-        echo "  polymarket-redeem <walletSelector> [tokenId|all] [limit] [--yes]"
+        echo "  polymarket-redeem <walletSelector> [tokenId|all] [limit] [signatureType] [--yes]"
         echo "  polymarket-cancel <walletSelector> <orderId> [--yes]"
         echo ""
         echo "Examples:"
+        echo "  agentwalletapi.sh skill-latest"
         echo "  agentwalletapi.sh wallets"
         echo "  agentwalletapi.sh user-tag-get"
         echo "  agentwalletapi.sh user-tag-set my-agent-tag --yes"
@@ -1140,6 +1162,7 @@ case "$COMMAND" in
         echo "  agentwalletapi.sh polymarket-orders 2 OPEN 50"
         echo "  agentwalletapi.sh polymarket-redeem 2 all 100 --yes"
         echo "  agentwalletapi.sh polymarket-redeem 2 1234567890 100 --yes"
+        echo "  agentwalletapi.sh polymarket-redeem 2 1234567890 100 0 --yes  # assert direct on-chain path"
         echo "  agentwalletapi.sh polymarket-cancel 2 0xorderid --yes"
         ;;
 esac
