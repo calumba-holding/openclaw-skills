@@ -26,7 +26,7 @@ Access the Snapchat Marketing API with managed OAuth authentication. Manage orga
 # List your organizations
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/snapchat/v1/me/organizations')
+req = urllib.request.Request('https://api.maton.ai/snapchat/v1/me/organizations')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,12 +35,12 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/snapchat/{api-path}
+https://api.maton.ai/snapchat/{api-path}
 ```
 
 The Snapchat Marketing API uses the path pattern:
 ```
-https://gateway.maton.ai/snapchat/v1/{resource}
+https://api.maton.ai/snapchat/v1/{resource}
 ```
 
 ## Authentication
@@ -65,14 +65,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Snapchat OAuth connections at `https://ctrl.maton.ai`.
+Manage your Snapchat OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=snapchat&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=snapchat&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -84,7 +84,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'snapchat'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -96,7 +96,7 @@ EOF
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -106,7 +106,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "f5d5458b-fb65-458c-9e51-08844662dd39",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-14T00:00:00.000000Z",
     "last_updated_time": "2026-02-14T00:00:00.000000Z",
@@ -124,7 +124,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -137,14 +137,19 @@ If you have multiple Snapchat connections, specify which one to use with the `Ma
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/snapchat/v1/me/organizations')
+req = urllib.request.Request('https://api.maton.ai/snapchat/v1/me/organizations')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'f5d5458b-fb65-458c-9e51-08844662dd39')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to ad accounts, campaigns, ad squads, ads, creatives, and audiences within the connected Snapchat account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -705,7 +710,7 @@ Supported values: `updated_at-desc`, `created_at-desc`
 ```javascript
 // List organizations
 const response = await fetch(
-  'https://gateway.maton.ai/snapchat/v1/me/organizations',
+  'https://api.maton.ai/snapchat/v1/me/organizations',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -724,7 +729,7 @@ import requests
 
 # List organizations
 response = requests.get(
-    'https://gateway.maton.ai/snapchat/v1/me/organizations',
+    'https://api.maton.ai/snapchat/v1/me/organizations',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -742,7 +747,7 @@ headers = {'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 
 # Get ad accounts
 response = requests.get(
-    f'https://gateway.maton.ai/snapchat/v1/organizations/{org_id}/adaccounts',
+    f'https://api.maton.ai/snapchat/v1/organizations/{org_id}/adaccounts',
     headers=headers
 )
 ad_accounts = response.json()['adaccounts']
@@ -751,7 +756,7 @@ ad_accounts = response.json()['adaccounts']
 for aa in ad_accounts:
     ad_account_id = aa['adaccount']['id']
     campaigns = requests.get(
-        f'https://gateway.maton.ai/snapchat/v1/adaccounts/{ad_account_id}/campaigns',
+        f'https://api.maton.ai/snapchat/v1/adaccounts/{ad_account_id}/campaigns',
         headers=headers
     ).json()
     print(f"Ad Account: {aa['adaccount']['name']}")
