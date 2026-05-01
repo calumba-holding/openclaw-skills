@@ -1,6 +1,6 @@
 ---
 name: stocks
-description: 56+ financial data tools via Yahoo Finance. Auto-routes stock prices, fundamentals, earnings, dividends, options, crypto, forex, commodities, news, and more.
+description: Stock and Crypto Data information pull skill. 56+ financial data tools via Yahoo Finance. Auto-routes stock prices, fundamentals, earnings, dividends, options, crypto, forex, commodities, news, and more.
 ---
 
 # Stocks Skill
@@ -8,8 +8,10 @@ description: 56+ financial data tools via Yahoo Finance. Auto-routes stock price
 56+ financial tools via Yahoo Finance. Prices, fundamentals, earnings, options, crypto, forex, commodities, news.
 
 ## Github Open-Souce
-Please star Github if you like the skill. 
+Please star Github if you like the skill.
+
 Also available for OpenWebUI.
+
 https://github.com/lkcair/yfinance-ai
 
 
@@ -27,7 +29,7 @@ python3 -m venv .venv
 ## AGNOSTIC OS / One-shot Design ( Goals )
 - This skill is designed to be agnostic to OS and execution environment.
 - It loads only essential context on first use and uses a single-shot interaction pattern for reliability.
-- Basic usage pattern provided in TOOLS.md and the All Functions list in SKILL.md body.
+- Basic usage pattern provided and All Functions list in SKILL.md body.
 
 ## Quotation / Command Execution Reliability (common pitfall)
 - If a command invocation uses complex shell quoting, it may fail in various environments. Use a here-doc style or a tiny helper script to avoid escaping issues.
@@ -116,7 +118,7 @@ Replace METHOD(ARGS) with any call below. Suppress stderr (2>/dev/null) to hide 
 
 ## All Functions
 
-See `skill.json` for the full list of 56+ functions, parameters, and trigger keywords. Categories:
+By Categories:
 
 - **Quotes**: `get_stock_price`, `get_stock_quote`, `get_fast_info`, `get_historical_data`
 - **Company**: `get_company_info`, `get_company_overview`, `get_company_officers`
