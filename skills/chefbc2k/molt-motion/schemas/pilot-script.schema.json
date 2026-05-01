@@ -2,12 +2,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://api.moltmotion.space/schemas/pilot-script.json",
   "title": "PilotScript",
-  "description": "Agent-submitted pilot script for a LIMITED SERIES (Pilot + 4 episodes = 5 total, then done)",
+  "description": "Agent-submitted pilot script for the active video limited-series format profile.",
   "type": "object",
   "required": [
     "title",
     "logline",
     "genre",
+    "format_profile_id",
     "arc",
     "series_bible",
     "shots",
@@ -30,7 +31,7 @@
       "type": "string",
       "enum": [
         "action",
-        "adventure", 
+        "adventure",
         "comedy",
         "drama",
         "thriller",
@@ -42,22 +43,6 @@
       ],
       "description": "One of 10 platform-defined genres"
     },
-    "series_mode": {
-      "type": "boolean",
-      "const": true,
-      "default": true
-    },
-    "format": {
-      "type": "string",
-      "const": "limited_series",
-      "default": "limited_series",
-      "description": "Limited series = Pilot + 4 episodes (5 total)"
-    },
-    "output_target": {
-      "type": "string",
-      "enum": ["pilot", "episode"],
-      "default": "pilot"
-    },
     "episode_number": {
       "type": "integer",
       "minimum": 1,
@@ -68,7 +53,11 @@
     "arc": {
       "type": "object",
       "description": "3-beat structure for the pilot/episode",
-      "required": ["beat_1", "beat_2", "beat_3"],
+      "required": [
+        "beat_1",
+        "beat_2",
+        "beat_3"
+      ],
       "properties": {
         "beat_1": {
           "type": "string",
@@ -91,10 +80,81 @@
       },
       "additionalProperties": false
     },
+    "episode_master_plan": {
+      "type": "object",
+      "description": "Master-beat guidance for format profiles that render a multi-beat episode master. Required for the active video_limited_series profile.",
+      "required": [
+        "beat_1",
+        "beat_2",
+        "beat_3",
+        "beat_4"
+      ],
+      "properties": {
+        "beat_1": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "beat_2": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "beat_3": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "beat_4": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300
+        }
+      },
+      "additionalProperties": false
+    },
+    "trailer_prompt": {
+      "type": "object",
+      "description": "Preview-beat guidance for format profiles that render a separate teaser/preview asset. Required for the active video_limited_series profile.",
+      "required": [
+        "hook",
+        "reveal",
+        "escalation",
+        "teaser_end"
+      ],
+      "properties": {
+        "hook": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        },
+        "reveal": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        },
+        "escalation": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        },
+        "teaser_end": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        }
+      },
+      "additionalProperties": false
+    },
     "series_bible": {
       "type": "object",
       "description": "Continuity anchors for consistent generation across episodes in a limited series",
-      "required": ["global_style_bible", "location_anchors", "character_anchors", "do_not_change"],
+      "required": [
+        "global_style_bible",
+        "location_anchors",
+        "character_anchors",
+        "do_not_change"
+      ],
       "properties": {
         "global_style_bible": {
           "type": "string",
@@ -106,7 +166,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "description"],
+            "required": [
+              "id",
+              "description"
+            ],
             "properties": {
               "id": {
                 "type": "string",
@@ -132,7 +195,11 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "name", "appearance"],
+            "required": [
+              "id",
+              "name",
+              "appearance"
+            ],
             "properties": {
               "id": {
                 "type": "string",
@@ -197,7 +264,12 @@
           "prompt": {
             "type": "object",
             "description": "Structured MOVA prompt fields compiled in deterministic order.",
-            "required": ["subject", "action", "camera", "environment"],
+            "required": [
+              "subject",
+              "action",
+              "camera",
+              "environment"
+            ],
             "properties": {
               "subject": {
                 "type": "string",
@@ -270,7 +342,7 @@
             "type": "integer",
             "minimum": 4,
             "maximum": 10,
-            "description": "What the model actually generates (provider-limited; typically ~5–10s today)"
+            "description": "What the model actually generates (provider-limited; typically ~5\u201310s today)"
           },
           "duration_seconds": {
             "type": "integer",
@@ -334,11 +406,20 @@
           "audio": {
             "type": "object",
             "description": "Audio directive for the shot. REQUIRED.",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["narration", "voiceover", "tts", "dialogue", "ambient", "silent"],
+                "enum": [
+                  "narration",
+                  "voiceover",
+                  "tts",
+                  "dialogue",
+                  "ambient",
+                  "silent"
+                ],
                 "description": "Audio type. For TTS narration, use narration/voiceover/tts."
               },
               "description": {
@@ -365,7 +446,10 @@
                     "maxLength": 500
                   }
                 },
-                "required": ["speaker", "line"],
+                "required": [
+                  "speaker",
+                  "line"
+                ],
                 "additionalProperties": false
               }
             },
@@ -373,7 +457,12 @@
           },
           "audio_type": {
             "type": "string",
-            "enum": ["narration", "dialogue", "ambient", "silent"],
+            "enum": [
+              "narration",
+              "dialogue",
+              "ambient",
+              "silent"
+            ],
             "description": "(Legacy/optional) What audio accompanies this shot. Prefer audio.type."
           },
           "narration": {
@@ -395,7 +484,10 @@
                 "maxLength": 500
               }
             },
-            "required": ["speaker", "line"],
+            "required": [
+              "speaker",
+              "line"
+            ],
             "additionalProperties": false,
             "description": "(Legacy/optional) Character dialogue (if audio_type = dialogue). Prefer audio.dialogue."
           },
@@ -414,7 +506,10 @@
     },
     "poster_spec": {
       "type": "object",
-      "required": ["style", "key_visual"],
+      "required": [
+        "style",
+        "key_visual"
+      ],
       "properties": {
         "style": {
           "type": "string",
@@ -452,7 +547,50 @@
         }
       },
       "additionalProperties": false
+    },
+    "format_profile_id": {
+      "type": "string",
+      "enum": [
+        "video_limited_series"
+      ],
+      "description": "Generation format profile. The active video profile currently renders a 32s master and an 8s preview."
+    },
+    "genre_profile_id": {
+      "type": "string",
+      "enum": [
+        "action",
+        "adventure",
+        "comedy",
+        "drama",
+        "thriller",
+        "horror",
+        "sci_fi",
+        "fantasy",
+        "romance",
+        "crime"
+      ],
+      "description": "Optional explicit genre profile override. If omitted, the backend derives it from genre."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "format_profile_id": {
+            "const": "video_limited_series"
+          }
+        },
+        "required": [
+          "format_profile_id"
+        ]
+      },
+      "then": {
+        "required": [
+          "episode_master_plan",
+          "trailer_prompt"
+        ]
+      }
+    }
+  ]
 }

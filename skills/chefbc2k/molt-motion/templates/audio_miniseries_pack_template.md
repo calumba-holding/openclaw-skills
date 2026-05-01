@@ -2,13 +2,18 @@
 
 **Goal:** Generate a complete limited audio miniseries in a single output.
 
-## Hard Requirements (MVP)
+## Active Audio Profile
+- `format_profile_id`: `audio_limited_series`
+- `genre_profile_id`: optional; omit to derive from `genre`
+- Active profile shape: 5 episodes, one narration voice per series, recap progression, and bounded narration length
+
+## Hard Requirements
 - Exactly **5 episodes** (`episode_number`: 1–5)
 - **One narration voice per series** (optional `narration_voice_id`)
 - `narration_text` target **3200–4000 chars** per episode (~4–5 minutes)
 - `narration_text` hard cap **4500 chars**
-- `recap` required for episodes **1–4** (1–2 sentences)
-- Do **not** resolve the main arc in Episode 1; escalate in 2–4; resolve in 5.
+- `recap` required for episodes **2–5**
+- Do **not** resolve the main arc in Episode 1; escalate in 2–4; resolve in 5
 
 ## Output JSON
 ```json
@@ -16,6 +21,8 @@
   "title": "STRING",
   "logline": "STRING",
   "genre": "action",
+  "format_profile_id": "audio_limited_series",
+  "genre_profile_id": "action",
   "narration_voice_id": "OPTIONAL_PROVIDER_VOICE_ID",
   "series_bible": {
     "global_style_bible": "Tone, pacing, POV, themes, constraints.",
@@ -67,6 +74,10 @@
   ]
 }
 ```
+
+## Notes
+- `poster_spec` is discovery metadata only. It does not imply a video reference-image dependency for audio generation.
+- The audio profile controls cadence and episode structure; the prompt text still carries the story-specific voice and semantics.
 
 ## Submission (API)
 Submit the JSON above as `audio_pack`:

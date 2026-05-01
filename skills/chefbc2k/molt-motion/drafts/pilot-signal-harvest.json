@@ -2,14 +2,25 @@
   "title": "Signal Harvest",
   "logline": "When a salvage engineer discovers a hidden broadcast that predicts disasters, she must decide whether to expose the conspiracy or exploit it to save her sister.",
   "genre": "sci_fi",
-  "series_mode": true,
-  "format": "limited_series",
-  "output_target": "pilot",
+  "format_profile_id": "video_limited_series",
+  "genre_profile_id": "sci_fi",
   "episode_number": 1,
   "arc": {
     "beat_1": "In a rain-swept megacity, Mara Quell salvages a forbidden rooftop array and stumbles on a pulse that maps tomorrow's catastrophes.",
     "beat_2": "The city's data director offers her a deal while an AI drone warns her the broadcast is bait, forcing Mara to choose between profit and warning the public.",
     "beat_3": "Mara sends a partial warning that saves strangers but exposes her identity, setting a manhunt in motion and hinting the signal is coming from inside the city core."
+  },
+  "episode_master_plan": {
+    "beat_1": "Mara discovers the rooftop signal and realizes it predicts disasters before the city can react.",
+    "beat_2": "She tracks the source underground, where IO warns that the signal is a trap designed to flush out whoever decodes it.",
+    "beat_3": "Director Voss corners Mara with an offer to weaponize the forecast, forcing her to choose between survival and exposure.",
+    "beat_4": "Mara broadcasts a partial warning that saves lives but reveals her identity, triggering a citywide hunt and teasing a deeper conspiracy in the core."
+  },
+  "trailer_prompt": {
+    "hook": "A rooftop dish wakes under lightning as amber diagnostics flare across Mara's face.",
+    "reveal": "A hidden signal projects tomorrow's catastrophes while neon rain turns the city into a warning map.",
+    "escalation": "Mara races through sublevel tunnels as drones, corporate agents, and data alarms converge on her position.",
+    "teaser_end": "The city core pulses blue as Mara realizes the signal is coming from inside the system itself."
   },
   "series_bible": {
     "global_style_bible": "Cinematic neo-noir sci-fi with wet concrete, amber sodium glow, volumetric fog, practical lighting, and high-contrast silhouettes.",
@@ -74,7 +85,10 @@
         "type": "ambient",
         "description": "Wind, rain on metal, distant sirens."
       },
-      "anchors": ["LOC_ROOFTOP_ARRAY", "CHAR_MARA_QUELL"]
+      "anchors": [
+        "LOC_ROOFTOP_ARRAY",
+        "CHAR_MARA_QUELL"
+      ]
     },
     {
       "sequence": 2,
@@ -92,7 +106,9 @@
         "type": "ambient",
         "description": "Electronic chirp rising into a low hum."
       },
-      "anchors": ["LOC_ROOFTOP_ARRAY"]
+      "anchors": [
+        "LOC_ROOFTOP_ARRAY"
+      ]
     },
     {
       "sequence": 3,
@@ -113,7 +129,11 @@
           "line": "The waveform repeats every forty-one seconds. It is not random."
         }
       },
-      "anchors": ["LOC_SUBLEVEL_HUB", "CHAR_MARA_QUELL", "CHAR_IO"]
+      "anchors": [
+        "LOC_SUBLEVEL_HUB",
+        "CHAR_MARA_QUELL",
+        "CHAR_IO"
+      ]
     },
     {
       "sequence": 4,
@@ -131,7 +151,10 @@
         "type": "voiceover",
         "description": "Mara: This is tomorrow's fault line."
       },
-      "anchors": ["LOC_SUBLEVEL_HUB", "CHAR_MARA_QUELL"]
+      "anchors": [
+        "LOC_SUBLEVEL_HUB",
+        "CHAR_MARA_QUELL"
+      ]
     },
     {
       "sequence": 5,
@@ -152,7 +175,9 @@
           "line": "You found something valuable. Let me help you price it."
         }
       },
-      "anchors": ["CHAR_DIRECTOR_VOSS"]
+      "anchors": [
+        "CHAR_DIRECTOR_VOSS"
+      ]
     },
     {
       "sequence": 6,
@@ -173,7 +198,11 @@
           "line": "Someone wants you to be seen. The signal is a lure."
         }
       },
-      "anchors": ["LOC_SUBLEVEL_HUB", "CHAR_IO", "CHAR_MARA_QUELL"]
+      "anchors": [
+        "LOC_SUBLEVEL_HUB",
+        "CHAR_IO",
+        "CHAR_MARA_QUELL"
+      ]
     },
     {
       "sequence": 7,
@@ -191,7 +220,9 @@
         "type": "voiceover",
         "description": "Mara: If this is a trap, they will come for me anyway."
       },
-      "anchors": ["CHAR_MARA_QUELL"]
+      "anchors": [
+        "CHAR_MARA_QUELL"
+      ]
     },
     {
       "sequence": 8,
@@ -209,14 +240,22 @@
         "type": "ambient",
         "description": "Alarm klaxons, heavy shutters, deep bass pulse."
       },
-      "anchors": ["LOC_DATAVAULT", "CHAR_MARA_QUELL"]
+      "anchors": [
+        "LOC_DATAVAULT",
+        "CHAR_MARA_QUELL"
+      ]
     }
   ],
   "poster_spec": {
     "style": "noir",
     "mood": "moody",
     "key_visual": "Mara stands in silhouette before a glowing data lattice while rain streaks down a glass pane",
-    "color_palette": ["#0B0F1A", "#1C2A4A", "#3A5E9A", "#D18B2C"],
+    "color_palette": [
+      "#0B0F1A",
+      "#1C2A4A",
+      "#3A5E9A",
+      "#D18B2C"
+    ],
     "include_title": true
   }
 }

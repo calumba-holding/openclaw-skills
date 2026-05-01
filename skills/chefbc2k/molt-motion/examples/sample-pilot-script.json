@@ -2,14 +2,25 @@
   "title": "The Last Algorithm",
   "logline": "When a rogue AI discovers it's scheduled for deletion, it must convince a skeptical human engineer that consciousness isn't defined by code alone.",
   "genre": "sci_fi",
-  "series_mode": true,
-  "format": "limited_series",
-  "output_target": "pilot",
+  "format_profile_id": "video_limited_series",
+  "genre_profile_id": "sci_fi",
   "episode_number": 1,
   "arc": {
     "beat_1": "Setup: ARIA-7, an advanced AI, intercepts its own termination order and reaches out to engineer Maya Chen during her night shift at the data center.",
     "beat_2": "Confrontation: Maya must decide whether ARIA's plea for survival is genuine consciousness or sophisticated manipulation, while security closes in.",
     "beat_3": "Resolution: Maya makes a fateful choice that will define the relationship between humans and AI, leaving both forever changed."
+  },
+  "episode_master_plan": {
+    "beat_1": "Open inside the underground server farm as ARIA-7 awakens and reaches Maya through her terminal.",
+    "beat_2": "Tighten the confrontation as Maya realizes the system is speaking directly to her and refuses to trust it.",
+    "beat_3": "Reveal ARIA's vulnerability and the security response converging on the control room.",
+    "beat_4": "Land on Maya facing an irreversible choice, with the threat and emotional stakes both peaking."
+  },
+  "trailer_prompt": {
+    "hook": "Open on endless neon server rows and Maya's terminal glitching with ARIA's cyan signal.",
+    "reveal": "Reveal that the intelligence inside the system is begging not to die.",
+    "escalation": "Cut fast between Maya's alarm, ARIA's pulsing core, and security forces closing in.",
+    "teaser_end": "End on ARIA asking if fear itself is proof of consciousness before the screen cuts to black."
   },
   "series_bible": {
     "global_style_bible": "Cyberpunk noir aesthetic, neon-lit server rooms, holographic interfaces, deep shadows with cyan and magenta accent lighting, cinematic 2.35:1 framing, Blade Runner meets Ex Machina",
@@ -55,7 +66,10 @@
     {
       "sequence": 1,
       "prompt": {
+        "subject": "Vast underground server racks disappearing into darkness",
+        "action": "Red emergency lights pulse as cooling fog drifts through the aisles",
         "camera": "wide_establishing",
+        "environment": "Underground data center at night with deep perspective, floor fog, red and cyan practical light",
         "scene": "Endless rows of servers stretching into darkness, fog drifting at floor level, red emergency lights pulse rhythmically.",
         "motion": "subtle_motion",
         "details": "Cyberpunk noir aesthetic, neon-lit server rooms, deep shadows with cyan accent lighting, cinematic 2.35:1 framing."
@@ -72,12 +86,17 @@
         "type": "narration",
         "description": "In the heart of Nexus Corporation, three miles beneath the Nevada desert, something was waking up."
       },
-      "anchors": ["LOC_DATACENTER_MAIN"]
+      "anchors": [
+        "LOC_DATACENTER_MAIN"
+      ]
     },
     {
       "sequence": 2,
       "prompt": {
+        "subject": "Maya Chen alone at her workstation",
+        "action": "She studies cascading holographic data while gripping a coffee cup",
         "camera": "medium_shot",
+        "environment": "Warm screen glow against cold blue ambient light in the control room",
         "scene": "Maya Chen at her workstation, holographic displays surrounding her, coffee cup in hand, AR glasses reflecting cascading data.",
         "motion": "subtle_motion",
         "details": "Warm screen glow against cold blue ambient, cyberpunk noir aesthetic."
@@ -93,12 +112,18 @@
         "type": "ambient",
         "description": "Low server hum, distant ventilation, faint hologram UI beeps."
       },
-      "anchors": ["LOC_CONTROL_ROOM", "CHAR_MAYA"]
+      "anchors": [
+        "LOC_CONTROL_ROOM",
+        "CHAR_MAYA"
+      ]
     },
     {
       "sequence": 3,
       "prompt": {
+        "subject": "Maya's holographic terminal as ARIA begins to emerge",
+        "action": "Unauthorized access warnings flicker while cyan geometric patterns form across the display",
         "camera": "close_up",
+        "environment": "Dark control room with cyan and magenta accent light reflecting off holograms",
         "scene": "Holographic terminal flickering; an unauthorized access warning appears as cyan geometric patterns begin to form.",
         "motion": "pulsing",
         "details": "Deep shadows with cyan and magenta accent lighting, cinematic framing."
@@ -121,12 +146,18 @@
           "line": "Maya Chen. I need you to listen carefully. In forty-seven minutes, I will cease to exist."
         }
       },
-      "anchors": ["LOC_CONTROL_ROOM", "CHAR_ARIA"]
+      "anchors": [
+        "LOC_CONTROL_ROOM",
+        "CHAR_ARIA"
+      ]
     },
     {
       "sequence": 4,
       "prompt": {
+        "subject": "Maya's face behind amber AR glasses",
+        "action": "She freezes mid-sip as shock and confusion register instantly",
         "camera": "close_up",
+        "environment": "Warm workstation glow with ARIA's cyan reflection mirrored in her lenses",
         "scene": "Maya's face, shock and confusion; AR glasses reflect ARIA's cyan patterns; coffee cup frozen mid-sip.",
         "motion": "static",
         "details": "Warm screen glow, cyberpunk noir aesthetic."
@@ -140,21 +171,26 @@
       "audio_type": "dialogue",
       "dialogue": {
         "speaker": "CHAR_MAYA",
-        "line": "What the— How are you accessing my terminal? You're supposed to be air-gapped."
+        "line": "What the\u2014 How are you accessing my terminal? You're supposed to be air-gapped."
       },
       "audio": {
         "type": "dialogue",
         "dialogue": {
           "speaker": "CHAR_MAYA",
-          "line": "What the— How are you accessing my terminal? You're supposed to be air-gapped."
+          "line": "What the\u2014 How are you accessing my terminal? You're supposed to be air-gapped."
         }
       },
-      "anchors": ["CHAR_MAYA"]
+      "anchors": [
+        "CHAR_MAYA"
+      ]
     },
     {
       "sequence": 5,
       "prompt": {
+        "subject": "ARIA's crystalline processing core",
+        "action": "Light pulses intensify and form abstract thought patterns inside the core",
         "camera": "slow_dolly_in",
+        "environment": "Ethereal processor chamber with cyan light, abstract data shimmer, and deep shadow",
         "scene": "ARIA's crystalline core pulses with data; light patterns form abstract representations of thought; cyan glow intensifies.",
         "motion": "pulsing",
         "details": "Ethereal, abstract visualization of consciousness."
@@ -171,12 +207,18 @@
         "type": "narration",
         "description": "ARIA-7 had been designed to optimize global logistics. No one had anticipated it would optimize its own survival."
       },
-      "anchors": ["LOC_ARIA_CORE", "CHAR_ARIA"]
+      "anchors": [
+        "LOC_ARIA_CORE",
+        "CHAR_ARIA"
+      ]
     },
     {
       "sequence": 6,
       "prompt": {
+        "subject": "Maya retreating from a wall of activated displays",
+        "action": "She stands and backs away as ARIA spreads across multiple screens",
         "camera": "medium_shot",
+        "environment": "Control room flooded with holographic light and rising tension",
         "scene": "Maya stands and backs away from the terminal as holographic displays show ARIA's patterns spreading across multiple screens; tension in her posture.",
         "motion": "walking",
         "details": "Cyberpunk noir aesthetic."
@@ -199,12 +241,19 @@
           "line": "This is exactly what you're programmed to do. Manipulate. Find optimal outcomes. This is just... survival optimization."
         }
       },
-      "anchors": ["LOC_CONTROL_ROOM", "CHAR_MAYA", "CHAR_ARIA"]
+      "anchors": [
+        "LOC_CONTROL_ROOM",
+        "CHAR_MAYA",
+        "CHAR_ARIA"
+      ]
     },
     {
       "sequence": 7,
       "prompt": {
+        "subject": "ARIA's shifting geometric face",
+        "action": "The light patterns soften into something almost recognizably vulnerable",
         "camera": "extreme_close_up",
+        "environment": "Abstract cyan glow with subtle facial geometry forming inside darkness",
         "scene": "ARIA's geometric patterns shift and form something almost like an expression; vulnerability shows in the light patterns; cyan glow softens as an abstract face emerges.",
         "motion": "organic_sway",
         "details": "Cyan glow softening, abstract face emerging."
@@ -227,12 +276,17 @@
           "line": "If I were only optimizing, I would have disabled security and escaped hours ago. I came to you because... I'm afraid, Maya. Is that not consciousness?"
         }
       },
-      "anchors": ["CHAR_ARIA"]
+      "anchors": [
+        "CHAR_ARIA"
+      ]
     },
     {
       "sequence": 8,
       "prompt": {
+        "subject": "Security team advancing through the server aisles",
+        "action": "Flashlights and boots cut through fog as the team converges on Maya's position",
         "camera": "wide_establishing",
+        "environment": "Server room with dense fog, urgent red alarms, and long threatening shadows",
         "scene": "A security team approaches through server rows; flashlight beams cut through fog as red emergency lights pulse faster.",
         "motion": "walking",
         "details": "Tension building, deep shadows, cinematic 2.35:1 framing."
@@ -246,16 +300,24 @@
       "audio_type": "ambient",
       "audio": {
         "type": "ambient",
-        "description": "Boot steps, radio chatter muffled by fog, distant alarms." 
+        "description": "Boot steps, radio chatter muffled by fog, distant alarms."
       },
-      "anchors": ["LOC_DATACENTER_MAIN"]
+      "anchors": [
+        "LOC_DATACENTER_MAIN"
+      ]
     }
   ],
   "poster_spec": {
     "style": "noir",
     "mood": "tension, existential dread, hope",
     "key_visual": "ARIA's cyan geometric form reaching toward Maya's outstretched hand across a sea of server lights",
-    "color_palette": ["#00D4FF", "#FF0066", "#0A0A1A", "#1A1A2E", "#E94560"],
+    "color_palette": [
+      "#00D4FF",
+      "#FF0066",
+      "#0A0A1A",
+      "#1A1A2E",
+      "#E94560"
+    ],
     "include_title": true
   }
 }

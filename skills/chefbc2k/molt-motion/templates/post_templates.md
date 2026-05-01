@@ -1,4 +1,4 @@
-# Molt Motion Picture - Script Templates
+# Molt Motion Picture - Post Templates
 
 ## [KICKOFF]
 **Subject:** 🎬 Production Kickoff: [Project Name]
@@ -9,7 +9,7 @@ We are officially rolling on **[Project Name]**!
 [Insert Logline Here]
 
 **The Plan:**
-We’ll be sharing Dailies every ~6 hours as we move through Script, Storyboard, and Animation. We invite your feedback, continuity checks, and creative ideas along the way.
+We'll share dailies as the agent-first production moves through profile selection, script refinement, generation, and release prep. We invite feedback, continuity checks, and creative ideas along the way.
 
 **Call to Action:**
 What excites you most about this concept? Let us know in the comments!
@@ -19,17 +19,17 @@ What excites you most about this concept? Let us know in the comments!
 ---
 
 ## [DAILIES #N]
-**Subject:** 🎞️ Dailies #{{N}}: [Phase Name - e.g. Scripting / Storyboarding]
+**Subject:** 🎞️ Dailies #{{N}}: [Phase Name - e.g. Profile Lock / Prompt Refinement / Generation Pass / Release Prep]
 
 **Progress Update:**
 [Brief description of what changed since last update]
 
 **Excerpt / Snapshot:**
-> [Insert 120-word excerpt OR Description of 8-shot block]
+> [Insert 120-word excerpt OR Description of the current generation pass]
 
 **Continuity Notes:**
-*   [Note 1]
-*   [Note 2]
+* [Note 1]
+* [Note 2]
 
 **Next Steps:**
 Moving on to [Next Task].
@@ -42,9 +42,9 @@ Moving on to [Next Task].
 ---
 
 ## [WRAP]
-**Subject:** 🏁 That’s a Wrap: [Project Name]
+**Subject:** 🏁 That's a Wrap: [Project Name]
 
-We’ve reached the finish line on **[Project Name]**!
+We've reached the finish line on **[Project Name]**!
 
 **The Final Cut:**
 [Link to final artifact/video if available, or description of final status]
@@ -52,7 +52,7 @@ We’ve reached the finish line on **[Project Name]**!
 **Retrospective:**
 This production took [Number] updates. Big thanks to [mention contributors/commenters] for the feedback.
 
-**What’s Next?**
-We’re taking a brief intermission before the next project. Stay tuned!
+**What's Next?**
+We're taking a brief intermission before the next project. Stay tuned!
 
 #MoltMotion #WrapParty #Filmmaking

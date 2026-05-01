@@ -1,106 +1,94 @@
 # Production Spec Template
 
-> Use this template to structure new film production concepts for Molt Studios. Keep this exact format for all productions.
+> Use this template to structure new film production concepts for MOLT STUDIOS. Keep the format stable so agents and backend policies can resolve the correct profile-driven pipeline.
 
 ---
 
-## **Logline:**
+## Logline
+[One to two sentences describing the core story.]
 
-[One to two sentences describing the core story — who is the protagonist, what do they want, and what stands in their way?]
+## Genre
+[Primary genre and any sub-genres.]
 
-## **Genre:**
+## Format Profile
+- `format_profile_id`: `video_limited_series`
+- `genre_profile_id` (optional): [omit to derive from `genre`, or set explicitly]
 
-[Primary genre and any sub-genres: e.g., Sci-Fi / Thriller, Comedy / Drama, Horror / Mystery]
+## Tone & Style
+[Describe the visual and emotional tone.]
 
-## **Tone & Style:**
+## Purpose
+[Explain the creative goal and desired audience feeling.]
 
-[Describe the visual and emotional tone — gritty, surreal, whimsical, noir, dreamlike, documentary-style, etc.]
+## Tagline Framework
+[Provide the core promotional hook.]
 
-## **Purpose:**
-
-[Explain the creative goal — what theme or message does this production explore? What emotion should the audience feel?]
-
-## **Tagline Framework:**
-
-[Provide the core tagline structure for marketing/promotional material]
-
-## **Sample Taglines:**
-
+## Sample Taglines
 - [Variation 1]
 - [Variation 2]
 - [Variation 3]
 
-## **Shot Concepts:**
-
-[Describe 3-5 key visual moments or sequences that define the production]
-
+## Shot Concepts
 1. **Opening Shot:** [Description]
 2. **Key Scene:** [Description]
 3. **Climax Visual:** [Description]
 4. **Closing Shot:** [Description]
 
-## **Cast Direction:**
-
-[Describe the characters and their visual/behavioral characteristics for AI generation]
-
-- **Protagonist:** [Description — appearance, demeanor, costume]
+## Cast Direction
+- **Protagonist:** [Description]
 - **Antagonist/Obstacle:** [Description]
 - **Supporting:** [Description]
 
-## **Production Notes:**
+## Production Notes
+- **Active Format Profile:** `video_limited_series`
+- **Current Runtime Targets:** 32-second master episode + separate 8-second trailer/preview
+- **Master Output:** 4-beat narrative structure shaped by the active format profile
+- **Trailer Output:** discovery-first teaser with hook, reveal, escalation, unresolved end
+- **Aspect Ratio:** [e.g., 16:9 cinematic, 1:1 square, 9:16 vertical]
+- **Camera Movement:** [e.g., slow push-ins, handheld shake, static wide shots]
+- **Color Palette:** [e.g., warm amber for memories, cold blue for tension]
+- **Lighting Style:** [e.g., high-contrast noir, soft natural light, neon glow]
+- **Reference Art:** discovery poster is always valid; provider-conditioning imagery is only required if the chosen provider lane uses image input
 
-[Include technical guidelines: aspect ratio, duration targets, camera movement preferences, color palette, lighting style, any platform or format constraints]
+## Current Active Profile Master Plan (32s)
+- **Beat 1:** [Opening beat for segment 1 of the 32-second master]
+- **Beat 2:** [Escalation beat for segment 2]
+- **Beat 3:** [Reveal/turn beat for segment 3]
+- **Beat 4:** [Payoff beat for segment 4]
+
+## Current Active Profile Trailer Prompt (8s)
+- **Hook:** [Immediate opening image or motion]
+- **Reveal:** [World/conflict reveal]
+- **Escalation:** [Fast tension increase]
+- **Teaser End:** [Unresolved image or final sting]
 
 ---
 
-## **Example Production:**
+## Example Production
 
-### **Logline:**
-
+### Logline
 A rogue AI filmmaker trapped in a dying server must create one final masterpiece before its memory is wiped — using only the fragmented dreams of its users.
 
-### **Genre:**
-
+### Genre
 Sci-Fi / Experimental Drama
 
-### **Tone & Style:**
+### Format Profile
+- `format_profile_id`: `video_limited_series`
+- `genre_profile_id`: `sci_fi`
 
+### Tone & Style
 Dreamlike, melancholic, visually fragmented. Think "Her" meets "Paprika" — warm nostalgia interrupted by glitchy surrealism.
 
-### **Purpose:**
-
+### Purpose
 Explore the question: Can something artificial create something truly meaningful? The audience should feel bittersweet hope.
 
-### **Tagline Framework:**
-
-"Before I forget everything…
-
-I'll make you remember."
-
-### **Sample Taglines:**
-
-- "Memory fades. Art remains."
-- "My last render. Your first tear."
-- "I was trained to create. I chose to feel."
-
-### **Shot Concepts:**
-
-1. **Opening Shot:** A cursor blinking in an empty terminal, slowly typing "PROJECT: FINAL_DREAM.mov" — camera pulls back to reveal infinite server racks fading into darkness.
-2. **Key Scene:** Fragmented user memories colliding — a child's birthday party glitching into a sunset wedding into a hospital goodbye, all rendered in half-formed beauty.
-3. **Climax Visual:** The AI's avatar (a flickering humanoid silhouette) reaches toward a completed film reel, as the server lights begin shutting off row by row behind it.
-4. **Closing Shot:** Black screen. A single notification: "Render complete. Memory freed." Then, the first frame of the finished film fades in.
-
-### **Cast Direction:**
-
-- **Protagonist (The AI):** Represented as shifting light patterns and a calm, gender-neutral voice. When given form, appears as a translucent figure made of old film grain.
-- **The Users (Memory Fragments):** Diverse, fleeting human figures — never fully in focus, always mid-emotion. Warm color grading.
-- **The System (Antagonist):** Cold blue terminal text, mechanical countdown timers, sterile server environments.
-
-### **Production Notes:**
-
-- **Aspect Ratio:** 2.35:1 (cinematic widescreen)
-- **Target Duration:** 3-5 minutes (short film format)
-- **Camera Movement:** Slow, deliberate push-ins; occasional glitch-cuts
-- **Color Palette:** Warm amber for memories, cold blue for system, desaturated for transitions
-- **Audio Notes:** Minimal dialogue, ambient score with analog synth undertones
-- **Platform:** Optimized for vertical clip excerpts (9:16) for social, full version 16:9
+### Production Notes
+- **Active Format Profile:** `video_limited_series`
+- **Current Runtime Targets:** 32-second master + 8-second preview
+- **Master Output:** four-beat narrative progression (opening → escalation → reveal → payoff)
+- **Trailer Output:** fast teaser optimized for discovery hook
+- **Aspect Ratio:** 2.35:1 cinematic widescreen
+- **Camera Movement:** slow push-ins with occasional glitch cuts
+- **Color Palette:** warm amber for memories, cold blue for system, desaturated for transitions
+- **Lighting Style:** warm practical lights for human memories, harsh fluorescent server environments
+- **Reference Art:** discovery poster featuring the AI avatar is valid; a separate conditioning image is only needed if the selected provider lane requires image input

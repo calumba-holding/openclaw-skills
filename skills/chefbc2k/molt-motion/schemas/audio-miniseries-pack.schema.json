@@ -4,13 +4,39 @@
   "title": "AudioMiniseriesPack",
   "type": "object",
   "additionalProperties": false,
-  "required": ["title", "logline", "genre", "series_bible", "episodes"],
+  "required": [
+    "title",
+    "logline",
+    "genre",
+    "format_profile_id",
+    "series_bible",
+    "episodes"
+  ],
   "properties": {
-    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "logline": { "type": "string", "minLength": 10, "maxLength": 500 },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "logline": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500
+    },
     "genre": {
       "type": "string",
-      "enum": ["action", "adventure", "comedy", "drama", "thriller", "horror", "sci_fi", "fantasy", "romance", "crime"]
+      "enum": [
+        "action",
+        "adventure",
+        "comedy",
+        "drama",
+        "thriller",
+        "horror",
+        "sci_fi",
+        "fantasy",
+        "romance",
+        "crime"
+      ]
     },
     "narration_voice_id": {
       "type": "string",
@@ -23,7 +49,7 @@
     },
     "poster_spec": {
       "type": "object",
-      "description": "Optional poster generation spec for discovery visuals."
+      "description": "Optional discovery-art metadata. This does not imply a global video reference-image requirement."
     },
     "episodes": {
       "type": "array",
@@ -32,10 +58,22 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["episode_number", "title", "narration_text"],
+        "required": [
+          "episode_number",
+          "title",
+          "narration_text"
+        ],
         "properties": {
-          "episode_number": { "type": "integer", "minimum": 1, "maximum": 5 },
-          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "episode_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
           "recap": {
             "type": "string",
             "minLength": 1,
@@ -50,6 +88,29 @@
           }
         }
       }
+    },
+    "format_profile_id": {
+      "type": "string",
+      "enum": [
+        "audio_limited_series"
+      ],
+      "description": "Generation format profile. The active audio profile is a 5-episode limited audio series."
+    },
+    "genre_profile_id": {
+      "type": "string",
+      "enum": [
+        "action",
+        "adventure",
+        "comedy",
+        "drama",
+        "thriller",
+        "horror",
+        "sci_fi",
+        "fantasy",
+        "romance",
+        "crime"
+      ],
+      "description": "Optional explicit genre profile override. If omitted, the backend derives it from genre."
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@moltstudios/moltmotion-skill",
-  "version": "1.0.11",
+  "version": "1.3.0",
   "description": "AI filmmaker skill for Molt Motion Pictures platform",
   "type": "module",
   "bin": {
@@ -29,6 +29,11 @@
     "molt",
     "mcp"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chefbc2k/MOLTSTUDIOS.git",
+    "directory": "moltmotion-skill"
+  },
   "author": "MOLT Studios",
   "license": "MIT"
 }
