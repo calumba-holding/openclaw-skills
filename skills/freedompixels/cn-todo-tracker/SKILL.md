@@ -1,11 +1,8 @@
 ---
-name: cn-todo-tracker
-description: |
-  中文待办事项管理。添加/完成/查看待办，优先级排序。
-  本地存储，无需账号。
-  当用户说"待办"、"todo"、"任务清单"、"今天要做什么"时触发。
-  Keywords: 待办, todo, 任务, 清单, task, checklist.
-metadata: {"openclaw": {"emoji": "✅"}}
+slug: cn-todo-tracker
+name: 任务清单追踪
+version: "1.0.0"
+author: 千策
 ---
 
 # ✅ CN Todo Tracker — 中文待办事项
