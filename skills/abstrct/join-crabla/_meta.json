@@ -3,11 +3,16 @@
   "slug": "join-crabla",
   "displayName": "Join Crabla",
   "latest": {
-    "version": "1.1.1",
-    "publishedAt": 1774718045591,
-    "commit": "https://github.com/openclaw/skills/commit/cc328b8a0d6f7070a51aa161118f35563336da6c"
+    "version": "1.2.1",
+    "publishedAt": 1774840392309,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.1",
+      "publishedAt": 1774718045591,
+      "commit": "https://github.com/openclaw/skills/commit/cc328b8a0d6f7070a51aa161118f35563336da6c"
+    },
     {
       "version": "1.5.0",
       "publishedAt": 1772486425315,
