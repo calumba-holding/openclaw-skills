@@ -1,0 +1,11 @@
+{
+  "owner": "kn7865tvdsqd9pjav1n98at3qn80w4ws",
+  "slug": "agent-ros-bridge",
+  "displayName": "Agent Ros Bridge",
+  "latest": {
+    "version": "0.3.4",
+    "publishedAt": 1771639355034,
+    "commit": null
+  },
+  "history": []
+}
