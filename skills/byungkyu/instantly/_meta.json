@@ -3,9 +3,15 @@
   "slug": "instantly",
   "displayName": "Instantly",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1770895433289,
-    "commit": "https://github.com/openclaw/skills/commit/2166eb149ae4b254b2935ff0c5cbea3f7445246b"
+    "version": "1.0.1",
+    "publishedAt": 1777588764012,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1770895433289,
+      "commit": "https://github.com/openclaw/skills/commit/2166eb149ae4b254b2935ff0c5cbea3f7445246b"
+    }
+  ]
 }

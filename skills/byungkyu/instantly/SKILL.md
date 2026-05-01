@@ -26,7 +26,7 @@ Access the Instantly API v2 with managed authentication. Manage cold email campa
 # List campaigns
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/instantly/api/v2/campaigns?limit=10')
+req = urllib.request.Request('https://api.maton.ai/instantly/api/v2/campaigns?limit=10')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/instantly/{native-api-path}
+https://api.maton.ai/instantly/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Instantly API endpoint path. The gateway proxies requests to `api.instantly.ai` and automatically injects your API key.
+Maton proxies requests to `api.instantly.ai` and automatically injects your API key.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Instantly connections at `https://ctrl.maton.ai`.
+Manage your Instantly connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=instantly&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=instantly&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'instantly'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "e4dca622-b9cf-4ed6-b52e-fa681345f5ac",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-11T22:19:35.798712Z",
     "last_updated_time": "2026-02-11T22:20:15.702846Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Instantly connections, specify which one to use with the `M
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/instantly/api/v2/campaigns')
+req = urllib.request.Request('https://api.maton.ai/instantly/api/v2/campaigns')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'e4dca622-b9cf-4ed6-b52e-fa681345f5ac')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to campaigns, leads, accounts, and email analytics within the connected Instantly account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -640,7 +645,7 @@ Use `next_starting_after` value in the next request's `starting_after` parameter
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/instantly/api/v2/campaigns?limit=10',
+  'https://api.maton.ai/instantly/api/v2/campaigns?limit=10',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -657,7 +662,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/instantly/api/v2/campaigns',
+    'https://api.maton.ai/instantly/api/v2/campaigns',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     params={'limit': 10}
 )
@@ -698,7 +703,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -708,8 +713,8 @@ EOF
 
 1. Ensure your URL path starts with `instantly`. For example:
 
-- Correct: `https://gateway.maton.ai/instantly/api/v2/campaigns`
-- Incorrect: `https://gateway.maton.ai/api/v2/campaigns`
+- Correct: `https://api.maton.ai/instantly/api/v2/campaigns`
+- Incorrect: `https://api.maton.ai/api/v2/campaigns`
 
 ## Resources
 
