@@ -26,7 +26,7 @@ Access the Sentry API with managed authentication. Monitor errors, manage issues
 # List issues for a project
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/sentry/api/0/projects/{organization_slug}/{project_slug}/issues/')
+req = urllib.request.Request('https://api.maton.ai/sentry/api/0/projects/{organization_slug}/{project_slug}/issues/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/sentry/{native-api-path}
+https://api.maton.ai/sentry/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Sentry API endpoint path. The gateway proxies requests to `{subdomain}.sentry.io` and automatically injects your credentials.
+Maton proxies requests to `{subdomain}.sentry.io` and automatically injects your credentials.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Sentry OAuth connections at `https://ctrl.maton.ai`.
+Manage your Sentry OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=sentry&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=sentry&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'sentry'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "21fd90f9-5935-43cd-b6c8-bde9d915ca80",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2025-12-08T07:20:53.488460Z",
     "last_updated_time": "2026-01-31T20:03:32.593153Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Sentry connections, specify which one to use with the `Mato
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/sentry/api/0/organizations/')
+req = urllib.request.Request('https://api.maton.ai/sentry/api/0/organizations/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '21fd90f9-5935-43cd-b6c8-bde9d915ca80')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to issues, events, projects, organizations, and error tracking within the connected Sentry account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -430,7 +435,7 @@ Link: <...?cursor=0:0:1>; rel="previous"; results="false"; cursor="0:0:1",
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/sentry/api/0/organizations/',
+  'https://api.maton.ai/sentry/api/0/organizations/',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -447,7 +452,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/sentry/api/0/organizations/',
+    'https://api.maton.ai/sentry/api/0/organizations/',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -460,7 +465,7 @@ import os
 import requests
 
 response = requests.put(
-    'https://gateway.maton.ai/sentry/api/0/issues/12345/',
+    'https://api.maton.ai/sentry/api/0/issues/12345/',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
