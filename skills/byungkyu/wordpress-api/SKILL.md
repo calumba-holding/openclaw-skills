@@ -25,7 +25,7 @@ Access the WordPress.com REST API with managed OAuth authentication. Create and 
 # List posts from a site
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site_id}/posts?number=10')
+req = urllib.request.Request('https://api.maton.ai/wordpress/rest/v1.1/sites/{site_id}/posts?number=10')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/wordpress/rest/v1.1/{endpoint}
+https://api.maton.ai/wordpress/rest/v1.1/{endpoint}
 ```
 
-The gateway proxies requests to `public-api.wordpress.com` and automatically injects your OAuth token.
+Maton proxies requests to `public-api.wordpress.com` and automatically injects your OAuth token.
 
 **Note:** WordPress.com uses the REST v1.1 API. Site-specific endpoints use the pattern `/sites/{site_id_or_domain}/{resource}`.
 
@@ -63,14 +63,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your WordPress.com OAuth connections at `https://ctrl.maton.ai`.
+Manage your WordPress.com OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=wordpress&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=wordpress&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -82,7 +82,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'wordpress'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -104,7 +104,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "fb327990-1a43-4325-9c15-bad771b6a288",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-10T07:46:26.908898Z",
     "last_updated_time": "2026-02-10T07:49:33.440422Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,14 +135,19 @@ If you have multiple WordPress.com connections, specify which one to use with th
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site_id}/posts')
+req = urllib.request.Request('https://api.maton.ai/wordpress/rest/v1.1/sites/{site_id}/posts')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'fb327990-1a43-4325-9c15-bad771b6a288')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to posts, pages, sites, and content within the connected WordPress.com account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -571,7 +576,7 @@ headers = {
 
 # Initial request
 response = requests.get(
-    'https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site}/posts',
+    'https://api.maton.ai/wordpress/rest/v1.1/sites/{site}/posts',
     headers=headers,
     params={'number': 20}
 )
@@ -581,7 +586,7 @@ all_posts = result['posts']
 # Continue with page_handle
 while result.get('meta', {}).get('next_page'):
     response = requests.get(
-        'https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site}/posts',
+        'https://api.maton.ai/wordpress/rest/v1.1/sites/{site}/posts',
         headers=headers,
         params={'number': 20, 'page_handle': result['meta']['next_page']}
     )
@@ -603,7 +608,7 @@ GET /wordpress/rest/v1.1/sites/{site}/posts?number=20&offset=20
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site}/posts?number=10',
+  'https://api.maton.ai/wordpress/rest/v1.1/sites/{site}/posts?number=10',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -621,7 +626,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site}/posts',
+    'https://api.maton.ai/wordpress/rest/v1.1/sites/{site}/posts',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     params={'number': 10, 'status': 'publish'}
 )
@@ -636,7 +641,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site}/posts/new',
+    'https://api.maton.ai/wordpress/rest/v1.1/sites/{site}/posts/new',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -696,7 +701,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -706,8 +711,8 @@ EOF
 
 1. Ensure your URL path starts with `wordpress`. For example:
 
-- Correct: `https://gateway.maton.ai/wordpress/rest/v1.1/sites/{site_id}/posts`
-- Incorrect: `https://gateway.maton.ai/rest/v1.1/sites/{site_id}/posts`
+- Correct: `https://api.maton.ai/wordpress/rest/v1.1/sites/{site_id}/posts`
+- Incorrect: `https://api.maton.ai/rest/v1.1/sites/{site_id}/posts`
 
 ## Resources
 
