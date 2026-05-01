@@ -3,9 +3,15 @@
   "slug": "posthog-api",
   "displayName": "PostHog",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1771887896651,
-    "commit": "https://github.com/openclaw/skills/commit/90b412bf5f6dff6c44f878ffbf360d396af2d5ab"
+    "version": "1.0.1",
+    "publishedAt": 1777588002964,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1771887896651,
+      "commit": "https://github.com/openclaw/skills/commit/90b412bf5f6dff6c44f878ffbf360d396af2d5ab"
+    }
+  ]
 }

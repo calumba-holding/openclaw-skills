@@ -26,7 +26,7 @@ Access the PostHog API with managed authentication. Query product analytics even
 # List projects
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/posthog/api/projects/')
+req = urllib.request.Request('https://api.maton.ai/posthog/api/projects/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/posthog/{native-api-path}
+https://api.maton.ai/posthog/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual PostHog API endpoint path. The gateway proxies requests to `{subdomain}.posthog.com` and automatically injects your credentials.
+Maton proxies requests to `{subdomain}.posthog.com` and automatically injects your credentials.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your PostHog OAuth connections at `https://ctrl.maton.ai`.
+Manage your PostHog OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=posthog&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=posthog&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'posthog'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "ce2b0840-4e39-4b58-b607-7290fa7a3595",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-23T09:37:57.686121Z",
     "last_updated_time": "2026-02-23T09:39:11.851118Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple PostHog connections, specify which one to use with the `Mat
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/posthog/api/projects/')
+req = urllib.request.Request('https://api.maton.ai/posthog/api/projects/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'ce2b0840-4e39-4b58-b607-7290fa7a3595')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to events, persons, feature flags, insights, and dashboards within the connected PostHog account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -589,7 +594,7 @@ For session recordings, use `has_next` boolean:
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/posthog/api/projects/',
+  'https://api.maton.ai/posthog/api/projects/',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -606,7 +611,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/posthog/api/projects/',
+    'https://api.maton.ai/posthog/api/projects/',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -619,7 +624,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/posthog/api/projects/@current/query/',
+    'https://api.maton.ai/posthog/api/projects/@current/query/',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
