@@ -43,6 +43,7 @@ import {
 } from "./lib/reply-strategy.js";
 import { extractTemplate, formatTemplate } from "./lib/template.js";
 import { buildHealthReport, type NoteDiagnostics } from "./lib/health.js";
+import { buildWebUrl, enrichWithWebUrl } from "./lib/url.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
@@ -165,6 +166,7 @@ searchCmd.action(async (keyword, opts) => {
       sortMap[opts.sort] ?? "general",
       typeMap[opts.type] ?? 0
     );
+    enrichWithWebUrl(result, "pc_search");
 
     if (opts.json) {
       output(result, true);
@@ -220,6 +222,13 @@ readCmd.action(async (url, opts) => {
       }
     } else {
       result = await client.getNoteFromHtml(noteId, xsecToken ?? "");
+    }
+
+    // Attach the fully-signed webUrl (uses the token passed in on the URL).
+    // Without a token any `/explore/<id>` URL 302s to the xhs_sec_server gate.
+    if (result && typeof result === "object" && xsecToken) {
+      const r = result as Record<string, unknown>;
+      if (!r.webUrl) r.webUrl = buildWebUrl(noteId, xsecToken, "pc_share");
     }
 
     if (opts.json) {
@@ -335,6 +344,7 @@ userPostsCmd.action(async (userId, opts) => {
           cursor?: string;
         };
         const notes = res.notes ?? [];
+        enrichWithWebUrl(notes, "pc_user");
         allNotes.push(...notes);
         process.stderr.write(`Page ${page}: +${notes.length} notes (total: ${allNotes.length})\n`);
         if (!res.has_more || !res.cursor || notes.length === 0) break;
@@ -356,6 +366,7 @@ userPostsCmd.action(async (userId, opts) => {
     }
 
     const result = await client.getUserNotes(userId, opts.cursor ?? "");
+    enrichWithWebUrl(result, "pc_user");
     if (opts.json) {
       output(result, true);
     } else {
@@ -387,6 +398,7 @@ feedCmd.action(async (opts) => {
   try {
     const client = await getClient(opts.cookieSource, opts.chromeProfile, opts.cookieString);
     const result = await client.getHomeFeed(opts.category);
+    enrichWithWebUrl(result, "pc_feed");
     output(result, opts.json ?? false);
   } catch (err) {
     handleError(err);
@@ -450,13 +462,19 @@ postCmd.action(async (opts) => {
       isPrivate: opts.private ?? false,
     });
 
+    const r = result as Record<string, unknown>;
+    if (r.note_id && typeof r.xsec_token === "string") {
+      r.webUrl = buildWebUrl(r.note_id as string, r.xsec_token, "pc_share");
+    }
     if (opts.json) {
       output(result, true);
     } else {
       console.log(kleur.green("Note published!"));
-      const r = result as Record<string, unknown>;
       if (r.note_id) {
-        console.log(`  URL: https://www.xiaohongshu.com/explore/${r.note_id}`);
+        const url = typeof r.webUrl === "string"
+          ? r.webUrl
+          : `https://www.xiaohongshu.com/explore/${r.note_id}`;
+        console.log(`  URL: ${url}`);
       }
       console.error(kleur.yellow("⚠ Rate limit: wait ≥3-4 hours before the next post (2-3 notes/day max)."));
     }
@@ -526,7 +544,10 @@ favoritesCmd.action(async (userId, opts) => {
         cursor?: string;
       };
 
-      if (res.notes) allNotes.push(...res.notes);
+      if (res.notes) {
+        enrichWithWebUrl(res.notes, "pc_user");
+        allNotes.push(...res.notes);
+      }
       hasMore = opts.all ? (res.has_more ?? false) : false;
       cursor = res.cursor ?? "";
     }
@@ -786,7 +807,15 @@ boardCmd.action(async (url, opts) => {
       name: string;
       desc: string;
       noteCount: number;
-      notes: Array<{ note_id: string; title: string; author: string; type: string; url: string }>;
+      notes: Array<{
+        note_id: string;
+        xsec_token?: string;
+        title: string;
+        author: string;
+        type: string;
+        url: string;
+        webUrl?: string;
+      }>;
     };
 
     // Try REST API first, fall back to HTML scraping
@@ -796,15 +825,20 @@ boardCmd.action(async (url, opts) => {
         client.getBoardNotes(boardId) as Promise<Record<string, unknown>>,
       ]);
       const rawNotes = (feeds.notes ?? []) as Array<Record<string, unknown>>;
-      const notes = rawNotes.map((n) => ({
-        note_id: (n.note_id ?? n.id ?? "") as string,
-        xsec_token: (n.xsec_token ?? "") as string,
-        title: (n.display_title ?? n.title ?? "") as string,
-        type: (n.type ?? "") as string,
-        author: ((n.user as Record<string, unknown>)?.nick_name ??
-                 (n.user as Record<string, unknown>)?.nickname ?? "") as string,
-        url: `https://www.xiaohongshu.com/explore/${n.note_id ?? n.id}`,
-      }));
+      const notes = rawNotes.map((n) => {
+        const noteId = (n.note_id ?? n.id ?? "") as string;
+        const token = (n.xsec_token ?? "") as string;
+        return {
+          note_id: noteId,
+          xsec_token: token,
+          title: (n.display_title ?? n.title ?? "") as string,
+          type: (n.type ?? "") as string,
+          author: ((n.user as Record<string, unknown>)?.nick_name ??
+                   (n.user as Record<string, unknown>)?.nickname ?? "") as string,
+          url: buildWebUrl(noteId, token, "pc_board"),
+          webUrl: buildWebUrl(noteId, token, "pc_board"),
+        };
+      });
       result = {
         boardId,
         name: (info.name ?? "") as string,

@@ -923,14 +923,27 @@ All commands accept:
 
 ## Technical Reference
 
-### xsec_token — Required for Reading Notes
+### xsec_token — Required for Reading & Sharing Notes
 
 The XHS API requires a valid `xsec_token` to fetch note content. Without it, `read`, `comments`, and `analyze-viral` return `{}`.
+
+**The same token is also required for shareable URLs.** Any `https://www.xiaohongshu.com/explore/<id>` URL without `?xsec_token=...&xsec_source=...` is 302-redirected by XHS's anti-scrape layer to `https://www.xiaohongshu.com/404/sec_*?source=xhs_sec_server&originalUrl=...`. This affects anyone who clicks the URL — Safari, iOS link previews, agent action buttons, etc.
+
+**`webUrl` — use this (since v0.7.0):**
+
+Every note-returning command (`feed`, `search`, `user-posts`, `favorites`, `board`, `read`, `post`) now includes a `webUrl` field with the token baked in and the correct `xsec_source`. Consumers should use `webUrl` directly — do not construct URLs by hand.
+
+```bash
+redbook feed --json | jq '.items[0].webUrl'
+# => "https://www.xiaohongshu.com/explore/<id>?xsec_token=<t>&xsec_source=pc_feed"
+```
+
+`xsec_source` is set per-command: `pc_feed`, `pc_search`, `pc_user`, `pc_board`, `pc_share`.
 
 **Key rules:**
 
 1. **Tokens expire.** A URL with `?xsec_token=...` from a previous session will return `{}`. Never cache or reuse old URLs.
-2. **`search` always returns fresh tokens.** Every item in search results includes a valid `xsec_token` for that note.
+2. **`search` and `feed` always return fresh tokens.** Every item includes a valid `xsec_token` + a pre-built `webUrl`.
 3. **noteId alone returns `{}`.** Running `redbook read <noteId>` without a token almost always fails.
 
 **The correct workflow — always search first:**
@@ -942,18 +955,11 @@ redbook read "https://www.xiaohongshu.com/explore/689da7b0?xsec_token=OLD_TOKEN"
 
 # RIGHT — search first, then use the fresh URL with token
 redbook search "AI编程" --sort popular --json
-# Extract the noteId + xsec_token from search results, then:
-redbook read "https://www.xiaohongshu.com/explore/<noteId>?xsec_token=<freshToken>" --json
+# Extract the webUrl from search results, then:
+redbook read "<webUrl from search result>" --json
 ```
 
-**For agents:** When the user gives a bare XHS note URL (no `xsec_token` param), extract the noteId from the URL path, search for the note title or noteId to get a fresh token, then use the full URL with the fresh token.
-
-**How to extract fresh URLs from search results (JSON):**
-
-```bash
-# Each search result item has: { id: "noteId", xsec_token: "...", note_card: { ... } }
-# Build the URL: https://www.xiaohongshu.com/explore/{id}?xsec_token={xsec_token}
-```
+**For agents:** Prefer `webUrl` from the response. When only a bare noteId is available, search first to obtain a fresh token, then use the returned `webUrl`.
 
 **Commands that need xsec_token:** `read`, `comments`, `analyze-viral`
 **Commands that do NOT need xsec_token:** `search`, `user`, `user-posts`, `feed`, `whoami`, `topics`

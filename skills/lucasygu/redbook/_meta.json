@@ -3,11 +3,16 @@
   "slug": "redbook",
   "displayName": "redbook",
   "latest": {
-    "version": "0.6.0",
-    "publishedAt": 1773994875167,
-    "commit": "https://github.com/openclaw/skills/commit/13fcd2e62ecc81df535fd6774cd1b8c572b2a6c8"
+    "version": "0.7.2",
+    "publishedAt": 1775972145031,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.6.0",
+      "publishedAt": 1773994875167,
+      "commit": "https://github.com/openclaw/skills/commit/13fcd2e62ecc81df535fd6774cd1b8c572b2a6c8"
+    },
     {
       "version": "0.5.1",
       "publishedAt": 1772900212373,
