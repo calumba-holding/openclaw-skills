@@ -1,0 +1,11 @@
+{
+  "owner": "aporthq",
+  "slug": "aport-agent-guardrail",
+  "displayName": "Aport Agent Guardrail",
+  "latest": {
+    "version": "1.1.20",
+    "publishedAt": 1776087680206,
+    "commit": null
+  },
+  "history": []
+}
