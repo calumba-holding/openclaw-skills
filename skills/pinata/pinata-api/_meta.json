@@ -1,0 +1,11 @@
+{
+  "owner": "pinata",
+  "slug": "pinata-api",
+  "displayName": "Pinata API",
+  "latest": {
+    "version": "1.0.10",
+    "publishedAt": 1776876751191,
+    "commit": null
+  },
+  "history": []
+}
