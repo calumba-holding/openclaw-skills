@@ -26,7 +26,7 @@ Access the ActiveCampaign API with managed OAuth authentication. Manage contacts
 # List all contacts
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/active-campaign/api/3/contacts')
+req = urllib.request.Request('https://api.maton.ai/active-campaign/api/3/contacts')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/active-campaign/{native-api-path}
+https://api.maton.ai/active-campaign/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual ActiveCampaign API endpoint path. The gateway proxies requests to `{account}.api-us1.com` and automatically injects your OAuth token.
+Maton proxies requests to `{account}.api-us1.com` and automatically injects your OAuth token.
 
 
 ## Authentication
@@ -63,14 +63,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your ActiveCampaign OAuth connections at `https://ctrl.maton.ai`.
+Manage your ActiveCampaign OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=active-campaign&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=active-campaign&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -82,7 +82,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'active-campaign'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -104,7 +104,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "9e8ba2aa-25ec-4ba0-8815-3068be304dca",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-09T20:03:16.595823Z",
     "last_updated_time": "2026-02-09T20:04:09.550767Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,14 +135,19 @@ If you have multiple ActiveCampaign connections, specify which one to use with t
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/active-campaign/api/3/contacts')
+req = urllib.request.Request('https://api.maton.ai/active-campaign/api/3/contacts')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '9e8ba2aa-25ec-4ba0-8815-3068be304dca')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to contacts, deals, lists, campaigns, automations, and tags within the connected ActiveCampaign account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -789,7 +794,7 @@ GET /active-campaign/api/3/contacts?orders[id]=ASC&id_greater=100
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/active-campaign/api/3/contacts',
+  'https://api.maton.ai/active-campaign/api/3/contacts',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -807,7 +812,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/active-campaign/api/3/contacts',
+    'https://api.maton.ai/active-campaign/api/3/contacts',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -827,7 +832,7 @@ headers = {
 
 # Create contact
 contact_response = requests.post(
-    'https://gateway.maton.ai/active-campaign/api/3/contacts',
+    'https://api.maton.ai/active-campaign/api/3/contacts',
     headers=headers,
     json={
         'contact': {
@@ -842,7 +847,7 @@ print(f"Created contact ID: {contact['id']}")
 
 # Add tag to contact
 tag_response = requests.post(
-    'https://gateway.maton.ai/active-campaign/api/3/contactTags',
+    'https://api.maton.ai/active-campaign/api/3/contactTags',
     headers=headers,
     json={
         'contactTag': {
@@ -904,7 +909,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
