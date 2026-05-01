@@ -3,9 +3,15 @@
   "slug": "command-flow",
   "displayName": "Command Flow",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1772086825418,
-    "commit": "https://github.com/openclaw/skills/commit/5dd212901420ac2827ef0f042c32b4202887de5d"
+    "version": "1.0.3",
+    "publishedAt": 1774866399714,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1772086825418,
+      "commit": "https://github.com/openclaw/skills/commit/5dd212901420ac2827ef0f042c32b4202887de5d"
+    }
+  ]
 }

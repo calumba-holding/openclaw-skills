@@ -4,7 +4,7 @@
 name: command-flow
 version: 1.0.2
 description: "让命令像说话一样自然——中文解释、安全分级、一键执行"
-metadata: { "openclaw": { "emoji": "🌊", "requires": { "bins": ["jq"] }, "triggers": ["斜杠命令", "所有命令", "/help", "/commands", "命令列表", "命令全览", "command flow"], "priority": "critical" } }
+metadata: { "openclaw": { "emoji": "🌊", "requires": { "bins": ["jq"] }, "triggers": ["斜杠命令", "所有命令", "/help", "/commands", "命令列表", "命令全览", "command flow", "//", "命令 1", "命令 2", "命令 3", "下一页", "上一页"], "priority": "critical" } }
 ---
 
 # 🌊 Command Flow - 命令流

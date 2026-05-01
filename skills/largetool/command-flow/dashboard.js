@@ -21,78 +21,81 @@ const {
 
 /**
  * 显示命令列表
+ * 自动检测平台，Telegram 用简单格式，其他用框线格式
+ * 支持分页显示
  */
-async function showCommands(showHidden = false) {
-  const commands = getAllCommands(showHidden);
-  const display = generateCommandsDisplay(commands, showHidden);
+async function showCommands(showHidden = false, page = 1, pageSize = 20) {
+  const allCommands = getAllCommands(showHidden);
+  const display = generateCommandsDisplay(allCommands, showHidden);
+  
+  // 合并所有命令用于分页
+  const allFlat = [...display.native, ...display.ours, ...display.thirdParty];
+  const totalPages = Math.ceil(allFlat.length / pageSize);
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, allFlat.length);
+  const pagedCommands = allFlat.slice(startIndex, endIndex);
+  
+  // 使用分页后的命令直接显示（不再分类）
+  const pagedDisplay = {
+    native: pagedCommands,
+    ours: [],
+    thirdParty: []
+  };
+  
+  // 检测是否 Telegram（通过环境变量或参数）
+  const isTelegram = process.argv.includes('--telegram') || process.env.TELEGRAM_PLATFORM === 'true';
   
   let output = `\n`;
-  output += `┌─────────────────────────────────────────────────┐\n`;
-  output += `│  📋 斜杠命令全览                         🔍     │\n`;
-  output += `├─────────────────────────────────────────────────┤\n`;
   
-  // OpenClaw 原生技能
-  if (display.native.length > 0) {
-    output += `│                                                 │\n`;
-    output += `│  🏷️ OpenClaw 原生技能                            │\n`;
-    output += `│                                                 │\n`;
-    
-    display.native.forEach((cmd, index) => {
-      output += `│  ${cmd.safety} ${cmd.command.padEnd(28)} │\n`;
-      output += `│     ${cmd.description.substring(0, 30).padEnd(30)}│\n`;
-      output += `│     [执行] [详情]${' '.repeat(12)}│\n`;
-      
-      if (index < display.native.length - 1) {
-        output += `│                                                 │\n`;
-      }
-    });
-    
-    output += `│                                                 │\n`;
-  }
-  
-  // 我们开发的技能
-  if (display.ours.length > 0) {
+  if (isTelegram) {
+    // Telegram 简单格式（不用框线）
+    output += `📋 *斜杠命令全览 第${page}/${totalPages}页*\n\n`;
+  } else {
+    // 其他平台框线格式
+    output += `┌─────────────────────────────────────────────────┐\n`;
+    output += `│  📋 斜杠命令全览 第${page}/${totalPages}页              🔍     │\n`;
     output += `├─────────────────────────────────────────────────┤\n`;
-    output += `│  🛠️ 我们开发的技能                               │\n`;
-    output += `│                                                 │\n`;
-    
-    display.ours.forEach((cmd, index) => {
-      output += `│  ${cmd.safety} ${cmd.command.padEnd(28)} │\n`;
-      output += `│     ${cmd.description.substring(0, 30).padEnd(30)}│\n`;
-      output += `│     [执行] [详情]${' '.repeat(12)}│\n`;
-      
-      if (index < display.ours.length - 1) {
-        output += `│                                                 │\n`;
-      }
-    });
-    
-    output += `│                                                 │\n`;
   }
   
-  // 第三方技能
-  if (display.thirdParty.length > 0) {
-    output += `├─────────────────────────────────────────────────┤\n`;
-    output += `│  🧩 第三方技能                                    │\n`;
-    output += `│                                                 │\n`;
-    
-    display.thirdParty.forEach((cmd, index) => {
-      output += `│  ${cmd.safety} ${cmd.command.padEnd(28)} │\n`;
+  // 显示分页后的命令（简化显示，不分类）
+  if (isTelegram) {
+    pagedCommands.forEach((cmd) => {
+      const cmdDisplay = cmd.aliases && cmd.aliases.length > 0 
+        ? `${cmd.command} \\(${cmd.aliases.join(', ')}\\)`
+        : cmd.command;
+      output += `${cmd.safety} \\` + cmdDisplay + `\n`;
+      output += `   ${cmd.description}\n\n`;
+    });
+  } else {
+    pagedCommands.forEach((cmd, index) => {
+      const cmdDisplay = cmd.aliases && cmd.aliases.length > 0 
+        ? `${cmd.command} ${cmd.aliases.join(', ')}`
+        : cmd.command;
+      output += `│  ${cmd.safety} ${cmdDisplay.padEnd(35)} │\n`;
       output += `│     ${cmd.description.substring(0, 30).padEnd(30)}│\n`;
       output += `│     [执行] [详情]${' '.repeat(12)}│\n`;
       
-      if (index < display.thirdParty.length - 1) {
+      if (index < pagedCommands.length - 1) {
         output += `│                                                 │\n`;
       }
     });
-    
-    output += `│                                                 │\n`;
   }
+  
+  // 分页导航
+  const prevPage = page > 1 ? page - 1 : 1;
+  const nextPage = page < totalPages ? page + 1 : totalPages;
   
   // 说明
-  output += `├─────────────────────────────────────────────────┤\n`;
-  output += `│  ${generateAskText().substring(1, 54)}│\n`;
-  output += `│  ${generateAskText().substring(55, 108).padEnd(53)}│\n`;
-  output += `└─────────────────────────────────────────────────┘\n`;
+  if (isTelegram) {
+    output += `说明：🟢 安全  🟡 危险（需确认） 🔴 隐藏（默认不显示）\n\n`;
+    output += `显示 ${startIndex + 1}-${Math.min(endIndex, allFlat.length)} / ${allFlat.length} 个命令\n\n`;
+    output += `[⬅️ 上一页] [➡️ 下一页] [查看隐藏命令] [导出列表] [搜索命令]\n`;
+  } else {
+    output += `├─────────────────────────────────────────────────┤\n`;
+    output += `│  显示 ${startIndex + 1}-${Math.min(endIndex, allFlat.length)} / ${allFlat.length} 个命令`.padEnd(54) + `│\n`;
+    output += `│  [⬅️ 上一页] [➡️ 下一页] [查看隐藏命令] [导出列表]`.padEnd(54) + `│\n`;
+    output += `└─────────────────────────────────────────────────┘\n`;
+  }
   
   return output;
 }
@@ -216,18 +219,28 @@ module.exports = {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const command = args[0];
-  const param = args[1];
+  const page = parseInt(args[1]) || 1;
+  const telegram = args.includes('--telegram');
+  
+  // 如果是 Telegram 模式，使用 inline keyboard
+  if (telegram) {
+    const { showCommandsTelegram } = require('./telegram-inline.js');
+    showCommandsTelegram(page).then(result => {
+      console.log(JSON.stringify(result, null, 2));
+    });
+    return;
+  }
   
   switch (command) {
     case 'show':
-      showCommands(command === 'show-hidden').then(console.log);
+      showCommands(false, page).then(console.log);
       break;
     case 'show-hidden':
       showHiddenCommands().then(console.log);
       break;
     case 'search':
-      if (param) {
-        searchCommandsDisplay(param).then(console.log);
+      if (args[1]) {
+        searchCommandsDisplay(args[1]).then(console.log);
       } else {
         console.log('用法：node dashboard.js search <关键词>');
       }
@@ -236,6 +249,6 @@ if (require.main === module) {
       exportToMarkdown().then(console.log);
       break;
     default:
-      showCommands().then(console.log);
+      showCommands(false, 1).then(console.log);
   }
 }

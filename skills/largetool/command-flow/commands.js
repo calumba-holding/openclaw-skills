@@ -96,11 +96,524 @@ const COMMANDS = {
       execute: async (skillName) => {
         return `正在卸载 ${skillName}...\n\n（卸载功能待实现）`;
       }
+    },
+    // 以下为 OpenClaw 系统命令（44 个）
+    {
+      slug: 'acp',
+      command: '/acp',
+      description: 'Agent Control Protocol 工具',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/acp\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'agent',
+      command: '/agent',
+      description: '运行一次 Agent 轮询',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/agent\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'agents',
+      command: '/agents',
+      description: '管理隔离的 Agent',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/agents\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'approvals',
+      command: '/approvals',
+      description: '管理执行审批',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/approvals\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'browser',
+      command: '/browser',
+      description: '管理 OpenClaw 专用浏览器',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/browser\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'channels',
+      command: '/channels',
+      description: '管理连接的聊天频道',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/channels\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'clawbot',
+      command: '/clawbot',
+      description: '传统 clawbot 命令别名',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/clawbot\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'completion',
+      command: '/completion',
+      description: '生成 Shell 自动补全脚本',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/completion\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'config',
+      command: '/config',
+      description: '非交互式配置助手',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/config\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'configure',
+      command: '/configure',
+      description: '交互式设置向导',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/configure\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'cron',
+      command: '/cron',
+      description: '管理定时任务',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/cron\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'daemon',
+      command: '/daemon',
+      description: '网关服务',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/daemon\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'dashboard',
+      command: '/dashboard',
+      description: '打开控制面板',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/dashboard\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'devices',
+      command: '/devices',
+      description: '设备配对 + Token 管理',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/devices\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'directory',
+      command: '/directory',
+      description: '查找联系人和群组 ID',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/directory\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'dns',
+      command: '/dns',
+      description: 'DNS 辅助工具',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/dns\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'docs',
+      command: '/docs',
+      description: '搜索 OpenClaw 在线文档',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/docs\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'doctor',
+      command: '/doctor',
+      description: '健康检查 + 快速修复',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/doctor\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'gateway',
+      command: '/gateway',
+      description: '运行、检查和查询 WebSocket 网关',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/gateway\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'health',
+      command: '/health',
+      description: '获取网关健康状态',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/health\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'help',
+      command: '/help',
+      description: '显示命令帮助',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/help\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'hooks',
+      command: '/hooks',
+      description: '管理内部 Agent 钩子',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/hooks\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'logs',
+      command: '/logs',
+      description: '查看网关日志',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/logs\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'memory',
+      command: '/memory',
+      description: '搜索和重建记忆文件索引',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/memory\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'message',
+      command: '/message',
+      description: '发送、读取和管理消息',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/message\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'models',
+      command: '/models',
+      description: '发现、扫描和配置模型',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/models\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'node',
+      command: '/node',
+      description: '运行和管理无节点主机服务',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/node\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'nodes',
+      command: '/nodes',
+      description: '管理网关节点配对和节点命令',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/nodes\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'onboard',
+      command: '/onboard',
+      description: '交互式入职向导',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/onboard\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'pairing',
+      command: '/pairing',
+      description: '安全 DM 配对',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/pairing\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'plugins',
+      command: '/plugins',
+      description: '管理 OpenClaw 插件和扩展',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/plugins\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'qr',
+      command: '/qr',
+      description: '生成 iOS 配对二维码',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/qr\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'reset',
+      command: '/reset',
+      description: '重置本地配置/状态',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/reset\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'sandbox',
+      command: '/sandbox',
+      description: '管理沙盒容器',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/sandbox\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'security',
+      command: '/security',
+      description: '安全工具和本地配置审计',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/security\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'sessions',
+      command: '/sessions',
+      description: '查看存储的会话列表',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/sessions\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'setup',
+      command: '/setup',
+      description: '初始化本地配置和工作空间',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/setup\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'status',
+      command: '/status',
+      description: '显示频道健康和最近会话接收者',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/status\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'system',
+      command: '/system',
+      description: '系统事件、心跳和状态',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/system\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'tui',
+      command: '/tui',
+      description: '打开终端 UI',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/tui\`\n\n（此命令为系统命令）`;
+      }
+    },
+    {
+      slug: 'webhooks',
+      command: '/webhooks',
+      description: 'Webhook 辅助工具和集成',
+      safety: SAFETY.SAFE,
+      source: SOURCE.NATIVE,
+      category: 'OpenClaw',
+      executeHint: '执行命令',
+      execute: async () => {
+        return `提示：请使用 OpenClaw 直接执行 \`/webhooks\`\n\n（此命令为系统命令）`;
+      }
     }
   ],
   
   // 我们开发的技能
   ours: [
+    {
+      slug: 'command-flow',
+      command: '//',
+      description: '查看所有指令（快捷触发）',
+      safety: SAFETY.SAFE,
+      source: SOURCE.OURS,
+      category: '管理',
+      executeHint: '显示斜杠命令全览（支持分页 + 一键执行）',
+      execute: async () => {
+        const isTelegram = process.env.TELEGRAM_PLATFORM === 'true';
+        if (isTelegram) {
+          const { showCommandsTelegram } = require('./telegram-inline.js');
+          const result = await showCommandsTelegram(1);
+          return result.text + '\n\n💡 点击任意命令按钮，自动填入输入框，只需回车即可执行！';
+        } else {
+          const { showCommands } = require('./dashboard.js');
+          return await showCommands(false, 1);
+        }
+      }
+    },
     {
       slug: 'compress',
       command: '/compress <文本>',
@@ -278,7 +791,7 @@ function getCommandsBySafety(safety) {
 }
 
 /**
- * 搜索命令
+ * 搜索命令（支持别名搜索）
  */
 function searchCommands(query) {
   const all = getAllCommands(true);
@@ -287,16 +800,21 @@ function searchCommands(query) {
   return all.filter(cmd => 
     cmd.command.toLowerCase().includes(lowerQuery) ||
     cmd.description.toLowerCase().includes(lowerQuery) ||
-    cmd.slug.toLowerCase().includes(lowerQuery)
+    cmd.slug.toLowerCase().includes(lowerQuery) ||
+    (cmd.aliases && cmd.aliases.includes(lowerQuery)) ||
+    cmd.command === lowerQuery  // 精确匹配命令
   );
 }
 
 /**
- * 根据 slug 获取命令
+ * 根据 slug 或别名获取命令
  */
 function getCommandBySlug(slug) {
   const all = getAllCommands(true);
-  return all.find(cmd => cmd.slug === slug);
+  return all.find(cmd => 
+    cmd.slug === slug || 
+    (cmd.aliases && cmd.aliases.includes(slug))
+  );
 }
 
 // 导出
