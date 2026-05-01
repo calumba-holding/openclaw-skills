@@ -1,0 +1,11 @@
+{
+  "owner": "aeoess",
+  "slug": "agent-passport-system",
+  "displayName": "Agent Passport",
+  "latest": {
+    "version": "5.8.0",
+    "publishedAt": 1777616117813,
+    "commit": null
+  },
+  "history": []
+}
