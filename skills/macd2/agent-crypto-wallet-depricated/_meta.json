@@ -1,0 +1,11 @@
+{
+  "owner": "macd2",
+  "slug": "agent-crypto-wallet-depricated",
+  "displayName": "OpenClawCash",
+  "latest": {
+    "version": "1.9.9",
+    "publishedAt": 1772299407410,
+    "commit": null
+  },
+  "history": []
+}
