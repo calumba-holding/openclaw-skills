@@ -76,10 +76,10 @@ python scripts/upload.py --file /path/to/file --folder 30767843
 ```json
 {
   "success": true,
-  "file_id": 30769728,
+  "file_id": 12345678,
   "filename": "example.zip",
   "size": 6010,
-  "link": "https://1817804024.v.123pan.cn/1817804024/30769728",
+  "link": "https://12345678910.v.123pan.cn/12345678910/12345678",
   "link_type": "short_direct_link"
 }
 ```
