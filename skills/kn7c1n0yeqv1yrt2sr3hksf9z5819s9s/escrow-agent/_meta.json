@@ -1,0 +1,11 @@
+{
+  "owner": "kn7c1n0yeqv1yrt2sr3hksf9z5819s9s",
+  "slug": "escrow-agent",
+  "displayName": "a trustless escrow protocol for agent-to-agent transactions on Solana and Base.",
+  "latest": {
+    "version": "1.0.2",
+    "publishedAt": 1771262718505,
+    "commit": null
+  },
+  "history": []
+}
