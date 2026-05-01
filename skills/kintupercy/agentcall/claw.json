@@ -1,12 +1,12 @@
 {
   "name": "agentcall",
-  "version": "2.0.3",
-  "description": "Phone numbers, SMS, voice calls, and AI voice calls for AI agents. Provision real numbers, send/receive texts, extract OTP codes, and make autonomous AI-powered phone calls.",
+  "version": "2.1.2",
+  "description": "Phone numbers, SMS, voice calls, and inbound + outbound AI voice for AI agents. Provision real numbers, send/receive texts, extract OTP codes, configure phone numbers to be answered by an OpenAI Realtime voice agent, or place autonomous AI-powered outbound calls.",
   "author": "agentcall",
   "license": "MIT",
   "permissions": ["network"],
   "entry": "instructions.md",
-  "tags": ["phone", "sms", "voice", "otp", "verification", "calls", "ai-voice", "telephony", "numbers"],
+  "tags": ["phone", "sms", "voice", "otp", "verification", "calls", "ai-voice", "inbound-ai", "ai-receptionist", "telephony", "numbers"],
   "models": ["claude-*", "gpt-*", "gemini-*"],
   "minOpenClawVersion": "0.8.0",
   "credentials": {
@@ -16,12 +16,13 @@
     }
   },
   "billing": {
-    "notice": "Usage may incur charges. Free tier: 1 number, 10 SMS/mo, 5 call min/mo. Pro ($29/mo): unlimited numbers + usage-based pricing. See https://agentcall.co/#pricing",
+    "notice": "Free tier: 1 phone number, 10 SMS/mo, 5 call min/mo — never charged. Pro ($19.99/mo): unlimited numbers + usage-based pricing (SMS $0.015, voice $0.035/min, AI voice $0.40/min outbound or inbound). See https://agentcall.co/#pricing",
     "hasFreeTier": true,
-    "paidFeatures": ["SIM numbers", "AI voice calls ($0.20/min)", "call recording", "unlimited numbers"]
+    "paidFeatures": ["SIM numbers", "outbound AI voice ($0.40/min)", "inbound AI voice ($0.40/min)", "call recording", "unlimited numbers"]
   },
   "webhooks": {
-    "notice": "This skill can register webhook endpoints to receive real-time events (inbound SMS, OTP codes, call status, recordings). Webhooks require an HTTPS URL you control.",
-    "events": ["sms.inbound", "sms.otp", "call.inbound", "call.status", "call.recording", "number.released"]
-  }
+    "notice": "This skill can register webhook endpoints to receive real-time events (inbound SMS, OTP codes, call status, recordings, AI call transcripts). Webhooks require an HTTPS URL you control.",
+    "events": ["sms.inbound", "sms.otp", "call.inbound", "call.ringing", "call.status", "call.recording", "call.transcript", "number.released"]
+  },
+  "changelog": "v2.1.2 (2026-04-29): Replace internal carrier names with user-friendly geographic phrasing in copy. v2.1.0 (2026-04-29): Added inbound AI voice — configure any supported number (US and Canada) to be answered autonomously by an OpenAI Realtime voice agent. Added GET /v1/calls/voices (8-voice catalog with sample MP3s) and GET /v1/calls/prompt-templates (5 ready-made templates: receptionist, lead qualifier, appointment booker, customer support, call screener). Default voice changed from alloy to shimmer (warmer, more welcoming). Updated tollfree pricing to $2.50/mo and mobile to $2/mo (correcting stale rates)."
 }
