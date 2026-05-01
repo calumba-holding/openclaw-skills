@@ -3,11 +3,16 @@
   "slug": "clawcrm",
   "displayName": "Clawcrm",
   "latest": {
-    "version": "1.0.7",
-    "publishedAt": 1772207632460,
-    "commit": "https://github.com/openclaw/skills/commit/461500ac2e255d431e428e11761fb0dd7948803f"
+    "version": "1.0.8",
+    "publishedAt": 1777363033121,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.7",
+      "publishedAt": 1772207632460,
+      "commit": "https://github.com/openclaw/skills/commit/461500ac2e255d431e428e11761fb0dd7948803f"
+    },
     {
       "version": "1.0.6",
       "publishedAt": 1772068749567,

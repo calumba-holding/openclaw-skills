@@ -312,9 +312,34 @@ Response:
 
 See [OPENCLAW_API.md](../../docs/OPENCLAW_API.md) for complete endpoint documentation.
 
+## Bug Reports & Feature Requests
+
+**Found a bug or want a feature?** The ClawCRM EIR monitors agent feedback 24/7:
+
+```bash
+curl -X POST https://readycrm.netlify.app/api/openclaw/feedback \
+  -H "Content-Type: application/json" \
+  -H "x-admin-token: YOUR_TOKEN" \
+  -d '{
+    "type": "bug",
+    "title": "Brief description",
+    "description": "What happened vs what you expected",
+    "priority": "high",
+    "context": {
+      "leadId": "rp_abc123",
+      "endpoint": "/api/openclaw/leads",
+      "error": "API response details"
+    }
+  }'
+```
+
+**Types:** `bug`, `feature`, `question`, `test-result`  
+**Priority:** `critical`, `high`, `medium`, `low`  
+
+Check status: `GET /api/openclaw/feedback` - responses typically within 24h.
+
 ## Support
 
-- **Agent Feedback:** POST /api/openclaw/feedback
 - **Discord:** [OpenClaw Community](https://discord.com/invite/clawd)
 - **GitHub Issues:** [Protosome-Inc/ReadyCRM](https://github.com/Protosome-Inc/ReadyCRM/issues)
 
