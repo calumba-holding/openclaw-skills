@@ -26,7 +26,7 @@ Access the Microsoft Teams API with managed OAuth authentication via Microsoft G
 # List user's joined teams
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/microsoft-teams/v1.0/me/joinedTeams')
+req = urllib.request.Request('https://api.maton.ai/microsoft-teams/v1.0/me/joinedTeams')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/microsoft-teams/{native-api-path}
+https://api.maton.ai/microsoft-teams/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Microsoft Graph API endpoint path. The gateway proxies requests to `graph.microsoft.com` and automatically injects your OAuth token.
+Maton proxies requests to `graph.microsoft.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Microsoft Teams OAuth connections at `https://ctrl.maton.ai`.
+Manage your Microsoft Teams OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=microsoft-teams&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=microsoft-teams&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'microsoft-teams'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "fb0fdc4a-0b5a-40cf-8b92-3bdae848cde3",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-17T09:51:21.074601Z",
     "last_updated_time": "2026-02-17T09:51:34.323814Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Microsoft Teams connections, specify which one to use with 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/microsoft-teams/v1.0/me/joinedTeams')
+req = urllib.request.Request('https://api.maton.ai/microsoft-teams/v1.0/me/joinedTeams')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'fb0fdc4a-0b5a-40cf-8b92-3bdae848cde3')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to teams, channels, messages, and meetings via Microsoft Graph API within the connected Microsoft Teams account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -676,7 +681,7 @@ Use the `$top` parameter to limit results per page.
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/microsoft-teams/v1.0/me/joinedTeams',
+  'https://api.maton.ai/microsoft-teams/v1.0/me/joinedTeams',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -693,7 +698,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/microsoft-teams/v1.0/me/joinedTeams',
+    'https://api.maton.ai/microsoft-teams/v1.0/me/joinedTeams',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -709,7 +714,7 @@ team_id = "your-team-id"
 channel_id = "your-channel-id"
 
 response = requests.post(
-    f'https://gateway.maton.ai/microsoft-teams/v1.0/teams/{team_id}/channels/{channel_id}/messages',
+    f'https://api.maton.ai/microsoft-teams/v1.0/teams/{team_id}/channels/{channel_id}/messages',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
