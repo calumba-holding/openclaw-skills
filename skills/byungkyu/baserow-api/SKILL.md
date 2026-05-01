@@ -26,7 +26,7 @@ Access the Baserow API with managed API key authentication. Manage database rows
 # List rows from a table
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/baserow/api/database/rows/table/{table_id}/?user_field_names=true')
+req = urllib.request.Request('https://api.maton.ai/baserow/api/database/rows/table/{table_id}/?user_field_names=true')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/baserow/{native-api-path}
+https://api.maton.ai/baserow/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Baserow API endpoint path. The gateway proxies requests to `api.baserow.io` and automatically injects your API token.
+Maton proxies requests to `api.baserow.io` and automatically injects your API token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Baserow API key connections at `https://ctrl.maton.ai`.
+Manage your Baserow API key connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=baserow&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=baserow&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'baserow'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "90a5d047-b856-4577-ac05-faccaabf8989",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-03-02T12:01:29.812801Z",
     "last_updated_time": "2026-03-02T12:02:17.932675Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to enter your Baserow database token.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,14 +135,19 @@ If you have multiple Baserow connections, specify which one to use with the `Mat
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/baserow/api/database/rows/table/123/')
+req = urllib.request.Request('https://api.maton.ai/baserow/api/database/rows/table/123/')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '90a5d047-b856-4577-ac05-faccaabf8989')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to database rows, fields, and tables within the connected Baserow account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -411,7 +416,7 @@ Query parameters:
 python <<'EOF'
 import urllib.request, os, json
 req = urllib.request.Request(
-    'https://gateway.maton.ai/baserow/api/database/rows/table/863922/5/move/?before_id=3',
+    'https://api.maton.ai/baserow/api/database/rows/table/863922/5/move/?before_id=3',
     method='PATCH'
 )
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
@@ -452,7 +457,7 @@ python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'url': 'https://httpbin.org/image/png'}).encode()
 req = urllib.request.Request(
-    'https://gateway.maton.ai/baserow/api/user-files/upload-via-url/',
+    'https://api.maton.ai/baserow/api/user-files/upload-via-url/',
     data=data,
     method='POST'
 )
@@ -493,7 +498,7 @@ Content-Type: multipart/form-data
 
 **Example:**
 ```bash
-curl -X POST "https://gateway.maton.ai/baserow/api/user-files/upload-file/" \
+curl -X POST "https://api.maton.ai/baserow/api/user-files/upload-file/" \
   -H "Authorization: Bearer $MATON_API_KEY" \
   -F "file=@/path/to/file.pdf"
 ```
@@ -691,7 +696,7 @@ Response includes `next` and `previous` URLs:
 ```javascript
 // List rows with user field names
 const response = await fetch(
-  'https://gateway.maton.ai/baserow/api/database/rows/table/863922/?user_field_names=true',
+  'https://api.maton.ai/baserow/api/database/rows/table/863922/?user_field_names=true',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -710,7 +715,7 @@ import requests
 
 # Create a row
 response = requests.post(
-    'https://gateway.maton.ai/baserow/api/database/rows/table/863922/?user_field_names=true',
+    'https://api.maton.ai/baserow/api/database/rows/table/863922/?user_field_names=true',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -761,7 +766,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -771,8 +776,8 @@ EOF
 
 Ensure your URL path starts with `baserow`. For example:
 
-- Correct: `https://gateway.maton.ai/baserow/api/database/rows/table/{table_id}/`
-- Incorrect: `https://gateway.maton.ai/api/database/rows/table/{table_id}/`
+- Correct: `https://api.maton.ai/baserow/api/database/rows/table/{table_id}/`
+- Incorrect: `https://api.maton.ai/api/database/rows/table/{table_id}/`
 
 ## Resources
 
