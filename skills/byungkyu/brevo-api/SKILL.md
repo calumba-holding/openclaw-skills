@@ -25,7 +25,7 @@ Access the Brevo API with managed OAuth authentication. Send transactional email
 # Get account info
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/brevo/v3/account')
+req = urllib.request.Request('https://api.maton.ai/brevo/v3/account')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/brevo/v3/{resource}
+https://api.maton.ai/brevo/v3/{resource}
 ```
 
-The gateway proxies requests to `api.brevo.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.brevo.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -61,14 +61,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Brevo OAuth connections at `https://ctrl.maton.ai`.
+Manage your Brevo OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=brevo&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=brevo&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -80,7 +80,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'brevo'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -92,7 +92,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "b04dd695-d056-433b-baf9-0fb4eb3bde9e",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-09T19:51:00.932629Z",
     "last_updated_time": "2026-02-09T19:51:30.123456Z",
@@ -120,7 +120,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -133,14 +133,19 @@ If you have multiple Brevo connections, specify which one to use with the `Maton
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/brevo/v3/account')
+req = urllib.request.Request('https://api.maton.ai/brevo/v3/account')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'b04dd695-d056-433b-baf9-0fb4eb3bde9e')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to contacts, email campaigns, transactional emails, lists, and senders within the connected Brevo account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -921,7 +926,7 @@ To get the next page, increment offset by limit:
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/brevo/v3/contacts',
+  'https://api.maton.ai/brevo/v3/contacts',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -939,7 +944,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/brevo/v3/contacts',
+    'https://api.maton.ai/brevo/v3/contacts',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -953,7 +958,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/brevo/v3/smtp/email',
+    'https://api.maton.ai/brevo/v3/smtp/email',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -982,7 +987,7 @@ headers = {
 
 # Create contact
 response = requests.post(
-    'https://gateway.maton.ai/brevo/v3/contacts',
+    'https://api.maton.ai/brevo/v3/contacts',
     headers=headers,
     json={
         'email': 'newuser@example.com',
@@ -1035,7 +1040,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
