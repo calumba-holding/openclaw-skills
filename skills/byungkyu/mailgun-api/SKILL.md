@@ -26,7 +26,7 @@ Access the Mailgun API with managed OAuth authentication. Send transactional ema
 # List domains
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/mailgun/v3/domains')
+req = urllib.request.Request('https://api.maton.ai/mailgun/v3/domains')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/mailgun/v3/{resource}
+https://api.maton.ai/mailgun/v3/{resource}
 ```
 
-Replace `{resource}` with the actual Mailgun API endpoint path. The gateway proxies requests to `api.mailgun.net/v3` (US region) and automatically injects your OAuth token.
+Maton proxies requests to `api.mailgun.net/v3` (US region) and automatically injects your OAuth token.
 
 **Regional Note:** Mailgun has US and EU regions. The gateway defaults to US region (api.mailgun.net).
 
@@ -64,14 +64,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Mailgun OAuth connections at `https://ctrl.maton.ai`.
+Manage your Mailgun OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=mailgun&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=mailgun&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -83,7 +83,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'mailgun'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -95,7 +95,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -105,7 +105,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "78b5a036-c621-40c2-b74b-276195735af2",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-12T02:24:16.551210Z",
     "last_updated_time": "2026-02-12T02:25:03.542838Z",
@@ -123,7 +123,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -136,14 +136,19 @@ If you have multiple Mailgun connections, specify which one to use with the `Mat
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/mailgun/v3/domains')
+req = urllib.request.Request('https://api.maton.ai/mailgun/v3/domains')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '78b5a036-c621-40c2-b74b-276195735af2')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to messages, domains, routes, events, and mailing lists within the connected Mailgun account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -637,7 +642,7 @@ formData.append('subject', 'Hello');
 formData.append('text', 'Hello World!');
 
 const response = await fetch(
-  'https://gateway.maton.ai/mailgun/v3/example.com/messages',
+  'https://api.maton.ai/mailgun/v3/example.com/messages',
   {
     method: 'POST',
     headers: {
@@ -658,7 +663,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/mailgun/v3/example.com/messages',
+    'https://api.maton.ai/mailgun/v3/example.com/messages',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     data={
         'from': 'sender@example.com',
@@ -677,7 +682,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/mailgun/v3/domains',
+    'https://api.maton.ai/mailgun/v3/domains',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 domains = response.json()
@@ -696,7 +701,7 @@ domain = 'example.com'
 
 # Create route
 route_response = requests.post(
-    'https://gateway.maton.ai/mailgun/v3/routes',
+    'https://api.maton.ai/mailgun/v3/routes',
     headers=headers,
     data={
         'priority': 0,
@@ -709,7 +714,7 @@ print(f"Route created: {route_response.json()}")
 
 # Create webhook
 webhook_response = requests.post(
-    f'https://gateway.maton.ai/mailgun/v3/domains/{domain}/webhooks',
+    f'https://api.maton.ai/mailgun/v3/domains/{domain}/webhooks',
     headers=headers,
     data={
         'id': 'delivered',
@@ -765,7 +770,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -775,8 +780,8 @@ EOF
 
 1. Ensure your URL path starts with `mailgun`. For example:
 
-- Correct: `https://gateway.maton.ai/mailgun/v3/domains`
-- Incorrect: `https://gateway.maton.ai/v3/domains`
+- Correct: `https://api.maton.ai/mailgun/v3/domains`
+- Incorrect: `https://api.maton.ai/v3/domains`
 
 ### Troubleshooting: Sandbox Domain Restrictions
 
