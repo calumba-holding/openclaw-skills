@@ -3,11 +3,16 @@
   "slug": "openclaw-onebot",
   "displayName": "OpenClaw OneBot",
   "latest": {
-    "version": "1.2.10",
-    "publishedAt": 1776001045561,
-    "commit": "https://github.com/openclaw/skills/commit/38e9fb664df4a3ba49ff82f1d1c036135665c888"
+    "version": "1.2.12",
+    "publishedAt": 1777358652678,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.2.10",
+      "publishedAt": 1776001045561,
+      "commit": "https://github.com/openclaw/skills/commit/38e9fb664df4a3ba49ff82f1d1c036135665c888"
+    },
     {
       "version": "1.2.9",
       "publishedAt": 1775725850816,
