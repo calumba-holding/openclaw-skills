@@ -3,11 +3,16 @@
   "slug": "twitterapi-io",
   "displayName": "twitterapi-io",
   "latest": {
-    "version": "3.8.3",
-    "publishedAt": 1776744493485,
-    "commit": "https://github.com/openclaw/skills/commit/ce5c9198983ea040147028c0a102388d3a76d9b1"
+    "version": "3.8.5",
+    "publishedAt": 1777435584978,
+    "commit": null
   },
   "history": [
+    {
+      "version": "3.8.3",
+      "publishedAt": 1776744493485,
+      "commit": "https://github.com/openclaw/skills/commit/ce5c9198983ea040147028c0a102388d3a76d9b1"
+    },
     {
       "version": "3.8.1",
       "publishedAt": 1776209581148,
