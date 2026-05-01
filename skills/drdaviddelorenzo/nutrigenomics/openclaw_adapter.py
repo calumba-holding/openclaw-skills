@@ -19,7 +19,7 @@ Usage (via OpenClaw):
 
 import json
 import sys
-import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
@@ -29,6 +29,24 @@ from extract_genotypes import extract_snp_genotypes
 from score_variants import compute_nutrient_risk_scores
 from generate_report import generate_report
 from repro_bundle import create_reproducibility_bundle
+from path_safety import validate_input_file, validate_output_dir, validate_panel_file
+
+
+# OpenClaw entry point (called by the platform)
+def run_analysis(input_file: str, file_format: str = "auto") -> Dict[str, Any]:
+    """
+    Main entry point for OpenClaw.
+    
+    Args:
+        input_file: Path to uploaded genetic data file
+        file_format: File format hint ("auto", "23andme", "ancestry", "vcf")
+    
+    Returns:
+        Result dictionary with analysis outputs
+    """
+    adapter = NutrigenomicsOpenClaw()
+    return adapter.analyse_file(input_file, file_format=file_format)
+
 
 
 class NutrigenomicsOpenClaw:
@@ -50,15 +68,16 @@ class NutrigenomicsOpenClaw:
             panel_path: Path to custom SNP panel JSON (default: data/snp_panel.json)
         """
         # Resolve SNP panel
+        skill_root = Path(__file__).parent.resolve()
         if panel_path is None:
-            panel_path = Path(__file__).parent / "data" / "snp_panel.json"
+            panel_path = (skill_root / "data" / "snp_panel.json").resolve()
         else:
-            panel_path = Path(panel_path)
+            panel_path = validate_panel_file(panel_path, skill_root)
         
         if not panel_path.exists():
             raise FileNotFoundError(f"SNP panel not found at {panel_path}")
         
-        with open(panel_path) as f:
+        with open(panel_path, encoding="utf-8") as f:
             self.snp_panel = json.load(f)
         
         self.panel_path = panel_path
@@ -75,20 +94,34 @@ class NutrigenomicsOpenClaw:
         Args:
             input_file: Path to genetic data file (23andMe, AncestryDNA, or VCF)
             file_format: Auto-detect or specify "23andme", "ancestry", "vcf"
-            output_dir: Where to save results (default: temp directory)
+            output_dir: Where to save results (default: timestamped directory
+                under the working directory; persists until manually deleted)
         
         Returns:
             Dict with keys:
             - "status": "success" or "error"
-            - "report_path": Path to generated Markdown report
-            - "figures": Dict of figure paths (radar.png, heatmap.png)
+            - "output_dir": Absolute path to the output directory
+            - "report_path": Filename of the Markdown report (relative to output_dir)
+            - "figures": Dict of figure filenames (relative to output_dir)
             - "summary": Executive summary as string
             - "risk_scores": Dict of nutrient risk scores
             - "message": Human-readable status message
+            - "cleanup_reminder": Reminder to delete output_dir after download
         """
         
         try:
-            input_path = Path(input_file)
+            try:
+                input_path = validate_input_file(input_file)
+            except Exception as exc:
+                return {
+                    "status": "error",
+                    "message": str(exc),
+                    "report_path": None,
+                    "figures": {},
+                    "summary": None,
+                    "risk_scores": {}
+                }
+
             if not input_path.exists():
                 return {
                     "status": "error",
@@ -100,11 +133,15 @@ class NutrigenomicsOpenClaw:
                 }
             
             # Set up output directory
+            # A timestamped directory is created under the working directory and
+            # persists on disk until the caller deletes it — there is no auto-cleanup.
+            workspace_root = Path.cwd().resolve()
             if output_dir is None:
-                output_dir = tempfile.mkdtemp(prefix="nutrigenomics_")
+                ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                output_dir = str(workspace_root / f"nutrigenomics_output_{ts}")
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
             
-            output_path = Path(output_dir)
-            output_path.mkdir(parents=True, exist_ok=True)
+            output_path = validate_output_dir(output_dir, workspace_root)
             
             print(f"[Nutrigenomics] Parsing genetic file: {input_path.name}")
             
@@ -168,21 +205,28 @@ class NutrigenomicsOpenClaw:
             # Prepare output summary
             summary = self._generate_summary(risk_scores, snp_calls)
             
-            # Locate generated figures
+            # Locate generated figures.
+            # Return filenames relative to output_dir — the caller can join
+            # them with output_dir to get the full path if needed.
+            # Absolute paths are intentionally not returned here to avoid
+            # embedding system paths in the result dict for sensitive data.
             figures = {}
             for fig_file in ["nutrigenomics_radar.png", "nutrigenomics_heatmap.png"]:
-                fig_path = output_path / fig_file
-                if fig_path.exists():
-                    figures[fig_file.replace(".png", "")] = str(fig_path)
-            
+                if (output_path / fig_file).exists():
+                    figures[fig_file.replace(".png", "")] = fig_file
+
             result = {
                 "status": "success",
                 "message": f"✅ Analysis complete. Panel coverage: {present}/{len(self.snp_panel)} SNPs ({coverage:.1f}%)",
-                "report_path": str(report_path),
-                "figures": figures,
+                "output_dir": str(output_path),
+                "report_path": "nutrigenomics_report.md",   # relative to output_dir
+                "figures": figures,                         # filenames relative to output_dir
                 "summary": summary,
                 "risk_scores": risk_scores,
-                "output_dir": str(output_path)
+                "cleanup_reminder": (
+                    "Output files persist in the output directory until manually deleted. "
+                    "Delete output_dir after the user has downloaded their results."
+                ),
             }
             
             print(f"[Nutrigenomics] Success! Results in: {output_path}/")
@@ -266,22 +310,6 @@ class NutrigenomicsOpenClaw:
             return "🟡"
         else:
             return "🔴"
-
-
-# OpenClaw entry point (called by the platform)
-def run_analysis(input_file: str, file_format: str = "auto") -> Dict[str, Any]:
-    """
-    Main entry point for OpenClaw.
-    
-    Args:
-        input_file: Path to uploaded genetic data file
-        file_format: File format hint ("auto", "23andme", "ancestry", "vcf")
-    
-    Returns:
-        Result dictionary with analysis outputs
-    """
-    adapter = NutrigenomicsOpenClaw()
-    return adapter.analyse_file(input_file, file_format=file_format)
 
 
 if __name__ == "__main__":

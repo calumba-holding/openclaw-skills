@@ -7,7 +7,160 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.0] — 2026-02-28
+## [0.3.1] — 2026-04-05
+
+### Fixed
+- **`SKILL.md`** — Added `## Execution` section with explicit shell commands so the
+  agent knows how to invoke the analysis directly rather than responding
+  conversationally. Includes the standard invocation (`--input`, `--format auto`)
+  and a ready-to-run demo command using the bundled synthetic patient file.
+- Version bumped to 0.3.1 in `SKILL.md` and `openclaw.json`.
+
+---
+
+## [0.3.0] — 2026-04-05
+
+### Fixed
+- **`SKILL.md`** — Added required YAML frontmatter (`name`, `description`, `metadata`) so
+  OpenClaw's skill loader can discover and register the skill. Previously the file
+  contained only human-readable Markdown; without machine-parseable frontmatter the
+  skill was silently skipped at the discovery stage and never appeared in
+  `openclaw skills list`.
+- **`SKILL.md`** — Added `metadata.openclaw.requires.bins: ["python3"]` to gate
+  eligibility on Python 3 being present on PATH, and `emoji: "🧬"` for the macOS
+  Skills UI.
+- **`openclaw.json`** — Corrected `documentation.main` reference from
+  `SKILL_OPENCLAW.md` to `README_OPENCLAW.md`, which is the actual user-facing guide.
+- Removed `SKILL_OPENCLAW.md` (renamed `CLAWHUB_LISTING.md`; content fully covered by
+  `README_OPENCLAW.md`) and excluded internal-only files (`IMPLEMENTATION.md`,
+  `_meta.json`) from the published package.
+- Version bumped to 0.3 in `SKILL.md` and `openclaw.json`.
+
+---
+
+## [0.2.8] — 2026-04-05
+
+### Fixed
+- **`README_OPENCLAW.md`** — `checksums.txt` description corrected: previously
+  said "SHA-256 checksums of input and output files"; now correctly states only
+  the SNP panel and output report are checksummed, with an explicit note that
+  the input file is excluded to avoid creating a stable fingerprint.
+- **`README_OPENCLAW.md`** — `provenance.json` description corrected: previously
+  said "Timestamp, software version, and input filename"; now correctly states
+  timestamp, software version, and analysis settings, with an explicit note that
+  the input filename is not recorded.
+- **`README.md`** — `provenance.json` line corrected from "Timestamp, version,
+  and input filename metadata" to "Timestamp, version, and analysis settings
+  (input filename intentionally not recorded)".
+- Version strings bumped to 0.2.8 across `openclaw.json`, `SKILL.md`,
+  `generate_report.py`, and `repro_bundle.py`.
+
+---
+
+## [0.2.7] — 2026-04-05
+
+### Fixed
+- **`openclaw_adapter.py`** — `report_path` and `figures` values in the result
+  dict now return filenames relative to `output_dir`, rather than absolute system
+  paths. The caller already has `output_dir`; embedding redundant absolute paths
+  in additional fields exposed system path information for sensitive genomic data.
+- **`openclaw_adapter.py`** — `cleanup_reminder` no longer embeds the absolute
+  output path string; it now gives a generic instruction to delete `output_dir`
+  after the user has downloaded their results.
+- **`openclaw_adapter.py`** — Fixed inaccurate docstring on `analyse_file` that
+  described the default `output_dir` as a "temp directory"; it is a persistent
+  timestamped directory under the working directory.
+- **`openclaw.json`** — Updated `output_schema` to reflect that `report_path`
+  and `figures` are relative to `output_dir`; added `output_dir` field with
+  clarifying description.
+- Version strings bumped to 0.2.7 across `openclaw.json`, `SKILL.md`,
+  `generate_report.py`, and `repro_bundle.py`.
+
+---
+
+## [0.2.6] — 2026-04-05
+
+### Changed
+- Moved `run_analysis()` entry point to the top of `openclaw_adapter.py`, immediately
+  after imports, so the OpenClaw scanner can confirm the declared entry point
+  (`openclaw_adapter:run_analysis`) without needing to parse the full file.
+
+### Fixed
+- Version strings bumped consistently to 0.2.6 across `openclaw.json`, `SKILL.md`,
+  `generate_report.py`, and `repro_bundle.py`.
+
+---
+
+## [0.2.5] — 2026-04-05
+
+### Added
+- **`path_safety.py`** — Path validation module that was imported by the adapter but
+  missing from the published package. Provides `validate_input_file`,
+  `validate_output_dir`, and `validate_panel_file`, enforcing allowed extensions
+  (`.txt`, `.csv`, `.vcf`) and blocking path traversal attacks.
+
+### Fixed
+- **`repro_bundle.py`** — Input file name and SHA-256 hash of the input file are no
+  longer stored in any reproducibility artefact. Storing the filename risked persisting
+  a personally identifiable label; storing the hash created a stable fingerprint of the
+  user's genetic dataset. Only the SNP panel and generated report are now checksummed.
+- **`SKILL.md`** — Removed `.gitignore` from the file structure diagram and updated
+  `provenance.json` and `checksums.txt` descriptions to reflect the privacy-preserving
+  behaviour introduced in this version.
+
+---
+
+## [0.2.4] — 2026-04-05
+
+### Security / Privacy
+
+- **`openclaw_adapter.py`** — Replaced `tempfile.mkdtemp` with an explicit
+  timestamped output directory (`nutrigenomics_output_YYYYMMDD_HHMMSS/`) created
+  under the working directory. Removes the false implication of auto-cleanup; output
+  files now persist until the caller explicitly deletes them. Added `cleanup_reminder`
+  key to the result dict so callers are reminded to delete the directory after use.
+  Removed unused `import tempfile`.
+
+- **`openclaw.json`** — Added `output_files_require_manual_cleanup: true` to the
+  features block. Updated the security `notes` field to accurately describe that
+  output files persist on disk until manually deleted and that the input file is
+  never copied into the output directory.
+
+### Documentation
+
+- **`SKILL.md`** — Multiple accuracy fixes:
+  - Removed erroneous `commands.sh` from the Key Outputs list and Algorithm step 5;
+    replaced with the actual reproducibility artefacts (`README_reproducibility.txt`,
+    `environment.yml`, `checksums.txt`, `provenance.json`).
+  - Rewrote the Privacy section to accurately state that: (a) reports *do* include
+    per-SNP genotype calls for the 58 panel SNPs by design; (b) full raw genome data
+    is not reproduced; (c) output files persist until manually deleted.
+  - Added note that no executable scripts are generated.
+  - Bumped version from `0.1.0` to `0.2.4`.
+
+- **`IMPLEMENTATION.md`** — Fixed the Security & Privacy checklist:
+  - Replaced false "Temp files cleaned — auto-cleanup" item with accurate description
+    of the timestamped output directory and manual cleanup responsibility.
+  - Replaced false "No data persistence" item with accurate "Persistence scope
+    documented" item clarifying that input is never copied but outputs persist.
+  - Updated "Last updated" date.
+
+- **`README.md`** — Fixed Reproducibility Package section (removed `commands.sh`,
+  corrected file list). Corrected Privacy section bullet that incorrectly claimed
+  reports never contain raw genotypes.
+
+- **`README_OPENCLAW.md`** — Fixed "What You'll Download" section (removed
+  `commands.sh`, corrected file list and descriptions). Corrected privacy bullet
+  points and the claim that reports never contain raw genotypes.
+
+### Changed
+
+- Version bumped to `0.2.4` in `openclaw.json`, `SKILL.md`, `generate_report.py`,
+  and `repro_bundle.py`.
+
+---
+
+## [0.2.3] — 2026-02-28
 
 ### Added
 
@@ -97,7 +250,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For healthcare professionals and researchers, a professional-grade command-line tool (**NutriGx Advisor**) is available for ClawBio platform, offering advanced features and integration capabilities for clinical and research workflows.
 
-### Current Limitations (v0.2.0)
+### Current Limitations (v0.2.3)
 
 1. **Common Variants Only**
    - SNP panel limited to MAF > 1% in major populations
@@ -169,15 +322,15 @@ If you use Nutrigenomics in research or education:
   title = {Nutrigenomics: Personalised Nutrition from Genetic Data},
   year = {2026},
   url = {https://github.com/drdaviddelorenzo/nutrigenomics},
-  version = {0.2.0}
+  version = {0.2.3}
 }
 ```
 
 ### APA
-de Lorenzo, D. (2026). *Nutrigenomics: Personalised nutrition from genetic data* (Version 0.2.0) [Software]. Retrieved from https://github.com/drdaviddelorenzo/nutrigenomics
+de Lorenzo, D. (2026). *Nutrigenomics: Personalised nutrition from genetic data* (Version 0.2.3) [Software]. Retrieved from https://github.com/drdaviddelorenzo/nutrigenomics
 
 ### Chicago
-de Lorenzo, David. "Nutrigenomics: Personalised Nutrition from Genetic Data." Version 0.2.0. Accessed [Date]. https://github.com/drdaviddelorenzo/nutrigenomics.
+de Lorenzo, David. "Nutrigenomics: Personalised Nutrition from Genetic Data." Version 0.2.3. Accessed [Date]. https://github.com/drdaviddelorenzo/nutrigenomics.
 
 ---
 

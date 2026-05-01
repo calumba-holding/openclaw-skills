@@ -114,10 +114,10 @@ python examples/generate_patient.py --run
 - **Heatmap**: Gene-nutrient interaction matrix
 
 ### Reproducibility Package
-- `commands.sh` — Full CLI reproduction
-- `environment.yml` — Python environment
-- `checksums.txt` — Data validation
-- `provenance.json` — Analysis metadata
+- `README_reproducibility.txt` — Step-by-step instructions to reproduce the analysis
+- `environment.yml` — Pinned conda environment
+- `checksums.txt` — SHA-256 checksums of the SNP panel and output report (input file intentionally excluded)
+- `provenance.json` — Timestamp, version, and analysis settings (input filename intentionally not recorded)
 
 ---
 
@@ -166,7 +166,7 @@ See [ATTRIBUTION.md](ATTRIBUTION.md) for more information.
 ✅ **All processing is local** — Your genetic data never leaves your device
 ✅ **No external API calls** — No data transmission to third parties
 ✅ **No account required** — Complete anonymity
-✅ **Reports are safe** — Contains gene names and risk scores, never raw genotypes
+✅ **Reports are local** — Contains per-SNP genotype calls for the 58 analysed SNPs only; full raw genome data is never reproduced
 ✅ **Open source** — Code is auditable
 
 ---
@@ -230,12 +230,12 @@ If you use Nutrigenomics in research or education:
   title = {Nutrigenomics: Personalised Nutrition from Genetic Data},
   year = {2026},
   url = {https://github.com/drdaviddelorenzo/nutrigenomics},
-  version = {0.2.0}
+  version = {0.2.3}
 }
 ```
 
 ### APA
-de Lorenzo, D. (2026). *Nutrigenomics: Personalised nutrition from genetic data* (Version 0.2.0) [Software]. Retrieved from https://github.com/drdaviddelorenzo/nutrigenomics
+de Lorenzo, D. (2026). *Nutrigenomics: Personalised nutrition from genetic data* (Version 0.2.3) [Software]. Retrieved from https://github.com/drdaviddelorenzo/nutrigenomics
 
 See [ATTRIBUTION.md](ATTRIBUTION.md) for more citation formats.
 

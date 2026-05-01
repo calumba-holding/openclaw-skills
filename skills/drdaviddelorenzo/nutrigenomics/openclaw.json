@@ -1,8 +1,8 @@
 {
   "skill_id": "nutrigenomics",
   "name": "Nutrigenomics",
-  "version": "0.2.0-openclaw",
-  "description": "Generate personalised nutrition recommendations from your genetic data (23andMe, AncestryDNA, or VCF). Analyzes 40+ genes affecting nutrient metabolism, absorption, and food sensitivities. All processing is local—your data stays private.",
+  "version": "0.3.1",
+  "description": "Generate personalised nutrition recommendations from your genetic data (23andMe, AncestryDNA, or VCF). Analyzes 40+ genes affecting nutrient metabolism, absorption, and food sensitivities. All processing is local\u2014your data stays private.",
   "author": "David de Lorenzo",
   "license": "MIT",
   "category": "health-nutrition-genetics",
@@ -27,7 +27,12 @@
       },
       "file_format": {
         "type": "string",
-        "enum": ["auto", "23andme", "ancestry", "vcf"],
+        "enum": [
+          "auto",
+          "23andme",
+          "ancestry",
+          "vcf"
+        ],
         "default": "auto",
         "description": "Auto-detect or specify format"
       }
@@ -38,18 +43,25 @@
     "properties": {
       "status": {
         "type": "string",
-        "enum": ["success", "error"]
+        "enum": [
+          "success",
+          "error"
+        ]
       },
       "message": {
         "type": "string"
       },
+      "output_dir": {
+        "type": "string",
+        "description": "Absolute path to the output directory (join with report_path/figures to get full paths)"
+      },
       "report_path": {
         "type": "string",
-        "description": "Path to generated Markdown report"
+        "description": "Filename of generated Markdown report, relative to output_dir"
       },
       "figures": {
         "type": "object",
-        "description": "Paths to generated visualizations (radar, heatmap)"
+        "description": "Filenames of generated visualizations (relative to output_dir)"
       },
       "summary": {
         "type": "string",
@@ -71,7 +83,11 @@
       "VCF (.vcf)"
     ],
     "generates_reports": true,
-    "generates_visualizations": true
+    "generates_visualizations": true,
+    "local_only_file_access": true,
+    "restricted_output_directory": true,
+    "no_executable_scripts_generated": true,
+    "output_files_require_manual_cleanup": true
   },
   "dependencies": {
     "python": ">=3.11",
@@ -84,8 +100,7 @@
     ]
   },
   "documentation": {
-    "main": "SKILL_OPENCLAW.md",
-    "readme": "README_OPENCLAW.md"
+    "main": "README_OPENCLAW.md"
   },
   "metadata": {
     "genes_analyzed": 40,
@@ -96,7 +111,18 @@
     "attribution_file": "ATTRIBUTION.md",
     "contributors_file": "CONTRIBUTORS.md",
     "changelog_file": "CHANGELOG.md",
-    "license": "MIT (see LICENSE file)",
+    "license": "MIT (see LICENSE.txt file)",
     "citation_format": "See ATTRIBUTION.md for BibTeX, APA, and Chicago formats"
+  },
+  "security": {
+    "network_access": false,
+    "input_extensions_allowlist": [
+      ".txt",
+      ".csv",
+      ".vcf"
+    ],
+    "panel_path_restricted_to_skill_directory": true,
+    "output_directory_restricted_to_working_directory": true,
+    "notes": "Processes local genetic data only. Does not transmit data externally. Does not generate executable shell scripts. Output files (report, figures, checksums) are written to a timestamped directory under the working directory and persist on disk until manually deleted. The input file is never copied into the output directory."
   }
 }

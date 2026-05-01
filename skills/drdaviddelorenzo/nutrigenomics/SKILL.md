@@ -1,9 +1,15 @@
+---
+name: nutrigenomics
+description: Generate a personalised nutrition report from your genetic data (23andMe, AncestryDNA, or VCF). Analyses 40+ genes affecting nutrient metabolism, absorption, and food sensitivities. All processing is local — your genetic data never leaves your device.
+metadata: {"openclaw": {"requires": {"bins": ["python3"]}, "emoji": "🧬"}}
+---
+
 # Nutrigenomics — Personalised Nutrition from Genetic Data
 
-**Skill ID**: `nutrigenomics`  
-**Version**: 0.1.0  
-**Status**: MVP  
-**Author**: David de Lorenzo 
+**Skill ID**: `nutrigenomics`
+**Version**: 0.3.1
+**Status**: Beta
+**Author**: David de Lorenzo
 **Requires**: Python 3.11+, pandas, numpy, matplotlib, seaborn, reportlab (optional)
 
 ---
@@ -17,10 +23,10 @@ peer-reviewed nutrigenomics literature, then translates genotype calls into
 actionable dietary and supplementation guidance — all computed locally.
 
 **Key outputs**
-- Markdown nutrition report with risk scores and recommendations
+- Markdown nutrition report with risk scores and per-SNP genotype calls
 - Radar chart of nutrient risk profile
 - Gene × nutrient heatmap
-- Reproducibility bundle (`commands.sh`, `environment.yml`, SHA-256 checksums)
+- Reproducibility bundle (`README_reproducibility.txt`, `environment.yml`, `checksums.txt`, `provenance.json`)
 
 ---
 
@@ -155,12 +161,33 @@ Outputs a structured Markdown report with:
 ### 5. Reproducibility Bundle (`repro_bundle.py`)
 
 Exports to the output directory (not committed to the repo):
-- `commands.sh` — full CLI to reproduce analysis
+- `README_reproducibility.txt` — step-by-step instructions to reproduce the analysis manually
 - `environment.yml` — pinned conda environment
-- `checksums.txt` — SHA-256 checksums of input and output files
-- `provenance.json` — timestamp and version information
+- `checksums.txt` — SHA-256 checksums of the SNP panel and output report (input file intentionally excluded to avoid persisting a fingerprint of genetic data)
+- `provenance.json` — timestamp, version, and format arguments (input filename intentionally omitted)
+
+**Note**: No executable scripts are generated. The reproducibility bundle contains
+only text files for documentation and integrity verification.
 
 ---
+
+## Execution
+
+To run the analysis on a user-provided genetic file, execute this command directly:
+
+```bash
+python {baseDir}/openclaw_adapter.py --input <path_to_genetic_file> --format auto
+```
+
+To run a demo without real genetic data (synthetic patient file included with the skill):
+
+```bash
+python {baseDir}/openclaw_adapter.py --input {baseDir}/tests/synthetic_patient.csv --format 23andme
+```
+
+`{baseDir}` is replaced by OpenClaw at runtime with the absolute path to this skill's folder. Do not substitute it manually. Output is written to a timestamped directory (`nutrigenomics_output_YYYYMMDD_HHMMSS/`) in the current working directory and persists until manually deleted.
+
+Supported `--format` values: `auto` (default), `23andme`, `ancestry`, `vcf`.
 
 ## Usage
 
@@ -174,8 +201,8 @@ openclaw "Run Nutrigenomics analysis on variants.vcf and flag any folate pathway
 # Targeted query
 openclaw "What does my APOE status mean for my saturated fat intake?"
 
-# Generate a random demo patient and run the report
-python examples/generate_patient.py --run
+# Run the demo report (no real genetic data needed)
+openclaw "Run a demo nutrigenomics report using the synthetic patient file"
 ```
 
 ---
@@ -191,7 +218,6 @@ skills/nutrigenomics/
 ├── score_variants.py             ← risk scoring algorithm
 ├── generate_report.py            ← Markdown + figures
 ├── repro_bundle.py               ← reproducibility export
-├── .gitignore
 ├── data/
 │   └── snp_panel.json            ← curated SNP definitions
 ├── tests/
@@ -207,16 +233,29 @@ skills/nutrigenomics/
 ```
 
 > **Note**: Runtime output directories and randomly generated patient files are
-> excluded from version control via `.gitignore`. Only the pre-rendered demo
+> excluded from version control. Only the pre-rendered demo
 > report in `examples/output/` is committed.
 
 ---
 
 ## Privacy
 
-All computation runs **locally**. No genetic data is transmitted. Input files are
-read-only; no raw genotype data appears in any output file (reports contain only
-gene names, SNP IDs, and risk categories).
+All computation runs **locally** — no genetic data is ever transmitted to external
+servers or third-party services.
+
+**What the report contains**: The Markdown report includes per-SNP genotype calls
+(e.g. `AT`, `TT`) for each of the 58 panel SNPs analysed. This is intentional:
+knowing your specific genotype at each nutrition-related locus is what makes the
+report actionable. Full raw genome data from the input file is not reproduced in
+the report; only the 58 panel SNPs are included.
+
+**File persistence**: Output files (report, figures, reproducibility bundle) are
+written to a timestamped `nutrigenomics_output_YYYYMMDD_HHMMSS/` directory under
+the working directory and **persist on disk until manually deleted**. The input
+file is read-only and is never copied into the output directory.
+
+If you are running this skill on behalf of others or in a shared environment,
+delete the output directory once the user has downloaded their results.
 
 ---
 
