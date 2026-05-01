@@ -26,7 +26,7 @@ Access the Cal.com API with managed OAuth authentication. Create and manage even
 # Get your profile
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/cal-com/v2/me')
+req = urllib.request.Request('https://api.maton.ai/cal-com/v2/me')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/cal-com/v2/{resource}
+https://api.maton.ai/cal-com/v2/{resource}
 ```
 
-Replace `{resource}` with the Cal.com API endpoint path. The gateway proxies requests to `api.cal.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.cal.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Cal.com OAuth connections at `https://ctrl.maton.ai`.
+Manage your Cal.com OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=cal-com&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=cal-com&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'cal-com'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "4481afaa-03e4-4b2d-a1c6-7daaf4bff512",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-12T22:52:17.140998Z",
     "last_updated_time": "2026-02-12T22:55:20.376189Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Cal.com connections, specify which one to use with the `Mat
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/cal-com/v2/me')
+req = urllib.request.Request('https://api.maton.ai/cal-com/v2/me')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '4481afaa-03e4-4b2d-a1c6-7daaf4bff512')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to event types, bookings, schedules, and availability within the connected Cal.com account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -690,7 +695,7 @@ GET /cal-com/v2/bookings?take=10&cursor=abc123
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/cal-com/v2/event-types',
+  'https://api.maton.ai/cal-com/v2/event-types',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -707,7 +712,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/cal-com/v2/event-types',
+    'https://api.maton.ai/cal-com/v2/event-types',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -748,7 +753,7 @@ echo $MATON_API_KEY
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -758,8 +763,8 @@ EOF
 
 1. Ensure your URL path starts with `cal-com`. For example:
 
-- Correct: `https://gateway.maton.ai/cal-com/v2/me`
-- Incorrect: `https://gateway.maton.ai/v2/me`
+- Correct: `https://api.maton.ai/cal-com/v2/me`
+- Incorrect: `https://api.maton.ai/v2/me`
 
 ### Troubleshooting: Booking Creation Fails
 
