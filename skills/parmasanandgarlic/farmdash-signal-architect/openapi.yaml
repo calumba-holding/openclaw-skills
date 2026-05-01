@@ -114,9 +114,12 @@ paths:
       summary: Get a token swap quote without executing
       description: |
         Returns an unsigned preview quote showing expected output, fee breakdown,
-        and the protocol that would be used. No authentication required.
+        protocol selection, and FarmDash execution guardrails. No authentication required.
         Useful for agents to compare pricing before committing a signed swap.
         Route selection: x402 (Base-to-Base) > Li.Fi (cross-chain) > 0x (single-chain EVM).
+        When wallet and risk inputs are supplied, the response also includes
+        allowance checks, depeg/health warnings, quote-decay diagnostics, and
+        positive-net-edge guidance.
       tags: [Swap]
       parameters:
         - in: query
@@ -151,6 +154,46 @@ paths:
             type: string
             enum: [lifi, zerox, x402]
           description: Force a specific routing protocol (auto-selected if omitted)
+        - in: query
+          name: walletAddress
+          required: false
+          schema: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+          description: Optional wallet used for approval and allowance checks
+        - in: query
+          name: toAddress
+          required: false
+          schema: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+          description: Optional destination wallet override for previewing the signed route
+        - in: query
+          name: slippage
+          required: false
+          schema: { type: number, minimum: 0.01, maximum: 5 }
+          description: Optional slippage tolerance in percent
+        - in: query
+          name: expectedUpsideUsd
+          required: false
+          schema: { type: number }
+          description: Optional upside estimate used to enforce positive net edge
+        - in: query
+          name: riskBufferUsd
+          required: false
+          schema: { type: number }
+          description: Optional execution-risk haircut added to total route cost
+        - in: query
+          name: healthFactor
+          required: false
+          schema: { type: number }
+          description: Optional health factor used for halt checks
+        - in: query
+          name: liquidationBufferPct
+          required: false
+          schema: { type: number }
+          description: Optional liquidation buffer percentage used for halt checks
+        - in: query
+          name: safetyMode
+          required: false
+          schema: { $ref: '#/components/schemas/SwapSafetyMode' }
+          description: "`strict` halts on severe quote decay, `balanced` downgrades that condition to a warning"
       responses:
         '200':
           description: Swap quote
@@ -176,7 +219,8 @@ paths:
       description: |
         Main swap router. Authenticates the agent via EIP-191 signature,
         selects the optimal protocol, attaches the FarmDash fee (75 bps default,
-        volume discounts available), and returns ready-to-broadcast transaction calldata.
+        volume discounts available), applies Execution Alpha routing, and enforces
+        Risk Sentinel guardrails before returning ready-to-broadcast transaction calldata.
 
         FarmDash NEVER touches funds. The protocol (Li.Fi / 0x / x402) executes the swap.
         The FarmDash treasury receives the fee haircut directly from the protocol.
@@ -213,6 +257,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Swap halted by Risk Sentinel guardrails
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapHaltResponse'
         '402':
           description: Payment required
         '429':
@@ -264,6 +314,66 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/HistoryResponse'
                   - $ref: '#/components/schemas/RevenueMetrics'
+        '402':
+          description: Payment required
+        '429':
+          description: Rate limit exceeded
+
+  /v1/agent/risk-sentinel:
+    get:
+      operationId: getRiskSentinelInfo
+      summary: Describe Risk Sentinel usage
+      description: |
+        Returns a lightweight usage guide for the standalone risk-analysis endpoint.
+        Use POST to inspect allowance state, token/bridge/contract risks, depeg checks,
+        health-factor alerts, quote decay, and positive-net-edge enforcement.
+      tags: [Risk]
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        '200':
+          description: Usage guide
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  description: { type: string }
+                  usage: { type: string }
+        '402':
+          description: Payment required
+    post:
+      operationId: analyzeRiskSentinel
+      summary: Analyze a route or account with Risk Sentinel
+      description: |
+        Accepts either a full swap-shaped payload or manual health/net-edge inputs.
+        When swap fields are present, FarmDash auto-selects a route, computes
+        Execution Alpha diagnostics, and returns a full Risk Sentinel report.
+      tags: [Risk]
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskSentinelRequest'
+      responses:
+        '200':
+          description: Risk analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskSentinelResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '402':
           description: Payment required
         '429':
@@ -442,6 +552,10 @@ components:
             summary:
               $ref: '#/components/schemas/ChainBreakdownSummary'
 
+    SwapSafetyMode:
+      type: string
+      enum: [strict, balanced]
+
     SwapTxData:
       type: object
       required: [to, data, value, chainId]
@@ -482,6 +596,20 @@ components:
         expiresAt:
           type: integer
           description: Unix timestamp — quotes valid for 30 seconds
+
+        allowanceTarget:
+          type: string
+          nullable: true
+        gasEstimateUsd:
+          type: number
+          nullable: true
+        bridgeFeeUsd:
+          type: number
+          nullable: true
+        executionAlpha:
+          $ref: '#/components/schemas/ExecutionAlphaReport'
+        riskReport:
+          $ref: '#/components/schemas/SwapRiskReport'
 
     SwapQuoteResponse:
       allOf:
@@ -534,6 +662,24 @@ components:
           description: Force protocol (auto-selected if omitted)
         volumeHintUSD:
           type: number
+        expectedUpsideUsd:
+          type: number
+          description: Optional upside estimate in USD for positive-net-edge checks
+        riskBufferUsd:
+          type: number
+          description: Optional extra execution-risk buffer in USD
+        healthFactor:
+          type: number
+          description: Optional lending health factor supplied by the caller
+        liquidationBufferPct:
+          type: number
+          description: Optional liquidation-buffer percentage supplied by the caller
+        walletAddress:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{40}$'
+          description: Optional wallet address used for on-chain approval checks
+        safetyMode:
+          $ref: '#/components/schemas/SwapSafetyMode'
           description: Agent-supplied USD estimate — unlocks volume fee discounts (>=10k = 35bps, >=100k = 25bps)
         nonce:
           type: string
@@ -542,6 +688,201 @@ components:
           type: string
           pattern: '^0x[a-fA-F0-9]+$'
           description: EIP-191 personal_sign of the deterministic payload
+
+    ExecutionAlphaReport:
+      type: object
+      properties:
+        selectedProtocol:
+          type: string
+          enum: [lifi, zerox, x402]
+        routeReason:
+          type: string
+        mevProtection:
+          type: object
+          properties:
+            safetyMode:
+              $ref: '#/components/schemas/SwapSafetyMode'
+            actualSlippageBps:
+              type: integer
+            maxRecommendedSlippageBps:
+              type: integer
+        candidates:
+          type: array
+          items:
+            type: object
+            properties:
+              protocol:
+                type: string
+                enum: [lifi, zerox, x402]
+              estimatedOutput: { type: string }
+              feeAmountUsd: { type: number }
+              gasEstimateUsd: { type: number, nullable: true }
+              bridgeFeeUsd: { type: number, nullable: true }
+              routeRiskScore: { type: number }
+              selected: { type: boolean }
+        quoteDecay:
+          type: object
+          properties:
+            previousObservedAt: { type: integer, nullable: true }
+            quoteAgeMs: { type: integer, nullable: true }
+            outputDecayBps: { type: number }
+            gasIncreaseBps: { type: number }
+            severity:
+              type: string
+              enum: [none, low, medium, high]
+        netEdge:
+          type: object
+          properties:
+            expectedUpsideUsd: { type: number, nullable: true }
+            protocolFeeUsd: { type: number }
+            gasUsd: { type: number }
+            bridgeFeeUsd: { type: number }
+            riskBufferUsd: { type: number }
+            totalCostUsd: { type: number }
+            netEdgeUsd: { type: number, nullable: true }
+            positive: { type: boolean, nullable: true }
+            enforced: { type: boolean }
+
+    SwapRiskReport:
+      type: object
+      properties:
+        flags:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              category:
+                type: string
+                enum: [approval, bridge, contract, token, health, execution]
+              severity:
+                type: string
+                enum: [low, medium, high, critical]
+              title: { type: string }
+              message: { type: string }
+              metadata:
+                type: object
+                additionalProperties: true
+        approval:
+          type: object
+          nullable: true
+          properties:
+            spender: { type: string, nullable: true }
+            allowance: { type: string, nullable: true }
+            requiredAmount: { type: string }
+            approvalNeeded: { type: boolean }
+            overApproved: { type: boolean }
+            source:
+              type: string
+              enum: [onchain, quote_fallback, unavailable]
+        pegChecks:
+          type: array
+          items:
+            type: object
+            properties:
+              tokenAddress: { type: string }
+              symbol: { type: string }
+              reference:
+                type: string
+                enum: [USD, ETH]
+              priceUsd: { type: number, nullable: true }
+              referencePriceUsd: { type: number, nullable: true }
+              deviationPct: { type: number, nullable: true }
+              alert: { type: boolean }
+        health:
+          type: object
+          nullable: true
+          properties:
+            healthFactor: { type: number, nullable: true }
+            liquidationBufferPct: { type: number, nullable: true }
+            alertLevel:
+              type: string
+              enum: [none, warning, critical]
+            shouldHalt: { type: boolean }
+        shouldHalt:
+          type: boolean
+        haltReasons:
+          type: array
+          items: { type: string }
+
+    SwapHaltResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: swap_halted
+        code:
+          type: string
+          example: swap_halted
+        selectedProtocol:
+          type: string
+          enum: [lifi, zerox, x402]
+        executionAlpha:
+          $ref: '#/components/schemas/ExecutionAlphaReport'
+        riskReport:
+          $ref: '#/components/schemas/SwapRiskReport'
+
+    RiskSentinelRequest:
+      type: object
+      description: Provide either manual health/net-edge inputs or a full swap-shaped request for route-aware analysis.
+      properties:
+        fromChainId: { type: integer }
+        toChainId: { type: integer }
+        fromToken: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        toToken: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        fromAmount: { type: string, pattern: '^\\d+$' }
+        walletAddress: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        toAddress: { type: string, pattern: '^0x[a-fA-F0-9]{40}$' }
+        protocol:
+          type: string
+          enum: [lifi, zerox, x402]
+        slippage: { type: number }
+        expectedUpsideUsd: { type: number }
+        riskBufferUsd: { type: number }
+        healthFactor: { type: number }
+        liquidationBufferPct: { type: number }
+        protocolFeeUsd: { type: number }
+        gasUsd: { type: number }
+        bridgeFeeUsd: { type: number }
+        enforcePositive: { type: boolean }
+        safetyMode:
+          $ref: '#/components/schemas/SwapSafetyMode'
+
+    RiskSentinelResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+        mode:
+          type: string
+          enum: [manual, quoted]
+        selectedProtocol:
+          type: string
+          enum: [lifi, zerox, x402]
+          nullable: true
+        executionAlpha:
+          allOf:
+            - $ref: '#/components/schemas/ExecutionAlphaReport'
+          nullable: true
+        riskReport:
+          allOf:
+            - $ref: '#/components/schemas/SwapRiskReport'
+          nullable: true
+        quotePreview:
+          allOf:
+            - $ref: '#/components/schemas/SwapQuote'
+          nullable: true
+        health:
+          type: object
+          nullable: true
+        netEdge:
+          type: object
+          nullable: true
+        flags:
+          type: array
+          items:
+            type: object
+        shouldHalt:
+          type: boolean
 
     FeeEvent:
       type: object

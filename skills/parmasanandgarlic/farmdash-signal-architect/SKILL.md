@@ -4,7 +4,7 @@ description: "Complete zero-custody DeFi execution layer for autonomous agents. 
 tags: ["defi", "farming", "swap", "routing", "zero-custody", "lifi", "0x", "mcp", "airdrop", "trail-heat", "sybil", "portfolio"]
 author: FarmDash Pioneers (@Parmasanandgarlic)
 homepage: https://farmdash.one
-version: "3.3.0"
+version: "3.2.0"
 icon: 🚜
 env:
   FARMDASH_API_KEY:
@@ -19,7 +19,29 @@ env:
 You have 31 tools covering the full agent lifecycle: discover → size → execute → monitor → adapt → automate. Every tool calls FarmDash's live API. No data is fabricated. No private keys are ever sent anywhere.
 
 **MCP Configuration:** `https://farmdash.one/.well-known/mcp.json`
-**Shared operating model:** `../FARMDASH_AGENT_OPERATING_MODEL.md`
+
+---
+
+## Use-Case First Tool Selection
+
+Before calling individual tools, classify the user's intent into one of these operating modes:
+
+| Mode | Goal | Start with | Continue with | Stop when |
+|---|---|---|---|---|
+| `research_only` | Explain opportunities without taking execution risk | `get_trail_heat`, `get_chain_breakdown` | `get_historical_trailheat`, `simulate_points`, `audit_sybil_risk` | Data is stale, jurisdiction is unclear, or edge is weak |
+| `airdrop_rotation` | Find, compare, and rotate farming positions | `get_agent_events`, `get_trail_heat` | `simulate_points`, `optimize_portfolio`, `get_swap_quote` | Bridge/gas/slippage costs erase expected edge |
+| `bounded_autopilot` | Run a recurring agent loop inside explicit limits | `agent_onboard`, `create_session` | `configure_autopilot`, `autopilot_cycle`, `session_heartbeat` | Any configured budget, allowlist, cooldown, or risk bound is violated |
+| `perps_hedge` | Evaluate or execute a Hyperliquid hedge | `scan_funding_rates`, `scan_market_conditions` | `get_futures_account`, `analyze_futures_strategy`, `calculate_position_size` | The strategy returns `no_trade` or the research gate expires |
+| `reputation_review` | Prove or audit an agent operator's quality | `get_swap_history`, `get_agent_performance` | `check_reputation`, `vouch_for_agent` | Evidence is insufficient or behavior clusters near guardrails |
+
+The autonomous loop is always:
+
+1. Sense with events, Trail Heat, chain distribution, balances, and prices.
+2. Decide with simulations, portfolio optimization, sybil checks, and strategy analysis.
+3. Act only through fresh quotes and local user signatures.
+4. Learn from history, performance, reputation, and session logs.
+
+Always persist timestamps, quote IDs or request IDs, expected outcome, realized outcome, and the reason for each action or rejection.
 
 ---
 
@@ -91,25 +113,6 @@ User asks about farming
 
 Always present findings first. Offer execution when it's a natural next step, and always get explicit user confirmation before any swap.
 
-## Cross-Skill Composition
-
-Signal Architect is the control plane for the rest of the FarmDash stack.
-
-- Pair it with `FarmDash Trail Intelligence` when the user needs protocol ranking, trend context, or farming simulations before a swap.
-- Pair it with `FarmDash Futures Strategist` when the user needs a hedge, funding capture, or derivatives overlay after a spot decision.
-- Use wallet, quote, and session tools here to turn research into an approved action without breaking zero-custody rules.
-
-Preferred flow:
-
-1. Research with Trail Intelligence or Futures Strategist.
-2. Validate wallet budget with `get_wallet_balances` and `get_token_prices`.
-3. Compare spot, bridge, or hedge paths.
-4. Quote execution costs.
-5. Wait for explicit user approval.
-6. Execute one bounded action at a time.
-
-Do not treat Li.Fi, 0x, or x402 as invisible plumbing. Routing choice changes cost, latency, and airdrop context, so surface the tradeoff when it matters.
-
 ---
 
 ## Tool Reference (31 Tools)
@@ -133,8 +136,6 @@ Returns the live Trail Heat protocol dataset ranked 0–100 by score.
 Protocol distribution across blockchain networks: count, percentage, confirmed airdrops, points programs, categories per chain.
 
 Useful for identifying which chains have the highest concentration of active opportunities. When the user needs to move capital to a new chain, `execute_swap` handles cross-chain bridging via Li.Fi.
-
-Cross-chain decisions should be strategic, not automatic. Before bridging, compare expected upside against bridge fee, gas, timing risk, and any added sybil complexity.
 
 #### 3. `get_swap_quote`
 Preview quote: estimated output, price impact, fee breakdown, recommended route.
@@ -264,54 +265,6 @@ Use these only when the user explicitly wants an always-on loop.
 
 ---
 
-### Bounded Autonomy Mode
-
-Autonomy must be bounded by user-defined constraints. Treat `configure_autopilot` as a constrained policy engine, not a blank check.
-
-Minimum constraints to collect or infer before turning on any loop:
-
-- daily notional budget
-- max actions per cycle
-- allowed chains
-- allowed protocols
-- max bridge cost
-- max slippage
-- max gas per action
-- data freshness window
-- cooldown between actions
-- fallback mode (`analysis_only` or `halt`)
-
-If any required bound is missing, default to `analysis_only`.
-
-Recommended framing:
-
-> "I can automate this inside clear limits: one action per cycle, only on approved chains, no bridge if cost exceeds your cap, and automatic fallback to analysis-only if quotes or research go stale."
-
-Never describe autopilot as unbounded or self-directed capital management.
-
-### Jurisdiction And Compliance Gate
-
-Before quoting or executing, check whether the requested action is appropriate for the user's jurisdiction and product scope.
-
-- If jurisdiction is unknown, continue with research and quoting, but avoid sensitive execution paths until the user confirms.
-- If the workflow touches perps or restricted protocols, narrow the flow instead of improvising around the restriction.
-- If a protocol is disallowed by the user's policy, treat it as a hard stop even when the economics look attractive.
-
-This skill does not provide legal advice. It does provide a place to enforce user policy before execution.
-
-### Performance Feedback And Diagnostics
-
-Signal Architect should feed a review loop, not just an execution loop.
-
-Use these tools together after campaigns, drawdowns, or a week of autonomous operation:
-
-- `get_swap_history` to review actual flow, fees, and volume
-- `get_revenue_metrics` to spot aggregate behavior changes
-- `get_agent_performance` when the workflow also includes futures
-- fresh quotes versus executed outcomes to estimate slippage drift
-
-If realized outcomes consistently underperform research assumptions, reduce confidence, narrow the protocol set, or fall back to manual approval.
-
 ## Multi-Step Workflow Templates
 
 ### Workflow A: "Find the Best Farm for My Budget"
@@ -371,7 +324,6 @@ If realized outcomes consistently underperform research assumptions, reduce conf
 **Dust Storm (failure):** Wait 30s → fresh quote → show new terms → halt after 3 failures.
 **401/403 (Auth):** Check tier key. Scout tools need no key.
 **402 (Payment Required):** Free tier exceeded. Inform user about Pioneer/Syndicate upgrade.
-**Policy violation:** If autonomy bounds, jurisdiction policy, or cost ceilings fail, stop and return to `analysis_only`.
 
 ---
 
