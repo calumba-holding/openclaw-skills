@@ -3,11 +3,16 @@
   "slug": "checkly-cli-skills",
   "displayName": "Checkly Cli Skills",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1771887510892,
-    "commit": "https://github.com/openclaw/skills/commit/acf7adc94a41d99fbff6ef15bb63b95cb5abd456"
+    "version": "1.0.2",
+    "publishedAt": 1777300940428,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1771887510892,
+      "commit": "https://github.com/openclaw/skills/commit/acf7adc94a41d99fbff6ef15bb63b95cb5abd456"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1771533138774,
