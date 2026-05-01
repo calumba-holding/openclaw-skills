@@ -26,7 +26,7 @@ Access the Coda API with managed OAuth authentication. Manage docs, pages, table
 # List your docs
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/coda/apis/v1/docs')
+req = urllib.request.Request('https://api.maton.ai/coda/apis/v1/docs')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/coda/apis/v1/{resource}
+https://api.maton.ai/coda/apis/v1/{resource}
 ```
 
-Replace `{resource}` with the actual Coda API endpoint path. The gateway proxies requests to `coda.io/apis/v1` and automatically injects your OAuth token.
+Maton proxies requests to `coda.io/apis/v1` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Coda OAuth connections at `https://ctrl.maton.ai`.
+Manage your Coda OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=coda&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=coda&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'coda'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "f46d34b1-3735-478a-a0d7-54115a16cd46",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-12T01:38:10.500238Z",
     "last_updated_time": "2026-02-12T01:38:33.545353Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Coda connections, specify which one to use with the `Maton-
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/coda/apis/v1/docs')
+req = urllib.request.Request('https://api.maton.ai/coda/apis/v1/docs')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'f46d34b1-3735-478a-a0d7-54115a16cd46')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to docs, pages, tables, rows, and formulas within the connected Coda account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -526,7 +531,7 @@ Mutations are generally processed within a few seconds.
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/coda/apis/v1/docs?limit=10',
+  'https://api.maton.ai/coda/apis/v1/docs?limit=10',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -544,7 +549,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/coda/apis/v1/docs',
+    'https://api.maton.ai/coda/apis/v1/docs',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     params={'limit': 10}
 )
@@ -560,7 +565,7 @@ import os
 import requests
 
 headers = {'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
-base_url = 'https://gateway.maton.ai/coda/apis/v1'
+base_url = 'https://api.maton.ai/coda/apis/v1'
 
 # Create doc
 doc_response = requests.post(
@@ -590,7 +595,7 @@ import requests
 headers = {'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 
 response = requests.post(
-    'https://gateway.maton.ai/coda/apis/v1/docs/{docId}/tables/{tableId}/rows',
+    'https://api.maton.ai/coda/apis/v1/docs/{docId}/tables/{tableId}/rows',
     headers=headers,
     json={
         'rows': [
@@ -653,7 +658,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -663,8 +668,8 @@ EOF
 
 1. Ensure your URL path starts with `coda`. For example:
 
-- Correct: `https://gateway.maton.ai/coda/apis/v1/docs`
-- Incorrect: `https://gateway.maton.ai/apis/v1/docs`
+- Correct: `https://api.maton.ai/coda/apis/v1/docs`
+- Incorrect: `https://api.maton.ai/apis/v1/docs`
 
 ## Resources
 
