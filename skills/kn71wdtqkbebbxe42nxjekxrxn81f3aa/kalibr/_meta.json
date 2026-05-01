@@ -1,0 +1,11 @@
+{
+  "owner": "kn71wdtqkbebbxe42nxjekxrxn81f3aa",
+  "slug": "kalibr",
+  "displayName": "Kalibr: Ship agents that fix themselves",
+  "latest": {
+    "version": "0.2.1",
+    "publishedAt": 1771730329587,
+    "commit": null
+  },
+  "history": []
+}
