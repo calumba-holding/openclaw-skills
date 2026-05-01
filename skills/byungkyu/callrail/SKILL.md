@@ -25,7 +25,7 @@ Access the CallRail API with managed OAuth authentication. Track calls, manage t
 # List all calls
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/callrail/v3/a/{account_id}/calls.json')
+req = urllib.request.Request('https://api.maton.ai/callrail/v3/a/{account_id}/calls.json')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/callrail/{native-api-path}
+https://api.maton.ai/callrail/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual CallRail API endpoint path. The gateway proxies requests to `api.callrail.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.callrail.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -61,14 +61,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your CallRail OAuth connections at `https://ctrl.maton.ai`.
+Manage your CallRail OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=callrail&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=callrail&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -80,7 +80,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'callrail'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -92,7 +92,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "75364cb9-7116-4367-a707-1113d426f17d",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-10T09:55:17.574212Z",
     "last_updated_time": "2026-02-10T09:55:34.693801Z",
@@ -120,7 +120,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -133,14 +133,19 @@ If you have multiple CallRail connections, specify which one to use with the `Ma
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/callrail/v3/a.json')
+req = urllib.request.Request('https://api.maton.ai/callrail/v3/a.json')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '75364cb9-7116-4367-a707-1113d426f17d')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to calls, accounts, companies, trackers, and integrations within the connected CallRail account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -584,7 +589,7 @@ This returns `next_page` URL and `has_next_page` boolean for efficient paginatio
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/callrail/v3/a/{account_id}/calls.json',
+  'https://api.maton.ai/callrail/v3/a/{account_id}/calls.json',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -602,7 +607,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/callrail/v3/a/{account_id}/calls.json',
+    'https://api.maton.ai/callrail/v3/a/{account_id}/calls.json',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     params={'per_page': 50, 'date_range': 'last_30_days'}
 )
@@ -660,7 +665,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -670,8 +675,8 @@ EOF
 
 1. Ensure your URL path starts with `callrail`. For example:
 
-- Correct: `https://gateway.maton.ai/callrail/v3/a.json`
-- Incorrect: `https://gateway.maton.ai/v3/a.json`
+- Correct: `https://api.maton.ai/callrail/v3/a.json`
+- Incorrect: `https://api.maton.ai/v3/a.json`
 
 ## Resources
 
