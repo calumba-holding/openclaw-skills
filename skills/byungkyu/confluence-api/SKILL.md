@@ -28,13 +28,13 @@ python3 <<'EOF'
 import urllib.request, os, json
 
 # First get your Cloud ID
-req = urllib.request.Request('https://gateway.maton.ai/confluence/oauth/token/accessible-resources')
+req = urllib.request.Request('https://api.maton.ai/confluence/oauth/token/accessible-resources')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 resources = json.load(urllib.request.urlopen(req))
 cloud_id = resources[0]['id']
 
 # Then list pages
-req = urllib.request.Request(f'https://gateway.maton.ai/confluence/ex/confluence/{cloud_id}/wiki/api/v2/pages')
+req = urllib.request.Request(f'https://api.maton.ai/confluence/ex/confluence/{cloud_id}/wiki/api/v2/pages')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -43,19 +43,19 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/confluence/{atlassian-api-path}
+https://api.maton.ai/confluence/{atlassian-api-path}
 ```
 
 Confluence Cloud uses two URL patterns:
 
 **V2 API (recommended):**
 ```
-https://gateway.maton.ai/confluence/ex/confluence/{cloudId}/wiki/api/v2/{resource}
+https://api.maton.ai/confluence/ex/confluence/{cloudId}/wiki/api/v2/{resource}
 ```
 
 **V1 REST API (limited):**
 ```
-https://gateway.maton.ai/confluence/ex/confluence/{cloudId}/wiki/rest/api/{resource}
+https://api.maton.ai/confluence/ex/confluence/{cloudId}/wiki/rest/api/{resource}
 ```
 
 The `{cloudId}` is required for all API calls. Obtain it via the accessible-resources endpoint (see below).
@@ -82,14 +82,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Confluence OAuth connections at `https://ctrl.maton.ai`.
+Manage your Confluence OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=confluence&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=confluence&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -101,7 +101,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'confluence'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -113,7 +113,7 @@ EOF
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -123,7 +123,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "6cb7787f-7c32-4658-a3c3-4ddf1367a4ce",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-13T00:00:00.000000Z",
     "last_updated_time": "2026-02-13T00:00:00.000000Z",
@@ -141,7 +141,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -155,14 +155,14 @@ If you have multiple Confluence connections, specify which one to use with the `
 python3 <<'EOF'
 import urllib.request, os, json
 cloud_id = "YOUR_CLOUD_ID"
-req = urllib.request.Request(f'https://gateway.maton.ai/confluence/ex/confluence/{cloud_id}/wiki/api/v2/pages')
+req = urllib.request.Request(f'https://api.maton.ai/confluence/ex/confluence/{cloud_id}/wiki/api/v2/pages')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '6cb7787f-7c32-4658-a3c3-4ddf1367a4ce')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
 
 ## Getting Your Cloud ID
 
@@ -171,7 +171,7 @@ Before making API calls, you must obtain your Confluence Cloud ID:
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/confluence/oauth/token/accessible-resources')
+req = urllib.request.Request('https://api.maton.ai/confluence/oauth/token/accessible-resources')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 resources = json.load(urllib.request.urlopen(req))
 print(json.dumps(resources, indent=2))
@@ -191,6 +191,11 @@ EOF
   }
 ]
 ```
+
+## Security & Permissions
+
+- Access is scoped to pages, spaces, blogposts, comments, and attachments within the connected Confluence account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -732,7 +737,7 @@ GET /pages?limit=25&cursor=eyJpZCI6Ijk4MzkyIn0
 ```javascript
 // Get Cloud ID first
 const resourcesRes = await fetch(
-  'https://gateway.maton.ai/confluence/oauth/token/accessible-resources',
+  'https://api.maton.ai/confluence/oauth/token/accessible-resources',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -744,7 +749,7 @@ const cloudId = resources[0].id;
 
 // List pages
 const response = await fetch(
-  `https://gateway.maton.ai/confluence/ex/confluence/${cloudId}/wiki/api/v2/pages`,
+  `https://api.maton.ai/confluence/ex/confluence/${cloudId}/wiki/api/v2/pages`,
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -762,14 +767,14 @@ import requests
 
 # Get Cloud ID first
 resources = requests.get(
-    'https://gateway.maton.ai/confluence/oauth/token/accessible-resources',
+    'https://api.maton.ai/confluence/oauth/token/accessible-resources',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 ).json()
 cloud_id = resources[0]['id']
 
 # List pages
 response = requests.get(
-    f'https://gateway.maton.ai/confluence/ex/confluence/{cloud_id}/wiki/api/v2/pages',
+    f'https://api.maton.ai/confluence/ex/confluence/{cloud_id}/wiki/api/v2/pages',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -811,7 +816,7 @@ echo $MATON_API_KEY
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -821,8 +826,8 @@ EOF
 
 Ensure your URL path starts with `confluence`. For example:
 
-- Correct: `https://gateway.maton.ai/confluence/ex/confluence/{cloudId}/wiki/api/v2/pages`
-- Incorrect: `https://gateway.maton.ai/ex/confluence/{cloudId}/wiki/api/v2/pages`
+- Correct: `https://api.maton.ai/confluence/ex/confluence/{cloudId}/wiki/api/v2/pages`
+- Incorrect: `https://api.maton.ai/ex/confluence/{cloudId}/wiki/api/v2/pages`
 
 ### Troubleshooting: Scope Issues
 
@@ -832,7 +837,7 @@ If you receive a 401 error with "scope does not match", you may need to re-autho
 # Delete existing connection
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -841,7 +846,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'confluence'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
