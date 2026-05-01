@@ -3,9 +3,15 @@
   "slug": "beehiiv",
   "displayName": "beehiiv",
   "latest": {
-    "version": "1.0.0",
-    "publishedAt": 1770810337614,
-    "commit": "https://github.com/openclaw/skills/commit/6a35aa1296461ae5a3e01f97075df1ef73b23b27"
+    "version": "1.0.1",
+    "publishedAt": 1777588937218,
+    "commit": null
   },
-  "history": []
+  "history": [
+    {
+      "version": "1.0.0",
+      "publishedAt": 1770810337614,
+      "commit": "https://github.com/openclaw/skills/commit/6a35aa1296461ae5a3e01f97075df1ef73b23b27"
+    }
+  ]
 }
