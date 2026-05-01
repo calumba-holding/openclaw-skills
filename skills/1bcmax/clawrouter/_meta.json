@@ -1,13 +1,18 @@
 {
   "owner": "1bcmax",
   "slug": "clawrouter",
-  "displayName": "ClawRouter",
+  "displayName": "Clawrouter",
   "latest": {
-    "version": "0.10.5",
-    "publishedAt": 1771812885041,
-    "commit": "https://github.com/openclaw/skills/commit/0691ecc219793a2041a9d79ac097061a82d42410"
+    "version": "0.12.171",
+    "publishedAt": 1777516052727,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.10.5",
+      "publishedAt": 1771812885041,
+      "commit": "https://github.com/openclaw/skills/commit/0691ecc219793a2041a9d79ac097061a82d42410"
+    },
     {
       "version": "0.6.7",
       "publishedAt": 1770735056044,
