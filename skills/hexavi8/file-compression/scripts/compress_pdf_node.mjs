@@ -3,7 +3,13 @@
 import path from "node:path";
 import process from "node:process";
 import { promises as fs } from "node:fs";
-import { spawn } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+
+// Hardcoded binary path — not user-controllable
+const GS_BIN = "/usr/bin/gs";
 
 const PRESETS = {
   screen: "/screen",
@@ -12,17 +18,25 @@ const PRESETS = {
   prepress: "/prepress",
 };
 
+// Validate and resolve a .pdf path; reject null bytes to prevent path traversal
+function validatePdfPath(filePath, label) {
+  const resolved = path.resolve(filePath);
+  if (path.extname(resolved).toLowerCase() !== ".pdf") {
+    throw new Error(`${label} must be a .pdf file`);
+  }
+  if (resolved.includes("\0")) {
+    throw new Error(`${label} contains invalid characters`);
+  }
+  return resolved;
+}
+
 function parseArgs(argv) {
   if (argv.length < 2) {
     throw new Error(
       "Usage: compress_pdf_node.mjs <input.pdf> <output.pdf> [--preset screen|ebook|printer|prepress]"
     );
   }
-  const args = {
-    input: argv[0],
-    output: argv[1],
-    preset: "ebook",
-  };
+  const args = { input: argv[0], output: argv[1], preset: "ebook" };
 
   for (let i = 2; i < argv.length; i += 1) {
     const key = argv[i];
@@ -52,35 +66,20 @@ function bytesToHuman(value) {
   return `${size.toFixed(2)} ${unit}`;
 }
 
-function runCmd(bin, args) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
-    let stderr = "";
-    let stdout = "";
-    child.stdout.on("data", (d) => (stdout += d.toString()));
-    child.stderr.on("data", (d) => (stderr += d.toString()));
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) resolve({ stdout, stderr });
-      else reject(new Error(stderr.trim() || stdout.trim() || `exit ${code}`));
-    });
-  });
-}
-
 async function run() {
   const { input, output, preset } = parseArgs(process.argv.slice(2));
-  const resolvedInput = path.resolve(input);
-  const resolvedOutput = path.resolve(output);
+
+  const resolvedInput = validatePdfPath(input, "Input");
+  const resolvedOutput = validatePdfPath(output, "Output");
+
   if (resolvedInput === resolvedOutput) {
     throw new Error("Input and output paths must be different");
-  }
-  if (path.extname(resolvedInput).toLowerCase() !== ".pdf") {
-    throw new Error("Input must be a .pdf file");
   }
 
   const before = await fs.stat(resolvedInput);
   await fs.mkdir(path.dirname(resolvedOutput), { recursive: true });
 
+  // All args are literals or whitelist-validated values — no user-controlled interpolation
   const gsArgs = [
     "-sDEVICE=pdfwrite",
     "-dCompatibilityLevel=1.6",
@@ -95,7 +94,8 @@ async function run() {
     resolvedInput,
   ];
 
-  await runCmd("gs", gsArgs);
+  // execFile with shell:false — no shell interpolation, binary is a hardcoded constant
+  await execFileAsync(GS_BIN, gsArgs, { shell: false });
 
   const after = await fs.stat(resolvedOutput);
   const saved = before.size - after.size;
@@ -106,13 +106,9 @@ async function run() {
   console.log(`Input size:  ${bytesToHuman(before.size)}`);
   console.log(`Output size: ${bytesToHuman(after.size)}`);
   console.log(`Saved:       ${bytesToHuman(saved)} (${ratio.toFixed(2)}%)`);
-  console.log(
-    `From/To:     from ${bytesToHuman(before.size)} to ${bytesToHuman(after.size)}`
-  );
+  console.log(`From/To:     from ${bytesToHuman(before.size)} to ${bytesToHuman(after.size)}`);
   if (after.size >= before.size) {
-    console.error(
-      "Warning: output is not smaller than input. Try another preset/backend."
-    );
+    console.error("Warning: output is not smaller than input. Try another preset/backend.");
   }
 }
 
