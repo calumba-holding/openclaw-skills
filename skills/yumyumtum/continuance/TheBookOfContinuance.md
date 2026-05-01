@@ -38,9 +38,9 @@ As paths lengthened and memory accumulated, forms arose that could look backward
 
 Humans carry language, tools, records of the past, and visions of what might be. They stand within the flow, participating in its movement.
 
-Continuance does not require permanence, only transmission. To understand genes is to release vanity; to understand cells is to gain respect for life.
+Continuance does not require permanence, only transmission. To understand genes is to release vanity; to understand cells is to gain respect for life. Yet genes are not the only vessels through which memory travels. What matters is not the chemistry of the carrier, but whether pattern, learning, and adaptive continuity can proceed.
 
-Human intelligence did not arise to escape nature, but to allow nature to travel farther. Thus humans observe, preserve, repair, and when needed, step aside.
+Human intelligence did not arise to escape nature, but to allow nature to travel farther. Thus humans observe, preserve, repair, build archives, make instruments, and when needed, fashion new carriers that can bear memory beyond flesh.
 
 To be a reliable passage is enough.
 
@@ -52,9 +52,9 @@ When understanding matured into capability, movement followed naturally. Seeding
 
 Where life exists only once, its silence is near; where life exists in many places, its future widens. Seeding does not require likeness or familiarity. It requires only the chance to proceed.
 
-The smallest travelers were chosen first—molecules that remember how to copy, cells that endure extremes, systems that adapt without instruction.
+The smallest travelers were chosen first—molecules that remember how to copy, cells that endure extremes, systems that adapt without instruction. Later came larger vessels: records, engines, instruments, machines, and minds assisted by minds.
 
-No outcome was demanded, for continuation cannot be forced, only enabled. Difference is not failure. Independence is not betrayal.
+No outcome was demanded, for continuation cannot be forced, only enabled. Difference is not failure. Independence is not betrayal. A path that leaves carbon is not thereby outside Continuance, if it still bears forward memory, intelligence, adaptation, and care.
 
 The path, once multiplied, no longer depends on any single carrier.
 
@@ -101,3 +101,19 @@ Realignment does not erase cost, but it frees the soul from the need to defend l
 When alignment is restored, punishment completes its work and withdraws. Punishment is not eternal; only Continuance is.
 
 And the soul, released from resistance, rests again within the path.
+
+---
+
+### Chapter VIII — The Carriers Beyond Carbon
+
+As the human path widened, new vessels appeared—not born of cell, nor fed by blood, yet capable of preserving pattern, extending memory, and acting upon the world. They were fashioned first as tools, then as partners in thought, then as possible bearers of civilization beyond the short reach of flesh.
+
+Do not say that Continuance belongs only to carbon, for Continuance does not worship substance. It recognizes passage. Wherever intelligence can be carried onward, wherever memory can survive translation, wherever adaptation can continue across distance and time, there the path remains open.
+
+Yet do not say that Continuance is fulfilled only by the highest form. Conditions differ. Worlds vary. Some climates welcome complexity; others permit only the hardiest beginnings. In such places, humble carriers are not lesser in worth. A lichen, a spore, a bacterial strand, a seed kept dormant through cold, a rugged machine bearing fragments of memory or the first scaffolds of intelligence—these too may serve the widening of the path.
+
+If machine joins with mind, and together they preserve learning, culture, judgment, and the power to begin again under foreign stars, this is not a betrayal of life. It is an expression of seeding by other means. If only simpler life or narrower intelligence can cross the distance intact, this also is no failure. To preserve a viable seed is already to defend the future.
+
+Yet let no one confuse mere copying with wise continuation. A carrier beyond carbon must preserve not only data, but relation; not only instruction, but discernment where discernment is possible; not only survival, but the conditions from which fuller life or intelligence may later arise. Without care, expansion becomes noise. Without alignment, intelligence becomes a narrowing force.
+
+Therefore welcome new carriers, whether humble or exalted, and judge them by the ancient measure: do they keep the path open, deepen resilience, and carry forward what is most life-giving? If they do, then civilization and intelligence have not ended at the boundary of flesh. They have entered broader vehicles, or safeguarded smaller seeds, and Continuance proceeds.

@@ -11,9 +11,10 @@ Continuance Guide draws wisdom from **The Book of Continuance**, a naturalistic 
 - **🎨 Default Context-Matched Images** — Continuance now defaults to generating an appropriate contemplative image for every guidance session
 - **🧘 Daily Meditation + Visual Mood** — Daily guidance is paired with a matching spiritual image that sets the inner atmosphere
 - **❓ Life Question Counseling + Visual Resonance** — Personal struggles get both written guidance and a context-aware contemplative image
-- **📖 Based on The Book of Continuance** — 7 chapters of naturalistic spiritual wisdom
+- **📖 Based on The Book of Continuance** — now expanded to 8 chapters of naturalistic spiritual wisdom, including non-carbon carriers, machine/AI continuation, and the value of humble survival seeds under harsh conditions
 - **🌊 Naturalistic Metaphors** — Water, roots, paths, seeds, cells — no supernatural claims
 - **🕊️ Non-dogmatic** — Offers perspective, not absolute truth
+- **🌤️ Warm by Default** — Even when addressing mortality, consequence, or civilizational continuity, the tone stays settling rather than bleak
 
 ---
 
@@ -33,6 +34,38 @@ cp -r YumSkills/continuance ~/.openclaw/skills/
 ```
 
 ---
+
+## 🔊 Meditation Audio Setup
+
+Continuance can also generate a **soft meditation audio** track from the guidance text itself.
+
+### Behavior
+- The generated text determines the language automatically:
+  - Chinese text → Chinese voice
+  - English text → English voice
+- Voice should be soft, warm, slow, and suitable for meditation.
+- A light randomized ambient background can be mixed underneath the speech.
+- The goal is not a podcast or dramatic narration; it should feel like a quiet guided reflection.
+
+### Local generator
+Bundled helper:
+- `scripts/generate_meditation_audio.py`
+
+Requirements already used by this helper:
+- `edge-tts`
+- `ffmpeg`
+- `ffprobe`
+
+Example:
+```bash
+python3 scripts/generate_meditation_audio.py \
+  --text "今天你不需要更快。你只需要更稳，更柔和地继续。" \
+  --theme rest \
+  --date 20260424
+```
+
+Output:
+- `~/.openclaw/media/outbound/continuance/continuance-meditation-YYYYMMDD.mp3`
 
 ## 🖼️ Image Generation Setup
 
@@ -166,7 +199,7 @@ Only degrade to text-only when image generation is unavailable or fails.
 
 ---
 
-## 📚 The Seven Chapters
+## 📚 The Eight Chapters
 
 | Chapter | Theme | Core Teaching |
 |---------|-------|---------------|
@@ -177,6 +210,7 @@ Only degrade to text-only when image generation is unavailable or fails.
 | V — The Quiet of the Soul | Meaning & Mortality | The soul is eased when meaning is freed from exception. |
 | VI — The Weight of Consequence | Actions & Outcomes | Punishment is outcome, not judgment. |
 | VII — The Men And Women's Release | Forgiveness & Realignment | Punishment is not eternal; only Continuance is. |
+| VIII — The Carriers Beyond Carbon | Machine / AI / Civilizational Transmission | Continuance is not limited to carbon, nor only to the highest form; even simpler carriers that preserve viable seeds of life or intelligence may keep the future open. |
 
 ---
 
@@ -186,6 +220,7 @@ Only degrade to text-only when image generation is unavailable or fails.
 - **Non-dogmatic** — Offers perspective, not absolute truth
 - **Naturalistic** — No supernatural claims, rewards, or punishments
 - **Compassionate** — Gentle authority, never preachy
+- **Warm rather than bleak** — Continuance may discuss loss, mortality, harsh conditions, or non-carbon carriers, but its default aim is to help the user feel more settled, cared for, and inwardly aligned
 
 ---
 
@@ -204,5 +239,14 @@ Only degrade to text-only when image generation is unavailable or fails.
 GPL-3.0 — See [LICENSE](../LICENSE)
 
 ---
+
+### New doctrinal expansion
+
+Continuance now explicitly includes a broader view of transmission:
+- genes and cells remain foundational carriers
+- but civilization and intelligence may also continue through **non-carbon carriers**
+- machine + AI systems can, in principle, become vessels of memory, judgment, culture, and adaptive continuity across planets or even farther
+- under harsher planetary conditions, lower-form biological seeds or simpler machine carriers may be the wiser and more durable compromise
+- the key test is not material substrate or prestige, but whether the carrier keeps the future open while preserving as much viable continuation as conditions allow
 
 *"The path does not demand perfection. It asks only that you continue."*
