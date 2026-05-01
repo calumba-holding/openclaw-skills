@@ -5,7 +5,27 @@ description: |
   Send Bilibili DMs, reply to messages, read chat history, and browse conversations via browser automation.
 ---
 
-# Bilibili Private Messaging | B站私信自动化
+# Bilibili Messager | B站私信助手
+
+## 前置要求 | Prerequisites
+
+> 使用本技能前请先确认以下条件。
+
+| 条件 | 说明 |
+|------|------|
+| **Browser profile** | 必须使用 `openclaw` profile（已通过 `browser` 工具启动并登录 Bilibili） |
+| **登录状态** | Bilibili 账号已在 `openclaw` profile 中保持登录态 |
+| **账号确认** | 发送操作前，技能会要求用户明确确认目标账号和消息内容 |
+
+### 为什么需要 openclaw profile？
+
+本技能通过在 Bilibili 私信页面执行 DOM JavaScript（`querySelector`、`innerText`、`click` 等）实现消息读取和发送。这些操作需要浏览器环境持有有效的 Bilibili 登录会话。
+
+- `openclaw` profile 由 OpenClaw 启动和管理，独立于 Morois 的日常浏览器 profile
+- 技能仅在 Bilibili 私信页（`message.bilibili.com`）域内执行 DOM 操作，无法访问其他网站
+- 任何对外发送操作均需用户明确确认，不会自动发送
+
+---
 
 ## 模式 | Mode
 
