@@ -1,13 +1,18 @@
 {
   "owner": "jau123",
   "slug": "creative-toolkit",
-  "displayName": "AI Image Generator & Editor — Nanobanana, GPT Image, ComfyUI",
+  "displayName": "AI Image Generator & Editor — GPT Image 2, Nanobanana, ComfyUI",
   "latest": {
-    "version": "1.0.26",
-    "publishedAt": 1776942966957,
-    "commit": "https://github.com/openclaw/skills/commit/c6a8c7d18b370732c98992d291543786acc5a2c4"
+    "version": "1.0.31",
+    "publishedAt": 1777566238020,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.26",
+      "publishedAt": 1776942966957,
+      "commit": "https://github.com/openclaw/skills/commit/c6a8c7d18b370732c98992d291543786acc5a2c4"
+    },
     {
       "version": "1.0.24",
       "publishedAt": 1776249443512,
