@@ -3,11 +3,16 @@
   "slug": "vmware-monitor",
   "displayName": "Vmware Monitor",
   "latest": {
-    "version": "1.5.14",
-    "publishedAt": 1776774033255,
-    "commit": "https://github.com/openclaw/skills/commit/38d397913ab533b2d1e29019200a9a4099decb85"
+    "version": "1.5.17",
+    "publishedAt": 1777636016095,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.5.14",
+      "publishedAt": 1776774033255,
+      "commit": "https://github.com/openclaw/skills/commit/38d397913ab533b2d1e29019200a9a4099decb85"
+    },
     {
       "version": "1.5.12",
       "publishedAt": 1776420322202,
