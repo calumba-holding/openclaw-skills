@@ -4,15 +4,17 @@ description: Real-time web search, autosuggest, and AI-powered answers using the
 license: MIT
 metadata:
   author: Broedkrummen
-  version: 4.0.0
+  version: 4.2.0
 ---
 
-# Brave API Search
+# Brave API Search v4.2.0 — Significant Update
 
-Real-time web search, autosuggest, and AI-powered answers using the official Brave Search API. Three tools:
+Real-time web search, autosuggest, spellcheck, and AI-powered answers using the official Brave Search API. Four tools:
 - `brave_search` — web results with titles, URLs, descriptions, optional AI summary
 - `brave_suggest` — query autosuggestions as users type with optional rich metadata
+- `brave_spellcheck` — spell correction and "Did you mean?" suggestions
 - `brave_answers` — AI-grounded answers with inline citations powered by live web search
+  | **NEW — v4.2.0:** Full entity extraction via `enable-entities` flag
 
 ## Setup
 
@@ -23,6 +25,7 @@ Set your Brave API keys in a local `.env` file (recommended):
 BRAVE_SEARCH_API_KEY=your_key_here
 BRAVE_ANSWERS_API_KEY=your_key_here
 AUTOSUGGEST_API_KEY=your_key_here   # optional, for autosuggest only
+BRAVE_SPELLCHECK_API_KEY=your_key_here   # optional, for spellcheck only
 ```
 
 Get your keys at: https://api-dashboard.search.brave.com
@@ -31,6 +34,7 @@ Get your keys at: https://api-dashboard.search.brave.com
 - `brave_search` → `BRAVE_SEARCH_API_KEY`
 - `brave_answers` → `BRAVE_ANSWERS_API_KEY`
 - `brave_suggest` → `AUTOSUGGEST_API_KEY` → `BRAVE_AUTOSUGGEST_API_KEY` → `BRAVE_SEARCH_API_KEY` (tries in order)
+- `brave_spellcheck` → `BRAVE_SPELLCHECK_API_KEY` → `BRAVE_SEARCH_API_KEY` (tries in order)
 
 > Note: `brave_answers` uses streaming by default. Streaming is required for citations, entities, and research mode.
 
@@ -104,6 +108,22 @@ brave_suggest --query "einstein" --rich true
 - Implement debouncing (150-300ms) to avoid excessive API calls as users type
 - Load suggestions asynchronously without blocking the UI
 
+### brave_spellcheck
+
+Spell checking and query correction for search queries.
+
+```bash
+brave_spellcheck --query "articifial inteligence"
+brave_spellcheck --query "hello" --country US
+```
+
+**Parameters:**
+- `query` (required) — Query to check for spelling errors
+- `country` — 2-letter country code (default: `US`)
+
+**Returns:** "Did you mean:" suggestion, or confirms no correction needed. Uses dedicated `BRAVE_SPELLCHECK_API_KEY` if available, falls back to `BRAVE_SEARCH_API_KEY`.
+
+
 ### brave_answers
 
 AI-powered answers grounded in live web search with inline citations.
@@ -112,6 +132,7 @@ AI-powered answers grounded in live web search with inline citations.
 brave_answers --query "How does React Server Components work?"
 brave_answers --query "Compare Postgres vs MySQL for OLAP" --enable-research true
 brave_answers --query "Latest Python release notes" --enable-citations true
+brave_answers --query "Who is Albert Einstein" --enable-entities true
 ```
 
 **Parameters:**
@@ -124,10 +145,12 @@ brave_answers --query "Latest Python release notes" --enable-citations true
 
 **Returns:** AI answer with cited sources extracted from the response, plus token usage and cost breakdown.
 
-> ⚠️ **Citations, entities, and research mode require streaming (`--stream true`, which is the default).** If you disable streaming with `--stream false`, citations will not be available.
+> ⚠️ **Citations, entities, and research mode require streaming (`--stream true`, which is the default).** If you disable streaming with `--stream false`, citations and entity data will not be available.
 
 **Streaming mode output:**
 - Text streams progressively to stdout
+- Entities streamed inline as `<enum_item>` tags are parsed
+- **Entities mentioned** section printed at the end (v4.2.0)
 - Sources printed at the end (sorted by citation number)
 - Token usage and cost breakdown included
 
@@ -157,18 +180,23 @@ The skill uses a shared `utils.js` module containing:
 - `fetchWithRetry()` — fetch with exponential backoff retry on 429 and 5xx
 - `createCache()` — in-memory TTL cache (used by `brave_suggest`)
 
-### bravesearch.js
+### brave_search.js
 
 The core search script with the following optimizations:
 - **Parallel summary fetch:** When `--summary` is enabled, the summary key is extracted from the search response and fetched in parallel with the search results
 - **Pagination hint:** Response includes a hint for the next page offset when `more_results_available` is true
 - **Rate limit handling:** Retries on 429 (honors `Retry-After` header) and 5xx (exponential backoff)
 
-### braveanswers.js
+### brave_answers.js v4.2.0
 
 The AI answers script supports two modes:
-- **Streaming (default):** Progressive output with citations parsed from SSE stream, token usage, and cost breakdown
-- **Non-streaming:** Simpler batch output, no citations available
+- **Streaming (default):** Progressive output with real-time entity extraction, deduplicated citations, token usage, and cost breakdown
+- **Non-streaming:** Full citation and entity extraction from batch response via `parseCitations()` and `parseEntities()`
+
+Key changes in v4.2.0:
+- **Entity extraction:** Streaming mode parses `<enum_item>` tags incrementally — entity names are streamed inline as they are parsed, and a consolidated **Entities mentioned** section is printed at the end with URL and citation count per entity
+- **Citation deduplication:** Duplicate source URLs are deduplicated so each source is cited only once (sorted by citation number)
+- **Non-streaming mode (v4.2.0):** Full `parseCitations()` and `parseEntities()` applied to the batch response content, so citations and entities are extracted even without streaming
 
 ### brave_suggest.js
 
@@ -181,7 +209,7 @@ The autosuggest script with the following optimizations:
 When streaming is enabled (`stream: true`):
 - SSE chunks are parsed in real-time
 - Citations are collected and printed at end (sorted by citation number)
-- Entity items (`<enum_item>`) pass through as-is
+- Entity items (`<enum_item>`) are parsed incrementally — streamed inline and collected for the **Entities mentioned** section
 - Usage block (`<usage>`) parsed and displayed with token counts and total cost
 
 ## Security & Packaging Notes

@@ -6,16 +6,29 @@
 // This skill uses streaming by default for full feature coverage.
 
 const BASE_URL = 'https://api.search.brave.com/res/v1';
-const { parseArgs, fetchWithRetry, createCache } = require('./utils');
-
-// Simple in-memory cache for non-streaming fallback (stream: false)
-const answerCache = createCache();
+const { parseArgs, fetchWithRetry } = require('./utils');
 
 function getApiKey() {
   return process.env.BRAVE_ANSWERS_API_KEY || null;
 }
 
-// ─── Citation & HTML entity parsing ──────────────────────────────────────────
+// ─── HTML stripper (shared) ──────────────────────────────────────────────────
+
+function stripHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .trim();
+}
+
+// ─── Citation & entity parsing ────────────────────────────────────────────────
 
 function parseCitations(text) {
   const sources = [];
@@ -42,16 +55,32 @@ function parseCitations(text) {
 
   const cleanText = text
     .replace(/<citation>[\s\S]*?<\/citation>/g, '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&#x27;/g, "'")
-    .replace(/&#x2F;/g, '/')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
   return { cleanText, sources };
+}
+
+function parseEntities(text) {
+  const entities = [];
+  const entityRegex = /<enum_item>([\s\S]*?)<\/enum_item>/g;
+  let match;
+  while ((match = entityRegex.exec(text)) !== null) {
+    try {
+      const entity = JSON.parse(match[1]);
+      if (entity.name) {
+        entities.push({
+          name: entity.name,
+          href: entity.href || '',
+          originalTokens: entity.original_tokens || '',
+          citations: entity.citations || [],
+        });
+      }
+    } catch {
+      // ignore malformed entity
+    }
+  }
+  return entities;
 }
 
 // ─── Streaming answer handler ──────────────────────────────────────────────────
@@ -130,7 +159,6 @@ async function streamAnswer(query, country, enableCitations, enableResearch, ena
 
       // Handle special tags
       if (delta.startsWith('<citation>')) {
-        // Collect citations for later
         const citationText = delta.replace(/<citation>/g, '').replace(/<\/citation>/g, '');
         try {
           const citation = JSON.parse(citationText);
@@ -151,6 +179,21 @@ async function streamAnswer(query, country, enableCitations, enableResearch, ena
         usageLine = delta;
         fullContent += delta;
       } else if (delta.startsWith('<enum_item>')) {
+        // Format and stream entity item immediately
+        const entityText = delta.replace('<enum_item>', '').replace('</enum_item>', '');
+        try {
+          const entity = JSON.parse(entityText);
+          const label = entity.original_tokens || entity.name || '';
+          const href = entity.href || '';
+          if (label) {
+            process.stdout.write(` *${label}*`);
+            if (href) process.stdout.write(`(${href})`);
+            process.stdout.write(' ');
+          }
+        } catch {
+          // malformed entity tag — stream as plain text
+          process.stdout.write(delta);
+        }
         fullContent += delta;
       } else {
         // Plain text — stream it immediately
@@ -161,6 +204,22 @@ async function streamAnswer(query, country, enableCitations, enableResearch, ena
   }
 
   process.stdout.write('\n');
+
+  // Entities section
+  const entities = parseEntities(fullContent);
+  if (entities.length > 0) {
+    process.stdout.write('\n**Entities mentioned:**\n');
+    entities.forEach(e => {
+      const citeNote = e.citations.length > 0
+        ? ` (cited in ${e.citations.length} place${e.citations.length > 1 ? 's' : ''})`
+        : '';
+      if (e.href) {
+        process.stdout.write(`- [${e.name}](${e.href})${citeNote}\n`);
+      } else {
+        process.stdout.write(`- ${e.name}${citeNote}\n`);
+      }
+    });
+  }
 
   // Print sources at the end
   if (sources.length > 0) {
@@ -179,20 +238,24 @@ async function streamAnswer(query, country, enableCitations, enableResearch, ena
         .replace('<usage>', '')
         .replace('</usage>', '');
       const usage = JSON.parse(usageJson);
+      const totalTokens = (usage['X-Request-Tokens-In'] || 0) + (usage['X-Request-Tokens-Out'] || 0);
       process.stdout.write(
-        `\n*Tokens: ${usage['X-Request-Tokens-In'] + usage['X-Request-Tokens-Out']} ` +
-        `(in: ${usage['X-Request-Tokens-In']}, out: ${usage['X-Request-Tokens-Out']})*\n`
+        `\n*Tokens: ${totalTokens} ` +
+        `(in: ${usage['X-Request-Tokens-In'] || 0}, out: ${usage['X-Request-Tokens-Out'] || 0})*\n`
       );
-      process.stdout.write(`*Total cost: $${usage['X-Request-Total-Cost']?.toFixed(5)}*\n`);
+      const totalCost = usage['X-Request-Total-Cost'];
+      if (totalCost !== undefined && totalCost !== null) {
+        process.stdout.write(`*Total cost: $${parseFloat(totalCost).toFixed(5)}*\n`);
+      }
     } catch {
-      // ignore
+      // ignore malformed usage tag
     }
   }
 }
 
 // ─── Non-streaming fallback ───────────────────────────────────────────────────
 
-async function getAnswer(query, country, enableCitations, enableResearch) {
+async function getAnswer(query, country, enableCitations, enableResearch, enableEntities) {
   const apiKey = getApiKey();
   if (!apiKey) {
     console.error('Error: BRAVE_ANSWERS_API_KEY environment variable not set.');
@@ -209,6 +272,7 @@ async function getAnswer(query, country, enableCitations, enableResearch) {
       language: 'en',
       enable_citations: enableCitations,
       enable_research: enableResearch,
+      enable_entities: enableEntities,
     },
   };
 
@@ -236,10 +300,22 @@ function formatAnswer(data, query) {
   if (!content) return 'No answer returned.';
 
   const { cleanText, sources } = parseCitations(content);
+  const entities = parseEntities(content);
   const lines = [];
 
   lines.push(`**Query:** ${query}\n`);
   lines.push(cleanText);
+
+  if (entities.length > 0) {
+    lines.push('\n**Entities mentioned:**');
+    entities.forEach(e => {
+      if (e.href) {
+        lines.push(`- [${e.name}](${e.href})`);
+      } else {
+        lines.push(`- ${e.name}`);
+      }
+    });
+  }
 
   if (sources.length > 0) {
     lines.push('\n**Sources:**');
@@ -280,11 +356,9 @@ async function main() {
   const useStream = args.stream !== 'false'; // streaming ON by default
 
   if (useStream) {
-    // Streaming: output progressively, citations at end
     await streamAnswer(query, country, enableCitations, enableResearch, enableEntities);
   } else {
-    // Non-streaming: fetch then print
-    const data = await getAnswer(query, country, enableCitations, enableResearch);
+    const data = await getAnswer(query, country, enableCitations, enableResearch, enableEntities);
     console.log(formatAnswer(data, query));
   }
 }

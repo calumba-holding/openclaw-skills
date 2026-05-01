@@ -1,7 +1,7 @@
 {
-  "name": "brave-search-skill",
-  "version": "2.2.1",
-  "description": "Real-time web search, autosuggest, and AI-powered answers using the Brave Search API. Requires BRAVE_SEARCH_API_KEY and BRAVE_ANSWERS_API_KEY environment variables.",
+  "name": "brave-api-search-skill",
+  "version": "4.2.0",
+  "description": "Real-time web search, autosuggest, spellcheck, and AI-powered answers using the Brave Search API. Requires BRAVE_SEARCH_API_KEY and BRAVE_ANSWERS_API_KEY environment variables.",
   "author": "Broedkrummen",
   "requiredEnv": [
     "BRAVE_SEARCH_API_KEY",
@@ -73,9 +73,14 @@
       }
     },
     {
+"name": "brave_spellcheck",
+      "description": "Spell check and autocorrect search queries. Returns 'Did you mean' suggestions or confirms no correction needed.",
+      "command": "node {{workspace}}/brave_spellcheck.js --query \"{{query}}\" --country {{country|US}}"
+    },
+    {
       "name": "brave_answers",
-      "description": "Get AI-powered answers grounded in live Brave web search with inline citations. Use for research questions that benefit from multiple sources.",
-      "command": "node {{workspace}}/brave_answers.js --query \"{{query}}\" --country {{country|us}} --enable-citations {{enable_citations|true}} --enable-research {{enable_research|false}}",
+      "description": "Get AI-powered answers grounded in live Brave web search with inline citations and optional entity extraction. Use for research questions that benefit from multiple sources.",
+      "command": "node {{workspace}}/brave_answers.js --query \"{{query}}\" --country {{country|us}} --enable-citations {{enable_citations|true}} --enable-research {{enable_research|false}} --enable-entities {{enable_entities|false}} --stream {{stream|true}}",
       "args": {
         "query": {
           "type": "string",
@@ -96,6 +101,16 @@
           "type": "boolean",
           "description": "Enable deep multi-search research mode (uses more quota)",
           "default": false
+        },
+        "enable_entities": {
+          "type": "boolean",
+          "description": "Extract and display entity information from the answer (streaming required)",
+          "default": false
+        },
+        "stream": {
+          "type": "boolean",
+          "description": "Enable streaming output (required for citations and entities)",
+          "default": true
         }
       }
     }
