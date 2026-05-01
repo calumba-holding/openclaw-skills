@@ -27,6 +27,19 @@ Full Spotify Premium control with music analysis and smart discovery.
 
 > **ALWAYS run `python3 ~/.openclaw/scripts/spotify.py [cmd]`** — never respond with text only.
 
+## ✨ What makes this different
+
+| Feature | This skill | Basic Spotify skills |
+|---------|-----------|---------------------|
+| Playback control | ✅ play/pause/next/prev/volume/shuffle/queue | ✅ |
+| Auto-launch Spotify | ✅ opens app if closed, waits, then plays | ❌ |
+| Music taste analysis | ✅ top tracks/artists across 3 time periods | ❌ |
+| Genre profile | ✅ full genre breakdown | ❌ |
+| Music discovery | ✅ works without blocked recommendations API | ❌ |
+| Liked tracks analysis | ✅ search, filter by artist | ❌ |
+| One-command playlists | ✅ creates + fills playlist in one command | ❌ |
+| Multi-language triggers | ✅ English + Russian | ❌ |
+
 ---
 
 ## Setup (first time)

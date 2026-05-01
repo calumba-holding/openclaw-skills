@@ -1,13 +1,18 @@
 {
   "owner": "mixx85",
   "slug": "spotify-claw",
-  "displayName": "Spotify Claw",
+  "displayName": "Spotify",
   "latest": {
-    "version": "1.1.0",
-    "publishedAt": 1771884396147,
-    "commit": "https://github.com/openclaw/skills/commit/5d5aa64f8d95ef4f22303e15729a3a19e932d683"
+    "version": "2.0.1",
+    "publishedAt": 1773696314318,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.1.0",
+      "publishedAt": 1771884396147,
+      "commit": "https://github.com/openclaw/skills/commit/5d5aa64f8d95ef4f22303e15729a3a19e932d683"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771881934924,
