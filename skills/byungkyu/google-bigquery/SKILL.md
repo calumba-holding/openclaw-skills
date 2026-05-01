@@ -27,7 +27,7 @@ Access the Google BigQuery API with managed OAuth authentication. Run SQL querie
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': 'SELECT 1 as test_value', 'useLegacySql': False}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/google-bigquery/bigquery/v2/projects/{projectId}/queries', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/google-bigquery/bigquery/v2/projects/{projectId}/queries', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -37,10 +37,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/google-bigquery/bigquery/v2/{resource-path}
+https://api.maton.ai/google-bigquery/bigquery/v2/{resource-path}
 ```
 
-Replace `{resource-path}` with the actual BigQuery API endpoint path. The gateway proxies requests to `bigquery.googleapis.com` and automatically injects your OAuth token.
+Maton proxies requests to `bigquery.googleapis.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -64,14 +64,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Google BigQuery OAuth connections at `https://ctrl.maton.ai`.
+Manage your Google BigQuery OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=google-bigquery&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=google-bigquery&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -83,7 +83,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'google-bigquery'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -95,7 +95,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -105,7 +105,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "c8463a31-e5b4-4e52-9a32-e78dcd7ba7b1",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-14T09:02:02.780520Z",
     "last_updated_time": "2026-02-14T09:02:19.977436Z",
@@ -123,7 +123,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -136,14 +136,19 @@ If you have multiple Google BigQuery connections, specify which one to use with 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/google-bigquery/bigquery/v2/projects')
+req = urllib.request.Request('https://api.maton.ai/google-bigquery/bigquery/v2/projects')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'c8463a31-e5b4-4e52-9a32-e78dcd7ba7b1')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to datasets, tables, jobs, and SQL queries within the connected Google BigQuery account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -535,7 +540,7 @@ Use the `nextPageToken` value as `pageToken` in subsequent requests.
 ```javascript
 // Run a query
 const response = await fetch(
-  'https://gateway.maton.ai/google-bigquery/bigquery/v2/projects/my-project/queries',
+  'https://api.maton.ai/google-bigquery/bigquery/v2/projects/my-project/queries',
   {
     method: 'POST',
     headers: {
@@ -560,7 +565,7 @@ import requests
 
 # Run a query
 response = requests.post(
-    'https://gateway.maton.ai/google-bigquery/bigquery/v2/projects/my-project/queries',
+    'https://api.maton.ai/google-bigquery/bigquery/v2/projects/my-project/queries',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     json={
         'query': 'SELECT * FROM `my_dataset.my_table` LIMIT 10',
@@ -635,7 +640,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -645,8 +650,8 @@ EOF
 
 1. Ensure your URL path starts with `google-bigquery`. For example:
 
-- Correct: `https://gateway.maton.ai/google-bigquery/bigquery/v2/projects`
-- Incorrect: `https://gateway.maton.ai/bigquery/v2/projects`
+- Correct: `https://api.maton.ai/google-bigquery/bigquery/v2/projects`
+- Incorrect: `https://api.maton.ai/bigquery/v2/projects`
 
 ## Resources
 
