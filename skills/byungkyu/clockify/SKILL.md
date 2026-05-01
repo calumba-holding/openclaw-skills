@@ -26,7 +26,7 @@ Access the Clockify API with managed OAuth authentication. Track time, manage pr
 # Get current user
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/clockify/api/v1/user')
+req = urllib.request.Request('https://api.maton.ai/clockify/api/v1/user')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/clockify/{native-api-path}
+https://api.maton.ai/clockify/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Clockify API endpoint path. The gateway proxies requests to `api.clockify.me` and automatically injects your credentials.
+Maton proxies requests to `api.clockify.me` and automatically injects your credentials.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Clockify OAuth connections at `https://ctrl.maton.ai`.
+Manage your Clockify OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=clockify&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=clockify&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'clockify'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "13fe7b78-42ba-4b43-9631-69a4bf7091ec",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-13T09:18:02.529448Z",
     "last_updated_time": "2026-02-13T09:18:09.334540Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Clockify connections, specify which one to use with the `Ma
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/clockify/api/v1/user')
+req = urllib.request.Request('https://api.maton.ai/clockify/api/v1/user')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '13fe7b78-42ba-4b43-9631-69a4bf7091ec')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to time entries, projects, workspaces, clients, and tags within the connected Clockify account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -546,7 +551,7 @@ Response includes a `Last-Page` header indicating if there are more pages.
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/clockify/api/v1/workspaces',
+  'https://api.maton.ai/clockify/api/v1/workspaces',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -563,7 +568,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/clockify/api/v1/workspaces',
+    'https://api.maton.ai/clockify/api/v1/workspaces',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 workspaces = response.json()
@@ -581,7 +586,7 @@ start_time = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().repla
 end_time = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
 response = requests.post(
-    f'https://gateway.maton.ai/clockify/api/v1/workspaces/{workspace_id}/time-entries',
+    f'https://api.maton.ai/clockify/api/v1/workspaces/{workspace_id}/time-entries',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -628,7 +633,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -638,8 +643,8 @@ EOF
 
 1. Ensure your URL path starts with `clockify`. For example:
 
-- Correct: `https://gateway.maton.ai/clockify/api/v1/user`
-- Incorrect: `https://gateway.maton.ai/api/v1/user`
+- Correct: `https://api.maton.ai/clockify/api/v1/user`
+- Incorrect: `https://api.maton.ai/api/v1/user`
 
 ## Resources
 
