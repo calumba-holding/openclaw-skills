@@ -61,8 +61,6 @@ SOURCES = {
     "official": [
         {"name": "工信部-政策解读", "type": "rss", "url": "https://rss.injahow.cn/gov/miit/zcjd"},
         {"name": "工信部-文件公示", "type": "rss", "url": "https://rss.injahow.cn/gov/miit/wjgs"},
-        {"name": "中国政府网",        "type": "web", "url": "https://www.most.gov.cn/dfkj/dfkjyw/dfzxdt/index_1.html"},
-        {"name": "发改委-信息公开", "type": "rss", "url": "https://rss.injahow.cn/gov/ndrc/zfxxgk"},
         {"name": "发改委-新闻动态", "type": "rss", "url": "https://rss.injahow.cn/gov/ndrc/xwdt"},
     ],
 }

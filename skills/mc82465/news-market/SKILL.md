@@ -14,7 +14,7 @@ description: 专注中国A股市场资讯查询。聚合热点要闻、科技媒
 | 热点要闻 | `hot` | 人民网时政、新浪财经、36氪、财联社、雪球、观察者网、IT之家 |
 | 科技媒体 | `tech_media` | 36氪、钛媒体、InfoQ、量子位、机器之心、新智元 |
 | 证券网站 | `securities` | 东方财富、同花顺、雪球、富途牛牛 |
-| 官方渠道 | `official` | 工信部、科技部、发改委 |
+| 官方渠道 | `official` | 工信部、发改委 |
 
 ## 配置与网络要求
 
@@ -99,4 +99,4 @@ python3 skills/news_market/scripts/news_market.py hot --keyword "关键词" --js
 
 - 纯 Python 标准库实现，无需额外依赖
 - RSS 源可能因网站调整而失效，脚本会自动跳过失败的源
-- 中文新闻源（人民网、澎湃、36氪等）通常允许 `web_fetch` 抓取详情页
+- 中文新闻源（人民网、36氪等）通常允许 `web_fetch` 抓取详情页
