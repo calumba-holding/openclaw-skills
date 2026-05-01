@@ -24,7 +24,7 @@ Access Notion via MCP (Model Context Protocol) with managed authentication.
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': 'meeting notes', 'query_type': 'internal'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/notion/notion-search', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/notion/notion-search', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/notion/{tool-name}
+https://api.maton.ai/notion/{tool-name}
 ```
 
-Replace `{tool-name}` with the MCP tool name (e.g., `notion-search`). The gateway proxies requests to `mcp.notion.com` and automatically injects your credentials.
+Maton proxies requests to `mcp.notion.com` and automatically injects your credentials. The `{tool-name}` corresponds to the MCP tool name (e.g., `notion-search`).
 
 ## Request Headers
 
@@ -65,14 +65,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Notion MCP connections at `https://ctrl.maton.ai`.
+Manage your Notion MCP connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=notion&method=MCP&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=notion&method=MCP&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -84,7 +84,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'notion', 'method': 'MCP'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -96,7 +96,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -106,7 +106,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "21fd90f9-5935-43cd-b6c8-bde9d915ca80",
+    "connection_id": "{connection_id}",
     "status": "PENDING",
     "creation_time": "2025-12-08T07:20:53.488460Z",
     "url": "https://connect.maton.ai/?session_token=...",
@@ -124,7 +124,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -138,15 +138,20 @@ If you have multiple Notion connections (eg. OAuth2, MCP), you must specify whic
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': 'meeting notes', 'query_type': 'internal'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/notion/notion-search', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/notion/notion-search', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
-req.add_header('Maton-Connection', '21fd90f9-5935-43cd-b6c8-bde9d915ca80')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-IMPORTANT: If omitted, the gateway uses the default (oldest) active connection, which may fail if it's not an MCP connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to pages, databases, blocks, and users within the connected Notion workspace.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## MCP Reference
 
@@ -646,7 +651,7 @@ Content-Type: application/json
 ### JavaScript
 
 ```javascript
-const response = await fetch('https://gateway.maton.ai/notion/notion-search', {
+const response = await fetch('https://api.maton.ai/notion/notion-search', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -668,7 +673,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/notion/notion-search',
+    'https://api.maton.ai/notion/notion-search',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -722,7 +727,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -732,8 +737,8 @@ EOF
 
 1. Ensure your URL path starts with `notion`. For example:
 
-- Correct: `https://gateway.maton.ai/notion/v1/search`
-- Incorrect: `https://gateway.maton.ai/v1/search`
+- Correct: `https://api.maton.ai/notion/v1/search`
+- Incorrect: `https://api.maton.ai/v1/search`
 
 ## Notes
 
