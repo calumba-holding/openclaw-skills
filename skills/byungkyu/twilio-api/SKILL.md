@@ -25,7 +25,7 @@ Access the Twilio API with managed OAuth authentication. Send SMS messages, make
 # List all accounts
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/twilio/2010-04-01/Accounts.json')
+req = urllib.request.Request('https://api.maton.ai/twilio/2010-04-01/Accounts.json')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/twilio/2010-04-01/Accounts/{AccountSid}/{resource}.json
+https://api.maton.ai/twilio/2010-04-01/Accounts/{AccountSid}/{resource}.json
 ```
 
-The gateway proxies requests to `api.twilio.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.twilio.com` and automatically injects your OAuth token.
 
 **Important:** Most Twilio endpoints require your Account SID in the path. You can get your Account SID from the `/Accounts.json` endpoint.
 
@@ -63,14 +63,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Twilio OAuth connections at `https://ctrl.maton.ai`.
+Manage your Twilio OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=twilio&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=twilio&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -82,7 +82,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'twilio'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -104,7 +104,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "ebe566b1-3eaf-4926-bc92-0d8d47445f12",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-09T23:18:44.243582Z",
     "last_updated_time": "2026-02-09T23:19:55.176687Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -135,14 +135,19 @@ If you have multiple Twilio connections, specify which one to use with the `Mato
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/twilio/2010-04-01/Accounts.json')
+req = urllib.request.Request('https://api.maton.ai/twilio/2010-04-01/Accounts.json')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'ebe566b1-3eaf-4926-bc92-0d8d47445f12')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to messages, calls, phone numbers, and conversations within the connected Twilio account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -154,7 +159,7 @@ If omitted, the gateway uses the default (oldest) active connection.
 GET /twilio/2010-04-01/Accounts.json
 ```
 
-<!-- OpenClaw security redaction: secret removed from archive. -->
+**Response:**
 ```json
 {
   "accounts": [
@@ -574,7 +579,7 @@ Use `next_page_uri` to fetch the next page of results.
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/twilio/2010-04-01/Accounts.json',
+  'https://api.maton.ai/twilio/2010-04-01/Accounts.json',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -594,7 +599,7 @@ import requests
 
 # Get account SID
 response = requests.get(
-    'https://gateway.maton.ai/twilio/2010-04-01/Accounts.json',
+    'https://api.maton.ai/twilio/2010-04-01/Accounts.json',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 account_sid = response.json()['accounts'][0]['sid']
@@ -610,7 +615,7 @@ import requests
 account_sid = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 response = requests.post(
-    f'https://gateway.maton.ai/twilio/2010-04-01/Accounts/{account_sid}/Messages.json',
+    f'https://api.maton.ai/twilio/2010-04-01/Accounts/{account_sid}/Messages.json',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -635,7 +640,7 @@ import requests
 account_sid = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 response = requests.post(
-    f'https://gateway.maton.ai/twilio/2010-04-01/Accounts/{account_sid}/Calls.json',
+    f'https://api.maton.ai/twilio/2010-04-01/Accounts/{account_sid}/Calls.json',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -703,7 +708,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
