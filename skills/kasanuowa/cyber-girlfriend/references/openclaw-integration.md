@@ -72,6 +72,20 @@ For each scheduled mode:
 
 Keep the handler explicit and rich. Keep the state script thin.
 
+### Session routing recommendation
+
+For owner-only companion cron on current OpenClaw builds, prefer a **dedicated persistent session** such as:
+- `sessionTarget: "session:companion-owner"`
+- `payload.kind: "agentTurn"`
+- explicit `delivery` from the local config target
+
+Why:
+- it preserves cross-run relationship context
+- it avoids polluting or being polluted by the user's live main chat
+- it avoids `main`-session wakeups being blended into unrelated heartbeat/chat context
+
+Treat `sessionTarget: "main"` + `systemEvent` as a legacy/lightweight option only when occasional topic bleed is acceptable.
+
 Important pacing rule:
 - `heartbeat` uses its own cooldown bucket
 - `heartbeat` must not consume the normal `morning/afternoon/evening/night` cooldown

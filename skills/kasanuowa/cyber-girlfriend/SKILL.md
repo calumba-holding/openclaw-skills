@@ -23,6 +23,8 @@ On OpenClaw, treat the system as two layers:
    - Each scheduled task has its own real cron payload.
    - `morning`, `afternoon`, `evening`, `night`, `heartbeat`, and any custom labels are all valid examples, not fixed limits.
    - Those payloads can contain the full task prompt, search steps, generation instructions, and delivery behavior.
+   - On OpenClaw, prefer running companion cron jobs in a dedicated persistent custom session such as `session:companion-owner` with `payload.kind: "agentTurn"`.
+   - Use `main` + `systemEvent` only as a legacy compatibility path, because it can bleed into unrelated heartbeat or owner-chat context.
    - Do not duplicate full cron payloads in config.
 
 2. **`scripts/companion_ping.py` owns state and context**
