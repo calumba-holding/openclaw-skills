@@ -3,11 +3,16 @@
   "slug": "google-classroom",
   "displayName": "Google Classroom",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1771501869597,
-    "commit": "https://github.com/openclaw/skills/commit/5522bc1d55c35479f6e7bfeef05a43f08887004e"
+    "version": "1.0.3",
+    "publishedAt": 1777588250936,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1771501869597,
+      "commit": "https://github.com/openclaw/skills/commit/5522bc1d55c35479f6e7bfeef05a43f08887004e"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1771124116695,

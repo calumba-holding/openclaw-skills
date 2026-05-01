@@ -26,7 +26,7 @@ Access the Google Classroom API with managed OAuth authentication. Manage course
 # List all courses
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/google-classroom/v1/courses')
+req = urllib.request.Request('https://api.maton.ai/google-classroom/v1/courses')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,12 +35,12 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/google-classroom/{api-path}
+https://api.maton.ai/google-classroom/{api-path}
 ```
 
 The Google Classroom API uses the path pattern:
 ```
-https://gateway.maton.ai/google-classroom/v1/{resource}
+https://api.maton.ai/google-classroom/v1/{resource}
 ```
 
 ## Authentication
@@ -65,14 +65,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Google Classroom OAuth connections at `https://ctrl.maton.ai`.
+Manage your Google Classroom OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=google-classroom&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=google-classroom&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -84,7 +84,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'google-classroom'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -96,7 +96,7 @@ EOF
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -106,7 +106,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "8efa1361-0e86-40b1-a63b-53a5051f8ac6",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-14T00:00:00.000000Z",
     "last_updated_time": "2026-02-14T00:00:00.000000Z",
@@ -124,7 +124,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -137,14 +137,19 @@ If you have multiple Google Classroom connections, specify which one to use with
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/google-classroom/v1/courses')
+req = urllib.request.Request('https://api.maton.ai/google-classroom/v1/courses')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '8efa1361-0e86-40b1-a63b-53a5051f8ac6')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to courses, assignments, students, teachers, and announcements within the connected Google Classroom account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -677,7 +682,7 @@ GET /v1/courses?pageSize=10&pageToken=Ci8KLRIrEikKDmIMCLK8v8wGEIDQrsYBCgsI...
 ```javascript
 // List all courses
 const response = await fetch(
-  'https://gateway.maton.ai/google-classroom/v1/courses',
+  'https://api.maton.ai/google-classroom/v1/courses',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -696,7 +701,7 @@ import requests
 
 # List all courses
 response = requests.get(
-    'https://gateway.maton.ai/google-classroom/v1/courses',
+    'https://api.maton.ai/google-classroom/v1/courses',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 data = response.json()
@@ -723,7 +728,7 @@ assignment = {
 }
 
 response = requests.post(
-    f'https://gateway.maton.ai/google-classroom/v1/courses/{course_id}/courseWork',
+    f'https://api.maton.ai/google-classroom/v1/courses/{course_id}/courseWork',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
