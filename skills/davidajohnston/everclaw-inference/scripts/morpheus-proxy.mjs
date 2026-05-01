@@ -19,6 +19,7 @@ import path from "node:path";
 
 // --- Configuration ---
 const PROXY_PORT = parseInt(process.env.MORPHEUS_PROXY_PORT || "8083", 10);
+const PROXY_HOST = process.env.EVERCLAW_PROXY_HOST || "127.0.0.1";
 const ROUTER_URL = process.env.MORPHEUS_ROUTER_URL || "http://localhost:8082";
 const COOKIE_PATH = process.env.MORPHEUS_COOKIE_PATH || path.join(process.env.HOME, "morpheus/.cookie");
 const SESSION_DURATION = parseInt(process.env.MORPHEUS_SESSION_DURATION || "604800", 10); // 7 days default
@@ -26,6 +27,9 @@ const RENEW_BEFORE_SEC = parseInt(process.env.MORPHEUS_RENEW_BEFORE || "3600", 1
 const PROXY_API_KEY = process.env.MORPHEUS_PROXY_API_KEY || "morpheus-local"; // bearer token OpenClaw sends
 
 // --- Model ID map (blockchain model IDs) ---
+// Hardcoded defaults used as fallback if the router is unreachable at startup.
+// On startup (and periodically), refreshModelMap() overwrites this with
+// live data from the router's /blockchain/models endpoint.
 const MODEL_MAP = {
   "kimi-k2.5":         "0xbb9e920d94ad3fa2861e1e209d0a969dbe9e1af1cf1ad95c49f76d7b63d32d93",
   "kimi-k2.5:web":     "0xb487ee62516981f533d9164a0a3dcca836b06144506ad47a5c024a7a2a33fc58",
@@ -36,6 +40,39 @@ const MODEL_MAP = {
   "llama-3.3-70b":     "0xc753061a5d2640decfbbc1d1d35744e6805015d30d32872f814a93784c627fc3",
   "gpt-oss-120b":      "0x2e7228fe07523d84307838aa617141a5e47af0e00b4eaeab1522bc71985ffd11",
 };
+
+// --- Dynamic model refresh ---
+const MODEL_REFRESH_INTERVAL = parseInt(process.env.MORPHEUS_MODEL_REFRESH_INTERVAL || "300", 10); // 5 min default
+
+async function refreshModelMap() {
+  try {
+    const res = await routerFetch("GET", "/blockchain/models");
+    if (res.status !== 200) {
+      console.warn(`[morpheus-proxy] Model refresh returned ${res.status}, keeping existing map`);
+      return;
+    }
+    const models = JSON.parse(res.body.toString());
+    if (!Array.isArray(models) || models.length === 0) {
+      console.warn("[morpheus-proxy] Model refresh returned empty list, keeping existing map");
+      return;
+    }
+    let added = 0;
+    for (const m of models) {
+      const name = m.Name || m.name;
+      const id = m.Id || m.id;
+      if (name && id && !MODEL_MAP[name]) {
+        MODEL_MAP[name] = id;
+        added++;
+      } else if (name && id) {
+        // Update existing entry in case the on-chain ID changed
+        MODEL_MAP[name] = id;
+      }
+    }
+    console.log(`[morpheus-proxy] Refreshed MODEL_MAP: ${Object.keys(MODEL_MAP).length} models (${added} new)`);
+  } catch (e) {
+    console.warn(`[morpheus-proxy] Failed to refresh MODEL_MAP, using defaults: ${e.message}`);
+  }
+}
 
 // --- State ---
 const sessions = new Map(); // modelId -> { sessionId, expiresAt }
@@ -135,7 +172,7 @@ function oaiError(res, status, message, type = "server_error", code = null) {
 }
 
 // --- Forward a single inference attempt ---
-function forwardToRouter(body, sessionId, modelId, isStreaming, timeoutMs = 180000) {
+function forwardToRouter(body, sessionId, modelId, isStreaming, timeoutMs = 300000) {
   return new Promise((resolve, reject) => {
     const upstreamUrl = new URL("/v1/chat/completions", ROUTER_URL);
     const upstreamHeaders = {
@@ -398,11 +435,25 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({ error: { message: "Not found" } }));
 });
 
-server.listen(PROXY_PORT, "127.0.0.1", () => {
-  console.log(`[morpheus-proxy] Listening on http://127.0.0.1:${PROXY_PORT}`);
+// v5.12.0: Align server timeouts with upstream consumer→provider total (270s)
+server.requestTimeout = 300000;   // 5 min
+server.headersTimeout = 305000;   // slightly above requestTimeout
+server.keepAliveTimeout = 300000;
+
+server.listen(PROXY_PORT, PROXY_HOST, async () => {
+  console.log(`[morpheus-proxy] Listening on http://${PROXY_HOST}:${PROXY_PORT}`);
   console.log(`[morpheus-proxy] Router: ${ROUTER_URL}`);
-  console.log(`[morpheus-proxy] Available models: ${Object.keys(MODEL_MAP).join(", ")}`);
   console.log(`[morpheus-proxy] Session duration: ${SESSION_DURATION}s, renew before: ${RENEW_BEFORE_SEC}s`);
+
+  // Refresh model map from router on startup
+  await refreshModelMap();
+  console.log(`[morpheus-proxy] Available models: ${Object.keys(MODEL_MAP).join(", ")}`);
+
+  // Periodically refresh to pick up new on-chain models
+  if (MODEL_REFRESH_INTERVAL > 0) {
+    setInterval(refreshModelMap, MODEL_REFRESH_INTERVAL * 1000);
+    console.log(`[morpheus-proxy] Model refresh interval: ${MODEL_REFRESH_INTERVAL}s`);
+  }
 });
 
 server.on("error", (e) => {

@@ -1,12 +1,29 @@
 # ♾️ Everclaw — AI Inference You Own, Forever Powering Your OpenClaw Agents
 
-**Own your inference.** Everclaw connects your [OpenClaw](https://github.com/openclaw/openclaw) agent to the [Morpheus](https://mor.org) decentralized inference network — giving you consistent, self-sovereign access to Kimi K2.5, GLM-4.7 Flash, Qwen3, and 10+ open-source models powered by staked MOR tokens that recycle back to you.
+**Open-source first.** Everclaw connects your [OpenClaw](https://github.com/openclaw/openclaw) agent to the [Morpheus](https://mor.org) decentralized inference network — putting open-source models like GLM-5 (Opus 4.5-level) front and center as your default, with Claude as a fallback only when needed.
 
-When your primary API credits run out, Everclaw kicks in automatically. Your agent stays online. No interruptions, no downtime, no surprise bills. And because MOR is staked — not spent — you maintain access for as long as you hold your tokens.
+Your agent runs on inference you own: GLM-5, GLM-4.7 Flash, Kimi K2.5, and 30+ models powered by staked MOR tokens that recycle back to you. No API bills, no credit limits, no surprise costs. MOR is staked — not spent — so you maintain access for as long as you hold your tokens.
+
+> **New: [DIY Setup Guide](https://github.com/betterbrand/Mac-Mini-Morpheus-Agent-DIY-Guide)** — Want to build an always-on Morpheus-powered agent from scratch on a Mac mini? Complete walkthrough with identity separation, on-chain guardrails, three-tier inference fallback, and 9 documented gotchas. Every step tested on real hardware.
 
 ---
 
 ## Install
+
+### One-Line Install (Recommended)
+
+```bash
+curl -fsSL https://get.everclaw.xyz | bash
+```
+
+This guided installer:
+- ✅ Checks for required dependencies (curl, git, Node.js, npm, Homebrew, OpenClaw)
+- ✅ Prompts to install any missing dependencies
+- ✅ Clones EverClaw to the right location
+- ✅ Bootstraps a **free GLM-5 starter key** (1,000 requests/day)
+- ✅ Optionally installs the Morpheus proxy-router for P2P inference
+
+### Other Install Methods
 
 **From ClawHub:**
 
@@ -14,13 +31,7 @@ When your primary API credits run out, Everclaw kicks in automatically. Your age
 clawhub install everclaw-inference
 ```
 
-**Or one-command installer:**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/profbernardoj/everclaw/main/scripts/install-everclaw.sh | bash
-```
-
-**Or manual clone:**
+**Manual clone:**
 
 ```bash
 git clone https://github.com/profbernardoj/everclaw.git ~/.openclaw/workspace/skills/everclaw
@@ -28,7 +39,32 @@ git clone https://github.com/profbernardoj/everclaw.git ~/.openclaw/workspace/sk
 
 > ⚠️ **Use `everclaw-inference`** — not `everclaw`. The bare `everclaw` slug on ClawHub belongs to a different, unrelated product ("Everclaw Vault"). See [CLAWHUB_WARNING.md](CLAWHUB_WARNING.md).
 
-Then set up your wallet, proxy, and guardian:
+### Prerequisites
+
+| Dependency | How to Install | Required For |
+|------------|----------------|--------------|
+| **Homebrew** (macOS) | `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` | Package manager |
+| **Node.js** (v18+) | `brew install node` | Bootstrap scripts, proxy |
+| **Git** | `brew install git` | Skill installation |
+| **OpenClaw** | `curl -fsSL https://get.openclaw.ai \| bash` | Agent runtime |
+
+**Quick check:** Run `curl -fsSL https://get.everclaw.xyz | bash -s -- --check-only` to verify your environment.
+
+### After Installation
+
+Configure your OpenClaw agent:
+
+```bash
+# Easiest: Gateway only (no local proxy needed)
+node ~/.openclaw/workspace/skills/everclaw/scripts/setup.mjs --template gateway-only --key YOUR_KEY --apply --test --restart
+
+# Full: Local P2P + Gateway (auto-detects OS)
+node ~/.openclaw/workspace/skills/everclaw/scripts/setup.mjs --key YOUR_KEY --apply --test --restart
+```
+
+Get your own API key at [app.mor.org](https://app.mor.org). Run without `--apply` first to preview changes.
+
+**Want local P2P inference too?** Set up the wallet, proxy, and guardian:
 
 ```bash
 # Step 1: Install the Morpheus proxy-router
@@ -47,7 +83,7 @@ node ~/.openclaw/workspace/skills/everclaw/scripts/everclaw-wallet.mjs approve
 bash ~/.openclaw/workspace/skills/everclaw/scripts/install-proxy.sh
 ```
 
-That's it. Your agent now has a fallback inference provider that runs on decentralized infrastructure. No API keys, no external accounts, no subscriptions.
+That's it. Your agent now has decentralized inference — either via the API Gateway (instant) or local P2P (stake MOR for persistent access you own).
 
 ---
 
@@ -93,15 +129,16 @@ The proxy handles all the blockchain complexity: opening sessions, renewing befo
 | **Auto-Session Manager** | Opens 7-day blockchain sessions on demand, renews before expiry, recycles MOR |
 | **Session Auto-Retry** | If a session expires mid-request, opens a fresh one and retries automatically (v0.5) |
 | **Cooldown-Safe Errors** | Returns proper OpenAI error types so failover engines don't misclassify Morpheus errors as billing errors (v0.5) |
-| **Model Router** | 3-tier local prompt classifier — routes simple tasks to GLM Flash, standard tasks to Kimi K2.5, complex tasks to Claude (v0.6) |
+| **Model Router** | Open-source first 3-tier classifier — routes simple tasks to GLM Flash, standard + complex tasks to GLM-5, Claude fallback only (v0.9.8) |
 | **x402 Payment Client** | Automatic HTTP 402 payment handling — signs USDC on Base via EIP-712, with budget controls and dry-run mode (v0.7) |
 | **ERC-8004 Agent Registry** | Discover agents on-chain — reads Identity + Reputation registries on Base, resolves registration files, checks trust signals (v0.7) |
 | **API Gateway Bootstrap** | One-command setup for community-powered Morpheus inference — no API key, no wallet, no node required. New users get instant AI access (v0.8) |
 | **Multi-Key Auth Rotation** | Configure multiple Venice API keys — OpenClaw rotates through them automatically when credits drain, keeping you on premium models longer (v0.9.1) |
-| **Gateway Guardian v4** | Billing-aware escalation — classifies errors (billing vs transient), skips useless restarts for credit exhaustion, notifies owner with DIEM reset ETA. Through-OpenClaw inference probes, circuit breaker, 4-stage self-healing, proactive credit monitoring (v0.9.3) |
+| **Gateway Guardian v5** | Direct curl inference probes — eliminates 71K prompt bloat and Signal spam. Billing-aware escalation, DIEM reset awareness, circuit breaker, 4-stage self-healing, proactive credit monitoring (v2026.2.21) |
+| **Three-Shift Task Planning** | Morning/Afternoon/Night shift system — proposes prioritized task plans with approval workflow, shift-specific rules, handoff notes (v2026.2.21) |
 | **MOR Swap Scripts** | Swap ETH or USDC for MOR tokens directly from the command line |
 
-**Benefit:** Your agent gets persistent access to 30+ open-source models (Kimi K2.5, GLM-4.7 Flash, Qwen3, and more) that you own through staked MOR tokens. No API bills, no credit limits — stake once, use forever. MOR tokens are staked, not consumed — they're returned when sessions close and can be restaked indefinitely. The model router (v0.6) ensures you only use expensive models when you need to — cron jobs, heartbeats, and simple tasks run on Morpheus inference you own. The x402 client and agent registry (v0.7) let your agent discover and pay other agents on-chain. And with the API Gateway bootstrap (v0.8), new users get instant inference from their very first launch — no API key needed.
+**Benefit:** Your agent runs on inference you own — GLM-5 (Opus 4.5-level), GLM-4.7 Flash, Kimi K2.5, and 30+ open-source models via staked MOR tokens. No API bills, no credit limits — stake once, use forever. MOR tokens are staked, not consumed — returned when sessions close and restaked indefinitely. The open-source first model router (v0.9.8) sends all tiers to Morpheus by default — Claude is only the escape hatch for tasks GLM-5 can't handle. Cron jobs, heartbeats, research, coding, and complex reasoning all run on inference you own. The x402 client and agent registry (v0.7) let your agent discover and pay other agents on-chain. And with the API Gateway bootstrap (v0.8), new users get instant inference from their very first launch — no API key needed.
 
 ### 💸 Agent Economy — x402 Payments + ERC-8004 Registry
 | Component | What It Does |
@@ -114,12 +151,14 @@ The proxy handles all the blockchain complexity: opening sessions, renewing befo
 
 **Benefit:** Your agent can discover other agents on-chain, verify their reputation, and pay them for services — all without custodial intermediaries. USDC payments are signed with EIP-712 and settled via the Coinbase facilitator. Budget controls prevent surprise spending.
 
-### 🛡️ Gateway Guardian v4 — Billing-Aware Self-Healing
+### 🛡️ Gateway Guardian v5 — Direct Probe Self-Healing
 | Component | What It Does |
 |-----------|-------------|
+| **Direct Curl Probes** | Probes gateway's LiteLLM proxy directly with tiny prompt (~50 chars) — no more 71K workspace prompt bloat |
+| **No Signal Spam** | Failures stay in logs only — no agent session means no accidental Signal message delivery |
+| **Fast Lightweight Model** | Uses glm-4.7-flash for probes instead of glm-5 — faster, cheaper, purpose-built for health checks |
 | **Billing-Aware Escalation** | Classifies errors as `billing` vs `transient` vs `timeout`. Billing → backs off + notifies (restart is useless). Transient → restarts as before |
 | **DIEM Reset Awareness** | Calculates hours to midnight UTC (daily DIEM reset). Billing-dead → 30-min probe interval. Auto-clears on UTC day rollover |
-| **Through-OpenClaw Inference Probes** | Tests the full stack: gateway → auth → provider → response every 2 minutes |
 | **Proactive Credit Monitoring** | Reads Venice DIEM balance from response headers. Warns when balance drops below threshold |
 | **Circuit Breaker** | Detects sub-agents stuck >30 min with repeated timeouts and kills them |
 | **Fixed Restart Chain** | No more `set -e` silent exits or pkill self-kill. ERR trap logs unexpected failures |
@@ -127,7 +166,31 @@ The proxy handles all the blockchain complexity: opening sessions, renewing befo
 | **Signal Notifications** | Notifies owner on: billing exhaustion (with ETA), billing recovery, nuclear restart, total failure |
 | **launchd Integration** | Survives reboots, auto-starts on macOS |
 
-**Benefit:** v3 had two fatal bugs: billing exhaustion caused infinite useless restarts (restart clears cooldown → first request re-triggers 402 → back to dead), and `set -euo pipefail` + pkill self-kill caused the restart chain to silently do nothing. v4 understands that billing exhaustion can't be fixed by restarting — it backs off, notifies you, and waits for DIEM to reset at midnight UTC. Paired with reduced billing backoff config (`venice: 1h` instead of 5h), maximum downtime from credit exhaustion drops from 12+ hours to ~1 hour.
+**Benefit:** v4's `openclaw agent` probes injected the full 71K workspace system prompt into every health check, causing timeouts and delivering error messages to Signal as normal replies. v5 uses direct curl to the LiteLLM proxy with a tiny prompt — fast, silent, no side effects. Combined with billing-aware escalation from v4, your gateway self-heals reliably without spamming you.
+
+### 📋 Three-Shift Task Planning — Structured Work Management
+| Component | What It Does |
+|-----------|-------------|
+| **Morning Shift (6 AM)** | Ramp-up: meetings, comms, decisions — front-loads tasks requiring user input |
+| **Afternoon Shift (2 PM)** | Deep work: coding, writing, building — minimizes interruptions |
+| **Night Shift (10 PM)** | Autonomous: research, maintenance, prep — no external actions without approval |
+| **Priority Tiers** | P1 (must-do), P2 (should-do), P3 (could-do) — respects the 8-hour window |
+| **Approval Workflow** | Nothing executes until the user approves, modifies, or skips |
+| **Shift Handoff** | Each shift writes completion summary for the next shift to pick up |
+| **Configurable Schedule** | Adjust times, skip weekends, set quiet hours — see config reference |
+
+**Benefit:** Your agent proposes what to work on instead of waiting to be told. Three shifts cover 24 hours with clear boundaries — the morning shift handles human-interactive work, afternoon goes deep on building, and the night shift runs autonomously. Approval gates ensure nothing happens without your say-so.
+
+### ⚡ Always-On Power Config — 24/7 Agent Operation
+| Component | What It Does |
+|-----------|-------------|
+| **Power Management Setup** | Configures macOS to never sleep — disables sleep, standby, hibernation |
+| **Caffeinate LaunchAgent** | Background process prevents system sleep while running |
+| **Power Nap + Wake on LAN** | Network activity works even with display off; remote wake enabled |
+| **Auto-Restart** | System restarts automatically after power failure |
+| **Restore Mode** | One command restores default power settings |
+
+**Benefit:** Your agent needs your Mac to stay awake. Without this, cron jobs miss schedules, heartbeats don't fire, and long tasks fail mid-execution. With always-on configured, your agent is reachable 24/7, tasks complete uninterrupted, and cron jobs fire exactly when scheduled. Power cost is negligible (~$0.50-1/month for a Mac Mini M4 at idle).
 
 ### 🔍 SkillGuard — Skill Security Scanner
 | Component | What It Does |
@@ -170,20 +233,20 @@ The proxy handles all the blockchain complexity: opening sessions, renewing befo
 
 ## Available Models
 
-| Model | Type | Notes |
-|-------|------|-------|
-| **Kimi K2.5** | General | Recommended primary fallback — most reliable |
-| **Kimi K2 Thinking** | Reasoning | Extended thinking for complex problems |
-| **GLM-5** | General | Zhipu's latest flagship model (NEW) |
-| **GLM-5:web** | General + Web | GLM-5 with web search (NEW) |
-| **MiniMax M2.5** | General | MiniMax's latest model (NEW) |
-| **MiniMax M2.5:web** | General + Web | M2.5 with web search (NEW) |
-| **GLM 4.7 Flash** | Fast | Quick responses, lower latency |
-| **GLM 4.7** | General | Full GLM model |
-| **Qwen3 235B** | General | Large parameter count |
-| **GPT-OSS 120B** | General | OpenAI's open-source model |
+| Model | Type | Router Tier | Notes |
+|-------|------|-------------|-------|
+| **GLM-5** | General | ⭐ STANDARD + HEAVY | **Default** — Opus 4.5-level reasoning, coding, and analysis. Open-source first. |
+| **GLM 4.7 Flash** | Fast | LIGHT | Quick responses for trivial tasks — cron, heartbeats, simple lookups |
+| **Kimi K2.5** | General | — | Solid general model, previous default |
+| **Kimi K2 Thinking** | Reasoning | — | Extended thinking for complex problems |
+| **GLM-5:web** | General + Web | — | GLM-5 with web search capability |
+| **GLM 4.7** | General | — | Full GLM model |
+| **Qwen3 235B** | General | — | Large parameter count |
+| **GPT-OSS 120B** | General | — | OpenAI's open-source model |
 
 All models are accessed through the same proxy endpoint. Switch models by changing the model name in your request.
+
+**Why GLM-5?** Zhipu's 744B MoE model (40B active) matches Claude Opus 4.5 on benchmarks: 92.7% AIME 2026, 86% GPQA-Diamond, 50.4 Humanity's Last Exam (with tools). Industry-leading hallucination resistance. Handles reasoning, coding, structured output, and agentic tasks at frontier quality — all through Morpheus inference you own.
 
 ---
 
@@ -207,6 +270,8 @@ When a session ends, your MOR comes back. Open a new session with the same token
 
 | Action | Command |
 |--------|---------|
+| **Setup (recommended)** | `node scripts/setup.mjs --key YOUR_KEY --apply --test --restart` |
+| Setup (dry-run) | `node scripts/setup.mjs` |
 | Install (ClawHub) | `clawhub install everclaw-inference` |
 | Install (script) | `curl -fsSL https://raw.githubusercontent.com/profbernardoj/everclaw/main/scripts/install-everclaw.sh \| bash` |
 | Update (ClawHub) | `clawhub update everclaw-inference` |
@@ -231,6 +296,9 @@ When a session ends, your MOR comes back. Open a new session with the same token
 | Scan a skill | `node security/skillguard/src/cli.js scan <path>` |
 | Security audit | `bash security/clawdstrike/scripts/collect_verified.sh` |
 | Guardian logs | `tail -f ~/.openclaw/logs/guardian.log` |
+| **Always-on setup** | `sudo bash skills/everclaw/scripts/always-on.sh` |
+| Restore power defaults | `sudo bash skills/everclaw/scripts/always-on.sh --restore` |
+| Check power settings | `pmset -g` |
 
 ---
 
