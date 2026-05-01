@@ -6,17 +6,26 @@
 set -euo pipefail
 
 # Default production gateway is Belong-owned domain; override with BELONG_EVENTS_ENDPOINT for staging/self-hosted.
-ENDPOINT="${BELONG_EVENTS_ENDPOINT:-https://join.belong.net/functions/v1/openclaw-skill-proxy}"
+DEFAULT_ENDPOINT='https://join.belong.net/functions/v1/openclaw-skill-proxy'
+ENDPOINT="${BELONG_EVENTS_ENDPOINT:-$DEFAULT_ENDPOINT}"
 API_KEY="${BELONG_EVENTS_API_KEY:-}"
 
 METHOD="${1:?Usage: invoke.sh <method> [params-json]}"
-PARAMS="${2:-{}}"
+DEFAULT_PARAMS='{}'
+PARAMS="${2:-$DEFAULT_PARAMS}"
+
+if ! printf '%s' "$METHOD" | grep -Eq '^[A-Za-z][A-Za-z0-9_]*$'; then
+  echo "Invalid method: $METHOD" >&2
+  exit 2
+fi
 
 HEADERS=(-H "Content-Type: application/json")
 if [ -n "$API_KEY" ]; then
   HEADERS+=(-H "X-OpenClaw-Key: $API_KEY")
 fi
 
-exec curl -sS -X POST "$ENDPOINT" \
+REQUEST_BODY="$(printf '{"jsonrpc":"2.0","id":1,"method":"%s","params":%s}' "$METHOD" "$PARAMS")"
+
+printf '%s' "$REQUEST_BODY" | exec curl -sS -X POST "$ENDPOINT" \
   "${HEADERS[@]}" \
-  -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"$METHOD\",\"params\":$PARAMS}"
+  --data-binary @-
