@@ -3,11 +3,16 @@
   "slug": "open-persona",
   "displayName": "Open Persona",
   "latest": {
-    "version": "0.20.0",
-    "publishedAt": 1774709625111,
-    "commit": "https://github.com/openclaw/skills/commit/b50bc69768484eb0de1c8319a77d7ca7939bd05f"
+    "version": "0.21.1",
+    "publishedAt": 1777372033092,
+    "commit": null
   },
   "history": [
+    {
+      "version": "0.20.0",
+      "publishedAt": 1774709625111,
+      "commit": "https://github.com/openclaw/skills/commit/b50bc69768484eb0de1c8319a77d7ca7939bd05f"
+    },
     {
       "version": "0.19.1",
       "publishedAt": 1774172173904,
