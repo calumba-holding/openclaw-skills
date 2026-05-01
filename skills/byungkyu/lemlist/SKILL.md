@@ -26,7 +26,7 @@ Access the Lemlist API with managed OAuth authentication. Manage campaigns, lead
 # List campaigns
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/lemlist/api/campaigns')
+req = urllib.request.Request('https://api.maton.ai/lemlist/api/campaigns')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/lemlist/api/{resource}
+https://api.maton.ai/lemlist/api/{resource}
 ```
 
-Replace `{resource}` with the actual Lemlist API endpoint path. The gateway proxies requests to `api.lemlist.com/api` and automatically injects your OAuth token.
+Maton proxies requests to `api.lemlist.com/api` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Lemlist OAuth connections at `https://ctrl.maton.ai`.
+Manage your Lemlist OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=lemlist&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=lemlist&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'lemlist'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "3ecf268f-42ad-40cc-b77a-25e020fbf591",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-12T02:00:53.023887Z",
     "last_updated_time": "2026-02-12T02:01:45.284131Z",
@@ -121,7 +121,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,14 +134,19 @@ If you have multiple Lemlist connections, specify which one to use with the `Mat
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/lemlist/api/campaigns')
+req = urllib.request.Request('https://api.maton.ai/lemlist/api/campaigns')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '3ecf268f-42ad-40cc-b77a-25e020fbf591')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to campaigns, leads, sequences, and email outreach within the connected Lemlist account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -440,7 +445,7 @@ Lemlist uses page-based pagination with different formats depending on the endpo
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/lemlist/api/campaigns',
+  'https://api.maton.ai/lemlist/api/campaigns',
   {
     headers: {
       'Authorization': `Bearer ${process.env.MATON_API_KEY}`
@@ -458,7 +463,7 @@ import os
 import requests
 
 response = requests.get(
-    'https://gateway.maton.ai/lemlist/api/campaigns',
+    'https://api.maton.ai/lemlist/api/campaigns',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
 )
 campaigns = response.json()
@@ -473,7 +478,7 @@ import os
 import requests
 
 headers = {'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'}
-base_url = 'https://gateway.maton.ai/lemlist/api'
+base_url = 'https://api.maton.ai/lemlist/api'
 
 # Create campaign
 campaign_response = requests.post(
@@ -546,7 +551,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -556,8 +561,8 @@ EOF
 
 1. Ensure your URL path starts with `lemlist`. For example:
 
-- Correct: `https://gateway.maton.ai/lemlist/api/campaigns`
-- Incorrect: `https://gateway.maton.ai/api/campaigns`
+- Correct: `https://api.maton.ai/lemlist/api/campaigns`
+- Incorrect: `https://api.maton.ai/api/campaigns`
 
 ## Resources
 
