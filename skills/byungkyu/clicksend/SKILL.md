@@ -26,7 +26,7 @@ Access the ClickSend API with managed authentication. Send SMS, MMS, and voice m
 # Get account info
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/clicksend/v3/account')
+req = urllib.request.Request('https://api.maton.ai/clicksend/v3/account')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -35,10 +35,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/clicksend/{native-api-path}
+https://api.maton.ai/clicksend/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual ClickSend API endpoint path. The gateway proxies requests to `rest.clicksend.com` and automatically injects your authentication.
+Maton proxies requests to `rest.clicksend.com` and automatically injects your authentication.
 
 ## Authentication
 
@@ -62,14 +62,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your ClickSend connections at `https://ctrl.maton.ai`.
+Manage your ClickSend connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=clicksend&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=clicksend&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -81,7 +81,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'clicksend'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -93,7 +93,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -103,7 +103,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "37beee67-29f7-43b6-b0b2-5f0f7a5d6440",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-10T10:04:12.418030Z",
     "last_updated_time": "2026-02-10T10:06:17.059090Z",
@@ -119,7 +119,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -132,14 +132,19 @@ If you have multiple ClickSend connections, specify which one to use with the `M
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/clicksend/v3/account')
+req = urllib.request.Request('https://api.maton.ai/clicksend/v3/account')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '37beee67-29f7-43b6-b0b2-5f0f7a5d6440')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to SMS messages, voice messages, contacts, and lists within the connected ClickSend account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -704,7 +709,7 @@ GET /clicksend/v3/lists?page=2&limit=50
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/clicksend/v3/sms/send',
+  'https://api.maton.ai/clicksend/v3/sms/send',
   {
     method: 'POST',
     headers: {
@@ -733,7 +738,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/clicksend/v3/sms/send',
+    'https://api.maton.ai/clicksend/v3/sms/send',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -794,7 +799,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -804,8 +809,8 @@ EOF
 
 1. Ensure your URL path starts with `clicksend`. For example:
 
-- Correct: `https://gateway.maton.ai/clicksend/v3/account`
-- Incorrect: `https://gateway.maton.ai/v3/account`
+- Correct: `https://api.maton.ai/clicksend/v3/account`
+- Incorrect: `https://api.maton.ai/v3/account`
 
 ## Resources
 

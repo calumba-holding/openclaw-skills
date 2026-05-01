@@ -3,11 +3,16 @@
   "slug": "clicksend",
   "displayName": "ClickSend",
   "latest": {
-    "version": "1.0.2",
-    "publishedAt": 1770765801227,
-    "commit": "https://github.com/openclaw/skills/commit/8ef5c318a29d52b51a419b5119bd08b43600f441"
+    "version": "1.0.3",
+    "publishedAt": 1777589006112,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.2",
+      "publishedAt": 1770765801227,
+      "commit": "https://github.com/openclaw/skills/commit/8ef5c318a29d52b51a419b5119bd08b43600f441"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1770728421295,
