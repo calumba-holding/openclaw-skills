@@ -27,7 +27,7 @@ Access the PDF.co API with managed authentication. Convert, merge, split, and ed
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'url': 'https://example.com/sample.pdf'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/pdf-co/v1/pdf/info', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/pdf-co/v1/pdf/info', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -37,10 +37,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/pdf-co/{native-api-path}
+https://api.maton.ai/pdf-co/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual PDF.co API endpoint path. The gateway proxies requests to `api.pdf.co` and automatically injects your API credentials.
+Maton proxies requests to `api.pdf.co` and automatically injects your API credentials.
 
 ## Authentication
 
@@ -64,14 +64,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your PDF.co connections at `https://ctrl.maton.ai`.
+Manage your PDF.co connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=pdf-co&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=pdf-co&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -83,7 +83,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'pdf-co'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -95,7 +95,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -105,7 +105,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "21fd90f9-5935-43cd-b6c8-bde9d915ca80",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2025-12-08T07:20:53.488460Z",
     "last_updated_time": "2026-01-31T20:03:32.593153Z",
@@ -123,7 +123,7 @@ Open the returned `url` in a browser to complete authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -137,15 +137,20 @@ If you have multiple PDF.co connections, specify which one to use with the `Mato
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'url': 'https://example.com/sample.pdf'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/pdf-co/v1/pdf/info', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/pdf-co/v1/pdf/info', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
-req.add_header('Maton-Connection', '21fd90f9-5935-43cd-b6c8-bde9d915ca80')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to PDF conversion, merging, splitting, text extraction, and form filling within the connected PDF.co account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -557,7 +562,7 @@ Content-Type: application/json
 
 ```javascript
 const response = await fetch(
-  'https://gateway.maton.ai/pdf-co/v1/pdf/merge',
+  'https://api.maton.ai/pdf-co/v1/pdf/merge',
   {
     method: 'POST',
     headers: {
@@ -581,7 +586,7 @@ import os
 import requests
 
 response = requests.post(
-    'https://gateway.maton.ai/pdf-co/v1/pdf/merge',
+    'https://api.maton.ai/pdf-co/v1/pdf/merge',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     json={
         'url': 'https://example.com/doc1.pdf,https://example.com/doc2.pdf',
@@ -626,7 +631,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -636,8 +641,8 @@ EOF
 
 1. Ensure your URL path starts with `pdf-co`. For example:
 
-- Correct: `https://gateway.maton.ai/pdf-co/v1/pdf/merge`
-- Incorrect: `https://gateway.maton.ai/v1/pdf/merge`
+- Correct: `https://api.maton.ai/pdf-co/v1/pdf/merge`
+- Incorrect: `https://api.maton.ai/v1/pdf/merge`
 
 ## Resources
 
