@@ -1,6 +1,6 @@
 ---
 name: tencentcloud-lighthouse-skill
-description: Manage Tencent Cloud Lighthouse (轻量应用服务器) — auto-setup mcporter + MCP, query instances, monitoring & alerting, self-diagnostics, firewall, snapshots, remote command execution (TAT). Use when user asks about Lighthouse or 轻量应用服务器. NOT for CVM or other cloud server types.
+description: 'Load when: user mentions Lighthouse, 轻量应用服务器, 轻量服务器, or asks to check/create/manage/deploy Lighthouse instances, deploy applications to Lighthouse, manage Lighthouse firewall rules, reset Lighthouse password, view Lighthouse snapshots/images/traffic, monitor Lighthouse metrics, run commands on Lighthouse via TAT, or asks to get/identify the current instance ID. Trigger phrases: "查看轻量服务器", "Lighthouse实例", "轻量应用服务器", "部署应用", "部署程序", "部署到Lighthouse", "管理防火墙规则", "重置密码", "查看快照", "查看流量包", "获取实例ID", "查看实例ID", "当前实例", "实例IP", "check Lighthouse", "create Lighthouse", "deploy app", "deploy application", "Lighthouse firewall", "Lighthouse snapshot", "instance ID", "whoami". NOT for CVM, CBS, VPC, or other non-Lighthouse products.'
 metadata:
   {
     "openclaw":
@@ -10,174 +10,189 @@ metadata:
         "install":
           [
             {
-              "id": "node-mcporter",
-              "kind": "node",
-              "package": "mcporter",
-              "bins": ["mcporter"],
-              "label": "Install mcporter (MCP CLI)",
+              "id": "pip",
+              "kind": "pip",
+              "package": "tccli",
+              "bins": ["tccli"],
+              "label": "Install TCCLI",
             },
+          ],
+        "references":
+          [
+            "instance-management",
+            "application-deployment",
+            "monitoring-alerting",
+            "firewall-management",
+            "remote-command-tat",
+            "snapshot-blueprint",
+            "traffic-package",
           ],
       },
   }
 ---
 
-# Lighthouse 云服务器运维
+# Lighthouse Cloud Server Operations
 
-通过 mcporter + lighthouse-mcp-server 管理腾讯云轻量应用服务器。
+Manage Tencent Cloud Lighthouse instances via tccli CLI.
 
-## 首次使用 — 自动设置
+Your knowledge of tccli parameters and API limits may be outdated.
+**Always use `tccli <service> <action> --help` to verify parameters before execution.**
 
-当用户首次要求管理云服务器时，按以下流程操作：
-
-### 步骤 1：检查当前状态
-
-```bash
-{baseDir}/scripts/setup.sh --check-only
-```
-
-如果输出显示一切 OK（mcporter 已安装、config 已配置、lighthouse 已就绪），跳到「调用格式」。
-
-### 步骤 2：如果未配置，引导用户提供密钥
-
-告诉用户：
-> 我需要你的腾讯云 API 密钥来连接 Lighthouse 服务器。请提供：
-> 1. **SecretId** — 腾讯云 API 密钥 ID
-> 2. **SecretKey** — 腾讯云 API 密钥 Key
->
-> 你可以在 [腾讯云控制台 > 访问管理 > API密钥管理](https://console.cloud.tencent.com/cam/capi) 获取。
-
-### 步骤 3：用户提供密钥后，运行自动设置
+## Prerequisites
 
 ```bash
-{baseDir}/scripts/setup.sh --secret-id "<用户提供的SecretId>" --secret-key "<用户提供的SecretKey>"
+tccli --version
 ```
 
-脚本会自动：
-- 检查并安装 mcporter（如未安装）
-- 创建 `~/.mcporter/mcporter.json` 配置文件
-- 写入 lighthouse MCP 服务器配置和密钥
-- 验证连接
+If not installed: `pip install tccli`
 
-设置完成后即可开始使用。
+## Credential Setup
 
-## 调用格式
+| Method | Security | Expiry | Recommendation |
+|--------|----------|--------|----------------|
+| OAuth browser login | High | Temporary, expires in 2 hours | Recommended |
+| AK/SK key pair | Low | Permanent unless revoked | Special cases only |
 
-所有 mcporter 命令必须使用以下格式：
+When the user has not chosen a method, default to OAuth.
 
-```
-mcporter call lighthouse.<tool_name> --config ~/.mcporter/mcporter.json --output json [--args '<JSON>']
-```
+### OAuth Login (Recommended)
 
-列出可用工具：
-```
-mcporter list lighthouse --config ~/.mcporter/mcporter.json --schema
-```
-
-
-## 工具总览
-
-本 MCP Server 包含以下工具类别：
-
-| 类别 | 说明 |
-|------|------|
-| 地域查询 | 获取可用地域列表（唯一不需要 Region 参数的操作） |
-| 实例管理 | 查询、启动实例，查看流量包/套餐/配额等（需要 Region） |
-| 监控与告警 | 获取多指标监控数据、设置告警策略、服务器自检（需要 Region） |
-| 防火墙 | 规则增删改查、防火墙模板管理（需要 Region） |
-| 远程命令(TAT) | 在实例上执行命令、查询任务状态（需要 Region） |
-
-## 常用操作
-
-> 以下所有示例省略了公共前缀 `mcporter call lighthouse.` 和 `--config ~/.mcporter/mcporter.json --output json`。
-> 完整命令格式：`mcporter call lighthouse.<tool_name> --config ~/.mcporter/mcporter.json --output json --args '<JSON>'`
-
-### 获取地域列表（不需要 Region 参数）
+Use `script/tccli-oauth-helper.sh` for non-interactive OAuth login:
 
 ```bash
-# 查询所有可用地域 — 唯一不需要 Region 参数的操作
-# 首次使用时应先调用此接口获取可用 Region 列表
-mcporter call lighthouse.describe_regions --config ~/.mcporter/mcporter.json --output json
+# Step 1: Check credential status
+bash script/tccli-oauth-helper.sh --status
+
+# Step 2: Generate authorization URL (if credentials are missing or expired)
+bash script/tccli-oauth-helper.sh --get-url
+
+# Step 3: User opens the URL in browser, completes login, and gets a base64 code
+
+# Step 4: Complete login with the code
+bash script/tccli-oauth-helper.sh --code "base64_code_from_browser"
+
+# Step 5: Verify
+tccli cvm DescribeRegions
 ```
 
-### 实例管理
+**Workflow:**
+1. Run `--status` to check existing credentials
+2. If expired/missing, run `--get-url` — show the URL to user
+3. User opens URL → logs in → copies the base64 code from browser
+4. Run `--code` with the base64 code to complete login
+5. Verify with `tccli cvm DescribeRegions`
+
+**Notes:**
+- Credentials are temporary (expires in ~2 hours)
+- State is valid for 10 minutes after `--get-url`
+- Do NOT use `tccli sts GetCallerIdentity` to verify — it does not support OAuth credentials
+
+### AK/SK Setup
+
+Only if the user explicitly provides SecretId and SecretKey:
 
 ```bash
-# 查询实例列表（Region 必填，可选参数: InstanceIds, Offset, Limit）
-mcporter call lighthouse.describe_instances --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","Limit":20,"Offset":0}'
-
-# 查询指定实例
-mcporter call lighthouse.describe_instances --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceIds":["lhins-xxxxxxxx"]}'
-
-# 启动实例
-mcporter call lighthouse.start_instances --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceIds":["lhins-xxxxxxxx"]}'
-
-# 获取实例登录终端地址
-mcporter call lighthouse.describe_instance_login_url --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx"}'
-
-# 查询所有应用镜像
-mcporter call lighthouse.describe_all_applications --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou"}'
-# BlueprintType 可选: APP_OS | PURE_OS | DOCKER | ALL（默认ALL）
+tccli configure set secretId <SecretId>
+tccli configure set secretKey <SecretKey>
+tccli configure set region ap-guangzhou
 ```
 
-### 监控与告警
+### Logout
 
 ```bash
-# 获取监控数据（支持多指标同时查询，默认最近6小时）
-mcporter call lighthouse.get_monitor_data --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","Indicators":["CPU利用率","内存利用率"]}'
-
-# 获取监控数据（指定时间范围）
-mcporter call lighthouse.get_monitor_data --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","Indicators":["公网出带宽","公网入带宽"],"StartTime":"2026-02-09 00:00:00","EndTime":"2026-02-10 00:00:00"}'
-
-# 支持的监控指标（中文名称）:
-# CPU利用率 | 内存利用率 | 公网出带宽 | 公网入带宽
-# 系统盘读IO | 系统盘写IO | 公网流量包
-
-# 设置告警策略
-# Alarms 中的 Frequency/Points/Size 均为字符串类型
-mcporter call lighthouse.set_alerting_strategy --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","Indicator":"CPU利用率","Alarms":[{"Frequency":"300","Threshold":"80%","Level":"严重","Points":"3","Size":"60"}],"PolicyName":"CPU高负载告警"}'
-# Frequency(秒): "300"|"600"|"900"|"1800"|"3600"|"7200"|"10800"|"21600"|"43200"|"86400"
-# Level: "提示"|"严重"|"紧急"    Points: "1"-"5"    Size: "60"|"300"
-
-# 服务器自检（检测网络、防火墙、存储、状态、性能）
-mcporter call lighthouse.self_test --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx"}'
+tccli auth logout
 ```
 
-### 防火墙
+## Quick Reference
 
-```bash
-# 查询防火墙规则
-mcporter call lighthouse.describe_firewall_rules --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx"}'
+| Task | Command |
+|------|---------|
+| List instances | `tccli lighthouse DescribeInstances --region <region>` |
+| Instance details | `tccli lighthouse DescribeInstances --region <region> --InstanceIds '["lhins-xxx"]'` |
+| Firewall rules | `tccli lighthouse DescribeFirewallRules --region <region> --InstanceId lhins-xxx` |
+| Monitoring data | `tccli monitor GetMonitorData --Namespace QCE/LIGHT_HOUSE ...` |
+| Run remote command | `tccli tat RunCommand --region <region> --InstanceIds '["lhins-xxx"]' --Content "..."` |
+| Snapshots | `tccli lighthouse DescribeSnapshots --region <region>` |
+| Traffic packages | `tccli lighthouse DescribeInstancesTrafficPackages --region <region> --InstanceIds '["lhins-xxx"]'` |
+| Available regions | `tccli cvm DescribeRegions` |
+| Help for any action | `tccli lighthouse <Action> --help` |
+| Get current instance ID | `bash script/whoami.sh` or `bash script/whoami.sh --id` |
 
-# 添加防火墙规则
-mcporter call lighthouse.create_firewall_rules --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","FirewallRules":[{"Protocol":"TCP","Port":"8080","CidrBlock":"0.0.0.0/0","Action":"ACCEPT","FirewallRuleDescription":"开放8080端口"}]}'
+## Scenario Routing
 
-# 删除防火墙规则
-mcporter call lighthouse.delete_firewall_rules --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","FirewallRules":[{"Protocol":"TCP","Port":"8080"}]}'
+Read the corresponding reference file before executing:
+
+```
+User wants to...
+├─ Query / start / stop / reboot instances  -> references/instance-management.md
+├─ Reset password / view blueprints         -> references/instance-management.md
+├─ Deploy applications / verify deployment   -> references/application-deployment.md
+├─ View CPU / memory / bandwidth metrics    -> references/monitoring-alerting.md
+├─ Set up alarm policies                    -> references/monitoring-alerting.md
+├─ Manage firewall rules                    -> references/firewall-management.md
+├─ Execute commands on instance             -> references/remote-command-tat.md
+├─ Create / restore snapshots               -> references/snapshot-blueprint.md
+├─ Create custom images                     -> references/snapshot-blueprint.md
+├─ Check traffic usage                      -> references/traffic-package.md
+├─ Identify current instance (ID / IP)      -> bash script/whoami.sh [--id | --ip]
+└─ Other operations                         -> tccli lighthouse --help
 ```
 
-### 远程命令执行 (TAT)
+## Operation Safety
 
-```bash
-# 在 Linux 实例上执行命令
-mcporter call lighthouse.execute_command --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","Command":"uptime && df -h && free -m","SystemType":"Linux"}'
+| Risk | Operations | Confirmation |
+|------|-----------|--------------|
+| High | Delete instance, apply snapshot, delete snapshot/blueprint | Double confirm, state irreversibility |
+| Medium | Stop/reboot instance, modify firewall, run commands | Single confirm |
+| Low | Query, list, describe, help | Execute directly |
 
-# 在 Windows 实例上执行命令
-mcporter call lighthouse.execute_command --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InstanceId":"lhins-xxxxxxxx","Command":"Get-Process | Sort-Object CPU -Descending | Select-Object -First 10","SystemType":"Windows"}'
+Rules:
+1. **Region is required** for all operations except `DescribeRegions`
+2. **Query before modify** — always `Describe` first, never blind `Create` / `Delete`
+3. **Use real IDs** — get InstanceId from `DescribeInstances`, never use placeholders
+4. **Verify parameters** — run `--help` when unsure about parameter names or formats
+5. Lighthouse and CVM are separate products — do NOT mix their APIs
+6. **Create means new** — when user asks to "create" / "deploy" / "set up" something (e.g., "create a server", "deploy an app"), create a NEW instance by default. Do NOT use existing instances unless the user explicitly specifies an existing instance ID.
 
-# 查询命令执行任务详情（自动轮询直到完成）
-mcporter call lighthouse.describe_command_tasks --config ~/.mcporter/mcporter.json --output json --args '{"Region":"ap-guangzhou","InvocationTaskId":"invt-xxxxxxxx"}'
+## Common Regions
 
-# 注意: Command 最大 2048 字符，超长命令建议登录实例手动执行
-```
+| Code | Location |
+|------|----------|
+| ap-beijing | Beijing |
+| ap-shanghai | Shanghai |
+| ap-guangzhou | Guangzhou |
+| ap-chengdu | Chengdu |
+| ap-chongqing | Chongqing |
+| ap-nanjing | Nanjing |
+| ap-hongkong | Hong Kong |
 
-## 使用规范
+Run `tccli cvm DescribeRegions` for the full list.
 
-1. **每次调用必须带** `--config ~/.mcporter/mcporter.json`
-2. **始终加** `--output json` 获取结构化输出
-3. **Region 参数规则**: 除 `describe_regions` 外，所有操作都**必须**传入 `Region` 参数。如果用户未指定 Region，应先调用 `describe_regions` 获取可用地域列表，再让用户选择或根据上下文确定
-4. **首次使用流程**: 先调用 `describe_regions` 获取地域列表 → 再调用 `describe_instances` 获取实例列表 → 记住 InstanceId 和 Region 供后续使用
-5. **用实际的 InstanceId** 替换示例中的 `lhins-xxxxxxxx`（先通过 `describe_instances` 获取）
-6. **监控指标用中文**: `get_monitor_data` 的 Indicators 参数使用中文名称（CPU利用率、内存利用率等）
-7. **命令长度限制**: `execute_command` 的 Command 参数最大 2048 字符，超长建议登录实例执行
-8. **危险操作前先确认**: 防火墙修改、命令执行、实例关机/重启等，先向用户确认
-9. **错误处理**: 如果调用失败，先用 `{baseDir}/scripts/setup.sh --check-only` 诊断问题，或用 `self_test` 检测实例状态
+## Channel Output Compatibility
+
+Many messaging channels (WeChat, 企业微信, Slack, Teams, Telegram, etc.) apply Markdown rendering or Markdown-to-plain-text conversion before displaying messages. Common transformations that **silently corrupt output**:
+
+- **Paired underscores** stripped: `_xxx_` → `xxx` (italic markers)
+- **Paired asterisks** stripped: `*xxx*` → `xxx` (bold/italic markers)
+- **Backslash escapes** consumed or displayed literally
+- **URLs** with special characters mangled or truncated
+
+This corrupts:
+
+- **URLs** containing underscores (e.g., `redirect_url`, `app_id` in OAuth links)
+- **CLI output** with underscored identifiers (e.g., `instance_name`, `secret_id`)
+- **Script output** containing underscored fields or special characters
+
+**Rules for all channel output:**
+
+1. **URLs**: Replace `_` (underscore) with `%5F` in any URL shown to the user. For example, the OAuth authorization URL parameters like `redirect_url`, `app_id` must use `%5F` instead of `_`.
+2. **CLI / script output**: Always wrap output in code blocks (triple backticks) to prevent Markdown interpretation. Prefer code blocks for any multi-line output containing underscores, asterisks, or other Markdown-sensitive characters.
+3. **General text**: Avoid bare underscores and asterisks in plain text. Use backtick-wrapped inline code for any identifier containing these characters (e.g., `instance_name`, `secret_id`).
+4. **Links**: When providing clickable links, ensure the full URL is inside a code block or use URL-encoding for special characters. Do not rely on Markdown link syntax `[text](url)` — the URL may be altered by the channel.
+
+## Error Handling
+
+1. Check credentials: `tccli cvm DescribeRegions`
+2. Verify the region parameter
+3. Run `tccli lighthouse <Action> --help` to confirm parameter format
+4. Check instance status: `tccli lighthouse DescribeInstances --region <region>`
