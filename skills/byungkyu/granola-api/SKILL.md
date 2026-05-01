@@ -24,7 +24,7 @@ Access Granola via MCP (Model Context Protocol) with managed authentication.
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': 'What action items came from my last meeting?'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/granola/query_granola_meetings', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/granola/query_granola_meetings', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/granola/{tool-name}
+https://api.maton.ai/granola/{tool-name}
 ```
 
-Replace `{tool-name}` with the MCP tool name (e.g., `query_granola_meetings`). The gateway proxies requests to `mcp.granola.ai` and automatically injects your credentials.
+Maton proxies requests to `mcp.granola.ai` and automatically injects your credentials. The `{tool-name}` corresponds to the MCP tool name (e.g., `query_granola_meetings`).
 
 ## Authentication
 
@@ -61,14 +61,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Granola MCP connections at `https://ctrl.maton.ai`.
+Manage your Granola MCP connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=granola&method=MCP&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=granola&method=MCP&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -80,7 +80,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'granola', 'method': 'MCP'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -92,7 +92,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "8a413c45-6427-45d9-b69d-8118ce62ffce",
+    "connection_id": "{connection_id}",
     "status": "PENDING",
     "creation_time": "2026-02-24T11:34:46.204677Z",
     "url": "https://connect.maton.ai/?session_token=...",
@@ -120,7 +120,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -134,15 +134,20 @@ If you have multiple Granola connections, you must specify which MCP connection 
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': 'What were my action items?'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/granola/query_granola_meetings', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/granola/query_granola_meetings', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
-req.add_header('Maton-Connection', '8a413c45-6427-45d9-b69d-8118ce62ffce')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-IMPORTANT: If omitted, the gateway uses the default (oldest) active connection, which may fail if it's not an MCP connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to meeting notes, transcripts, and documents within the connected Granola account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## MCP Reference
 
@@ -287,7 +292,7 @@ Content-Type: application/json
 ### JavaScript
 
 ```javascript
-const response = await fetch('https://gateway.maton.ai/granola/query_granola_meetings', {
+const response = await fetch('https://api.maton.ai/granola/query_granola_meetings', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -309,7 +314,7 @@ import requests
 
 # Query meeting notes
 response = requests.post(
-    'https://gateway.maton.ai/granola/query_granola_meetings',
+    'https://api.maton.ai/granola/query_granola_meetings',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -342,7 +347,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -352,8 +357,8 @@ EOF
 
 1. Ensure your URL path starts with `granola`. For example:
 
-- Correct: `https://gateway.maton.ai/granola/query_granola_meetings`
-- Incorrect: `https://gateway.maton.ai/query_granola_meetings`
+- Correct: `https://api.maton.ai/granola/query_granola_meetings`
+- Incorrect: `https://api.maton.ai/query_granola_meetings`
 
 ### Troubleshooting: MCP Parameter Errors
 

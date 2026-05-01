@@ -3,11 +3,16 @@
   "slug": "granola-api",
   "displayName": "Granola",
   "latest": {
-    "version": "1.0.1",
-    "publishedAt": 1772498428529,
-    "commit": "https://github.com/openclaw/skills/commit/107cdb7a0c8b1c540fc6221f2b20c54db0b16188"
+    "version": "1.0.2",
+    "publishedAt": 1777587900586,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.1",
+      "publishedAt": 1772498428529,
+      "commit": "https://github.com/openclaw/skills/commit/107cdb7a0c8b1c540fc6221f2b20c54db0b16188"
+    },
     {
       "version": "1.0.0",
       "publishedAt": 1771935255154,
