@@ -27,7 +27,7 @@ Access the Manus AI Agent API with managed API key authentication. Create and ma
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'prompt': 'What is the capital of France?'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/manus/v1/tasks', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/manus/v1/tasks', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -37,10 +37,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/manus/{native-api-path}
+https://api.maton.ai/manus/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual Manus API endpoint path. The gateway proxies requests to `api.manus.ai` and automatically injects your API key.
+Maton proxies requests to `api.manus.ai` and automatically injects your API key.
 
 ## Authentication
 
@@ -64,14 +64,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Manus API key connections at `https://ctrl.maton.ai`.
+Manage your Manus API key connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=manus&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=manus&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -83,7 +83,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'manus'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -95,7 +95,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -105,7 +105,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "f85eb0d5-87d6-41a7-8271-0449d3e407bd",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-28T00:12:24.030143Z",
     "last_updated_time": "2026-02-28T00:16:08.920760Z",
@@ -124,7 +124,7 @@ Open the returned `url` in a browser to enter your Manus API key.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -137,14 +137,19 @@ If you have multiple Manus connections, specify which one to use with the `Maton
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/manus/v1/tasks')
+req = urllib.request.Request('https://api.maton.ai/manus/v1/tasks')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', 'f85eb0d5-87d6-41a7-8271-0449d3e407bd')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to tasks, browser sessions, files, and agent executions within the connected Manus account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -452,7 +457,7 @@ DELETE /manus/v1/webhooks/{webhook_id}
 ```javascript
 // Create a task
 const response = await fetch(
-  'https://gateway.maton.ai/manus/v1/tasks',
+  'https://api.maton.ai/manus/v1/tasks',
   {
     method: 'POST',
     headers: {
@@ -474,7 +479,7 @@ import requests
 
 # Create a task
 response = requests.post(
-    'https://gateway.maton.ai/manus/v1/tasks',
+    'https://api.maton.ai/manus/v1/tasks',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -516,7 +521,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -526,8 +531,8 @@ EOF
 
 Ensure your URL path starts with `manus`. For example:
 
-- Correct: `https://gateway.maton.ai/manus/v1/tasks`
-- Incorrect: `https://gateway.maton.ai/v1/tasks`
+- Correct: `https://api.maton.ai/manus/v1/tasks`
+- Incorrect: `https://api.maton.ai/v1/tasks`
 
 ## Resources
 
