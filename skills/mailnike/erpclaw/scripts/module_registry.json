@@ -1,5 +1,5 @@
 {
-  "version": "3.4.1",
+  "version": "3.4.5",
   "generated": "2026-03-31",
   "modules": {
     "erpclaw": {
@@ -1054,30 +1054,35 @@
     },
     "erpclaw-integrations-shopify": {
       "display_name": "ERPClaw Shopify Integration",
-      "description": "Deep native Shopify integration: order sync, payout reconciliation, GL posting, COGS tracking, gift card deferred revenue",
+      "description": "Deep native Shopify integration: order sync, payout reconciliation, GL posting, COGS tracking, gift card deferred revenue, App Store OAuth pairing, status mirror, SSE command delivery, cross-platform push daemon, GDPR webhooks",
       "category": "expansion",
       "github": "avansaber/erpclaw-addons",
       "subdir": "erpclaw-integrations-shopify",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "requires": [
         "erpclaw"
       ],
       "has_init_db": true,
-      "action_count": 59,
+      "action_count": 66,
       "tags": [
         "shopify",
         "e-commerce",
         "reconciliation",
         "payout",
         "orders",
-        "inventory"
+        "inventory",
+        "oauth",
+        "app-store",
+        "gdpr"
       ],
       "keywords": [
         "shopify",
         "e-commerce",
         "online store",
         "payout reconciliation",
-        "shopify payments"
+        "shopify payments",
+        "shopify app store",
+        "oauth pairing"
       ]
     },
     "groomingclaw": {
