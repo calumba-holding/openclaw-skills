@@ -26,7 +26,7 @@ Access the Fireflies.ai GraphQL API with managed OAuth authentication. Retrieve 
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': '{ user { user_id name email is_admin } }'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/fireflies/graphql', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/fireflies/graphql', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -36,10 +36,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/fireflies/graphql
+https://api.maton.ai/fireflies/graphql
 ```
 
-All requests are sent to a single GraphQL endpoint. The gateway proxies requests to `api.fireflies.ai/graphql` and automatically injects your OAuth token.
+All requests are sent to a single GraphQL endpoint. Maton proxies requests to `api.fireflies.ai/graphql` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -63,14 +63,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Fireflies OAuth connections at `https://ctrl.maton.ai`.
+Manage your Fireflies OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=fireflies&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=fireflies&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -82,7 +82,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'fireflies'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -104,7 +104,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "a221f04a-6842-4254-ae9a-424bb63ad745",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-11T00:45:25.802991Z",
     "last_updated_time": "2026-02-11T00:46:04.771700Z",
@@ -122,7 +122,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -136,15 +136,20 @@ If you have multiple Fireflies connections, specify which one to use with the `M
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'query': '{ user { user_id name email } }'}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/fireflies/graphql', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/fireflies/graphql', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
-req.add_header('Maton-Connection', 'a221f04a-6842-4254-ae9a-424bb63ad745')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to meeting transcripts, notes, users, and audio recordings within the connected Fireflies account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete mutation, confirm the target resource and intended effect with the user.
 
 ## GraphQL API
 
@@ -589,7 +594,7 @@ const query = `{
 }`;
 
 const response = await fetch(
-  'https://gateway.maton.ai/fireflies/graphql',
+  'https://api.maton.ai/fireflies/graphql',
   {
     method: 'POST',
     headers: {
@@ -621,7 +626,7 @@ query = '''
 '''
 
 response = requests.post(
-    'https://gateway.maton.ai/fireflies/graphql',
+    'https://api.maton.ai/fireflies/graphql',
     headers={
         'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}',
         'Content-Type': 'application/json'
@@ -679,7 +684,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -689,8 +694,8 @@ EOF
 
 1. Ensure your URL path starts with `fireflies`. For example:
 
-- Correct: `https://gateway.maton.ai/fireflies/graphql`
-- Incorrect: `https://gateway.maton.ai/graphql`
+- Correct: `https://api.maton.ai/fireflies/graphql`
+- Incorrect: `https://api.maton.ai/graphql`
 
 ## Resources
 
