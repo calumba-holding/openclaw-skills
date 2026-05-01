@@ -26,7 +26,7 @@ Access the Dropbox Business API with managed OAuth authentication. Manage team a
 # Get team info
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/dropbox-business/2/team/get_info', data=b'null', method='POST')
+req = urllib.request.Request('https://api.maton.ai/dropbox-business/2/team/get_info', data=b'null', method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -36,10 +36,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/dropbox-business/2/{endpoint-path}
+https://api.maton.ai/dropbox-business/2/{endpoint-path}
 ```
 
-Replace `{endpoint-path}` with the actual Dropbox Business API endpoint path. The gateway proxies requests to `api.dropboxapi.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.dropboxapi.com` and automatically injects your OAuth token.
 
 **IMPORTANT:** Dropbox Business API uses **POST** for almost all endpoints, including read operations. Request bodies should be JSON (use `null` for endpoints with no parameters).
 
@@ -65,14 +65,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your Dropbox Business OAuth connections at `https://ctrl.maton.ai`.
+Manage your Dropbox Business OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=dropbox-business&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=dropbox-business&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -84,7 +84,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'dropbox-business'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -94,7 +94,7 @@ EOF
 **Response:**
 ```json
 {
-  "connection_id": "09062f57-98a9-49f2-9e63-b2a7e03a9d7a",
+  "connection_id": "{connection_id}",
   "status": "PENDING",
   "url": "https://connect.maton.ai/?session_token=...",
   "app": "dropbox-business"
@@ -108,7 +108,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python3 <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 urllib.request.urlopen(req)
 print("Deleted")
@@ -123,7 +123,12 @@ If you have multiple Dropbox Business connections, specify which one to use with
 req.add_header('Maton-Connection', '{connection_id}')
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to team members, groups, team folders, devices, and audit logs for Dropbox Business teams within the connected Dropbox Business account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -1128,7 +1133,7 @@ To access files on behalf of a team member, use the `Dropbox-API-Select-User` he
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({"path": ""}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/dropbox-business/2/files/list_folder', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/dropbox-business/2/files/list_folder', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Dropbox-API-Select-User', 'dbmid:AAA...')
@@ -1142,7 +1147,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/dropbox-business/2/sharing/list_folders', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/dropbox-business/2/sharing/list_folders', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Dropbox-API-Select-User', 'dbmid:AAA...')
@@ -1156,7 +1161,7 @@ EOF
 python3 <<'EOF'
 import urllib.request, os, json
 data = json.dumps({}).encode()
-req = urllib.request.Request('https://gateway.maton.ai/dropbox-business/2/file_requests/list_v2', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/dropbox-business/2/file_requests/list_v2', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 req.add_header('Dropbox-API-Select-User', 'dbmid:AAA...')
@@ -1206,7 +1211,7 @@ Content-Type: application/json
 ```javascript
 async function listTeamMembers() {
   const response = await fetch(
-    'https://gateway.maton.ai/dropbox-business/2/team/members/list',
+    'https://api.maton.ai/dropbox-business/2/team/members/list',
     {
       method: 'POST',
       headers: {
@@ -1228,7 +1233,7 @@ import json
 import urllib.request
 
 def list_team_members():
-    url = 'https://gateway.maton.ai/dropbox-business/2/team/members/list'
+    url = 'https://api.maton.ai/dropbox-business/2/team/members/list'
     data = json.dumps({'limit': 100}).encode()
     req = urllib.request.Request(url, data=data, method='POST')
     req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
@@ -1236,7 +1241,7 @@ def list_team_members():
     return json.load(urllib.request.urlopen(req))
 
 def get_team_info():
-    url = 'https://gateway.maton.ai/dropbox-business/2/team/get_info'
+    url = 'https://api.maton.ai/dropbox-business/2/team/get_info'
     req = urllib.request.Request(url, data=b'null', method='POST')
     req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
     req.add_header('Content-Type', 'application/json')
