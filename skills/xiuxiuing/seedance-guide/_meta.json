@@ -3,11 +3,16 @@
   "slug": "seedance-guide",
   "displayName": "seedance 2.0 guide",
   "latest": {
-    "version": "1.0.3",
-    "publishedAt": 1775713416624,
-    "commit": "https://github.com/openclaw/skills/commit/99aa789b33872c88372fc89e08a33294e6478114"
+    "version": "1.0.5",
+    "publishedAt": 1777270361008,
+    "commit": null
   },
   "history": [
+    {
+      "version": "1.0.3",
+      "publishedAt": 1775713416624,
+      "commit": "https://github.com/openclaw/skills/commit/99aa789b33872c88372fc89e08a33294e6478114"
+    },
     {
       "version": "1.0.1",
       "publishedAt": 1772550602838,

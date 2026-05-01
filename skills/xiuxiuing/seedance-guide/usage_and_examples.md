@@ -124,3 +124,70 @@ Visual Consistency: Refer to @image1 for the studio's eerie lighting and furnitu
 @image1 Visual/Lighting reference
 @video1 Motion reference
 ```
+
+---
+
+## 3. Artistic Stylization & Compositional Mastery
+*Advanced techniques to enhance artistic quality and maintain stylistic consistency.*
+
+### A. 风格化转译 (Artistic Stylization)
+**Goal**: Use a reference character photo while maintaining a cohesive 3D artistic style.
+**Prompt Template:**
+```markdown
+【Directorial Breakdown】
+SUBJECTS: A highly detailed 【CGI 3D Render】 of the character in @image1. High-poly model, smooth porcelain skin, stylized features.
+ENVIRONMENT: Futuristic neon lab, blue and pink ambient lighting.
+MOOD/STYLE: Cyberpunk 3D Animation style, Unreal Engine 5 render.
+
+【Timeline】
+0-7s (Segment 1): The character 【@image1】 in 3D stylized form slowly turns their head. Lighting reflects off the high-gloss surface of their outfit.
+7-15s (Segment 2): The character reaches out to a floating holographic screen. Particles glow around the fingertips.
+
+【Technical Requirements】
+Camera: Slow orbiting shot.
+Visual Consistency: Maintain character bones and hair from @image1 but transform into 【3D Cartoon/CGI Style】.
+
+【Material Reference】
+@image1 Character reference (to be stylized)
+```
+
+### B. 叙事性构图 (Cinematic Composition - Perspective Control)
+**Goal**: Create an ethereal scene by focusing on silhouette and environmental integration.
+**Prompt Template:**
+```markdown
+【Overall Setting】
+Style: Cinematic Realistic, Ethereal
+Duration: 15s
+Aspect Ratio: 9:16 (Vertical Vlog)
+
+【Storyboard Script】
+0-5s: [Extreme Long Shot] Camera slowly drifts above a sea of clouds. A tiny silhouette of the person in @image1 stands on a peak.
+5-12s: [Close-up from Back] Focus on the character's back. Wind blows through the hair and the fabric of the flowing dress. The face is completely hidden.
+12-15s: [Transition] The character raises their hand towards the sun. Flare obscures the frame.
+
+【Sound Design】
+BGM: Ambient wind sounds, ethereal choir.
+
+【Material Reference】
+@image1 Character reference (Focus on outfit/silhouette)
+```
+
+### C. 三视图参考 (Character Consistency Strategy)
+**Goal**: Establish clear character design references for consistent multi-shot production.
+**Prompt Template:**
+```markdown
+【Directorial Breakdown】
+SUBJECTS: A 【Character Concept Sheet】 of the woman in @image1. 
+ENVIRONMENT: Neutral white background, studio lighting.
+MOOD/STYLE: Professional game character design layout.
+
+【Timeline】
+0-15s: Static multi-view display. Show the character 【@image1】 from Front, 45-degree Side, and Back views simultaneously. The character is in a neutral A-pose. Minimal eye movement to maintain "static asset" feel.
+
+【Technical Requirements】
+Camera: Fixed flat view.
+Visual Consistency: Strictly follow @image1 for outfit and proportions.
+
+【Material Reference】
+@image1 Character reference
+```
