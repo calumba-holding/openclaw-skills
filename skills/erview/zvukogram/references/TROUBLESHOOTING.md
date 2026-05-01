@@ -33,9 +33,9 @@ ffmpeg -i input.mp3 -af "volume=2.0" output.mp3
 
 ### Wrong Stress
 **Fixes:**
-1. Use `+` before vowel: `Ал+ьтман`
-2. SSML: `<say-as stress="2">Альтман</say-as>`
-3. Alias: `<sub alias="Ал+ьтман">Альтман</sub>`
+1. Use `+` before stressed vowel: `Ал+ьтман`
+2. Prefer alias with stress: `<sub alias="Ал+ьтман">Альтман</sub>`
+3. If you need very precise pronunciation, use `<phoneme>` (IPA) — see `references/pronunciation-patterns.md`
 
 ### Wrong English Pronunciation
 **Fix:** Use aliases from `references/TRANSCRIPTION.md`
@@ -50,10 +50,12 @@ apt-get install ffmpeg
 ## SSML Issues
 
 ### SSML Not Working via API
-**Cause:** API has limited SSML support  
-**Fix:** 
-- Use simple tags: `<sub>`, `+` for stress
-- For full support use web interface
+**Cause:** Usually tag/attribute is unsupported by the selected voice, or SSML is malformed (XML).  
+**Fix:**
+- Validate XML well-formedness (proper closing tags, quotes)
+- Try with a different voice (support is voice-dependent)
+- Stick to the core tags: `<break>`, `<sub>`, `+` stress, and simple `<say-as>`
+- See the supported-tags contract and per-voice exceptions in `references/SSML.md`
 
 ### Multi-voice Not Working
 **Cause:** `<voice>` tag not supported in API  

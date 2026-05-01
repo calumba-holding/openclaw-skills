@@ -4,6 +4,11 @@ Source (official): https://zvukogram.com/node/ssml/
 
 This reference is a **practical, agent-readable** summary of Zvukogram SSML behavior (with Zvukogram-specific extensions/voice limitations). Treat it as the canonical contract for what we generate in podcast pipelines.
 
+See also:
+- `say-as` patterns & templates: `references/say-as.md`
+- pronunciation workflow (`+`, `<sub>`, `<phoneme>`): `references/pronunciation-patterns.md`
+- podcast-oriented patterns: `references/podcast-examples.md`
+
 ## 0) General rules
 
 - SSML is **XML**. Tags must be well-formed.
@@ -18,6 +23,7 @@ When producing TTS-ready text for Zvukogram:
 - ✅ Allowed: plain text + SSML tags listed in this doc.
 - ❌ Forbidden: arbitrary XML/HTML/JSON/YAML structures (e.g. `<tool>...</tool>`), markdown tables/code blocks, or any non-SSML markup.
 - If you include SSML, **only** use the supported tags and attributes below.
+- If your downstream runtime does not support wrapper tags like `<speak>` or `<voice>`, strip only those wrappers rather than blindly deleting all tags. Useful inline tags such as `break`, `say-as`, `sub`, `prosody`, `phoneme`, and `emphasis` should be preserved when the runtime supports them.
 
 ## 2) Supported tags (overview)
 

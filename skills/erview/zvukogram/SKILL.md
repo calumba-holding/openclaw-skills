@@ -1,9 +1,11 @@
 ---
 name: zvukogram
-description: Text-to-Speech via Zvukogram API with SSML support. Use when you need to generate speech from text, create podcasts, voice notifications, or work with audio. Supports speed control, stress marks, English word transcription, and audio fragment merging.
-requires:
-  env: [ZVUKOGRAM_TOKEN, ZVUKOGRAM_EMAIL]
-  credentials: zvukogram_api
+description: Text-to-Speech via Zvukogram API with SSML support. Use when you need to generate speech from text, create podcasts, voice notifications, or work with audio. Supports speed control, stress marks, English word transcription, audio fragment merging, rich SSML references, and podcast-oriented TTS patterns.
+metadata:
+  openclaw:
+    requires:
+      env: [ZVUKOGRAM_TOKEN, ZVUKOGRAM_EMAIL]
+      credentials: [zvukogram_api]
 ---
 
 # Zvukogram TTS
@@ -111,6 +113,9 @@ See [references/TRANSCRIPTION.md](references/TRANSCRIPTION.md) for proper pronun
 ## SSML Reference
 
 - Full, agent-readable reference (recommended): [references/SSML.md](references/SSML.md)
+- `say-as` modes with extra patterns: [references/say-as.md](references/say-as.md)
+- Pronunciation & transcription patterns (`+`, `<sub>`, `<phoneme>`): [references/pronunciation-patterns.md](references/pronunciation-patterns.md)
+- Podcast-oriented SSML patterns: [references/podcast-examples.md](references/podcast-examples.md)
 - Quick lookup: [references/SSML_CHEATSHEET.md](references/SSML_CHEATSHEET.md)
 - Official Zvukogram SSML docs: https://zvukogram.com/node/ssml/
 
@@ -121,11 +126,16 @@ See [references/TROUBLESHOOTING.md](references/TROUBLESHOOTING.md) for:
 - Audio issues
 - Diagnostics
 
-## API Limitations
+## API Reference
 
-- Max 1000 characters per request (`/text`)
-- Up to 1M characters via `/longtext`
-- Do not rely on `<voice>` / `<speak>` wrappers for API usage. For multi-voice, generate and merge fragments (one request per voice).
+- API contract (endpoints, parameters, responses): [references/API.md](references/API.md)
+- Choosing `/text` vs `/longtext` vs chunking: [references/chunking-and-method-choice.md](references/chunking-and-method-choice.md)
+
+## API Limits / gotchas
+
+- `/text`: max **1000 characters** per request
+- `/longtext` and `/subs`: up to **1,000,000 characters**
+- Multi-voice in API: generate and merge fragments (one request per voice). Do not rely on `<voice>` wrappers.
 
 ## Links
 

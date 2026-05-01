@@ -139,18 +139,16 @@ subprocess.run([
 
 **SSML text:**
 ```xml
-<speak>
-  В слове "з+амок" ударение падает на первый слог,
-  а в слове "зам+ок" — на второй.
-  
-  <break time="500ms"/>
-  
-  Компания <sub alias="Оупен Эй Ай">OpenAI</sub>
-  выпустила новую версию <sub alias="Джи Пи Ти">GPT</sub>.
-</speak>
+В слове "з+амок" ударение падает на первый слог,
+а в слове "зам+ок" — на второй.
+
+<break time="500ms"/>
+
+Компания <sub alias="Оупен Эй Ай">OpenAI</sub>
+выпустила новую версию <sub alias="Джи Пи Ти">GPT</sub>.
 ```
 
-**Note:** SSML via API has limited support. For full support use Zvukogram web interface.
+**Note:** В API SSML обычно передаётся прямо в параметре `text` (без обёртки `<speak>`). Поддержка зависит от конкретного голоса и тега — сверяйтесь с `references/SSML.md`.
 
 ## Example 7: Daily Podcast Automation
 
