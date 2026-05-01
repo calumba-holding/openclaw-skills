@@ -25,7 +25,7 @@ Access the SendGrid API with managed OAuth authentication. Send transactional an
 # Get user profile
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/sendgrid/v3/user/profile')
+req = urllib.request.Request('https://api.maton.ai/sendgrid/v3/user/profile')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -34,10 +34,10 @@ EOF
 ## Base URL
 
 ```
-https://gateway.maton.ai/sendgrid/{native-api-path}
+https://api.maton.ai/sendgrid/{native-api-path}
 ```
 
-Replace `{native-api-path}` with the actual SendGrid API endpoint path. The gateway proxies requests to `api.sendgrid.com` and automatically injects your OAuth token.
+Maton proxies requests to `api.sendgrid.com` and automatically injects your OAuth token.
 
 ## Authentication
 
@@ -61,14 +61,14 @@ export MATON_API_KEY="YOUR_API_KEY"
 
 ## Connection Management
 
-Manage your SendGrid OAuth connections at `https://ctrl.maton.ai`.
+Manage your SendGrid OAuth connections at `https://api.maton.ai`.
 
 ### List Connections
 
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections?app=sendgrid&status=ACTIVE')
+req = urllib.request.Request('https://api.maton.ai/connections?app=sendgrid&status=ACTIVE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -80,7 +80,7 @@ EOF
 python <<'EOF'
 import urllib.request, os, json
 data = json.dumps({'app': 'sendgrid'}).encode()
-req = urllib.request.Request('https://ctrl.maton.ai/connections', data=data, method='POST')
+req = urllib.request.Request('https://api.maton.ai/connections', data=data, method='POST')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 req.add_header('Content-Type', 'application/json')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
@@ -92,7 +92,7 @@ EOF
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -102,7 +102,7 @@ EOF
 ```json
 {
   "connection": {
-    "connection_id": "943c6cd5-9a56-4f5b-8adf-ecd4a140049f",
+    "connection_id": "{connection_id}",
     "status": "ACTIVE",
     "creation_time": "2026-02-11T10:53:41.817938Z",
     "last_updated_time": "2026-02-11T10:54:05.554084Z",
@@ -120,7 +120,7 @@ Open the returned `url` in a browser to complete OAuth authorization.
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections/{connection_id}', method='DELETE')
+req = urllib.request.Request('https://api.maton.ai/connections/{connection_id}', method='DELETE')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -133,14 +133,19 @@ If you have multiple SendGrid connections, specify which one to use with the `Ma
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://gateway.maton.ai/sendgrid/v3/user/profile')
+req = urllib.request.Request('https://api.maton.ai/sendgrid/v3/user/profile')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
-req.add_header('Maton-Connection', '943c6cd5-9a56-4f5b-8adf-ecd4a140049f')
+req.add_header('Maton-Connection', '{connection_id}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
 ```
 
-If omitted, the gateway uses the default (oldest) active connection.
+If you have multiple connections, always include this header to ensure requests go to the intended account.
+
+## Security & Permissions
+
+- Access is scoped to email sending, contacts, lists, templates, and sender identities within the connected SendGrid account.
+- **All write operations require explicit user approval.** Before executing any create, update, or delete call, confirm the target resource and intended effect with the user.
 
 ## API Reference
 
@@ -929,7 +934,7 @@ GET /sendgrid/v3/suppression/bounces?limit=100&offset=0
 ```javascript
 // Send an email
 const response = await fetch(
-  'https://gateway.maton.ai/sendgrid/v3/mail/send',
+  'https://api.maton.ai/sendgrid/v3/mail/send',
   {
     method: 'POST',
     headers: {
@@ -956,7 +961,7 @@ import requests
 
 # Get email stats
 response = requests.get(
-    'https://gateway.maton.ai/sendgrid/v3/stats',
+    'https://api.maton.ai/sendgrid/v3/stats',
     headers={'Authorization': f'Bearer {os.environ["MATON_API_KEY"]}'},
     params={'start_date': '2026-02-01'}
 )
@@ -1001,7 +1006,7 @@ echo $MATON_API_KEY
 ```bash
 python <<'EOF'
 import urllib.request, os, json
-req = urllib.request.Request('https://ctrl.maton.ai/connections')
+req = urllib.request.Request('https://api.maton.ai/connections')
 req.add_header('Authorization', f'Bearer {os.environ["MATON_API_KEY"]}')
 print(json.dumps(json.load(urllib.request.urlopen(req)), indent=2))
 EOF
@@ -1011,8 +1016,8 @@ EOF
 
 1. Ensure your URL path starts with `sendgrid`. For example:
 
-- Correct: `https://gateway.maton.ai/sendgrid/v3/user/profile`
-- Incorrect: `https://gateway.maton.ai/v3/user/profile`
+- Correct: `https://api.maton.ai/sendgrid/v3/user/profile`
+- Incorrect: `https://api.maton.ai/v3/user/profile`
 
 ## Resources
 
