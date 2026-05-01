@@ -8,6 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE_MAIN="${WORKSPACE_MAIN:-$HOME/clawd}"
 WORKSPACE_WHATSAPP="${WORKSPACE_WHATSAPP:-$HOME/.openclaw/workspace-whatsapp}"
+APPROVALS_FILE="${APPROVALS_FILE:-$HOME/.openclaw/exec-approvals.json}"
 
 chmod +x "$SKILL_DIR/scripts/openclaw-audit.sh"
 chmod +x "$SKILL_DIR/scripts/purge-stale-sessions.sh"
@@ -21,6 +22,8 @@ APPLY=false
 AUDIT_PATH="$SKILL_DIR/scripts/openclaw-audit.sh"
 PURGE_PATH="$SKILL_DIR/scripts/purge-stale-sessions.sh"
 PREFLIGHT_PATH="$SKILL_DIR/scripts/preflight.sh"
+SETUP_PATH="$SKILL_DIR/scripts/setup.sh"
+VERIFY_PATH="$SKILL_DIR/scripts/verify.sh"
 BEGIN_MARKER="<!-- inference-optimizer:begin -->"
 END_MARKER="<!-- inference-optimizer:end -->"
 
@@ -47,6 +50,14 @@ $BEGIN_MARKER
 | purge sessions | Approved action after audit/optimize | exec \`$PURGE_PATH\` (archives by default). |
 $END_MARKER
 EOF
+)
+
+APPROVAL_PATTERNS=(
+  "$AUDIT_PATH"
+  "$PREFLIGHT_PATH"
+  "$PURGE_PATH"
+  "$SETUP_PATH"
+  "$VERIFY_PATH"
 )
 
 update_file() {
@@ -86,6 +97,46 @@ path.write_text(cleaned)
 PY
 }
 
+update_approvals() {
+  python3 - "$APPROVALS_FILE" "${APPROVAL_PATTERNS[@]}" <<'PY'
+import json
+import pathlib
+import uuid
+import sys
+
+path = pathlib.Path(sys.argv[1])
+patterns = sys.argv[2:]
+agents = ["main", "whatsapp"]
+
+if not path.exists():
+    print(f"[WARN] approvals file not found: {path}")
+    raise SystemExit(0)
+
+data = json.loads(path.read_text())
+agent_map = data.setdefault("agents", {})
+changed = False
+
+for agent in agents:
+    section = agent_map.setdefault(agent, {})
+    allowlist = section.setdefault("allowlist", [])
+    existing = {entry.get("pattern") for entry in allowlist}
+    for pattern in patterns:
+        if pattern in existing:
+            continue
+        allowlist.append({
+            "pattern": pattern,
+            "id": str(uuid.uuid4()),
+        })
+        changed = True
+        print(f"[OK] Added approval pattern for {agent}: {pattern}")
+
+if changed:
+    path.write_text(json.dumps(data, indent=2) + "\n")
+else:
+    print("[OK] Approval patterns already present")
+PY
+}
+
 if [[ "$APPLY" = false ]]; then
   echo ""
   echo "Preview (no changes made). Run with --apply to modify workspace files."
@@ -99,6 +150,11 @@ if [[ "$APPLY" = false ]]; then
   echo "This update replaces any prior managed block and removes legacy paths such as:"
   echo "  - ~/clawdbot/code/scripts/openclaw-audit.sh"
   echo "  - ~/clawd/skills/public/inference-optimizer"
+  echo ""
+  echo "Managed approval patterns (main + whatsapp in $APPROVALS_FILE):"
+  for pattern in "${APPROVAL_PATTERNS[@]}"; do
+    echo "  - $pattern"
+  done
   echo ""
   echo "Workspaces: $WORKSPACE_MAIN, $WORKSPACE_WHATSAPP"
   echo "Usage: bash $0 --apply"
@@ -122,6 +178,8 @@ for ws in "$WORKSPACE_MAIN" "$WORKSPACE_WHATSAPP"; do
     echo "[WARN] $ws/TOOLS.md not found"
   fi
 done
+
+update_approvals
 
 echo ""
 echo "Done. Prefer manual purge: $PURGE_PATH (archives by default)."

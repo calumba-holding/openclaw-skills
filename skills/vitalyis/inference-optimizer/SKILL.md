@@ -3,7 +3,7 @@ name: inference-optimizer
 description: Audit OpenClaw runtime health first, then optimize inference speed and token usage with approval. Use /audit for analyze-only and /optimize for analyze + action flow.
 license: MIT
 metadata:
-  version: "0.3.3"
+  version: "0.3.4"
   openclaw:
     author: vitalyis
     emoji: "⚡"

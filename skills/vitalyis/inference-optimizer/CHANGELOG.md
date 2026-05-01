@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.4] - 2026-04-02
+
+### Fixed
+
+- `setup.sh --apply` now installs the required path-specific `exec-approvals.json` entries for `main` and `whatsapp`, covering `openclaw-audit.sh`, `preflight.sh`, `purge-stale-sessions.sh`, `setup.sh`, and `verify.sh`.
+- `verify.sh` now fails when those managed skill script approvals are missing, preventing `/audit`, `/optimize`, and `/preflight` from silently regressing into approval prompts after bot or policy updates.
+- Reapplying the skill now repairs both workspace wiring and the matching allowlist state, so the advertised command surface works on a fresh VPS install without manual approval surgery.
+
+### Added
+
+- Release notes under `docs/release-notes/0.3.4.md`.
+
 ## [0.3.3] - 2026-03-28
 
 ### Changed
